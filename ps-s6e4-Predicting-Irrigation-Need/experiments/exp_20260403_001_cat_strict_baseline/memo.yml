@@ -1,1 +1,34 @@
+experiment:
+  exp_id: exp_20260403_001_cat_strict_baseline
+  title: cat_strict_baseline
+  status: done
 
+competition:
+  name: ps-s6e4-Predicting-Irrigation-Need
+  metric: balanced_accuracy
+
+model:
+  family: catboost
+  variant: raw
+  use_original: false
+
+cv:
+  folds: 5
+  seed: 42
+  score: ""   # 例: 0.912345
+
+lb:
+  public: ""
+  private: ""
+
+artifacts:
+  notebook_url: ""
+  submission_file: "submission_catboost_strict_baseline.csv"
+  oof_file: "oof_catboost_strict_baseline_proba.npy"
+  pred_file: "pred_catboost_strict_baseline_proba.npy"
+
+decision:
+  verdict: baseline
+  reason: train/test の生列のみで CatBoost strict baseline を作成し、以後の比較基準にする。
+
+next_action: class bias 最適化
