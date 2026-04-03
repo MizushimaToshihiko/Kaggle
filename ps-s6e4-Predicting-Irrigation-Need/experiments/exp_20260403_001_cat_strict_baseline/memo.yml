@@ -15,14 +15,14 @@ model:
 cv:
   folds: 5
   seed: 42
-  score: ""   # 例: 0.912345
+  score: 0.961680   # 例: 0.912345
 
 lb:
-  public: ""
+  public: 0.95920
   private: ""
 
 artifacts:
-  notebook_url: ""
+  notebook_url: "https://www.kaggle.com/code/mizushimatoshihiko/ps-s6e4-cat-baseline/notebook?scriptVersionId=308462202"
   submission_file: "submission_catboost_strict_baseline.csv"
   oof_file: "oof_catboost_strict_baseline_proba.npy"
   pred_file: "pred_catboost_strict_baseline_proba.npy"
