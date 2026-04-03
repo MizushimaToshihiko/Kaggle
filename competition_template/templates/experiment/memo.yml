@@ -1,11 +1,11 @@
 experiment:
   exp_id: exp_YYYYMMDD_NNN_short_name
-  title: short_name
+  title: "short_name"
   status: planned   # planned / running / done / dropped
 
 competition:
-  name: 
-  metric: 
+  name: ""
+  metric: ""
 
 model:
   family: ""        # catboost / xgboost / lgbm / realmlp / blend など
@@ -28,7 +28,7 @@ artifacts:
   pred_file: ""
 
 decision:
-  verdict: ""       # adopt / hold / drop
+  verdict: ""       # baseline / adopt / hold / drop
   reason: ""
 
 next_action: ""
