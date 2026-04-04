@@ -29,6 +29,8 @@ artifacts:
 
 decision:
   verdict: baseline
-  reason: train/test の生列 + bias最適化で CatBoost strict baseline を作成し、以後の比較基準にする。
+  reason: 
+   - train/test の生列 + bias最適化で CatBoost strict baseline を作成し、以後の比較基準にする。
+   - best_bias: [ 0.   -0.38 -0.38]
 
 next_action: original priors 最小版
