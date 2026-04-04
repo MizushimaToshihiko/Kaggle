@@ -22,8 +22,8 @@ lb:
   private: ""
 
 artifacts:
-  notebook_url: "https://www.kaggle.com/code/mizushimatoshihiko/ps-s6e4-cat-baseline/notebook?scriptVersionId=308462202"
-  submission_file: "submission_catboost_strict_baseline.csv","submission_catboost_strict_baseline_bias.csv"
+  notebook_url: ""
+  submission_file: "submission_catboost_strict_baseline_bias.csv"
   oof_file: "oof_catboost_strict_baseline_bias_proba.npy"
   pred_file: "pred_catboost_strict_baseline_bias_proba.npy"
 
@@ -31,4 +31,4 @@ decision:
   verdict: baseline
   reason: train/test の生列 + bias最適化で CatBoost strict baseline を作成し、以後の比較基準にする。
 
-next_action: 
+next_action: original priors 最小版
