@@ -28,7 +28,7 @@ artifacts:
   pred_file: "pred_catboost_orig_priors_proba.npy"
 
 decision:
-  verdict: "baseline + orig minimum"
-  reason: ""
+  verdict: "baseline train/test の生列 + bias最適化 + orig prior minimum"
+  reason: "baseline train/test の生列 + bias最適化 + orig prior minimumで CatBoost strict baseline を作成し、以後の比較基準にする。"
 
 next_action: ""
