@@ -28,7 +28,10 @@ artifacts:
   pred_file: "pred_catboost_orig_priors_proba.npy"
 
 decision:
-  verdict: "baseline train/test の生列 + bias最適化 + orig prior minimum"
-  reason: "baseline train/test の生列 + bias最適化 + orig prior minimumで CatBoost strict baseline を作成し、以後の比較基準にする。"
+  verdict: "drop"
+  reason: "original priors 最小版は cat_strict_baseline_bias を CV/LB ともに下回ったため不採用。"
 
-next_action: ""
+next_action: 
+ - "orig priors の対象列を絞って再試行"
+ - "snap 最小版を試す"
+ - "bias 最適化の探索範囲を再調整"
