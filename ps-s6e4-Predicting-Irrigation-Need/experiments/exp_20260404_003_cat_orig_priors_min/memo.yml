@@ -1,0 +1,34 @@
+experiment:
+  exp_id: exp_20260404_003_cat_orig_priors_min
+  title: "cat_orig_priors_min"
+  status: done
+
+competition:
+  name: ps-s6e4-Predicting-Irrigation-Need
+  metric: balanced_accuracy
+
+model:
+  family: catboost
+  variant: orig_priors
+  use_original: true
+
+cv:
+  folds: 5
+  seed: 42
+  score: ""
+
+lb:
+  public: ""
+  private: ""
+
+artifacts:
+  notebook_url: ""
+  submission_file: ""
+  oof_file: ""
+  pred_file: ""
+
+decision:
+  verdict: ""
+  reason: ""
+
+next_action: ""
