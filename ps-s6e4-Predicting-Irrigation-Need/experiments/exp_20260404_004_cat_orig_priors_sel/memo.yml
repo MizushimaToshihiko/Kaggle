@@ -1,0 +1,9 @@
+experiment:
+  exp_id: exp_20260404_004_cat_orig_priors_sel
+  title: "cat_orig_priors_sel"
+  status: done
+
+model:
+  family: catboost
+  variant: orig_priors
+  use_original: true
