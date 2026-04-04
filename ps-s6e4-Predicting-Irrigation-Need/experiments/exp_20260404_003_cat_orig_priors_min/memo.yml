@@ -15,17 +15,17 @@ model:
 cv:
   folds: 5
   seed: 42
-  score: ""
+  score: 0.959104
 
 lb:
-  public: ""
+  public: 0.95734
   private: ""
 
 artifacts:
-  notebook_url: ""
-  submission_file: ""
-  oof_file: ""
-  pred_file: ""
+  notebook_url: "https://www.kaggle.com/code/mizushimatoshihiko/ps-s6e4-cat-baseline?scriptVersionId=308832503"
+  submission_file: "submission_catboost_orig_priors.csv"
+  oof_file: "oof_catboost_orig_priors_proba.npy"
+  pred_file: "pred_catboost_orig_priors_proba.npy"
 
 decision:
   verdict: ""
