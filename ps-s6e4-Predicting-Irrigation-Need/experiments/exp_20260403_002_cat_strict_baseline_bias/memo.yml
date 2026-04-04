@@ -15,10 +15,10 @@ model:
 cv:
   folds: 5
   seed: 42
-  score: 
+  score: 0.964848
 
 lb:
-  public: 
+  public: 0.95920
   private: ""
 
 artifacts:
