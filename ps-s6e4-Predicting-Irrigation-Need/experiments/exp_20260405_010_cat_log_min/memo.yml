@@ -1,0 +1,34 @@
+experiment:
+  exp_id: exp_20260405_010_cat_log_min
+  title: "cat_log_min"
+  status: done
+
+competition:
+  name: ps-s6e4-Predicting-Irrigation-Need
+  metric: balanced_accuracy
+
+model:
+  family: catboost
+  variant: log_min
+  use_original: false
+
+cv:
+  folds: 5
+  seed: 42
+  score: ""
+
+lb:
+  public: ""
+  private: ""
+
+artifacts:
+  notebook_url: ""
+  submission_file: "submission_catboost_log_min.csv"
+  oof_file: "oof_catboost_log_min_proba.npy"
+  pred_file: "pred_catboost_log_min_proba.npy"
+
+decision:
+  verdict: ""
+  reason: ""
+
+next_action: ""
