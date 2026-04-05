@@ -7,3 +7,31 @@ model:
   family: catboost
   variant: orig_priors
   use_original: true
+
+competition:
+  name: ps-s6e4-Predicting-Irrigation-Need
+  metric: balanced_accuracy
+
+cv:
+  folds: 5
+  seed: 42
+  score: 
+
+lb:
+  public: 0.95734
+  private: ""
+
+artifacts:
+  notebook_url: "https://www.kaggle.com/code/mizushimatoshihiko/ps-s6e4-cat-baseline?scriptVersionId=308899789"
+  submission_file: "submission_catboost_orig_priors_sel.csv"
+  oof_file: "oof_catboost_orig_priors_sel_proba.npy"
+  pred_file: "pred_catboost_orig_priors_sel_proba.npy"
+
+decision:
+  verdict: "drop"
+  reason: "original priors 最小版は cat_strict_baseline_bias を CV/LB ともに下回ったため不採用。"
+
+next_action:
+ priority_order:
+  - "snap 最小版を試す"
+  - "bias 最適化の探索範囲を再調整"
