@@ -15,10 +15,10 @@ competition:
 cv:
   folds: 5
   seed: 42
-  score: 
+  score: 0.959121
 
 lb:
-  public: 0.95734
+  public: 0.95752
   private: ""
 
 artifacts:
@@ -29,7 +29,7 @@ artifacts:
 
 decision:
   verdict: "drop"
-  reason: "original priors 最小版は cat_strict_baseline_bias を CV/LB ともに下回ったため不採用。"
+  reason: "original priors selected版も cat_strict_baseline_bias を CV/LB ともに下回ったため不採用。"
 
 next_action:
  priority_order:
