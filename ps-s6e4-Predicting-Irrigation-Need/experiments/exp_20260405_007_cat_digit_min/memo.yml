@@ -1,7 +1,7 @@
 experiment:
   exp_id: exp_20260405_007_cat_digit_min
   title: "cat_digit_min"
-  status: running
+  status: done
 
 competition:
   name: ps-s6e4-Predicting-Irrigation-Need
@@ -29,6 +29,6 @@ artifacts:
 
 decision:
   verdict: "drop"
-  reason: "cat bias wide, cat baseline よりもCV,LBが下回ったので、dropだが、bias wide + digit_minはどうなんでしょ"
+  reason: "cat_digit_min は cat_strict_baseline_bias_wide を CV/LB ともに下回ったため不採用。"
 
-next_action: "bias wide + digit_min ?"
+next_action: "bias wide + digit_min を試す"
