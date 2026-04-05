@@ -27,7 +27,7 @@ artifacts:
   pred_file: ""
 
 decision:
-  verdict: ""       # adopt / hold / drop
-  reason: ""
+  verdict: "analysis"
+  reason: "cat_digit_min_bias は cat_digit_min とほぼ同一人格で、cat_strict_baseline_bias_wide とも高相関だった。digit 系は改善したが、現時点では独立したブレンド要員としての価値は限定的。"
 
-next_action: ""
+next_action: "digit_min_bias を即ブレンド投入せず、別 feature family を追加して相関差を作れるか確認"
