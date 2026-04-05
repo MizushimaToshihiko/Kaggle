@@ -1,3 +1,8 @@
 experiment:
   exp_id: exp_20260405_009_corr_digit_min_bias_vs_core
   title: "corr_digit_min_bias_vs_core"
+
+model:
+  family: analysis
+  variant: correlation_check
+  use_original: false
