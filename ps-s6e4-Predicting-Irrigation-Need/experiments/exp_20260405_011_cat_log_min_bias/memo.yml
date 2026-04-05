@@ -1,0 +1,37 @@
+experiment:
+  exp_id: exp_20260405_011_cat_log_min_bias
+  title: "cat_log_min_bias"
+  status: done
+
+competition:
+  name: ps-s6e4-Predicting-Irrigation-Need
+  metric: balanced_accuracy
+
+model:
+  family: catboost
+  variant: log_min_bias
+  use_original: false
+
+cv:
+  folds: 5
+  seed: 42
+  score: ""
+
+lb:
+  public: ""
+  private: ""
+
+artifacts:
+  notebook_url: ""
+  submission_file: "submission_catboost_log_min_bias.csv"
+  oof_file: "oof_catboost_log_min_bias_proba.npy"
+  pred_file: "pred_catboost_log_min_bias_proba.npy"
+  bias_file: "best_class_bias_log_min.npy"
+
+decision:
+  verdict: ""
+  reason: ""
+
+next_action: ""
+
+artifacts_note: "oof/pred *_log_min_bias_proba.npy は bias適用前の raw probability。submission のみ bias適用後。"
