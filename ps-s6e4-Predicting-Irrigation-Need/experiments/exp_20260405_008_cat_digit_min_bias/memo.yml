@@ -15,20 +15,20 @@ model:
 cv:
   folds: 5
   seed: 42
-  score: ""
+  score: 0.967275
 
 lb:
-  public: ""
+  public: 0.96382
   private: ""
 
 artifacts:
-  notebook_url: ""
+  notebook_url: "https://www.kaggle.com/code/mizushimatoshihiko/ps-s6e4-cat-bias-wide-with-digit-mininum"
   submission_file: "submission_catboost_digit_min_bias.csv"
   oof_file: "oof_catboost_digit_min_bias_proba.npy"
   pred_file: "pred_catboost_digit_min_bias_proba.npy"
 
 decision:
-  verdict: ""
-  reason: ""
+  verdict: "adopt"
+  reason: "cv,lbが最高であったため"
 
 next_action: ""
