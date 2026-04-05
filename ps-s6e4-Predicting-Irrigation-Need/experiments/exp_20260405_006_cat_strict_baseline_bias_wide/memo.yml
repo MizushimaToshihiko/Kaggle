@@ -15,14 +15,14 @@ model:
 cv:
   folds: 5
   seed: 42
-  score: ""
+  score: 0.965980
 
 lb:
-  public: ""
+  public: 0.96312
   private: ""
 
 artifacts:
-  notebook_url: ""
+  notebook_url: "https://www.kaggle.com/code/mizushimatoshihiko/ps-s6e4-cat-baseline-bias?scriptVersionId=309072245"
   submission_file: "submission_catboost_strict_baseline_bias_wide.csv"
   oof_file: "oof_catboost_strict_baseline_bias_wide_proba.npy"
   pred_file: "pred_catboost_strict_baseline_bias_wide_proba.npy"
