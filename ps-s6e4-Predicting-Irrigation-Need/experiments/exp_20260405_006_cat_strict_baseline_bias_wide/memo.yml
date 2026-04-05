@@ -1,7 +1,7 @@
 experiment:
   exp_id: exp_20260405_006_cat_strict_baseline_bias_wide
   title: "cat_strict_baseline_bias_wide"
-  status: running
+  status: done
 
 competition:
   name: ps-s6e4-Predicting-Irrigation-Need
@@ -29,9 +29,9 @@ artifacts:
   artifacts_note: "oof/pred *_wide_proba.npy は bias適用前の raw probability。submission のみ bias適用後。"
 
 decision:
-  verdict: "hold"
-  reason: "cat baseline biasよりもcv/lb共に上回ったので、biasの再探索を行う"
+  verdict: "adopt"
+  reason: "cat_strict_baseline_bias を CV/LB ともに上回ったため採用。現時点の基準線として扱う。"
   le.classes_: ['High' 'Low' 'Medium']
   best_bias  : [ 0.   -0.32 -0.68]
 
-next_action: "biasの再探索"
+next_action: "この実験を新しい基準線として固定し、次の feature family を試す"
