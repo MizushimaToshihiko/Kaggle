@@ -1,4 +1,34 @@
 experiment:
   exp_id: exp_20260405_006_cat_strict_baseline_bias_wide
   title: "cat_strict_baseline_bias_wide"
-  status: done
+  status: running
+
+competition:
+  name: ps-s6e4-Predicting-Irrigation-Need
+  metric: balanced_accuracy
+
+model:
+  family: catboost
+  variant: raw
+  use_original: false
+
+cv:
+  folds: 5
+  seed: 42
+  score: ""
+
+lb:
+  public: ""
+  private: ""
+
+artifacts:
+  notebook_url: ""
+  submission_file: "submission_catboost_strict_baseline_bias_wide.csv"
+  oof_file: "oof_catboost_strict_baseline_bias_wide_proba.npy"
+  pred_file: "pred_catboost_strict_baseline_bias_wide_proba.npy"
+
+decision:
+  verdict: ""
+  reason: ""
+
+next_action: ""
