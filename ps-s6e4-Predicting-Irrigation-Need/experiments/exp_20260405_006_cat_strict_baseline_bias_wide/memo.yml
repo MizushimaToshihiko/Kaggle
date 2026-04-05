@@ -29,7 +29,9 @@ artifacts:
   artifacts_note: "oof/pred *_wide_proba.npy は bias適用前の raw probability。submission のみ bias適用後。"
 
 decision:
-  verdict: ""
-  reason: ""
+  verdict: "hold"
+  reason: "cat baseline biasよりもcv/lb共に上回ったので、biasの再探索を行う"
+  le.classes_: ['High' 'Low' 'Medium']
+  best_bias  : [ 0.   -0.32 -0.68]
 
-next_action: ""
+next_action: "biasの再探索"
