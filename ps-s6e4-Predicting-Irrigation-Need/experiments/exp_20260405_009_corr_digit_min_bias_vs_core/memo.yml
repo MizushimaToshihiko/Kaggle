@@ -6,3 +6,28 @@ model:
   family: analysis
   variant: correlation_check
   use_original: false
+
+competition:
+  name: ps-s6e4-Predicting-Irrigation-Need
+  metric: balanced_accuracy
+
+cv:
+  folds: "-"
+  seed: "-"
+  score: "-"
+
+lb:
+  public: "-"
+  private: "-"
+
+artifacts:
+  notebook_url: "https://www.kaggle.com/code/mizushimatoshihiko/ps-s6e4-show-corralation?scriptVersionId=309104070"
+  submission_file: ""
+  oof_file: ""
+  pred_file: ""
+
+decision:
+  verdict: ""       # adopt / hold / drop
+  reason: ""
+
+next_action: ""
