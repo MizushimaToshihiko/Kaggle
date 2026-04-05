@@ -15,23 +15,20 @@ competition:
 cv:
   folds: 5
   seed: 42
-  score: 0.959121
+  score: 0.958893
 
 lb:
-  public: 0.95752
+  public: 0.95716
   private: ""
 
 artifacts:
-  notebook_url: "https://www.kaggle.com/code/mizushimatoshihiko/ps-s6e4-cat-baseline?scriptVersionId=308899789"
-  submission_file: "submission_catboost_orig_priors_sel.csv"
-  oof_file: "oof_catboost_orig_priors_sel_proba.npy"
-  pred_file: "pred_catboost_orig_priors_sel_proba.npy"
+  notebook_url: "https://www.kaggle.com/code/mizushimatoshihiko/ps-s6e4-cat-snap-min?scriptVersionId=309066098"
+  submission_file: "submission_catboost_snap_min.csv"
+  oof_file: "oof_catboost_snap_min_proba.npy"
+  pred_file: "pred_catboost_snap_min_proba.npy"
 
 decision:
   verdict: "drop"
-  reason: "original priors selected版も cat_strict_baseline_bias を CV/LB ともに下回ったため不採用。"
+  reason: "cat_snap_minは、High recallはcat_orig_prior_selと比べて0.001程度改善したが cat_strict_baseline_bias を CV/LB ともに下回ったため不採用。"
 
-next_action:
- priority_order:
-  - "snap 最小版を試す"
-  - "bias 最適化の探索範囲を再調整"
+next_action: "bias 最適化の探索範囲を再調整"
