@@ -34,4 +34,4 @@ decision:
   le.classes_: ['High' 'Low' 'Medium']
   best_bias  : [ 0.   -0.32 -0.68]
 
-next_action: "この実験を新しい基準線として固定し、次の feature family を試す"
+next_action: "この実験を新しい基準線として固定し、次の feature family(DIGIT 最小版) を試す"
