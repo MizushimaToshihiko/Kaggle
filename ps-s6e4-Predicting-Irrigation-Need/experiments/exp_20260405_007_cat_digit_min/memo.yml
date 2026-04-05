@@ -15,20 +15,20 @@ model:
 cv:
   folds: 5
   seed: 42
-  score: ""
+  score: 0.960664
 
 lb:
-  public: ""
+  public: 0.95857
   private: ""
 
 artifacts:
-  notebook_url: ""
+  notebook_url: "https://www.kaggle.com/code/mizushimatoshihiko/ps-s6e4-cat-digit-mininum?scriptVersionId=309082700"
   submission_file: "submission_catboost_digit_min.csv"
   oof_file: "oof_catboost_digit_min_proba.npy"
   pred_file: "pred_catboost_digit_min_proba.npy"
 
 decision:
-  verdict: ""
-  reason: ""
+  verdict: "drop"
+  reason: "cat bias wide, cat baseline よりもCV,LBが下回ったので、dropだが、bias wide + digit_minはどうなんでしょ"
 
-next_action: ""
+next_action: "bias wide + digit_min ?"
