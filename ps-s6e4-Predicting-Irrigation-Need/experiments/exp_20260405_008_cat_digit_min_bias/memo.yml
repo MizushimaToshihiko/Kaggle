@@ -29,6 +29,6 @@ artifacts:
 
 decision:
   verdict: "adopt"
-  reason: "cv,lbが最高であったため"
+  reason: "cat_strict_baseline_bias_wide を CV/LB ともに上回ったため採用。現時点の新しい基準線候補。"
 
-next_action: ""
+next_action: "digit_min_bias の OOF/pred を既存主軸と相関確認し、ブレンド候補か主軸候補かを判定"
