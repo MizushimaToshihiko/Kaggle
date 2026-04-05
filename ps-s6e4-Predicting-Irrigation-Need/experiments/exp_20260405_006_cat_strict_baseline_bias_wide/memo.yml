@@ -26,6 +26,7 @@ artifacts:
   submission_file: "submission_catboost_strict_baseline_bias_wide.csv"
   oof_file: "oof_catboost_strict_baseline_bias_wide_proba.npy"
   pred_file: "pred_catboost_strict_baseline_bias_wide_proba.npy"
+  artifacts_note: "oof/pred *_wide_proba.npy は bias適用前の raw probability。submission のみ bias適用後。"
 
 decision:
   verdict: ""
