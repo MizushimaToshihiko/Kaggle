@@ -15,10 +15,10 @@ model:
 cv:
   folds: 5
   seed: 42
-  score: ""
+  score: 0.959198
 
 lb:
-  public: ""
+  public: 0.95679
   private: ""
 
 artifacts:
@@ -28,7 +28,7 @@ artifacts:
   pred_file: "pred_catboost_log_min_proba.npy"
 
 decision:
-  verdict: ""
-  reason: ""
+  verdict: "drop"
+  reason: "this is lesser than cat_baseline_digit_min_bias in cv and lb"
 
-next_action: ""
+next_action: "cat log-min + bias wide"
