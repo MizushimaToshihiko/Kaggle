@@ -1,0 +1,34 @@
+experiment:
+  exp_id: exp_20260405_008_cat_digit_min_bias
+  title: "cat_digit_min_bias"
+  status: done
+
+competition:
+  name: ps-s6e4-Predicting-Irrigation-Need
+  metric: balanced_accuracy
+
+model:
+  family: catboost
+  variant: digit_min_bias
+  use_original: false
+
+cv:
+  folds: 5
+  seed: 42
+  score: ""
+
+lb:
+  public: ""
+  private: ""
+
+artifacts:
+  notebook_url: ""
+  submission_file: "submission_catboost_digit_min_bias.csv"
+  oof_file: "oof_catboost_digit_min_bias_proba.npy"
+  pred_file: "pred_catboost_digit_min_bias_proba.npy"
+
+decision:
+  verdict: ""
+  reason: ""
+
+next_action: ""
