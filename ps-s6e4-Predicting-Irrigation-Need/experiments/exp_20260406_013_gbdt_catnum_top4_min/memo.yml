@@ -1,0 +1,146 @@
+experiment:
+  exp_id: exp_20260406_013_gbdt_catnum_top4_min
+  title: GBDT CATNUM with high-IV top4 categorical columns (minimum)
+  phase: feature_selection
+  status: planned
+  kind: training
+
+competition:
+  name: PS S6E4 Predicting Irrigation Need
+  metric: Balanced Accuracy
+
+purpose:
+  summary: >
+    high-IV OVR scan で抽出した top4 categorical columns を起点に、
+    単カテゴリ CATNUM を最小構成で追加し、GBDT系で効くかを確認する。
+    まずは CatBoost を使い、pair CATNUM や TE にはまだ進まない。
+  hypothesis:
+    - high-IV 上位カテゴリを起点にした単カテゴリ CATNUM は GBDT で有効な可能性がある
+    - 特に Crop_Growth_Stage 起点の統計特徴が効く可能性が高い
+    - top4 に絞ることで探索の散りを抑えられる
+  non_goals:
+    - カテゴリペア CATNUM はまだやらない
+    - leak-free TE はまだやらない
+    - NN系向け特徴量選定はまだやらない
+    - Optuna はまだやらない
+
+data:
+  source:
+    - train.csv
+    - test.csv
+  target: Irrigation_Need
+  row_scope:
+    train: full_train
+    test: full_test
+  high_iv_source_experiment: exp_20260406_012_high_iv_scan_cat_ovr_min
+  selected_high_iv_top4:
+    - Crop_Growth_Stage
+    - Water_Source
+    - Crop_Type
+    - Irrigation_Type
+  held_out_candidate:
+    - Soil_Type
+  numeric_cols:
+    - Soil_pH
+    - Soil_Moisture
+    - Organic_Carbon
+    - Electrical_Conductivity
+    - Temperature_C
+    - Humidity
+    - Rainfall_mm
+    - Sunlight_Hours
+    - Wind_Speed_kmh
+    - Field_Area_hectare
+    - Previous_Irrigation_mm
+  base_categorical_cols:
+    - Soil_Type
+    - Crop_Type
+    - Crop_Growth_Stage
+    - Season
+    - Irrigation_Type
+    - Water_Source
+    - Region
+    - Mulching_Used
+
+method:
+  model_family: CatBoost
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    seed: 42
+  catnum_definition: >
+    high-IV top4 categorical columns ごとに numeric columns の group statistics を作る単カテゴリ CATNUM。
+    train と test を結合した feature-only 集計で作成する。
+  catnum_stats:
+    - mean
+    - std
+    - median
+    - min
+    - max
+  catnum_feature_name_rule: "CATNUM__{cat}__{num}__{stat}"
+  fillna_value: -9999.0
+  class_order:
+    - Low
+    - Medium
+    - High
+  catboost_params:
+    loss_function: MultiClass
+    eval_metric: TotalF1
+    iterations: 3000
+    learning_rate: 0.03
+    depth: 6
+    l2_leaf_reg: 5.0
+    random_strength: 1.0
+    subsample: 0.9
+    bootstrap_type: Bernoulli
+    random_seed: 42
+    task_type: CPU
+  outputs:
+    - oof_catboost_catnum_top4_min_proba.npy
+    - pred_catboost_catnum_top4_min_proba.npy
+    - submission_catboost_catnum_top4_min.csv
+    - feature_columns.csv
+    - cv_result.json
+
+result:
+  cv:
+    score: null
+    fold_scores: []
+  lb:
+    public: null
+    private: null
+  n_catnum_cols: null
+  selected_feature_group:
+    - base_features
+    - catnum_top4_min
+  notes:
+    - 実行前
+    - 完走後に cv.score / fold_scores / n_catnum_cols / 判定を埋める
+
+comparison:
+  against:
+    - cat_strict_baseline_bias_wide
+    - cat_digit_min_bias
+    - cat_log_min_bias
+  focus:
+    - 単体CVで基準線を超えるか
+    - GBDT向け特徴量として伸びる余地があるか
+    - high-IV 起点が有効か
+    - 次に Soil_Type を足す価値があるか
+
+decision:
+  verdict: pending
+  reason: >
+    まだ未実行。
+    まずは high-IV top4 を起点にした単カテゴリ CATNUM の有効性だけを確認する。
+  next_action:
+    - 完走後に CV と feature count を確認
+    - 良ければ top4 + Soil_Type 比較版を作る
+    - 弱ければ統計量の見直しまたは family 切替を検討
+    - その後に必要なら pair CATNUM へ進む
+
+artifacts:
+  files:
+    - ps-s6e4-gbdt-catnum-top4-min.ipynb
+    - memo.yml
