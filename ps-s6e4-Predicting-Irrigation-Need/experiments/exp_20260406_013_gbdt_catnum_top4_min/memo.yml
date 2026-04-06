@@ -2,7 +2,7 @@ experiment:
   exp_id: exp_20260406_013_gbdt_catnum_top4_min
   title: GBDT CATNUM with high-IV top4 categorical columns (minimum)
   phase: feature_selection
-  status: planned
+  status: done
   kind: training
 
 competition:
@@ -95,7 +95,7 @@ method:
     subsample: 0.9
     bootstrap_type: Bernoulli
     random_seed: 42
-    task_type: CPU
+    task_type: GPU
   outputs:
     - oof_catboost_catnum_top4_min_proba.npy
     - pred_catboost_catnum_top4_min_proba.npy
@@ -105,18 +105,24 @@ method:
 
 result:
   cv:
-    score: null
-    fold_scores: []
+    score: 0.961637
+    fold_scores: [
+      0.9605393988550744,
+      0.9626661413488292,
+      0.962421536755793,
+      0.9618425870240431,
+      0.9607155210750502,
+    ]
   lb:
-    public: null
+    public: 0.95927
     private: null
-  n_catnum_cols: null
+  n_catnum_cols: 220
   selected_feature_group:
     - base_features
     - catnum_top4_min
   notes:
-    - 実行前
-    - 完走後に cv.score / fold_scores / n_catnum_cols / 判定を埋める
+    - 実行前->実行後
+    - 完走後に cv.score / fold_scores / n_catnum_cols / 判定を埋める->埋めた
 
 comparison:
   against:
@@ -130,8 +136,11 @@ comparison:
     - 次に Soil_Type を足す価値があるか
 
 decision:
-  verdict: pending
+  verdict: hold?
   reason: >
+    実行後:
+    cv,lbともにそれほど伸びなかったが?
+    実行前:
     まだ未実行。
     まずは high-IV top4 を起点にした単カテゴリ CATNUM の有効性だけを確認する。
   next_action:
