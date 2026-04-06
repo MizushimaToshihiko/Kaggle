@@ -106,13 +106,12 @@ method:
 result:
   cv:
     score: 0.961637
-    fold_scores: [
-      0.9605393988550744,
-      0.9626661413488292,
-      0.962421536755793,
-      0.9618425870240431,
-      0.9607155210750502,
-    ]
+    fold_scores:
+      - 0.9605393988550744
+      - 0.9626661413488292
+      - 0.962421536755793
+      - 0.9618425870240431
+      - 0.9607155210750502
   lb:
     public: 0.95927
     private: null
@@ -121,8 +120,9 @@ result:
     - base_features
     - catnum_top4_min
   notes:
-    - 実行前->実行後
-    - 完走後に cv.score / fold_scores / n_catnum_cols / 判定を埋める->埋めた
+    - high-IV top4 を起点にした単カテゴリ CATNUM 最小版は完走
+    - 実装上は成立したが、CV/LB ともに既存 CatBoost 主軸群を更新できなかった
+    - top4 単カテゴリ CATNUM をそのまま深掘りする優先度は低い
 
 comparison:
   against:
@@ -136,18 +136,16 @@ comparison:
     - 次に Soil_Type を足す価値があるか
 
 decision:
-  verdict: hold?
+  verdict: hold
   reason: >
-    実行後:
-    cv,lbともにそれほど伸びなかったが?
-    実行前:
-    まだ未実行。
-    まずは high-IV top4 を起点にした単カテゴリ CATNUM の有効性だけを確認する。
+    high-IV top4 単カテゴリ CATNUM 最小版は、CV 0.961637 / Public LB 0.95927 に留まり、
+    既存の CatBoost 主軸候補を明確に下回った。
+    このため、単カテゴリ CATNUM を同設計のまま拡張しても期待値は低いと判断する。
+    今の形では不採用だが別設計なら再検討余地あり。
   next_action:
-    - 完走後に CV と feature count を確認
-    - 良ければ top4 + Soil_Type 比較版を作る
-    - 弱ければ統計量の見直しまたは family 切替を検討
-    - その後に必要なら pair CATNUM へ進む
+    - GBDT系では単カテゴリ CATNUM ではなく pair CATNUM か leak-free TE 最小版へ進む
+    - もしくは family を変えて XGB / LGBM 側で high-IV 起点を再検証する
+    - NN系は別設計で進め、同じ特徴群をそのまま流用しない
 
 artifacts:
   files:
