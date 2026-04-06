@@ -15,10 +15,10 @@ model:
 cv:
   folds: 5
   seed: 42
-  score: ""
+  score: 0.965998
 
 lb:
-  public: ""
+  public: 0.96289
   private: ""
 
 artifacts:
@@ -29,9 +29,9 @@ artifacts:
   bias_file: "best_class_bias_log_min.npy"
 
 decision:
-  verdict: ""
-  reason: ""
+  verdict: "hold"
+  reason: "cv,lbがcat_digit_min_biasには及ばなかったがブレンド要員としてキープ"
 
-next_action: ""
+next_action: "high-IV探索"
 
 artifacts_note: "oof/pred *_log_min_bias_proba.npy は bias適用前の raw probability。submission のみ bias適用後。"
