@@ -1,0 +1,134 @@
+experiment:
+  exp_id: exp_20260406_014_gbdt_te_top4_min
+  title: GBDT leak-free TE with high-IV top4 categorical columns (minimum)
+  phase: feature_selection
+  status: planned
+  kind: training
+
+competition:
+  name: PS S6E4 Predicting Irrigation Need
+  metric: Balanced Accuracy
+
+purpose:
+  summary: >
+    high-IV OVR scan で抽出した top4 categorical columns を起点に、
+    leak-free な最小 TE を追加し、GBDT系で有効かを確認する。
+    まずは CatBoost で単列 TE のみを試し、pair TE や複雑化はまだ行わない。
+  hypothesis:
+    - high-IV top4 を起点にした leak-free TE は、単カテゴリ CATNUM より有効な可能性がある
+    - multiclass one-vs-rest TE により High / Medium / Low の分離に役立つ可能性がある
+    - top4 に絞ることで探索の散りを抑えられる
+  non_goals:
+    - pair TE はまだやらない
+    - trigram / interaction TE はまだやらない
+    - CATNUM pair はまだやらない
+    - Optuna はまだやらない
+    - NN系向け特徴量選定はまだやらない
+
+data:
+  source:
+    - train.csv
+    - test.csv
+  target: Irrigation_Need
+  row_scope:
+    train: full_train
+    test: full_test
+  high_iv_source_experiment: exp_20260406_012_high_iv_scan_cat_ovr_min
+  selected_high_iv_top4:
+    - Crop_Growth_Stage
+    - Water_Source
+    - Crop_Type
+    - Irrigation_Type
+  held_out_candidate:
+    - Soil_Type
+  base_categorical_cols:
+    - Soil_Type
+    - Crop_Type
+    - Crop_Growth_Stage
+    - Season
+    - Irrigation_Type
+    - Water_Source
+    - Region
+    - Mulching_Used
+
+method:
+  model_family: CatBoost
+  cv:
+    scheme: StratifiedKFold
+    outer_splits: 5
+    inner_splits: 5
+    shuffle: true
+    seed: 42
+  te_definition: >
+    high-IV top4 categorical columns に対して、multiclass target を one-vs-rest へ分解し、
+    class ごとの mean target encoding を leak-free に生成する。
+    outer train に対して inner CV で OOF TE を作成し、
+    outer valid / test には outer train 全体 fit の map を適用する。
+  te_feature_name_rule: "{col}__te_{class}"
+  target_classes:
+    - Low
+    - Medium
+    - High
+  te_fillna: 0.0
+  expected_te_feature_count: 12
+  catboost_params:
+    loss_function: MultiClass
+    eval_metric: TotalF1
+    iterations: 3000
+    learning_rate: 0.03
+    depth: 6
+    l2_leaf_reg: 5.0
+    random_strength: 1.0
+    subsample: 0.9
+    bootstrap_type: Bernoulli
+    random_seed: 42
+    task_type: CPU
+  outputs:
+    - oof_catboost_te_top4_min_proba.npy
+    - pred_catboost_te_top4_min_proba.npy
+    - submission_catboost_te_top4_min.csv
+    - feature_columns.csv
+    - cv_result.json
+
+result:
+  cv:
+    score: null
+    fold_scores: []
+  lb:
+    public: null
+    private: null
+  n_te_features: null
+  selected_feature_group:
+    - base_features
+    - te_top4_min
+  notes:
+    - 実行前
+    - 完走後に cv.score / fold_scores / n_te_features / 判定を埋める
+
+comparison:
+  against:
+    - cat_strict_baseline_bias_wide
+    - cat_digit_min_bias
+    - cat_log_min_bias
+    - exp_20260406_013_gbdt_catnum_top4_min
+  focus:
+    - 単体CVで既存基準線を超えるか
+    - 単カテゴリ CATNUM より TE の方が有効か
+    - high-IV 起点が GBDT系で意味を持つか
+    - 次に pair TE へ進む価値があるか
+
+decision:
+  verdict: pending
+  reason: >
+    まだ未実行。
+    high-IV top4 を起点にした leak-free TE 最小版が、013 の単カテゴリ CATNUM より
+    改善するかをまず確認する。
+  next_action:
+    - 完走後に CV と TE feature count を確認
+    - 良ければ Soil_Type を加えた top5 版または pair TE 最小版を検討
+    - 弱ければ high-IV 起点の GBDT設計をいったん縮小し、family 切替も検討
+
+artifacts:
+  files:
+    - ps-s6e4-gbdt-te-top4-min.ipynb
+    - memo.yml
