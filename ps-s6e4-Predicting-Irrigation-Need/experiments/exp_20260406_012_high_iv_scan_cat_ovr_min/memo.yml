@@ -44,18 +44,17 @@ data:
 
 method:
   iv_definition: >
-    categorical feature ごとに good/bad 分布から WOE と IV を計算。
-    zero division 回避のため smoothing を入れる。
-  positive_label: 1
-  smoothing_eps: 0.5
-  missing_policy: "__MISSING__" に置換して 1カテゴリとして扱う
+    multiclass target に対して one-vs-rest で class ごとに binary IV を計算し、
+    feature 単位では iv_max / iv_mean / iv_sum を集約指標として保存する。
+  class_scheme:
+    - Low vs rest
+    - Medium vs rest
+    - High vs rest
+  primary_rank_metric: iv_max
+  secondary_rank_metric: iv_mean
   outputs:
-    - iv_summary.csv
-    - iv_detail_{col}.csv
-  ranking_rule: IV の降順
-  selection_rule_initial:
-    top_k_candidate: 3
-    top_k_max: 5
+    - iv_summary_multiclass.csv
+    - iv_detail_{col}_multiclass.csv
 
 result:
   cv:
