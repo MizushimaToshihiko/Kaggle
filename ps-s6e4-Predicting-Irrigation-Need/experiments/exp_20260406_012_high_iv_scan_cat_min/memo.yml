@@ -1,0 +1,99 @@
+experiment:
+  exp_id: exp_20260406_012_high_iv_scan_cat_min
+  title: high-IV scan for categorical columns (minimum)
+  phase: feature_selection
+  status: done
+  kind: analysis
+
+competition:
+  name: PS S6E4 Predicting Irrigation Need
+  metric: Balanced Accuracy
+
+purpose:
+  summary: >
+    train の本カテゴリ列について IV を計算し、high-IV 列の一次候補を抽出する。
+    後続の GBDT系 / NN系 の特徴量選定の起点を作るための最小探索。
+  hypothesis:
+    - target を比較的強く分けるカテゴリ列を IV で一次選別できる
+    - 上位列を CATNUM / group stats / TE の起点に使うと探索範囲を絞れる
+  non_goals:
+    - IV の高低だけで最終採否を決めない
+    - この実験単体でモデル性能を評価しない
+    - original や synthetic artifact 系の価値を IV だけで裁かない
+
+data:
+  source:
+    - train.csv
+  target: Irrigation_Need
+  row_scope: train_only
+  feature_scope:
+    categorical:
+      - Soil_Type
+      - Crop_Type
+      - Crop_Growth_Stage
+      - Season
+      - Irrigation_Type
+      - Water_Source
+      - Region
+    excluded_for_now:
+      - Mulching_Used
+  notes:
+    - original は今回は使わない
+    - IV の初回比較を素直にするため train only で実施
+    - 二値列 Mulching_Used は別枠で後から確認
+
+method:
+  iv_definition: >
+    categorical feature ごとに good/bad 分布から WOE と IV を計算。
+    zero division 回避のため smoothing を入れる。
+  positive_label: 1
+  smoothing_eps: 0.5
+  missing_policy: "__MISSING__" に置換して 1カテゴリとして扱う
+  outputs:
+    - iv_summary.csv
+    - iv_detail_{col}.csv
+  ranking_rule: IV の降順
+  selection_rule_initial:
+    top_k_candidate: 3
+    top_k_max: 5
+
+result:
+  cv:
+    score: null
+  lb:
+    public: null
+    private: null
+  selected_high_iv_cols: []
+  dropped_cols: []
+  notes:
+    - 解析実験のため CV/LB はなし
+    - 実行後に iv_summary の順位を見て selected_high_iv_cols を埋める
+
+artifacts:
+  files:
+    - iv_summary.csv
+    - iv_detail_Soil_Type.csv
+    - iv_detail_Crop_Type.csv
+    - iv_detail_Crop_Growth_Stage.csv
+    - iv_detail_Season.csv
+    - iv_detail_Irrigation_Type.csv
+    - iv_detail_Water_Source.csv
+    - iv_detail_Region.csv
+
+decision:
+  verdict: keep
+  reason: >
+    high-IV は一次選別として使う価値がある。
+    ただし神格化せず、後続の GBDT系 / NN系 で別々に再評価する。
+  next_action:
+    - iv_summary の上位 3〜5 列を確定
+    - GBDT系向け最小 CATNUM を作る
+    - NN系向けには同じ列群をそのまま使わず別整理する
+
+comparison:
+  against:
+    - cat_digit_min_bias
+    - cat_strict_baseline_bias_wide
+    - cat_log_min_bias
+  relation: >
+    これら単体主軸候補の比較実験ではなく、次段の特徴量探索のための前処理実験。
