@@ -1,1 +1,171 @@
+experiment:
+  exp_id: exp_20260406_017_nn_bias_wide
+  title: NN bias wide on digit/log light baseline
+  phase: feature_selection
+  status: done
+  kind: training
 
+competition:
+  name: PS S6E4 Predicting Irrigation Need
+  metric: Balanced Accuracy
+
+purpose:
+  summary: >
+    016_nn_digit_log_light を土台に、後処理の class bias wide search を追加し、
+    NN系で bias wide が有効かを確認する。モデル本体は変えず、
+    OOF / test probability に対してクラス別 bias を適用する。
+  hypothesis:
+    - NN digit/log light の出力確率に対して class bias を加えることで
+      Balanced Accuracy が改善する可能性がある
+    - モデル本体よりクラス境界の調整が効くなら、NN family 続行の根拠になる
+    - CatBoost で効いた bias wide が NN でも部分的に効く可能性がある
+  non_goals:
+    - high-IV 起点の強調はまだ入れない
+    - TE / CATNUM はまだ入れない
+    - Optuna はまだやらない
+    - モデル構造自体は変えない
+
+data:
+  source:
+    - train.csv
+    - test.csv
+  target: Irrigation_Need
+  row_scope:
+    train: full_train
+    test: full_test
+  raw_numeric_cols:
+    - Soil_pH
+    - Soil_Moisture
+    - Organic_Carbon
+    - Electrical_Conductivity
+    - Temperature_C
+    - Humidity
+    - Rainfall_mm
+    - Sunlight_Hours
+    - Wind_Speed_kmh
+    - Field_Area_hectare
+    - Previous_Irrigation_mm
+  categorical_cols:
+    - Soil_Type
+    - Crop_Type
+    - Crop_Growth_Stage
+    - Season
+    - Irrigation_Type
+    - Water_Source
+    - Region
+    - Mulching_Used
+  light_num_targets:
+    - Soil_Moisture
+    - Organic_Carbon
+    - Electrical_Conductivity
+    - Rainfall_mm
+    - Sunlight_Hours
+    - Wind_Speed_kmh
+    - Field_Area_hectare
+    - Previous_Irrigation_mm
+
+method:
+  model_family: NeuralNetwork
+  model_name: TabularMLP
+  base_experiment: exp_20260406_016_nn_digit_log_light
+  numerical_preprocess: StandardScaler
+  categorical_preprocess: fold-wise integer indexing for embedding
+  engineered_numeric_features:
+    - log1p
+    - sqrt
+    - is_zero
+    - integer_part
+    - frac_part
+    - first_decimal
+    - second_decimal
+    - integer_like_flag
+  architecture:
+    embedding_rule: min(32, max(4, int(sqrt(cardinality)) + 1))
+    hidden_layers:
+      - 256
+      - 128
+      - 64
+    activation: ReLU
+    batch_norm: true
+    dropout:
+      - 0.2
+      - 0.2
+      - 0.1
+  optimization:
+    optimizer: AdamW
+    lr: 0.001
+    weight_decay: 0.00001
+    batch_size: 1024
+    epochs: 30
+    early_stopping_patience: 5
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    seed: 42
+  target_classes:
+    - Low
+    - Medium
+    - High
+  bias_wide:
+    apply_to: log_proba
+    grid_min: -0.30
+    grid_max: 0.30
+    grid_step: 0.02
+    search_space: class-wise 3d grid
+  outputs:
+    - oof_nn_bias_wide_proba.npy
+    - pred_nn_bias_wide_proba.npy
+    - best_class_bias.npy
+    - submission_nn_bias_wide.csv
+    - feature_columns.csv
+    - cv_result.json
+
+result:
+  cv:
+    score_raw: null
+    score_biased: null
+    fold_scores: []
+  lb:
+    public: null
+    private: null
+  best_bias:
+    - null
+    - null
+    - null
+  selected_feature_group:
+    - raw_num
+    - raw_cat
+    - digit_log_light_num
+    - class_bias_wide
+  notes:
+    - 実行前
+    - 完走後に cv.score_raw / cv.score_biased / best_bias / 判定を埋める
+
+comparison:
+  against:
+    - exp_20260406_015_nn_strict_baseline
+    - exp_20260406_016_nn_digit_log_light
+    - cat_digit_min_bias
+    - cat_strict_baseline_bias_wide
+  focus:
+    - 016 より改善するか
+    - NN において bias wide が有効か
+    - high-IV emphasis に進む前に class boundary 調整でどこまで伸びるか
+
+decision:
+  verdict: pending
+  reason: >
+    まだ未実行。
+    まずは 016 の digit/log light 出力に対して class bias wide を適用し、
+    後処理だけで改善余地があるかを確認する。
+  next_action:
+    - 完走後に 016 比の改善有無を確認
+    - 明確に改善すれば NN family を hold 継続
+    - 改善しなければ NN family の優先度を下げる
+    - その後に必要なら共有コード確認へ進む
+
+artifacts:
+  files:
+    - ps-s6e4-nn-bias-wide.ipynb
+    - memo.yml
