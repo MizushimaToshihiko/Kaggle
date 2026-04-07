@@ -94,21 +94,47 @@ result:
   cv:
     score: 0.961534
     fold_scores:
-    - 0.9601496392310427
-    - 0.9630513009336107
-    - 0.9622673876864374
-    - 0.9614834499279294
-    - 0.9607175608411253
+      - 0.9601496392310427
+      - 0.9630513009336107
+      - 0.9622673876864374
+      - 0.9614834499279294
+      - 0.9607175608411253
   lb:
     public: 0.95927
     private: null
-  n_te_features: null
+  n_te_features: 12
   selected_feature_group:
     - base_features
     - te_top4_min
   notes:
     - 完走
-    - CV/LBともにCatBoost既存群を更新できず
+    - TE特徴は 12 本
+    - CV/LB ともに既存 CatBoost 主軸群を更新できず
+    - 013 の単カテゴリ CATNUM 最小版よりも CV はわずかに下
+
+comparison:
+  against:
+    - cat_strict_baseline_bias_wide
+    - cat_digit_min_bias
+    - cat_log_min_bias
+    - exp_20260406_013_gbdt_catnum_top4_min
+  focus:
+    - 単体CVで既存基準線を超えるか -> 超えなかった
+    - 単カテゴリ CATNUM より TE の方が有効か -> 有効ではなかった（CVは013より 0.000103 低下）
+    - high-IV 起点が GBDT系で意味を持つか -> この最小単列TEの形では弱い
+    - 次に pair TE へ進む価値があるか -> 優先度低
+
+decision:
+  verdict: drop
+  reason: >
+    high-IV top4 を起点にした leak-free 単列 TE 最小版は、
+    CV 0.961534 で 013 の単カテゴリ CATNUM 最小版（0.961637）も下回り、
+    Public LB も改善しなかった。
+    このため、high-IV 起点の単列 GBDT 特徴を同系統のまま深掘りする期待値は低い。
+  next_action:
+    - high-IV 起点の GBDT 単列特徴は一旦打ち止め
+    - GBDTを続けるなら pair CATNUM / pair TE ではなく、別 family か別設計を優先
+    - NN系向け特徴量選定へ進み、GBDT と同じ特徴群をそのまま流用しない
 
 comparison:
   against:
@@ -121,13 +147,6 @@ comparison:
     - 単カテゴリ CATNUM より TE の方が有効か->0.001ほど下がった
     - high-IV 起点が GBDT系で意味を持つか->?
     - 次に pair TE へ進む価値があるか->?
-
-decision:
-  verdict: hold
-  reason: >
-    ?
-  next_action:
-    - ?
 
 artifacts:
   files:
