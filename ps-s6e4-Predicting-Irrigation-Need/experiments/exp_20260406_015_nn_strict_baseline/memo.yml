@@ -2,7 +2,7 @@ experiment:
   exp_id: exp_20260406_015_nn_strict_baseline
   title: NN strict baseline with raw numerical and categorical inputs
   phase: feature_selection
-  status: planned
+  status: done
   kind: training
 
 competition:
