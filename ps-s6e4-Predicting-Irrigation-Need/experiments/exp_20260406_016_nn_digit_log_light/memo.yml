@@ -114,18 +114,23 @@ method:
 
 result:
   cv:
-    score: null
-    fold_scores: []
+    score: 0.961227
+    fold_scores:
+    - 0.96013245534979
+    - 0.9623076884881746
+    - 0.961504798337831
+    - 0.9611252885400822
+    - 0.9610635539319544
   lb:
-    public: null
+    public: 0.96120
     private: null
   selected_feature_group:
     - raw_num
     - raw_cat
     - digit_log_light_num
   notes:
-    - 実行前
-    - 完走後に cv.score / fold_scores / 判定を埋める
+    - 完走
+    - NN strict baselineと比べてCV/LBが明確に改善した
 
 comparison:
   against:
@@ -139,14 +144,11 @@ comparison:
     - bias wide を足す前に数値表現だけでどこまで伸びるか
 
 decision:
-  verdict: pending
+  verdict: "hold"
   reason: >
-    まだ未実行。
-    まずは NN strict baseline に対する軽量数値表現の追加効果を確認する。
+    - NN strict baselineと比べてCV/LBが改善したので一旦holdとする
   next_action:
-    - 完走後に 015 比の改善有無を確認
-    - 明確に改善すれば nn_high_iv_focus_min または nn_bias_wide を検討
-    - 改善しなければ NN family の優先度を下げる
+    - 明確に改善したので nn_high_iv_focus_min または nn_bias_wide を検討
 
 artifacts:
   files:
