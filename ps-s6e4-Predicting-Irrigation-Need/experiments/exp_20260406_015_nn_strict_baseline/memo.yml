@@ -1,0 +1,136 @@
+experiment:
+  exp_id: exp_20260406_015_nn_strict_baseline
+  title: NN strict baseline with raw numerical and categorical inputs
+  phase: feature_selection
+  status: planned
+  kind: training
+
+competition:
+  name: PS S6E4 Predicting Irrigation Need
+  metric: Balanced Accuracy
+
+purpose:
+  summary: >
+    NN系の素の基準線を作るため、数値11列とカテゴリ8列のみを入力にした
+    strict baseline を実行する。digit/log/CATNUM/TE はまだ入れない。
+  hypothesis:
+    - GBDT系で弱かった high-IV 起点特徴を無理に流用せず、NN素の基準線を先に確認すべき
+    - raw numerical + categorical embedding だけでも一定の性能が出る可能性がある
+    - ここを基準線にしてから NN向けの軽量特徴追加を判断する
+  non_goals:
+    - digit/log 特徴はまだ入れない
+    - CATNUM / TE はまだ入れない
+    - high-IV 起点の強調はまだ入れない
+    - Optuna はまだやらない
+
+data:
+  source:
+    - train.csv
+    - test.csv
+  target: Irrigation_Need
+  row_scope:
+    train: full_train
+    test: full_test
+  numeric_cols:
+    - Soil_pH
+    - Soil_Moisture
+    - Organic_Carbon
+    - Electrical_Conductivity
+    - Temperature_C
+    - Humidity
+    - Rainfall_mm
+    - Sunlight_Hours
+    - Wind_Speed_kmh
+    - Field_Area_hectare
+    - Previous_Irrigation_mm
+  categorical_cols:
+    - Soil_Type
+    - Crop_Type
+    - Crop_Growth_Stage
+    - Season
+    - Irrigation_Type
+    - Water_Source
+    - Region
+    - Mulching_Used
+
+method:
+  model_family: NeuralNetwork
+  model_name: TabularMLP
+  numerical_preprocess: StandardScaler
+  categorical_preprocess: fold-wise integer indexing for embedding
+  architecture:
+    embedding_rule: min(32, max(4, int(sqrt(cardinality)) + 1))
+    hidden_layers:
+      - 256
+      - 128
+      - 64
+    activation: ReLU
+    batch_norm: true
+    dropout:
+      - 0.2
+      - 0.2
+      - 0.1
+  optimization:
+    optimizer: AdamW
+    lr: 0.001
+    weight_decay: 0.00001
+    batch_size: 1024
+    epochs: 30
+    early_stopping_patience: 5
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    seed: 42
+  target_classes:
+    - Low
+    - Medium
+    - High
+  outputs:
+    - oof_nn_strict_baseline_proba.npy
+    - pred_nn_strict_baseline_proba.npy
+    - submission_nn_strict_baseline.csv
+    - feature_columns.csv
+    - cv_result.json
+
+result:
+  cv:
+    score: null
+    fold_scores: []
+  lb:
+    public: null
+    private: null
+  selected_feature_group:
+    - raw_num
+    - raw_cat
+  notes:
+    - 実行前
+    - 完走後に cv.score / fold_scores / 判定を埋める
+
+comparison:
+  against:
+    - cat_strict_baseline_bias_wide
+    - cat_digit_min_bias
+    - cat_log_min_bias
+    - exp_20260406_013_gbdt_catnum_top4_min
+    - exp_20260406_014_gbdt_te_top4_min
+  focus:
+    - NN素の基準線がどの程度出るか
+    - GBDT単列特徴より素のNNの方が強いか
+    - 次に digit/log light を足す価値があるか
+
+decision:
+  verdict: pending
+  reason: >
+    まだ未実行。
+    まずは NN 系の strict baseline を作り、raw numerical + categorical embedding の
+    素の実力を確認する。
+  next_action:
+    - 完走後に CV と fold scores を確認
+    - 良ければ nn_digit_log_light に進む
+    - 弱ければ NN family / 学習設定の見直しを検討
+
+artifacts:
+  files:
+    - ps-s6e4-nn-strict-baseline.ipynb
+    - memo.yml
