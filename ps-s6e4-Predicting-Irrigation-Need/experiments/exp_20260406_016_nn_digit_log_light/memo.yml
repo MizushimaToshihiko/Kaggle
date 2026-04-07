@@ -2,7 +2,7 @@ experiment:
   exp_id: exp_20260406_016_nn_digit_log_light
   title: NN digit/log light on strict baseline numerical features
   phase: feature_selection
-  status: planned
+  status: done
   kind: training
 
 competition:
