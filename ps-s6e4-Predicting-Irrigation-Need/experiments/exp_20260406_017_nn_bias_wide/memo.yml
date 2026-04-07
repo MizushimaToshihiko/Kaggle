@@ -145,7 +145,11 @@ result:
     - class_bias_wide
   notes:
     - 完走
-    - cv.score_raw->誤差の範囲で微悪化 / cv.score_biased ->改善/ best_bias [-0.3,-0.3,0.3] だった?
+    - cv.score_raw は 016 比でほぼ同等
+    - cv.score_biased は改善
+    - best_bias は [-0.3, -0.3, 0.3]
+    - これは Low / Medium を選びにくくし、High を選びやすくする補正を意味する
+    - best_bias が探索範囲の端に張り付いているため、必要なら bias search range の再検討余地あり
 
 comparison:
   against:
