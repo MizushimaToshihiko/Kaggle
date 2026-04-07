@@ -95,17 +95,22 @@ method:
 
 result:
   cv:
-    score: null
-    fold_scores: []
+    score: 0.958089
+    fold_scores: 
+    - 0.9588365230631926
+    - 0.9614739407131961
+    - 0.9565792813846946
+    - 0.9548218908637028
+    - 0.9587333180147374
   lb:
-    public: null
+    public: 0.95833
     private: null
   selected_feature_group:
     - raw_num
     - raw_cat
   notes:
-    - 実行前
-    - 完走後に cv.score / fold_scores / 判定を埋める
+    - 完走
+    - CV/LB共にCatBoost 主軸群を更新できず
 
 comparison:
   against:
@@ -115,20 +120,16 @@ comparison:
     - exp_20260406_013_gbdt_catnum_top4_min
     - exp_20260406_014_gbdt_te_top4_min
   focus:
-    - NN素の基準線がどの程度出るか
-    - GBDT単列特徴より素のNNの方が強いか
-    - 次に digit/log light を足す価値があるか
+    - NN素の基準線がどの程度出るか->基準は出せた
+    - GBDT単列特徴より素のNNの方が強いか->Cat baseline LB0.95920よりわずかに下回った
+    - 次に digit/log light を足す価値があるか->biasも試してみた方が良いかも
 
 decision:
-  verdict: pending
+  verdict: "drop
   reason: >
-    まだ未実行。
-    まずは NN 系の strict baseline を作り、raw numerical + categorical embedding の
-    素の実力を確認する。
+    CAT baselineにもCV/LBが及ばなかった
   next_action:
-    - 完走後に CV と fold scores を確認
-    - 良ければ nn_digit_log_light に進む
-    - 弱ければ NN family / 学習設定の見直しを検討
+    - NN family / 学習設定の見直しを検討
 
 artifacts:
   files:
