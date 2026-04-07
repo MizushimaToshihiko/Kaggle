@@ -163,11 +163,17 @@ comparison:
     - high-IV emphasis に進む前に class boundary 調整でどこまで伸びるか->?
 
 decision:
-  verdict: "hold"
+  verdict: hold
   reason: >
-    cat_digit_min_biasにはcv、lbともに及ばなかったが、NN系ではcv,lb共に今のところ最高点であったため 
+    016_nn_digit_log_light に class bias wide を追加した結果、
+    raw CV は 0.961197 とほぼ同等だったが、
+    biased CV は 0.962928、Public LB は 0.96142 まで改善した。
+    NN系では現時点の最高点であり、bias wide が有効であることを確認できた。
+    ただし CatBoost 主軸群にはまだ届かないため、主戦力ではなく keep 寄り hold とする。
   next_action:
-    - 明確に改善したので NN family を hold 継続
+    - NN系の細掘りはここでいったん止める
+    - 4/10〜4/20 の共有コード確認で NN に効く入力表現を確認する
+    - 共有コード確認後、NN family を残すなら 017 を起点に Optuna を検討する
 
 artifacts:
   files:
