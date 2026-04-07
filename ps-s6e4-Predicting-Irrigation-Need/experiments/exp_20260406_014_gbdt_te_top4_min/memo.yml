@@ -92,18 +92,23 @@ method:
 
 result:
   cv:
-    score: null
-    fold_scores: []
+    score: 0.961534
+    fold_scores:
+    - 0.9601496392310427
+    - 0.9630513009336107
+    - 0.9622673876864374
+    - 0.9614834499279294
+    - 0.9607175608411253
   lb:
-    public: null
+    public: 0.95927
     private: null
   n_te_features: null
   selected_feature_group:
     - base_features
     - te_top4_min
   notes:
-    - 実行前
-    - 完走後に cv.score / fold_scores / n_te_features / 判定を埋める
+    - 完走
+    - CV/LBともにCatBoost既存群を更新できず
 
 comparison:
   against:
@@ -112,21 +117,17 @@ comparison:
     - cat_log_min_bias
     - exp_20260406_013_gbdt_catnum_top4_min
   focus:
-    - 単体CVで既存基準線を超えるか
-    - 単カテゴリ CATNUM より TE の方が有効か
-    - high-IV 起点が GBDT系で意味を持つか
-    - 次に pair TE へ進む価値があるか
+    - 単体CVで既存基準線を超えるか->超えなかった
+    - 単カテゴリ CATNUM より TE の方が有効か->0.001ほど下がった
+    - high-IV 起点が GBDT系で意味を持つか->?
+    - 次に pair TE へ進む価値があるか->?
 
 decision:
-  verdict: pending
+  verdict: hold
   reason: >
-    まだ未実行。
-    high-IV top4 を起点にした leak-free TE 最小版が、013 の単カテゴリ CATNUM より
-    改善するかをまず確認する。
+    ?
   next_action:
-    - 完走後に CV と TE feature count を確認
-    - 良ければ Soil_Type を加えた top5 版または pair TE 最小版を検討
-    - 弱ければ high-IV 起点の GBDT設計をいったん縮小し、family 切替も検討
+    - ?
 
 artifacts:
   files:
