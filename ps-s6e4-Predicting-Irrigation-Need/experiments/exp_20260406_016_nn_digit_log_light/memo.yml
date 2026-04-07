@@ -1,0 +1,154 @@
+experiment:
+  exp_id: exp_20260406_016_nn_digit_log_light
+  title: NN digit/log light on strict baseline numerical features
+  phase: feature_selection
+  status: planned
+  kind: training
+
+competition:
+  name: PS S6E4 Predicting Irrigation Need
+  metric: Balanced Accuracy
+
+purpose:
+  summary: >
+    NN strict baseline を土台に、数値列へ軽量な digit/log 特徴を追加して
+    NN系で有効かを確認する。CATNUM / TE / high-IV 起点統計特徴はまだ入れない。
+  hypothesis:
+    - raw strict baseline より、NN は軽量な数値表現追加で改善する可能性がある
+    - digit/log light は GBDT 的な単列統計特徴より NN に自然な入力になりうる
+    - 数値表現の改善余地があれば、NN family を続行する根拠になる
+  non_goals:
+    - CATNUM はまだ入れない
+    - TE はまだ入れない
+    - high-IV 起点の強調はまだ入れない
+    - bias wide はまだ入れない
+    - Optuna はまだやらない
+
+data:
+  source:
+    - train.csv
+    - test.csv
+  target: Irrigation_Need
+  row_scope:
+    train: full_train
+    test: full_test
+  raw_numeric_cols:
+    - Soil_pH
+    - Soil_Moisture
+    - Organic_Carbon
+    - Electrical_Conductivity
+    - Temperature_C
+    - Humidity
+    - Rainfall_mm
+    - Sunlight_Hours
+    - Wind_Speed_kmh
+    - Field_Area_hectare
+    - Previous_Irrigation_mm
+  categorical_cols:
+    - Soil_Type
+    - Crop_Type
+    - Crop_Growth_Stage
+    - Season
+    - Irrigation_Type
+    - Water_Source
+    - Region
+    - Mulching_Used
+  light_num_targets:
+    - Soil_Moisture
+    - Organic_Carbon
+    - Electrical_Conductivity
+    - Rainfall_mm
+    - Sunlight_Hours
+    - Wind_Speed_kmh
+    - Field_Area_hectare
+    - Previous_Irrigation_mm
+
+method:
+  model_family: NeuralNetwork
+  model_name: TabularMLP
+  numerical_preprocess: StandardScaler
+  categorical_preprocess: fold-wise integer indexing for embedding
+  engineered_numeric_features:
+    - log1p
+    - sqrt
+    - is_zero
+    - integer_part
+    - frac_part
+    - first_decimal
+    - second_decimal
+    - integer_like_flag
+  architecture:
+    embedding_rule: min(32, max(4, int(sqrt(cardinality)) + 1))
+    hidden_layers:
+      - 256
+      - 128
+      - 64
+    activation: ReLU
+    batch_norm: true
+    dropout:
+      - 0.2
+      - 0.2
+      - 0.1
+  optimization:
+    optimizer: AdamW
+    lr: 0.001
+    weight_decay: 0.00001
+    batch_size: 1024
+    epochs: 30
+    early_stopping_patience: 5
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    seed: 42
+  target_classes:
+    - Low
+    - Medium
+    - High
+  outputs:
+    - oof_nn_digit_log_light_proba.npy
+    - pred_nn_digit_log_light_proba.npy
+    - submission_nn_digit_log_light.csv
+    - feature_columns.csv
+    - cv_result.json
+
+result:
+  cv:
+    score: null
+    fold_scores: []
+  lb:
+    public: null
+    private: null
+  selected_feature_group:
+    - raw_num
+    - raw_cat
+    - digit_log_light_num
+  notes:
+    - 実行前
+    - 完走後に cv.score / fold_scores / 判定を埋める
+
+comparison:
+  against:
+    - exp_20260406_015_nn_strict_baseline
+    - cat_strict_baseline_bias_wide
+    - cat_digit_min_bias
+    - cat_log_min_bias
+  focus:
+    - NN strict baseline より改善するか
+    - NN family を続行する価値があるか
+    - bias wide を足す前に数値表現だけでどこまで伸びるか
+
+decision:
+  verdict: pending
+  reason: >
+    まだ未実行。
+    まずは NN strict baseline に対する軽量数値表現の追加効果を確認する。
+  next_action:
+    - 完走後に 015 比の改善有無を確認
+    - 明確に改善すれば nn_high_iv_focus_min または nn_bias_wide を検討
+    - 改善しなければ NN family の優先度を下げる
+
+artifacts:
+  files:
+    - ps-s6e4-nn-digit-log-light.ipynb
+    - memo.yml
