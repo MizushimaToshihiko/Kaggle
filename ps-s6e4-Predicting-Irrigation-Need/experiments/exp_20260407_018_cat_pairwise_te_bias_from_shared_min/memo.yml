@@ -157,7 +157,7 @@ method:
     depth: 8
     grow_policy: SymmetricTree
     loss_function: MultiClass
-    eval_metric: TotalF1
+    eval_metric: TotalF1:average=Macro
     early_stopping_rounds: 150
     task_type: GPU
   bias_tuning:
@@ -207,27 +207,33 @@ comparison:
     - exp_20260406_014_gbdt_te_top4_min
     - exp_20260406_017_nn_bias_wide
   focus:
-    - CatBoost 主軸を更新できるか
-    - pairwise TE 設計が単列 high-IV 系より強いか
-    - original weighted merge が有効か
-    - bias tuning がどれだけ改善幅を持つか
-    - 共有コードの勝ち筋が minimum reproduction でも再現されるか
+    - CatBoost 主軸を更新できるか->CV/LB共に更新した
+    - pairwise TE 設計が単列 high-IV 系より強いか->CV/LBを見る限り強いと考えられる
+    - original weighted merge が有効か->有効そうだかアブレーションしないと確定できない
+    - bias tuning がどれだけ改善幅を持つか->+0.002010改善した
+    - 共有コードの勝ち筋が minimum reproduction でも再現されるか->CVは元のnotebook0.979110に対し0.979091、LBは元のnotebook0.97841に対し0.97817とほとんど差がなかった
 
 result:
   cv:
-    score_raw: null
-    score_biased: null
-    fold_scores: []
+    score_raw: 0.977081
+    score_biased: 0.979091
+    fold_scores:
+     - 0.9762323918770298
+     - 0.9767585432324418
+     - 0.9786453380441742
+     - 0.9771758745146039
+     - 0.9765942899968877
+
   lb:
-    public: null
+    public: 0.97817
     private: null
   pairwise:
-    raw_pair_count: null
-    accepted_pair_count: null
+    raw_pair_count: 171
+    accepted_pair_count: 135
   best_bias:
-    - null
-    - null
-    - null
+    - -1.3359999656677246
+    - -1.312999963760376
+    - 1
   selected_feature_group:
     - physical_features
     - TE_ORIG_base
@@ -235,21 +241,15 @@ result:
     - in_fold_pairwise_te
     - class_bias
   notes:
-    - 共有コード本文は確認済み
-    - まだ notebook 未実装
-    - minimum reproduction から開始
-    - 完走後に raw/biased CV, pair count, LB, 判定を記録する
+    - 完走28m 31s · GPU T4 x2
+    - minimumだがCV/LBをほとんど再現した
 
 decision:
-  verdict: pending
+  verdict: "adopt"
   reason: >
-    共有コード本文は確認できたが、まだ自分の exp 形式での minimum 実装を行っていない。
-    まずは minimum reproduction を実行し、既存 CatBoost 主軸との比較を行う。
+    既存のCatBoost主軸群を大きく上回るCV/LBのため今後はこちらを主軸にする?
   next_action:
-    - notebook を exp_* 形式で実装する
-    - minimum reproduction を完走させる
-    - raw CV / biased CV / pair count / Public LB を確認する
-    - 強ければ次に ablation か full 化を検討する
+    - 強かったので次に ablation か full 化を検討する
 
 artifacts:
   files:
