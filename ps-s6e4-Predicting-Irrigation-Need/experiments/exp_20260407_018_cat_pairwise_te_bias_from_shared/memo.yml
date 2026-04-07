@@ -1,0 +1,147 @@
+experiment:
+  exp_id: exp_20260407_018_cat_pairwise_te_bias_from_shared
+  title: CatBoost pairwise TE and bias tuning from shared notebook
+  phase: shared_code_review
+  status: planned
+  kind: training
+
+competition:
+  name: PS S6E4 Predicting Irrigation Need
+  metric: Balanced Accuracy
+
+purpose:
+  summary: >
+    公開 notebook「0.979 CV Single CAT: Pairwise TE + Bias Tuning」の骨格を、
+    自分の実験管理形式へ移植するための下準備。
+    まずは共有コードの内容を読み解き、どの要素を採用し、どの要素を縮小して検証するかを整理する。
+  hypothesis:
+    - pairwise categorical combinations は CatBoost に対して有効な可能性がある
+    - in-fold target encoding は high-IV 起点の単列設計より強い可能性がある
+    - bias tuning は CatBoost だけでなく設計全体の重要要素である可能性がある
+    - original data と drift-aware な考え方が精度改善に寄与している可能性がある
+  non_goals:
+    - 共有コードの無批判な丸写しはしない
+    - 初回から完全再現版は作らない
+    - pairwise の全展開や重い最適化をすぐにはやらない
+    - Optuna はまだやらない
+
+source_notebook:
+  title: 0.979 CV Single CAT: Pairwise TE + Bias Tuning
+  author: UtaAzu
+  source_type: kaggle_shared_notebook
+  review_status: pending_code_text
+  visible_structure:
+    - Imports and Environment Setup
+    - Configuration and Data Loading
+    - Adversarial Validation: Drift Analysis
+    - Feature Engineering: Domain Priors and Pairwise Combinations
+    - Stratified 5-Fold CV with In-Fold Target Encoding
+    - Bias Tuning via Coordinate Descent
+    - Results Visualization and Distribution Analysis
+    - Final Submission and Save Artifacts
+
+data:
+  source:
+    - train.csv
+    - test.csv
+    - original.csv
+  target: Irrigation_Need
+  row_scope:
+    train: full_train
+    test: full_test
+    original: available
+  known_feature_groups:
+    numeric_cols:
+      - Soil_pH
+      - Soil_Moisture
+      - Organic_Carbon
+      - Electrical_Conductivity
+      - Temperature_C
+      - Humidity
+      - Rainfall_mm
+      - Sunlight_Hours
+      - Wind_Speed_kmh
+      - Field_Area_hectare
+      - Previous_Irrigation_mm
+    categorical_cols:
+      - Soil_Type
+      - Crop_Type
+      - Crop_Growth_Stage
+      - Season
+      - Irrigation_Type
+      - Water_Source
+      - Region
+    binary_cols:
+      - Mulching_Used
+
+method:
+  model_family: CatBoost
+  expected_components_from_shared:
+    - adversarial_validation
+    - domain_priors
+    - pairwise_categorical_combinations
+    - in_fold_target_encoding
+    - bias_tuning
+    - save_artifacts
+  implementation_policy:
+    - まず共有コード本文を確認してから notebook 実装に入る
+    - 自分の exp_* 形式に合わせて分解する
+    - 再現よりも管理可能性と検証可能性を優先する
+    - 初回実装は minimum viable reproduction を目指す
+  open_questions:
+    - pairwise combination の対象カテゴリ列は何本か
+    - target encoding の対象列と統計量は何か
+    - original data をどう feature source / prior source に使っているか
+    - adversarial validation の結果をどこに反映しているか
+    - bias tuning の探索範囲と探索単位は何か
+    - CatBoost の主要パラメータは何か
+    - artifacts として何を保存しているか
+
+planned_reproduction_steps:
+  - 共有コードの全文を確認する
+  - 骨格を自分用 notebook 構成へ分解する
+  - 最小再現版を作る
+  - strict CV を維持したまま in-fold TE を実装する
+  - pairwise 部分は最初は縮小版で試す
+  - bias tuning を後処理として独立実装する
+  - 単体CVとPublic LBで既存主軸と比較する
+
+comparison:
+  against:
+    - cat_digit_min_bias
+    - cat_strict_baseline_bias_wide
+    - cat_log_min_bias
+    - exp_20260406_013_gbdt_catnum_top4_min
+    - exp_20260406_014_gbdt_te_top4_min
+  focus:
+    - CatBoost 主軸を更新できるか
+    - pairwise TE が単列 high-IV 系より強いか
+    - bias tuning がどれだけ効くか
+    - original / drift-aware 要素に再現価値があるか
+
+result:
+  cv:
+    score: null
+    fold_scores: []
+  lb:
+    public: null
+    private: null
+  selected_feature_group: []
+  notes:
+    - 共有コード本文未確認
+    - 現時点では設計メモのみ
+    - コード共有後に method / result / decision を更新する
+
+decision:
+  verdict: pending
+  reason: >
+    まだ共有コード本文を確認していないため、採用要素と非採用要素の切り分けは未実施。
+    まずは本文確認後に minimum 実装へ落とし込む。
+  next_action:
+    - 共有コード本文のテキストを受け取る
+    - notebook 実装へ分解する
+    - 必要に応じて memo.yml を更新する
+
+artifacts:
+  files:
+    - memo.yml
