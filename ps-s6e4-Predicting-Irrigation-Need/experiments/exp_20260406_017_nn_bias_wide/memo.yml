@@ -123,47 +123,47 @@ method:
 
 result:
   cv:
-    score_raw: null
-    score_biased: null
-    fold_scores: []
+    score_raw: 0.961197
+    score_biased: 0.962928
+    fold_scores:
+      - 0.9606708162703755
+      - 0.9620438448153213
+      - 0.96094252244266
+      - 0.9610492794123052
+      - 0.9612791099479834
   lb:
-    public: null
+    public: 0.96142
     private: null
   best_bias:
-    - null
-    - null
-    - null
+    - -0.30000001192092896
+    - -0.30000001192092896
+    - 0.30000001192092896
   selected_feature_group:
     - raw_num
     - raw_cat
     - digit_log_light_num
     - class_bias_wide
   notes:
-    - 実行前
-    - 完走後に cv.score_raw / cv.score_biased / best_bias / 判定を埋める
+    - 完走
+    - cv.score_raw->誤差の範囲で微悪化 / cv.score_biased ->改善/ best_bias [-0.3,-0.3,0.3] だった?
 
 comparison:
   against:
-    - exp_20260406_015_nn_strict_baseline
-    - exp_20260406_016_nn_digit_log_light
-    - cat_digit_min_bias
-    - cat_strict_baseline_bias_wide
+    - exp_20260406_015_nn_strict_baseline: cv,lb共に上回った
+    - exp_20260406_016_nn_digit_log_light: cv,lb共に上回った
+    - cat_digit_min_bias: cv,lbともに及ばなかった
+    - cat_strict_baseline_bias_wide: cv,lbともに及ばなかった
   focus:
-    - 016 より改善するか
-    - NN において bias wide が有効か
-    - high-IV emphasis に進む前に class boundary 調整でどこまで伸びるか
+    - 016 より改善するか->改善した
+    - NN において bias wide が有効か->有効だった
+    - high-IV emphasis に進む前に class boundary 調整でどこまで伸びるか->?
 
 decision:
-  verdict: pending
+  verdict: "hold"
   reason: >
-    まだ未実行。
-    まずは 016 の digit/log light 出力に対して class bias wide を適用し、
-    後処理だけで改善余地があるかを確認する。
+    cat_digit_min_biasにはcv、lbともに及ばなかったが、NN系ではcv,lb共に今のところ最高点であったため 
   next_action:
-    - 完走後に 016 比の改善有無を確認
-    - 明確に改善すれば NN family を hold 継続
-    - 改善しなければ NN family の優先度を下げる
-    - その後に必要なら共有コード確認へ進む
+    - 明確に改善したので NN family を hold 継続
 
 artifacts:
   files:
