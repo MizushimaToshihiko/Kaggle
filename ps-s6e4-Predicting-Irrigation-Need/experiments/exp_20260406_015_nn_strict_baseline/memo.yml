@@ -125,13 +125,13 @@ comparison:
     - 次に digit/log light を足す価値があるか->biasも試してみた方が良いかも
 
 decision:
-  verdict: "drop
+  verdict: drop
   reason: >
-    CAT baselineにもCV/LBが及ばなかった
+    raw numerical + categorical embedding の strict baseline は、
+    CV 0.958089 / Public LB 0.95833 に留まり、
+    既存の CatBoost 主軸群および直前の GBDT 単列特徴実験を更新できなかった。
+    このため、この raw strict baseline を同構成のまま深掘りする優先度は低い。
   next_action:
-    - NN family / 学習設定の見直しを検討
-
-artifacts:
-  files:
-    - ps-s6e4-nn-strict-baseline.ipynb
-    - memo.yml
+    - nn_digit_log_light を実施して、NN向け軽量数値表現の効果を確認する
+    - raw strict baseline のまま Optuna や複雑化には進まない
+    - high-IV 起点特徴は NN では優先順位付けに留め、GBDT的な単列統計をそのまま流用しない
