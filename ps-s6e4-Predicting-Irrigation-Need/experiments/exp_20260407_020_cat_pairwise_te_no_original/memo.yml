@@ -1,0 +1,180 @@
+experiment:
+  exp_id: exp_20260407_020_cat_pairwise_te_no_original
+  title: Ablation of shared CatBoost pairwise TE pipeline without original data
+  phase: ablation
+  status: done
+  kind: training
+
+competition:
+  name: PS S6E4 Predicting Irrigation Need
+  metric: Balanced Accuracy
+
+purpose:
+  summary: >
+    018_cat_pairwise_te_bias_from_shared_min から original 系要素だけを外し、
+    pairwise TE + physical features + bias tuning の実力を確認する。
+    018 の強さのうち、original weighted merge / TE_ORIG / drift-aware 要素の寄与を切り分けるためのアブレーション。
+  hypothesis:
+    - 018 の強さの一部は original 系要素に依存している可能性がある
+    - original を外しても十分高ければ、本体は pairwise TE 側にある
+    - original を外した時の落差を見ることで、018 の改善の内訳を推定できる
+  non_goals:
+    - pairwise 設計は変えない
+    - bias tuning は維持する
+    - CatBoost のパラメータは変えない
+    - Optuna はまだやらない
+
+base_experiment:
+  exp_id: exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+  relation: original_only_ablation
+  inherited_components:
+    - physical_features
+    - pairwise_combinations
+    - in_fold_pairwise_te
+    - SymmetricTree
+    - bias_tuning
+  removed_components:
+    - original_dataset_merge
+    - original_row_weight
+    - TE_ORIG_base_features
+    - adversarial_validation
+
+data:
+  source:
+    - train.csv
+    - test.csv
+  target: Irrigation_Need
+  row_scope:
+    train: full_train
+    test: full_test
+  raw_feature_groups:
+    numeric_cols:
+      - Soil_pH
+      - Soil_Moisture
+      - Organic_Carbon
+      - Electrical_Conductivity
+      - Temperature_C
+      - Humidity
+      - Rainfall_mm
+      - Sunlight_Hours
+      - Wind_Speed_kmh
+      - Field_Area_hectare
+      - Previous_Irrigation_mm
+    categorical_cols:
+      - Soil_Type
+      - Crop_Type
+      - Crop_Growth_Stage
+      - Season
+      - Irrigation_Type
+      - Water_Source
+      - Mulching_Used
+      - Region
+
+method:
+  model_family: CatBoost
+  model_name: CatBoostClassifier
+  feature_engineering:
+    physical_features:
+      - ET_proxy
+      - water_deficit
+      - soil_quality
+    pairwise_combinations:
+      source_columns: ALL_BASE
+      raw_pair_count_expected: 171
+      filtering_rule: factorized cardinality <= total rows // 2
+    target_encoding:
+      apply_to: pairwise_columns_only
+      encoder: sklearn.preprocessing.TargetEncoder
+      target_type: multiclass
+      inner_cv: 3
+      leak_policy: in-fold only
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    seed: 42
+  catboost_params:
+    iterations: 3000
+    learning_rate: 0.03
+    depth: 8
+    grow_policy: SymmetricTree
+    loss_function: MultiClass
+    eval_metric: TotalF1
+    early_stopping_rounds: 150
+    task_type: GPU
+  bias_tuning:
+    apply_to: logit_of_oof_probabilities
+    objective: Balanced Accuracy
+    search_method: coordinate_descent
+    step_schedule:
+      - 1.0
+      - 0.5
+      - 0.2
+      - 0.1
+      - 0.05
+      - 0.02
+      - 0.01
+      - 0.005
+      - 0.002
+  outputs:
+    - oof_cat_pairwise_te_no_original_proba.npy
+    - pred_cat_pairwise_te_no_original_proba.npy
+    - oof_cat_pairwise_te_no_original_proba_biased.npy
+    - pred_cat_pairwise_te_no_original_proba_biased.npy
+    - submission_cat_pairwise_te_no_original.csv
+    - best_class_bias.npy
+    - feature_columns.csv
+    - feature_importance.csv
+    - cv_result.json
+
+comparison:
+  against:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260407_019_cat_pairwise_te_no_bias
+    - cat_digit_min_bias
+    - cat_strict_baseline_bias_wide
+  focus:
+    - original を外した時に CV/LB がどれだけ落ちるか
+    - original なしでも既存主軸群を更新できるか
+    - 018 の強さの本体が original 側か pairwise TE 側か
+
+result:
+  cv:
+    score_raw: null
+    score_biased: null
+    fold_scores: []
+  lb:
+    public: null
+    private: null
+  pairwise:
+    raw_pair_count: null
+    accepted_pair_count: null
+  best_bias:
+    - null
+    - null
+    - null
+  selected_feature_group:
+    - physical_features
+    - pairwise_columns
+    - in_fold_pairwise_te
+    - class_bias
+  notes:
+    - 実行前
+    - 018 から original 系要素のみ除去
+    - 完走後に raw/biased CV, pair count, Public LB, 018との差分を記録する
+
+decision:
+  verdict: pending
+  reason: >
+    まだ未実行。
+    018 の改善のうち original 系要素の寄与を切り分けるため、
+    まずは original なし版の実力を確認する。
+  next_action:
+    - 完走後に 018 と比較する
+    - 落差が大きければ original 系の寄与が大きいと判断する
+    - その後 021_cat_no_pairwise_bias へ進む
+
+artifacts:
+  files:
+    - ps-s6e4-cat-pairwise-te-no-original.ipynb
+    - memo.yml
