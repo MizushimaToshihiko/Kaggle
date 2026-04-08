@@ -1,0 +1,151 @@
+experiment:
+  exp_id: exp_20260408_022_corr_cat_shared_vs_core
+  title: Correlation check between shared CAT mainline and prior core CAT models
+  competition: PS S6E4 Predicting Irrigation Need
+  objective: >
+    exp_20260407_018_cat_pairwise_te_bias_from_shared_min が、
+    既存の CatBoost 主軸群に対してどの程度別人格かを確認するための相関分析。
+    raw probability ベースで raw / rank 相関を確認し、
+    将来の単純メタ / ridge 候補としての価値を判断する。
+
+status:
+  stage: done
+  verdict: pending
+
+analysis_type:
+  kind: correlation_check
+  target_space: multiclass probability
+  primary_view:
+    - raw_pearson_flatten
+    - rank_spearman_flatten
+  secondary_view:
+    - classwise_pearson_optional
+    - classwise_spearman_optional
+
+main_model:
+  exp_id: exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+  short_name: cat_pairwise_te_bias_from_shared_min
+  role: shared_reproduction_mainline
+  artifact:
+    oof_raw_proba: oof_cat_pairwise_te_bias_from_shared_min_proba.npy
+    oof_biased_proba: oof_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
+    pred_raw_proba: pred_cat_pairwise_te_bias_from_shared_min_proba.npy
+    pred_biased_proba: pred_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
+
+compare_models:
+  - exp_id: exp_20260405_008_cat_digit_min_bias
+    short_name: cat_digit_min_bias
+    role: prior_mainline_digit
+    artifact:
+      oof_raw_proba: oof_catboost_digit_min_bias_proba.npy
+      pred_raw_proba: pred_catboost_digit_min_bias_proba.npy
+    result:
+      raw_pearson_flatten: null
+      rank_spearman_flatten: null
+      classwise_pearson: {}
+      classwise_spearman: {}
+      interpretation: ""
+      verdict: pending
+
+  - exp_id: exp_20260405_006_cat_strict_baseline_bias_wide
+    short_name: cat_strict_baseline_bias_wide
+    role: prior_mainline_raw
+    artifact:
+      oof_raw_proba: oof_catboost_strict_baseline_bias_wide_proba.npy
+      pred_raw_proba: pred_catboost_strict_baseline_bias_wide_proba.npy
+    result:
+      raw_pearson_flatten: null
+      rank_spearman_flatten: null
+      classwise_pearson: {}
+      classwise_spearman: {}
+      interpretation: ""
+      verdict: pending
+
+  - exp_id: exp_20260405_011_cat_log_min_bias
+    short_name: cat_log_min_bias
+    role: prior_support_log
+    artifact:
+      oof_raw_proba: oof_catboost_log_min_bias_proba.npy
+      pred_raw_proba: pred_catboost_log_min_bias_proba.npy
+    result:
+      raw_pearson_flatten: null
+      rank_spearman_flatten: null
+      classwise_pearson: {}
+      classwise_spearman: {}
+      interpretation: ""
+      verdict: pending
+
+data_and_method:
+  source:
+    main_input: OOF raw probability npy
+    compare_input: OOF raw probability npy
+  comparison_rule:
+    use_raw_probability_first: true
+    use_biased_probability_first: false
+    flatten_before_global_corr: true
+    multiclass_note: >
+      binary の1列相関と違い、multiclass なのでまずは
+      flatten raw proba の Pearson / Spearman を主指標とする。
+  notes:
+    - biased版は必要なら追加確認する
+    - 初回は raw probability 同士で比較する
+    - 019, 020, 021 などのアブレーション群は今回の比較対象に含めない
+
+expected_read:
+  low_correlation_signal:
+    raw_pearson_flatten: "< 0.990 を期待"
+    rank_spearman_flatten: "< 0.990 を期待"
+  medium_correlation_signal:
+    raw_pearson_flatten: "0.990 - 0.995"
+    rank_spearman_flatten: "0.990 - 0.995"
+  high_correlation_signal:
+    raw_pearson_flatten: ">= 0.995"
+    rank_spearman_flatten: ">= 0.995"
+  interpretation_rule:
+    - raw / rank ともに高すぎるなら、018 は旧主軸の延長線の可能性が高い
+    - 片方でも十分下がるなら、018 は別人格としての価値がある
+    - cat_log_min_bias との相関が他2本より低ければ、LOG系は補助人格として再評価余地あり
+
+results_summary:
+  main_takeaway: ""
+  ordering_by_similarity: []
+  lowest_corr_model: ""
+  highest_corr_model: ""
+  overall_verdict: pending
+
+decision:
+  implication_for_next_step: ""
+  recommended_next_action: ""
+  avoid_action: ""
+
+artifacts:
+  planned_outputs:
+    - corr_matrix_raw_pearson.csv
+    - corr_matrix_rank_spearman.csv
+    - corr_summary.json
+    - memo.yml
+  optional_outputs:
+    - classwise_corr_raw.csv
+    - classwise_corr_rank.csv
+    - heatmap_raw.png
+    - heatmap_rank.png
+
+execution:
+  notebook_name: ps-s6e4-corr-cat-shared-vs-core.ipynb
+  based_on: exp_20260405_009_corr_digit_min_bias_vs_core
+  changes_from_base:
+    - main model を 018 に変更
+    - compare_models を 006 / 008 / 011 に変更
+    - raw probability flatten の相関確認を主指標にする
+  seed: 42
+
+post_run_fill:
+  completed_at: ""
+  runtime_note: ""
+  file_check:
+    main_loaded: false
+    compare_loaded:
+      cat_digit_min_bias: false
+      cat_strict_baseline_bias_wide: false
+      cat_log_min_bias: false
+  final_comment: ""
