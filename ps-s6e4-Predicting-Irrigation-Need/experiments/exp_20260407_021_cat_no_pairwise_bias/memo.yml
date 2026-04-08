@@ -1,0 +1,137 @@
+experiment:
+  exp_id: exp_20260407_021_cat_no_pairwise_bias
+  title: CatBoost no pairwise, keep original + bias
+  competition: PS S6E4 Predicting Irrigation Need
+  objective: >
+    exp_20260407_018_cat_pairwise_te_bias_from_shared_min から
+    pairwise combinations と pairwise in-fold TE だけを除去し、
+    original 系要素と bias tuning を残したアブレーション。
+    018 の強さにおける pairwise の寄与を切ることが目的。
+
+status:
+  stage: planned
+  verdict: pending
+
+model:
+  family: CatBoost
+  type: multiclass
+  seed: 42
+  folds: 5
+  inner_folds_pairwise_te: 3
+  params:
+    loss_function: MultiClass
+    eval_metric: TotalF1:average=Macro
+    iterations: 3000
+    learning_rate: 0.03
+    depth: 8
+    grow_policy: SymmetricTree
+    early_stopping_rounds: 150
+    task_type: GPU if torch.cuda.is_available() else CPU
+    devices: '"0" only if GPU'
+    verbose: 200
+
+features:
+  raw_base:
+    numeric:
+      - Soil_pH
+      - Soil_Moisture
+      - Organic_Carbon
+      - Electrical_Conductivity
+      - Temperature_C
+      - Humidity
+      - Rainfall_mm
+      - Sunlight_Hours
+      - Wind_Speed_kmh
+      - Field_Area_hectare
+      - Previous_Irrigation_mm
+    categorical:
+      - Soil_Type
+      - Crop_Type
+      - Crop_Growth_Stage
+      - Season
+      - Irrigation_Type
+      - Water_Source
+      - Mulching_Used
+      - Region
+  physical_features:
+    - ET_proxy
+    - water_deficit
+    - soil_quality
+  original_target_priors:
+    enabled: true
+    target: TE_ORIG_*
+    source: original data
+    numeric_rule: bins=10 mean target
+    categorical_rule: category mean target
+  original_weighted_merge:
+    enabled: true
+    apply_to: outer train only
+    weight: 0.35
+  pairwise:
+    enabled: false
+    removed_from: exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+  pairwise_target_encoding:
+    enabled: false
+    removed_from: exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+
+postprocess:
+  bias_tuning:
+    enabled: true
+    space: logit coordinate descent
+    steps:
+      - 1.0
+      - 0.5
+      - 0.2
+      - 0.1
+      - 0.05
+      - 0.02
+      - 0.01
+      - 0.005
+      - 0.002
+
+comparison:
+  parent: exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+  changed:
+    - remove pairwise combinations
+    - remove pairwise cardinality filtering
+    - remove pairwise in-fold multiclass TargetEncoder
+  kept:
+    - physical features
+    - TE_ORIG_*
+    - original weighted merge
+    - SymmetricTree
+    - bias tuning
+
+hypothesis:
+  - 021 が 018 から大きく落ちるなら pairwise は主役級
+  - 021 が 018 に比較的近いなら original + bias の寄与が大きい
+  - 020 との比較で pairwise と original の相対寄与を見やすくなる
+
+metrics:
+  primary_cv: balanced_accuracy_score
+  training_eval_metric: TotalF1:average=Macro
+  public_lb: pending
+
+expected_read:
+  raw_cv:
+    strong_if: "0.975台後半以上"
+    weak_if: "0.972台以下"
+  biased_cv:
+    strong_if: "0.978台前半以上"
+    weak_if: "0.977台前半以下"
+
+artifacts:
+  - oof_cat_no_pairwise_bias_proba.npy
+  - pred_cat_no_pairwise_bias_proba.npy
+  - oof_cat_no_pairwise_bias_proba_biased.npy
+  - pred_cat_no_pairwise_bias_proba_biased.npy
+  - best_class_bias.npy
+  - submission_cat_no_pairwise_bias.csv
+  - feature_columns.csv
+  - feature_importance.csv
+  - cv_result.json
+
+notes:
+  - 018 の3主役のうち、最後に未検証なのが pairwise
+  - この実験の結果を見るまでは full 化や Optuna に進まない
+  - 021 の後に 018 vs 021 vs 020 の比較表を作る
