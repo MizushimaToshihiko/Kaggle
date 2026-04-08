@@ -166,16 +166,16 @@ result:
   notes:
     - 完走15m 56s · GPU T4 x2
     - 018 から original 系要素のみ除去
-    - 完走後に raw/biased CV, pair count, Public LB, 018との差分を記録する↓
-    - raw CV:0.977081(018)->0.970100, diff:+0.000019
-    - biased CV:0.979091(018)->0.977908,diff:-0.001183
-    - pair count:171(018)->171,diff:0
-    - Public LB:0.97817(018)->0.97652,diff:-0.00165
+    - raw CV: 0.977081(018) -> 0.970100(020), diff: -0.006981
+    - biased CV: 0.979091(018) -> 0.977908(020), diff: -0.001183
+    - pair count: 171(018) -> 171(020), diff: 0
+    - Public LB: 0.97817(018) -> 0.97652(020), diff: -0.00165
 
 decision:
   verdict: "drop"
   reason: >
-    raw/biasedCV,LB共に018よりも大きく下がったためoriginal追加は明確に効いていたと結論付けられる。no original版は018よりも下なので採用しない。
+    raw/biasedCV,LB共に018よりも大きく下がったためoriginal追加は明確に効いていたと結論付けられる。
+    no original版は018よりも明確に下なので主軸としては採用しない。
   next_action:
     - 021_cat_no_pairwise_bias へ進む
 
