@@ -1,0 +1,203 @@
+experiment:
+  exp_id: exp_20260408_023_cat_pairwise_te_topk_reduction
+  title: CatBoost pairwise TE top-k reduction from exp_20260407_018
+  competition: PS S6E4 Predicting Irrigation Need
+  objective: >
+    exp_20260407_018_cat_pairwise_te_bias_from_shared_min の pairwise 部分を
+    feature_importance.csv を使って top-k に縮小し、
+    135本すべてが必要なのかを確認する。
+    original / physical / TE_ORIG / bias は維持し、
+    pairwise 採用本数だけを減らす最小アブレーションとする。
+
+status:
+  stage: planned
+  verdict: pending
+
+parent_experiment:
+  exp_id: exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+  raw_cv_ba: 0.977081
+  biased_cv_ba: 0.979091
+  public_lb: 0.97817
+  accepted_pair_count: 135
+  n_final_features: 446
+
+design:
+  model_family: CatBoost
+  target_type: multiclass
+  seed: 42
+  n_splits: 5
+  te_inner_cv: 3
+  orig_row_weight: 0.35
+  bias_tuning: true
+  pairwise_source: ALL_BASE
+  pairwise_generation_rule: >
+    018 と同じく combinations(ALL_BASE, 2) を順に回し、
+    factorize 後の nunique が len(combined)//2 以下のものを採用する。
+  pairwise_selection_rule: >
+    018 の feature_importance.csv 内の TE_pair_* importance を
+    3本ずつ集約して pair importance を復元し、
+    上位 top-k の pair_cols のみ採用する。
+  topk_pairwise: 64
+
+features:
+  raw_base:
+    numeric:
+      - Soil_pH
+      - Soil_Moisture
+      - Organic_Carbon
+      - Electrical_Conductivity
+      - Temperature_C
+      - Humidity
+      - Rainfall_mm
+      - Sunlight_Hours
+      - Wind_Speed_kmh
+      - Field_Area_hectare
+      - Previous_Irrigation_mm
+    categorical:
+      - Soil_Type
+      - Crop_Type
+      - Crop_Growth_Stage
+      - Season
+      - Irrigation_Type
+      - Water_Source
+      - Mulching_Used
+      - Region
+
+  physical_features:
+    - ET_proxy
+    - water_deficit
+    - soil_quality
+
+  original_target_prior_features:
+    enabled: true
+    target: TE_ORIG_*
+    source: original data
+    rule:
+      categorical: category mean of mapped target
+      numeric: histogram-bin based mean target
+
+  pairwise:
+    enabled: true
+    source_cols: ALL_BASE
+    accepted_pair_count_from_018: 135
+    selected_pair_count_for_this_exp: 64
+    selection_basis: pair importance aggregated from 018 TE_pair_* feature importance
+
+  pairwise_target_encoding:
+    enabled: true
+    encoder: sklearn.preprocessing.TargetEncoder
+    target_type: multiclass
+    inner_cv: 3
+
+  original_weighted_merge:
+    enabled: true
+    apply_to: outer train only
+    weight: 0.35
+
+catboost_params:
+  iterations: 3000
+  learning_rate: 0.03
+  depth: 8
+  grow_policy: SymmetricTree
+  loss_function: MultiClass
+  eval_metric: TotalF1:average=Macro
+  early_stopping_rounds: 150
+  task_type: GPU if torch.cuda.is_available() else CPU
+  devices: '"0" only if GPU'
+  verbose: 0
+
+postprocess:
+  bias_tuning:
+    enabled: true
+    method: logit coordinate search
+    steps:
+      - 1.0
+      - 0.5
+      - 0.2
+      - 0.1
+      - 0.05
+      - 0.02
+      - 0.01
+      - 0.005
+      - 0.002
+
+inputs:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  original_path: /kaggle/input/datasets/miadul/irrigation-water-requirement-prediction-dataset/irrigation_prediction.csv
+  reference_feature_importance_path: feature_importance.csv from exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+
+hypothesis:
+  - pairwise は 018 の本体だが、135本すべてが必要とは限らない
+  - top-k を 64 本に減らしても CV / LB があまり落ちなければ、018 は冗長な pairwise を含んでいる
+  - top-k 64 で大きく落ちるなら、018 の強さは広い pairwise カバレッジに依存している
+
+comparison_plan:
+  primary_compare_to:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+  secondary_compare_to:
+    - exp_20260407_020_cat_pairwise_te_no_original
+    - exp_20260407_021_cat_no_pairwise_bias
+  metrics:
+    - raw_cv_ba
+    - biased_cv_ba
+    - public_lb
+    - selected_pair_count
+    - n_final_features
+
+expected_read:
+  strong_result:
+    raw_cv_ba: "0.976台後半を維持"
+    biased_cv_ba: "0.978台後半を維持"
+    interpretation: "pairwise は本体だが、64本でもほぼ十分"
+  medium_result:
+    raw_cv_ba: "0.975台"
+    biased_cv_ba: "0.977台後半〜0.978前半"
+    interpretation: "pairwise 本数は効いているが、ある程度の削減余地あり"
+  weak_result:
+    raw_cv_ba: "< 0.974"
+    biased_cv_ba: "< 0.9775"
+    interpretation: "018 の強さは広い pairwise カバレッジに依存"
+
+results:
+  raw_cv_ba: null
+  biased_cv_ba: null
+  public_lb: null
+  selected_pair_count: null
+  n_final_features: null
+  best_bias: []
+  fold_scores_raw: []
+  summary_interpretation: ""
+  verdict: pending
+
+artifacts:
+  planned_outputs:
+    - oof_cat_pairwise_te_topk_reduction_proba.npy
+    - pred_cat_pairwise_te_topk_reduction_proba.npy
+    - oof_cat_pairwise_te_topk_reduction_proba_biased.npy
+    - pred_cat_pairwise_te_topk_reduction_proba_biased.npy
+    - best_class_bias.npy
+    - submission_cat_pairwise_te_topk_reduction.csv
+    - feature_columns.csv
+    - feature_importance.csv
+    - pair_importance_from_018.csv
+    - cv_result.json
+
+decision:
+  implication_for_next_step: ""
+  recommended_next_action: ""
+  avoid_action: ""
+
+notes:
+  - この実験は 018 深掘りのための最小アブレーションであり、主戦場にしない
+  - 023 の後は、必要ならもう1本だけ縮小版を試すか、低相関モデル探索に戻る
+  - 024, 025 のような original weight / bias search の細調整は、023 の結果次第で判断する
+
+post_run_fill:
+  completed_at: ""
+  runtime_note: ""
+  file_check:
+    feature_importance_loaded: false
+    pair_importance_reconstructed: false
+    selected_pair_cols_saved: false
+  final_comment: ""
