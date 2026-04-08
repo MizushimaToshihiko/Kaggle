@@ -161,9 +161,13 @@ result:
     - Public LB 0.97817->0.97594,差分-0.00223
 
 decision:
-  verdict: "drop"
+  verdict: drop
   reason: >
-    biasを外すことで明確に悪化したので、高いCV,LBに貢献していたことが分かった
+    raw CV 自体は 018 とほぼ同等だったため、pairwise TE 設計の本体は強いと判断できる。
+    しかし bias tuning を外すと Public LB が 0.97817 から 0.97594 まで大きく低下し、
+    tuned CV 0.979091 にも届かない。
+    よって、高CV/LB を実現していたのは pairwise TE 本体に加えて bias tuning も重要であり、
+    no-bias 版を主軸としては採用しない。
   next_action:
     - 020_cat_pairwise_te_no_original に進む
 
