@@ -135,3 +135,44 @@ notes:
   - 018 の3主役のうち、最後に未検証なのが pairwise
   - この実験の結果を見るまでは full 化や Optuna に進まない
   - 021 の後に 018 vs 021 vs 020 の比較表を作る
+
+result:
+  cv:
+    score_raw: 0.959658
+    score_biased: 0.965991
+    fold_scores:
+     - 0.9591143519590904
+     - 0.9604824334120844
+     - 0.959902132712137
+     - 0.9592464800983889
+     - 0.9595476263820933
+
+  lb:
+    public: 0.96454
+    private: null
+  pairwise:
+    raw_pair_count: null
+    accepted_pair_count: null
+  best_bias:
+    - 0.26
+    - -2.79
+    - -2.53
+  selected_feature_group:
+    - physical_features
+    - TE_ORIG_base
+    - class_bias
+  notes:
+    - 完走3m 31s · GPU T4 x2
+    - 元の018だけでなく019,020をCV/LB共に大きく下回った。
+    - 018の高成績の主因はpairwiseだったことがわかった
+
+decision:
+  verdict: "drop"
+  reason: >
+    018にはCV/LB共に大きく及ばなかったため、主軸として使用しない
+  next_action:
+    - 他の共有コードを見る?
+
+artifacts:
+  files:
+    - memo.yml
