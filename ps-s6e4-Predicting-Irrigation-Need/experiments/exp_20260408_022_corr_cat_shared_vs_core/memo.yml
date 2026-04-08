@@ -44,8 +44,10 @@ compare_models:
       rank_spearman_flatten: 0.907748
       classwise_pearson: {}
       classwise_spearman: {}
-      interpretation: ""
-      verdict: pending
+      interpretation: >
+        3本の中では最も高相関。
+        018 は digit 主軸とかなり近いが、完全一致ではない。
+      verdict: high_corr
 
   - exp_id: exp_20260405_006_cat_strict_baseline_bias_wide
     short_name: cat_strict_baseline_bias_wide
@@ -58,8 +60,9 @@ compare_models:
       rank_spearman_flatten: 0.905451
       classwise_pearson: {}
       classwise_spearman: {}
-      interpretation: ""
-      verdict: pending
+      interpretation: >
+        高相関。018 は raw 主軸の延長線上にも近い。
+      verdict: high_corr
 
   - exp_id: exp_20260405_011_cat_log_min_bias
     short_name: cat_log_min_bias
@@ -72,8 +75,10 @@ compare_models:
       rank_spearman_flatten: 0.905285
       classwise_pearson: {}
       classwise_spearman: {}
-      interpretation: ""
-      verdict: pending
+      interpretation: >
+        3本の中では最も相関が低いが、それでも高相関帯にある。
+        LOG 系の補助人格としての差は限定的。
+      verdict: high_corr
 
 data_and_method:
   source:
@@ -110,14 +115,25 @@ results_summary:
   main_takeaway: >
     初回の負相関は OOF 破損ではなく class 列順ズレが原因だった。
     shared 側に permutation [2, 0, 1] を適用後、相関は正常な高い正相関に戻った。
+  ordering_by_similarity:
+    - cat_digit_min_bias
+    - cat_strict_baseline_bias_wide
+    - cat_log_min_bias
+  lowest_corr_model: cat_log_min_bias
+  highest_corr_model: cat_digit_min_bias
   overall_verdict: >
-    018 は旧主軸群と低相関。別人格性といえる。
+    018 は旧主軸群と完全同一ではないが、高相関寄りである。
+    別人格性は限定的で、強い shared 再現主軸として扱うのが妥当。
 
 decision:
-  implication_for_next_step: ""
+  implication_for_next_step: >
+    018 は強いが低相関新人格とは言いにくい。
+    したがって、今後は他共有コード探索より先に 018 の軽い構造調整や
+    pairwise 周辺の確認を優先する。
   recommended_next_action: >
     他共有コード探索ではなく、018 の軽い構造調整または pairwise 周辺確認を優先。
-  avoid_action: ""
+  avoid_action: >
+    022 の結果を根拠に 018 を低相関別人格と過大評価しない。
 
 artifacts:
   planned_outputs:
@@ -134,12 +150,15 @@ execution:
   seed: 42
 
 post_run_fill:
-  completed_at: ""
-  runtime_note: ""
+  completed_at: "2026-04-08"
+  runtime_note: >
+    初回は負相関になったが、原因は shared 側の class 列順ズレだった。
+    permutation [2, 0, 1] を適用して再確認した。
   file_check:
-    main_loaded: false
+    main_loaded: true
     compare_loaded:
-      cat_digit_min_bias: false
-      cat_strict_baseline_bias_wide: false
-      cat_log_min_bias: false
-  final_comment: ""
+      cat_digit_min_bias: true
+      cat_strict_baseline_bias_wide: true
+      cat_log_min_bias: true
+  final_comment: >
+    multiclass proba の相関確認では、flatten 前に class 順一致確認が必要。
