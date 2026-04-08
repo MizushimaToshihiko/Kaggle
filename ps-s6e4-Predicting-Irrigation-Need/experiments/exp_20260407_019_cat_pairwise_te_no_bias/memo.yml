@@ -134,10 +134,15 @@ comparison:
 
 result:
   cv:
-    score_raw: null
-    fold_scores: []
+    score_raw: 0.977133
+    fold_scores:
+     - 0.9762323918770298
+     - 0.976820608675602
+     - 0.9785700902718659
+     - 0.9773490932829659
+     - 0.9766936976641478
   lb:
-    public: null
+    public: 0.97594
     private: null
   pairwise:
     raw_pair_count: null
@@ -148,9 +153,12 @@ result:
     - pairwise_columns
     - in_fold_pairwise_te
   notes:
-    - 実行前
+    - 完走27m 31s · GPU T4 x2
     - 018 から bias tuning のみ除去
     - 完走後に raw CV / pair count / Public LB / 018との差分を記録する
+    - raw_pair_count ->171
+    - raw CV ->0.977133
+    - Public LB ->0.97594
 
 decision:
   verdict: pending
