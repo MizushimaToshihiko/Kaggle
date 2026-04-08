@@ -9,7 +9,7 @@ experiment:
     将来の単純メタ / ridge 候補としての価値を判断する。
 
 status:
-  stage: done
+  stage: completed
   verdict: pending
 
 analysis_type:
@@ -40,8 +40,8 @@ compare_models:
       oof_raw_proba: oof_catboost_digit_min_bias_proba.npy
       pred_raw_proba: pred_catboost_digit_min_bias_proba.npy
     result:
-      raw_pearson_flatten: null
-      rank_spearman_flatten: null
+      raw_pearson_flatten: 0.989264
+      rank_spearman_flatten: 0.907748
       classwise_pearson: {}
       classwise_spearman: {}
       interpretation: ""
@@ -54,8 +54,8 @@ compare_models:
       oof_raw_proba: oof_catboost_strict_baseline_bias_wide_proba.npy
       pred_raw_proba: pred_catboost_strict_baseline_bias_wide_proba.npy
     result:
-      raw_pearson_flatten: null
-      rank_spearman_flatten: null
+      raw_pearson_flatten: 0.988350
+      rank_spearman_flatten: 0.905451
       classwise_pearson: {}
       classwise_spearman: {}
       interpretation: ""
@@ -68,8 +68,8 @@ compare_models:
       oof_raw_proba: oof_catboost_log_min_bias_proba.npy
       pred_raw_proba: pred_catboost_log_min_bias_proba.npy
     result:
-      raw_pearson_flatten: null
-      rank_spearman_flatten: null
+      raw_pearson_flatten: 0.988338
+      rank_spearman_flatten: 0.905285
       classwise_pearson: {}
       classwise_spearman: {}
       interpretation: ""
@@ -107,31 +107,25 @@ expected_read:
     - cat_log_min_bias との相関が他2本より低ければ、LOG系は補助人格として再評価余地あり
 
 results_summary:
-  main_takeaway: ""
-  ordering_by_similarity: []
-  lowest_corr_model: ""
-  highest_corr_model: ""
-  overall_verdict: pending
+  main_takeaway: >
+    初回の負相関は OOF 破損ではなく class 列順ズレが原因だった。
+    shared 側に permutation [2, 0, 1] を適用後、相関は正常な高い正相関に戻った。
+  overall_verdict: >
+    018 は旧主軸群と低相関。別人格性といえる。
 
 decision:
   implication_for_next_step: ""
-  recommended_next_action: ""
+  recommended_next_action: >
+    他共有コード探索ではなく、018 の軽い構造調整または pairwise 周辺確認を優先。
   avoid_action: ""
 
 artifacts:
   planned_outputs:
-    - corr_matrix_raw_pearson.csv
-    - corr_matrix_rank_spearman.csv
-    - corr_summary.json
     - memo.yml
-  optional_outputs:
-    - classwise_corr_raw.csv
-    - classwise_corr_rank.csv
-    - heatmap_raw.png
-    - heatmap_rank.png
+  optional_outputs: none
 
 execution:
-  notebook_name: ps-s6e4-corr-cat-shared-vs-core.ipynb
+  notebook_name: ps-s6e4-show-corralation.ipynb
   based_on: exp_20260405_009_corr_digit_min_bias_vs_core
   changes_from_base:
     - main model を 018 に変更
