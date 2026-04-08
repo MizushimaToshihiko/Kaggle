@@ -1,0 +1,169 @@
+experiment:
+  exp_id: exp_20260407_019_cat_pairwise_te_no_bias
+  title: Ablation of shared CatBoost pairwise TE pipeline without bias tuning
+  phase: ablation
+  status: done
+  kind: training
+
+competition:
+  name: PS S6E4 Predicting Irrigation Need
+  metric: Balanced Accuracy
+
+purpose:
+  summary: >
+    018_cat_pairwise_te_bias_from_shared_min から bias tuning だけを外し、
+    pairwise TE + original weighted merge + SymmetricTree の raw 実力を確認する。
+    018 の改善のうち、bias がどれだけ本体かを切り分けるためのアブレーション。
+  hypothesis:
+    - 018 の強さの一部は bias tuning に依存している可能性が高い
+    - bias を外しても raw CV が十分高ければ、本体は pairwise TE 設計側にある
+    - bias を外した時の落差を見ることで、018 の改善の内訳を推定できる
+  non_goals:
+    - pairwise 設計自体は変えない
+    - original weighted merge は維持する
+    - CatBoost のパラメータは変えない
+    - Optuna はまだやらない
+
+base_experiment:
+  exp_id: exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+  relation: bias_only_ablation
+  inherited_components:
+    - original_weighted_merge
+    - physical_features
+    - TE_ORIG_base_features
+    - pairwise_combinations
+    - in_fold_pairwise_te
+    - SymmetricTree
+  removed_components:
+    - bias_tuning
+
+source_notebook:
+  title: 0.979 CV Single CAT: Pairwise TE + Bias Tuning
+  author: UtaAzu
+  source_type: kaggle_shared_notebook
+
+data:
+  source:
+    - train.csv
+    - test.csv
+    - original.csv
+  target: Irrigation_Need
+  row_scope:
+    train: full_train
+    test: full_test
+    original: available
+  raw_feature_groups:
+    numeric_cols:
+      - Soil_pH
+      - Soil_Moisture
+      - Organic_Carbon
+      - Electrical_Conductivity
+      - Temperature_C
+      - Humidity
+      - Rainfall_mm
+      - Sunlight_Hours
+      - Wind_Speed_kmh
+      - Field_Area_hectare
+      - Previous_Irrigation_mm
+    categorical_cols:
+      - Soil_Type
+      - Crop_Type
+      - Crop_Growth_Stage
+      - Season
+      - Irrigation_Type
+      - Water_Source
+      - Mulching_Used
+      - Region
+
+method:
+  model_family: CatBoost
+  model_name: CatBoostClassifier
+  feature_engineering:
+    physical_features:
+      - ET_proxy
+      - water_deficit
+      - soil_quality
+    original_target_prior_features:
+      description: original target prior mean on all base columns
+    pairwise_combinations:
+      source_columns: ALL_BASE
+      raw_pair_count_expected: 171
+      accepted_pair_count_expected: 135
+      filtering_rule: factorized cardinality <= total rows // 2
+    target_encoding:
+      apply_to: pairwise_columns_only
+      encoder: sklearn.preprocessing.TargetEncoder
+      target_type: multiclass
+      inner_cv: 3
+      leak_policy: in-fold only
+  original_merge_policy:
+    merge_scope: outer_train_only
+    original_row_weight: 0.35
+    class_weighting: balanced
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    seed: 42
+  catboost_params:
+    iterations: 3000
+    learning_rate: 0.03
+    depth: 8
+    grow_policy: SymmetricTree
+    loss_function: MultiClass
+    eval_metric: TotalF1
+    early_stopping_rounds: 150
+    task_type: GPU
+  outputs:
+    - oof_cat_pairwise_te_no_bias_proba.npy
+    - pred_cat_pairwise_te_no_bias_proba.npy
+    - submission_cat_pairwise_te_no_bias.csv
+    - feature_columns.csv
+    - feature_importance.csv
+    - cv_result.json
+
+comparison:
+  against:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - cat_digit_min_bias
+    - cat_strict_baseline_bias_wide
+  focus:
+    - bias を外した時に CV がどれだけ落ちるか
+    - raw の時点で既存主軸群を更新できるか
+    - 018 の強さの本体が pairwise TE 側か bias 側か
+
+result:
+  cv:
+    score_raw: null
+    fold_scores: []
+  lb:
+    public: null
+    private: null
+  pairwise:
+    raw_pair_count: null
+    accepted_pair_count: null
+  selected_feature_group:
+    - physical_features
+    - TE_ORIG_base
+    - pairwise_columns
+    - in_fold_pairwise_te
+  notes:
+    - 実行前
+    - 018 から bias tuning のみ除去
+    - 完走後に raw CV / pair count / Public LB / 018との差分を記録する
+
+decision:
+  verdict: pending
+  reason: >
+    まだ未実行。
+    018 の改善のうち bias tuning の寄与を切り分けるため、
+    まずは bias なしの raw 実力を確認する。
+  next_action:
+    - 完走後に 018 の raw_cv_ba と比較する
+    - 落差が大きければ bias の寄与が大きいと判断する
+    - その後 020_cat_pairwise_te_no_original に進む
+
+artifacts:
+  files:
+    - ps-s6e4-cat-pairwise-te-no-bias.ipynb
+    - memo.yml
