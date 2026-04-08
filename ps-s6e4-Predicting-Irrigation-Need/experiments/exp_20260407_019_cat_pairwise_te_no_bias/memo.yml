@@ -156,20 +156,16 @@ result:
     - 完走27m 31s · GPU T4 x2
     - 018 から bias tuning のみ除去
     - 完走後に raw CV / pair count / Public LB / 018との差分を記録する
-    - raw_pair_count ->171
-    - raw CV ->0.977133
-    - Public LB ->0.97594
+    - raw_pair_count 171->171, 差分0
+    - raw CV 0.977081->0.977133, 差分+0.000052, bias CV0.979091,差分-0.001958
+    - Public LB 0.97817->0.97594,差分-0.00223
 
 decision:
-  verdict: pending
+  verdict: "drop"
   reason: >
-    まだ未実行。
-    018 の改善のうち bias tuning の寄与を切り分けるため、
-    まずは bias なしの raw 実力を確認する。
+    biasを外すことで明確に悪化したので、高いCV,LBに貢献していたことが分かった
   next_action:
-    - 完走後に 018 の raw_cv_ba と比較する
-    - 落差が大きければ bias の寄与が大きいと判断する
-    - その後 020_cat_pairwise_te_no_original に進む
+    - 020_cat_pairwise_te_no_original に進む
 
 artifacts:
   files:
