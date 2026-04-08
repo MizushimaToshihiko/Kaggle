@@ -207,11 +207,11 @@ comparison:
     - exp_20260406_014_gbdt_te_top4_min
     - exp_20260406_017_nn_bias_wide
   focus:
-    - CatBoost 主軸を更新できるか->CV/LB共に更新した
-    - pairwise TE 設計が単列 high-IV 系より強いか->CV/LBを見る限り強いと考えられる
-    - original weighted merge が有効か->有効そうだかアブレーションしないと確定できない
-    - bias tuning がどれだけ改善幅を持つか->+0.002010改善した
-    - 共有コードの勝ち筋が minimum reproduction でも再現されるか->CVは元のnotebook0.979110に対し0.979091、LBは元のnotebook0.97841に対し0.97817とほとんど差がなかった
+    - CatBoost 主軸を更新できるか -> CV/LB共に更新した
+    - pairwise TE 設計が単列 high-IV 系より強いか -> 今回の結果では明確に強い
+    - original weighted merge が有効か -> 有効そうだがアブレーションなしでは未確定
+    - bias tuning がどれだけ改善幅を持つか -> +0.002010 改善
+    - 共有コードの勝ち筋が minimum reproduction でも再現されるか -> ほぼ再現できた
 
 result:
   cv:
@@ -245,11 +245,15 @@ result:
     - minimumだがCV/LBをほとんど再現した
 
 decision:
-  verdict: "adopt"
+  verdict: adopt
   reason: >
-    既存のCatBoost主軸群を大きく上回るCV/LBのため今後はこちらを主軸にする?
+    既存の CatBoost 主軸群を大きく上回る CV/LB を確認できた。
+    また、共有 notebook の tuned CV / Public LB にかなり近い値を
+    minimum reproduction で再現できたため、主軸候補ではなく主軸として採用する。
   next_action:
-    - 強かったので次に ablation か full 化を検討する
+    - まずアブレーションを行い、何が効いたかを切り分ける
+    - 優先順は bias なし、original なし、pairwise なし
+    - その後に必要なら full 化または Optuna を検討する
 
 artifacts:
   files:
