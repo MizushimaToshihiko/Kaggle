@@ -201,13 +201,13 @@ future_corr_check:
     - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
     - exp_20260409_024_xgb_digit_orderedte_min
     - exp_20260409_025_lgb_digit_te_min
-  raw_pearson_flatten_vs_018: null
-  rank_spearman_flatten_vs_018: null
-  raw_pearson_flatten_vs_024: null
-  rank_spearman_flatten_vs_024: null
-  raw_pearson_flatten_vs_025: null
-  rank_spearman_flatten_vs_025: null
-  interpretation: ""
+  raw_pearson_flatten_vs_018: 0.994960
+  rank_spearman_flatten_vs_018: 0.911784
+  raw_pearson_flatten_vs_024: 0.995699
+  rank_spearman_flatten_vs_024: 0.908159
+  raw_pearson_flatten_vs_025: 0.995700
+  rank_spearman_flatten_vs_025: 0.909005
+  interpretation: "018,024,025のどれともraw相関高め、rank相関は低めだった"
 
 artifacts:
   planned_outputs:
@@ -234,8 +234,8 @@ post_run_fill:
   completed_at: ""
   runtime_note: ""
   file_check:
-    oof_saved: false
-    pred_saved: false
-    submission_saved: false
-    cv_result_saved: false
+    oof_saved: true
+    pred_saved: true
+    submission_saved: true
+    cv_result_saved: true
   final_comment: ""
