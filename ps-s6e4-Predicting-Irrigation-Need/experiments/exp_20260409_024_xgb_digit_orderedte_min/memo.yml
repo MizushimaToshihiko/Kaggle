@@ -175,9 +175,9 @@ results:
 future_corr_check:
   planned: true
   target_mainline: exp_20260407_018_cat_pairwise_te_bias_from_shared_min
-  raw_pearson_flatten: null
-  rank_spearman_flatten: null
-  interpretation: ""
+  raw_pearson_flatten: 0.995078
+  rank_spearman_flatten: 0.942156
+  interpretation: "別人格かな？"
 
 artifacts:
   planned_outputs:
