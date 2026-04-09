@@ -1,0 +1,242 @@
+experiment:
+  exp_id: exp_20260409_028_stack_core4_screening
+  title: Screening blends for current 4 core candidates
+  competition: PS S6E4 Predicting Irrigation Need
+  objective: >
+    現時点の主力4候補
+    - 018 pairwise mainline
+    - 024 xgb digit orderedte
+    - 025 lgb digit te
+    - 026 realmlp pair te
+    をスタック素材として整理する。
+    024 と 025 は競合枠、026 は別枠候補として扱い、
+    simple average と ridge blend だけで first screening を行う。
+
+status:
+  stage: planned
+  verdict: pending
+
+candidate_pool:
+  anchor:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+  competitor_pair:
+    - exp_20260409_024_xgb_digit_orderedte_min
+    - exp_20260409_025_lgb_digit_te_min
+  orthogonal_candidate:
+    - exp_20260409_026_realmlp_pair_te_min
+
+candidate_sets:
+  set1_018_024:
+    models:
+      - 018
+      - 024
+    purpose: "018 に対して 024 を足す価値を確認"
+
+  set2_018_026:
+    models:
+      - 018
+      - 026
+    purpose: "018 に対して 026 を足す価値を確認"
+
+  set3_018_024_026:
+    models:
+      - 018
+      - 024
+      - 026
+    purpose: "024 と 026 を併用した時の加算価値を確認"
+
+  set4_018_025:
+    models:
+      - 018
+      - 025
+    purpose: "024 の代わりに 025 を使う価値を確認"
+
+  set5_018_025_026:
+    models:
+      - 018
+      - 025
+      - 026
+    purpose: "025 と 026 を併用した時の加算価値を確認"
+
+blend_methods:
+  simple_average:
+    enabled: true
+    note: "素材の役割差があるかを最も素直に見るための基準"
+
+  ridge:
+    enabled: true
+    alpha: 1.0
+    use_logit: false
+    note: "重みづけに意味があるかを確認するための screening"
+
+postprocess:
+  bias_tuning:
+    enabled: true
+    method: simple_class_weight_grid
+    grid:
+      - [1.0, 1.0, 1.0]
+      - [1.2, 1.2, 1.2]
+      - [1.5, 1.5, 1.5]
+      - [1.5, 1.3, 1.8]
+      - [1.7, 1.5, 2.3]
+      - [1.8, 1.5, 2.4]
+
+inputs:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  npy_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/
+
+npy_sources:
+  "018":
+    oof: oof_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
+    pred: pred_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
+    class_order_fix:
+      applied: true
+      permutation: [2, 0, 1]
+
+  "024":
+    oof: oof_xgb_digit_orderedte_min_proba_biased.npy
+    pred: pred_xgb_digit_orderedte_min_proba_biased.npy
+    class_order_fix:
+      applied: true
+      permutation: [2, 0, 1]
+
+  "025":
+    oof: oof_lgb_digit_te_min_proba_biased.npy
+    pred: pred_lgb_digit_te_min_proba_biased.npy
+    class_order_fix:
+      applied: true
+      permutation: [2, 0, 1]
+
+  "026":
+    oof: oof_realmlp_pair_te_min_proba_biased.npy
+    pred: pred_realmlp_pair_te_min_proba_biased.npy
+    class_order_fix:
+      applied: true
+      permutation: [2, 0, 1]
+
+hypothesis:
+  - 024 と 025 は近縁なので、同時採用しなくてもよい可能性が高い
+  - 026 は単体では少し弱くても、018 や 024/025 に対して役割差で効く可能性がある
+  - まずは 2本組 / 3本組だけで screening し、勝ち筋を絞るべき
+
+evaluation_priority:
+  primary:
+    - biased_cv_ba
+    - raw_cv_ba
+  secondary:
+    - future_public_lb
+  interpretation_rule:
+    - 018 + 026 が 018 + 024 より良ければ、026 の追加価値が高い
+    - 018 + 024 と 018 + 025 が同等なら、024/025 は競合枠として1本で十分
+    - 018 + 024 + 026 または 018 + 025 + 026 が最良なら、026 は別枠として keep 価値が高い
+
+expected_read:
+  strong_result:
+    biased_cv_ba: "018 単体や 018+024 / 018+025 を明確に上回る"
+    interpretation: "素材の役割差が効いている。候補集合を絞れる"
+  medium_result:
+    biased_cv_ba: "同等か微増"
+    interpretation: "候補整理の価値はあるが、決定打は弱い"
+  weak_result:
+    biased_cv_ba: "ほぼ差が出ない"
+    interpretation: "現候補群は近すぎる可能性があり、追加探索が必要"
+
+results:
+  screening_table: []
+  best_set_name: ""
+  best_models: []
+  best_blend_type: ""
+  best_raw_cv_ba: null
+  best_biased_cv_ba: null
+  summary_interpretation: ""
+  verdict: pending
+
+set_results:
+  set1_018_024:
+    simple_average:
+      raw_cv_ba: null
+      biased_cv_ba: null
+      best_class_weights: []
+    ridge:
+      raw_cv_ba: null
+      biased_cv_ba: null
+      best_class_weights: []
+    interpretation: ""
+
+  set2_018_026:
+    simple_average:
+      raw_cv_ba: null
+      biased_cv_ba: null
+      best_class_weights: []
+    ridge:
+      raw_cv_ba: null
+      biased_cv_ba: null
+      best_class_weights: []
+    interpretation: ""
+
+  set3_018_024_026:
+    simple_average:
+      raw_cv_ba: null
+      biased_cv_ba: null
+      best_class_weights: []
+    ridge:
+      raw_cv_ba: null
+      biased_cv_ba: null
+      best_class_weights: []
+    interpretation: ""
+
+  set4_018_025:
+    simple_average:
+      raw_cv_ba: null
+      biased_cv_ba: null
+      best_class_weights: []
+    ridge:
+      raw_cv_ba: null
+      biased_cv_ba: null
+      best_class_weights: []
+    interpretation: ""
+
+  set5_018_025_026:
+    simple_average:
+      raw_cv_ba: null
+      biased_cv_ba: null
+      best_class_weights: []
+    ridge:
+      raw_cv_ba: null
+      biased_cv_ba: null
+      best_class_weights: []
+    interpretation: ""
+
+decision:
+  implication_for_next_step: ""
+  recommended_next_action: ""
+  avoid_action: ""
+
+notes:
+  - 今回は screening なので、hill climb や logit blend までは行かない
+  - 024 と 025 は近縁なので、同時採用前提で考えない
+  - まずは勝ち残る候補セットを切ることが目的
+  - 新しい shared 候補探索より先に、現候補群の整理を優先する
+
+artifacts:
+  planned_outputs:
+    - screening_results.csv
+    - screening_results.json
+    - submission_best_set.csv
+    - oof_best_set_proba.npy
+    - pred_best_set_proba.npy
+    - oof_best_set_proba_biased.npy
+    - pred_best_set_proba_biased.npy
+    - meta_note.json
+    - memo.yml
+
+post_run_fill:
+  completed_at: ""
+  runtime_note: ""
+  file_check:
+    all_npy_loaded: false
+    class_order_fix_applied: false
+    screening_results_saved: false
+    best_submission_saved: false
+  final_comment: ""
