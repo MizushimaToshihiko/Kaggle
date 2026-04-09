@@ -13,8 +13,8 @@ experiment:
     simple average と ridge blend だけで first screening を行う。
 
 status:
-  stage: planned
-  verdict: pending
+  stage: done
+  verdict: done
 
 candidate_pool:
   anchor:
@@ -145,12 +145,16 @@ expected_read:
 results:
   screening_table: []
   best_set_name: "set5_018_025_026"
-  best_models: [018,025,026]
+  best_models: [018, 025, 026]
   best_blend_type: "ridge"
   best_raw_cv_ba: 0.979638
-  best_biased_cv_ba: 0.980125
-  summary_interpretation: ""
-  verdict: pending
+  best_biased_cv_ba: 0.980126
+  summary_interpretation: >
+    ridge screening では set5_018_025_026 が最良だった。
+    018+026 単独は弱く、026 は 025 と組ませた時に加算価値を持つ。
+    一方、simple average の値は 0.014 台で異常なので、
+    実装不備があり判断材料として使わない。
+  verdict: adopt
 
 set_results:
   set1_018_024:
@@ -162,7 +166,7 @@ set_results:
       raw_cv_ba: 0.979550
       biased_cv_ba: 0.979983
       best_class_weights: [1.7, 1.5, 2.3]
-    interpretation: ""
+    interpretation: "ridge では強いが最良ではない。024 は有力だが 025 にやや劣る。"
 
   set2_018_026:
     simple_average:
@@ -173,7 +177,7 @@ set_results:
       raw_cv_ba: 0.979102
       biased_cv_ba: 0.979267
       best_class_weights: [1.7, 1.5, 2.3]
-    interpretation: ""
+    interpretation: "ridge では強いが最良ではない。024 は有力だが 025 にやや劣る。"
 
   set3_018_024_026:
     simple_average:
@@ -184,7 +188,7 @@ set_results:
       raw_cv_ba: 0.979484
       biased_cv_ba: 0.979974
       best_class_weights: [1.8, 1.5, 2.4]
-    interpretation: ""
+    interpretation: "ridge では最も弱い。026 の価値は単独追加では出にくい。"
 
   set4_018_025:
     simple_average:
@@ -195,7 +199,7 @@ set_results:
       raw_cv_ba: 0.979681
       biased_cv_ba: 0.979951
       best_class_weights: [1.7, 1.5, 2.3]
-    interpretation: ""
+    interpretation: "ridge では 018+024 よりやや良い。現時点では 024 より 025 優勢。"
 
   set5_018_025_026:
     simple_average:
@@ -206,12 +210,18 @@ set_results:
       raw_cv_ba: 0.979638
       biased_cv_ba: 0.980126
       best_class_weights: [1.5, 1.3, 1.8]
-    interpretation: ""
+    interpretation: "ridge では 018+024 よりやや良い。現時点では 024 より 025 優勢。"
 
 decision:
-  implication_for_next_step: ""
-  recommended_next_action: ""
-  avoid_action: ""
+  implication_for_next_step: >
+    024 と 025 は競合枠だが、今回の screening では 025 がやや優勢。
+    026 は単独追加では弱く、025 と組ませた時に価値が出る。
+  recommended_next_action: >
+    次は 018+025+026 を本命候補として、必要なら 018+024+026 と比較しつつ
+    本番用のより丁寧なスタックへ進む。
+  avoid_action: >
+    simple average の結果を根拠に判断しない。
+    また 026 を単独追加材として過大評価しない。
 
 notes:
   - 今回は screening なので、hill climb や logit blend までは行かない
