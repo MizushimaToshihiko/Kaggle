@@ -13,7 +13,7 @@ experiment:
 
 status:
   stage: done
-  verdict: pending
+  verdict: done
 
 analysis_type:
   kind: correlation_check
@@ -114,60 +114,72 @@ focused_results:
     test_raw: 0.996178
     oof_rank: 0.942156
     test_rank: 0.945409
-    interpretation: ""
+    interpretation: "中程度に近い。大枠は似るが、役割差を持ちうる。"
 
   pair_018_025:
     oof_raw: 0.994775
     test_raw: 0.995935
     oof_rank: 0.945456
     test_rank: 0.952764
-    interpretation: ""
+    interpretation: "018 と 025 も中程度に近い。024 とほぼ同系統寄り。"
 
   pair_018_026:
     oof_raw: 0.994960
     test_raw: 0.995901
     oof_rank: 0.911784
     test_rank: 0.952204
-    interpretation: ""
+    interpretation: "raw は近いが OOF rank は低め。026 は 018 に対して役割がズレる候補。"
 
   pair_024_025:
     oof_raw: 0.998641
     test_raw: 0.999317
     oof_rank: 0.992057
     test_rank: 0.996804
-    interpretation: ""
+    interpretation: "最も近縁。digit+TE 系のほぼ同系統ペア。"
 
   pair_024_026:
     oof_raw: 0.995699
     test_raw: 0.997025
     oof_rank: 0.908159
     test_rank: 0.928774
-    interpretation: ""
+    interpretation: "raw は高いが rank は低め。026 は 024 に対して別枠候補。"
 
   pair_025_026:
     oof_raw: 0.995700
     test_raw: 0.997172
     oof_rank: 0.909005
     test_rank: 0.937726
-    interpretation: ""
+    interpretation: "025 に対しても 026 は別枠候補。024/025 の近縁塊とは違う。"
 
 classwise_cross_corr:
   executed: true
-  target_focus_model: ""
-  notable_findings: []
-  interpretation: ""
+  target_focus_model: "025lgb_digit_te_min_biased"
+  notable_findings:
+    - "018 vs 025 は class1/class2 の対角相関が非常に高く、列順補正後は正常な対応になっている"
+    - "024 vs 025 は classwise でも極めて高相関で、同系統であることを裏付ける"
+    - "026 vs 025 は対角相関は高いが、024/025 ペアほどの近さではない"
+  interpretation: >
+    classwise でも 024 と 025 の近縁性が確認できた。
+    一方 026 は列順問題ではなく、実際に役割が少しズレている。
 
 sanity_check:
   executed: true
-  row_sum_ok: null
-  shape_ok: null
-  interpretation: ""
+  row_sum_ok: true
+  shape_ok: true
+  interpretation: "全モデルで OOF/PRED shape と行和は正常。確率配列の破損は見られない。"
 
 role_clustering:
-  cluster_1: []
-  cluster_2: []
-  outlier_or_bridge: []
-  summary: ""
+  cluster_1:
+    - exp_20260409_024_xgb_digit_orderedte_min
+    - exp_20260409_025_lgb_digit_te_min
+  cluster_2:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+  outlier_or_bridge:
+    - exp_20260409_026_realmlp_pair_te_min
+  summary: >
+    024 と 025 は digit+TE 系の近縁クラスター。
+    018 は pairwise 主軸として独立性を保つ。
+    026 は単体最強ではないが、024/025 より別枠寄りの橋渡し候補。
 
 expected_read:
   high_corr_signal:
@@ -184,19 +196,26 @@ expected_read:
     interpretation: "別枠候補として価値が高い"
 
 results_summary:
-  main_takeaway: ""
-  closest_pair: ""
-  most_distinct_pair: ""
-  018_position: ""
-  024_position: ""
-  025_position: ""
-  026_position: ""
-  overall_verdict: pending
+  main_takeaway: >
+    現時点の4候補では、024 と 025 が最も近縁で、026 が最も役割のズレを持つ。
+    018 は主軸として独立性を保ちつつ、024/025 と中程度に近い。
+  closest_pair: "024_xgb_digit_orderedte_min and 025_lgb_digit_te_min"
+  most_distinct_pair: "024_xgb_digit_orderedte_min and 026_realmlp_pair_te_min"
+  018_position: "pairwise 主軸。024/025 と中程度に近く、026 とは rank でややズレる。"
+  024_position: "digit+TE 系の主力。025 と極めて近い。"
+  025_position: "digit+TE 系の主力。024 の代替候補に近い。"
+  026_position: "単体はやや弱いが、024/025 より別枠性がある keep 候補。"
+  overall_verdict: "4候補の役割整理は完了。024/025 は近縁箱、026 は別枠箱、018 は主軸箱。"
 
 decision:
-  implication_for_next_step: ""
-  recommended_next_action: ""
-  avoid_action: ""
+  implication_for_next_step: >
+    新しい shared 最小再現を増やす前に、018 / 024 / 025 / 026 の4本を候補集合として扱い、
+    スタック候補としての採否を切る段階に入る。
+  recommended_next_action: >
+    018 / 024 / 025 / 026 の4本を使ったスタック候補整理を行う。
+    特に 024 と 025 は近縁なので、同時採用の必要性を慎重に見る。
+  avoid_action: >
+    024 と 025 を独立した強人格として重複採用前提で扱わない。
 
 artifacts:
   planned_outputs:
