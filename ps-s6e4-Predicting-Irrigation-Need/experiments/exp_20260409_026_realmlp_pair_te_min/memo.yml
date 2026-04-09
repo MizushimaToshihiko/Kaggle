@@ -1,0 +1,236 @@
+experiment:
+  exp_id: exp_20260409_026_realmlp_pair_te_min
+  title: RealMLP + pairwise multiclass TE minimum reproduction
+  competition: PS S6E4 Predicting Irrigation Need
+  objective: >
+    Mahog_RealMLP_lb0.97685 の骨格から、
+    selected columns + pair combinations + multiclass TargetEncoder + RealMLP
+    を残した最小再現版を作る。
+    018 / 024 / 025 と異なる人格候補になりうるかを確認する。
+
+status:
+  stage: planned
+  verdict: pending
+
+source_reference:
+  notebook_name: code_Mahog_RealMLP_lb0.97685
+  reference_type: shared_code
+  key_elements:
+    - selected columns
+    - pair combinations from a limited column subset
+    - multiclass TargetEncoder
+    - RealMLP
+  intentionally_removed:
+    - extra surrounding optimization
+    - unnecessary expansion beyond minimum reproduction
+
+design:
+  model_family: RealMLP
+  target_type: multiclass
+  seed: 42
+  n_folds: 5
+  cv_type: StratifiedKFold
+  use_pair_columns: true
+  pair_source_columns:
+    - Soil_Moisture
+    - Crop_Growth_Stage
+    - Temperature_C
+    - Mulching_Used
+    - Wind_Speed_kmh
+    - Rainfall_mm
+  pair_r: 2
+  use_multiclass_target_encoder: true
+  bias_tuning_type: simple_manual_grid
+  use_original_data: true
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  original_path: /kaggle/input/datasets/miadul/irrigation-water-requirement-prediction-dataset/irrigation_prediction.csv
+  target_col: Irrigation_Need
+  id_col: id
+
+features:
+  raw_categorical:
+    - Soil_Type
+    - Crop_Type
+    - Crop_Growth_Stage
+    - Season
+    - Irrigation_Type
+    - Water_Source
+    - Mulching_Used
+    - Region
+
+  raw_numeric:
+    - Soil_pH
+    - Soil_Moisture
+    - Organic_Carbon
+    - Electrical_Conductivity
+    - Temperature_C
+    - Humidity
+    - Rainfall_mm
+    - Sunlight_Hours
+    - Wind_Speed_kmh
+    - Field_Area_hectare
+    - Previous_Irrigation_mm
+
+  feature_engineering:
+    numeric_copy_suffix_2:
+      enabled: true
+      rule: >
+        shared code 準拠で、各 NUMS に _2 の copy 列を追加する。
+    factorize_base_columns:
+      enabled: true
+      target: raw_categorical + raw_numeric
+      rule: >
+        train + test + original を結合し、対象列を factorize 後 category 化する。
+    pair_combinations:
+      enabled: true
+      source_columns:
+        - Soil_Moisture
+        - Crop_Growth_Stage
+        - Temperature_C
+        - Mulching_Used
+        - Wind_Speed_kmh
+        - Rainfall_mm
+      combination_r: 2
+      rule: >
+        2列組み合わせの pair token を作成し、
+        train + test + original で factorize。
+        nunique > len(combined)//2 の組み合わせは drop。
+    multiclass_target_encoder:
+      enabled: true
+      target_columns: pair_columns_only
+      params:
+        target_type: multiclass
+        cv: 5
+        random_state: 42
+      note: >
+        shared code 準拠で pair columns のみ TargetEncoder をかけ、
+        その後元の pair columns を drop する。
+
+model_config:
+  n_ens: 8
+  embed_dim: 6
+  onehot_thresh: 8
+  hidden_dims:
+    - 512
+    - 64
+    - 128
+  dropout: 0.05
+  add_front_scale: true
+
+  pbld_hidden_dim: 20
+  pbld_out_dim: 5
+  pbld_freq_scale: 1.0
+
+  lr: 0.01
+  weight_decay: 0.01
+  epochs: 3
+  train_bs: 256
+  eval_bs: 10240
+  device: cuda_if_available_else_cpu
+
+class_weighting:
+  base_class_weight:
+    enabled: true
+    rule: compute_class_weight_balanced
+  post_bias_tuning:
+    enabled: true
+    method: simple_grid
+    note: >
+      shared code の雰囲気は残すが、ここでは最小再現として
+      少数の class weight 候補のみで簡易確認する。
+
+hypothesis:
+  - 024 / 025 が近縁だったので、026 は多少弱くても相関がズレるなら keep 価値がある
+  - pair columns + RealMLP は 018 とも digit系とも異なる出方をする可能性がある
+  - 単体CVだけでなく、018 / 024 / 025 との相関が重要
+
+comparison_plan:
+  primary_compare_to:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260409_024_xgb_digit_orderedte_min
+    - exp_20260409_025_lgb_digit_te_min
+  metrics:
+    - raw_cv_ba
+    - biased_cv_ba
+    - public_lb
+    - future_corr_vs_018
+    - future_corr_vs_024
+    - future_corr_vs_025
+
+expected_read:
+  strong_result:
+    raw_cv_ba: "0.977台後半以上"
+    biased_cv_ba: "0.978台前半以上"
+    interpretation: >
+      単体でも十分強く、かつ相関がズレるなら有力 keep 候補。
+  medium_result:
+    raw_cv_ba: "0.976台後半〜0.977前半"
+    biased_cv_ba: "0.977台前半〜0.978未満"
+    interpretation: >
+      単体はやや弱めでも、024 / 025 と相関が十分ズレるなら keep 候補。
+  weak_result:
+    raw_cv_ba: "< 0.9765"
+    biased_cv_ba: "< 0.9775"
+    interpretation: >
+      単体も弱く、相関妙味も薄ければ drop 寄り。
+
+results:
+  raw_cv_ba: null
+  biased_cv_ba: null
+  public_lb: null
+  improvement_from_bias: null
+  n_pair_columns: null
+  n_features_before_te: null
+  n_features_after_te: null
+  fold_scores: []
+  best_class_weights: []
+  summary_interpretation: ""
+  verdict: pending
+
+future_corr_check:
+  planned: true
+  target_mainline:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260409_024_xgb_digit_orderedte_min
+    - exp_20260409_025_lgb_digit_te_min
+  raw_pearson_flatten_vs_018: null
+  rank_spearman_flatten_vs_018: null
+  raw_pearson_flatten_vs_024: null
+  rank_spearman_flatten_vs_024: null
+  raw_pearson_flatten_vs_025: null
+  rank_spearman_flatten_vs_025: null
+  interpretation: ""
+
+artifacts:
+  planned_outputs:
+    - oof_realmlp_pair_te_min_proba.npy
+    - pred_realmlp_pair_te_min_proba.npy
+    - oof_realmlp_pair_te_min_proba_biased.npy
+    - pred_realmlp_pair_te_min_proba_biased.npy
+    - submission_realmlp_pair_te_min.csv
+    - feature_columns.csv
+    - cv_result.json
+
+decision:
+  implication_for_next_step: ""
+  recommended_next_action: ""
+  avoid_action: ""
+
+notes:
+  - この実験は shared code 全再現ではなく、別人格候補判定のための最小再現
+  - 024 / 025 が近縁だったため、026 では相関妙味を重視する
+  - 単体CVだけで採否を即断しない
+  - 多少弱くても相関がズレるなら keep 候補になりうる
+
+post_run_fill:
+  completed_at: ""
+  runtime_note: ""
+  file_check:
+    oof_saved: false
+    pred_saved: false
+    submission_saved: false
+    cv_result_saved: false
+  final_comment: ""
