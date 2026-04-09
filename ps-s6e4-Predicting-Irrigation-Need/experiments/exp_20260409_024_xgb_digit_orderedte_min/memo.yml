@@ -10,7 +10,7 @@ experiment:
 
 status:
   stage: done
-  verdict: pending
+  verdict: adopt
 
 source_reference:
   notebook_name: code_yunsuxiaozi_xgb_lb0.98011
@@ -156,16 +156,21 @@ expected_read:
       最小再現では弱い。OrderedTE や bias の追加検討前に一旦 drop 寄り。
 
 results:
-  raw_cv_ba: null
-  biased_cv_ba: null
-  public_lb: null
-  improvement_from_bias: null
-  n_features_before_te: null
-  n_features_after_te: null
-  fold_scores: []
-  best_class_weights: []
-  summary_interpretation: ""
-  verdict: pending
+  raw_cv_ba: 0.978635
+  biased_cv_ba: 0.979154
+  public_lb: 0.97925
+  improvement_from_bias: +0.000518766015427996
+  n_features_before_te: 85
+  n_features_after_te: 332
+  fold_scores:
+    - 0.9780391744312891
+    - 0.979457394233776
+    - 0.978010746109568
+    - 0.979572129713868
+    - 0.9780951050427678
+  best_class_weights: [1.8, 1.5, 2.4]
+  summary_interpretation: "共有元CV:0.979805,diff-0.000651,共有元LB0.0.98011,diff-0.00076と大きく割らずに再現した。"
+  verdict: adopt
 
 future_corr_check:
   planned: true
@@ -199,8 +204,8 @@ post_run_fill:
   completed_at: ""
   runtime_note: ""
   file_check:
-    oof_saved: false
-    pred_saved: false
-    submission_saved: false
-    cv_result_saved: false
+    oof_saved: true
+    pred_saved: true
+    submission_saved: true
+    cv_result_saved: true
   final_comment: ""
