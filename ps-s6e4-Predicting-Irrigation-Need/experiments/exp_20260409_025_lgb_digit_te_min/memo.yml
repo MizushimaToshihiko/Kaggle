@@ -10,7 +10,7 @@ experiment:
 
 status:
   stage: done
-  verdict: pending
+  verdict: adopt
 
 source_reference:
   notebook_name: code_yunsuxiaozi_lgb_lb0.97971
@@ -163,27 +163,36 @@ expected_read:
       最小再現としては弱い。相関妙味がない限り drop 寄り。
 
 results:
-  raw_cv_ba: null
-  biased_cv_ba: null
-  public_lb: null
-  improvement_from_bias: null
-  n_features_before_te: null
-  n_features_after_te: null
-  fold_scores: []
-  best_class_weights: []
-  summary_interpretation: ""
-  verdict: pending
+  raw_cv_ba: 0.9792273875999572
+  biased_cv_ba: 0.9793964215510969
+  public_lb: 0.97981
+  improvement_from_bias: 0.000169
+  n_features_before_te: 85
+  n_features_after_te: 332
+  fold_scores:
+    - 0.9786321173057708
+    - 0.9802635418697236
+    - 0.9793860229727533
+    - 0.979920286211565
+    - 0.9779558284095116
+  best_class_weights: [
+    1.8,
+    1.5,
+    2.4,
+  ]
+  summary_interpretation: "最小再現でもかなり強い。018 / 024 に次ぐ keep 候補として有力。"
+  verdict: adopt
 
 future_corr_check:
   planned: true
   target_mainline:
     - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
     - exp_20260409_024_xgb_digit_orderedte_min
-  raw_pearson_flatten_vs_018: null
-  rank_spearman_flatten_vs_018: null
-  raw_pearson_flatten_vs_024: null
-  rank_spearman_flatten_vs_024: null
-  interpretation: ""
+  raw_pearson_flatten_vs_018: 0.994775
+  rank_spearman_flatten_vs_018: 0.945456
+  raw_pearson_flatten_vs_024: 0.998641
+  rank_spearman_flatten_vs_024: 0.992057
+  interpretation: "別人格とはいいがたいが相関は低めだった"
 
 artifacts:
   planned_outputs:
@@ -210,8 +219,8 @@ post_run_fill:
   completed_at: ""
   runtime_note: ""
   file_check:
-    oof_saved: false
-    pred_saved: false
-    submission_saved: false
-    cv_result_saved: false
+    oof_saved: true
+    pred_saved: true
+    submission_saved: fatruelse
+    cv_result_saved: true
   final_comment: ""
