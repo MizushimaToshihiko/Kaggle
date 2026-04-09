@@ -192,8 +192,11 @@ results:
     - 0.9778672307208415
     - 0.9777564745148926
   best_class_weights: [1.7, 1.5, 2.3]
-  summary_interpretation: "元の共有コードrawCV:0.9780230,lb0.97685に対し、rawCV-diff±0,lb-diff+0.00068とわずかに改善した"
-  verdict: "adopt"
+  summary_interpretation: >
+    単体性能は 024 / 025 よりやや弱いが実戦圏。
+    一方で rank 相関は 018 / 024 / 025 のいずれに対しても 0.91 前後まで下がっており、
+    024 / 025 の近縁塊とは別枠の keep 候補として価値がある。
+  verdict: adopt
 
 future_corr_check:
   planned: true
@@ -220,9 +223,15 @@ artifacts:
     - cv_result.json
 
 decision:
-  implication_for_next_step: ""
-  recommended_next_action: ""
-  avoid_action: ""
+  implication_for_next_step: >
+    026 は単体最強ではないが、024 / 025 よりブレンド上の役割がズレる可能性が高い。
+    したがって keep し、次は 018 / 024 / 025 / 026 の4本で
+    スタック候補としての相関と役割を整理する段階に入る。
+  recommended_next_action: >
+    新しい shared 最小再現を増やす前に、018 / 024 / 025 / 026 の4本で
+    相関表と候補整理を行う。
+  avoid_action: >
+    026 を単体性能だけで 024 / 025 より下位とみなして軽視しない。
 
 notes:
   - この実験は shared code 全再現ではなく、別人格候補判定のための最小再現
@@ -231,8 +240,8 @@ notes:
   - 多少弱くても相関がズレるなら keep 候補になりうる
 
 post_run_fill:
-  completed_at: ""
-  runtime_note: ""
+  completed_at: "2026-04-09"
+  runtime_note: "9m 57s · GPU T4 x2"
   file_check:
     oof_saved: true
     pred_saved: true
