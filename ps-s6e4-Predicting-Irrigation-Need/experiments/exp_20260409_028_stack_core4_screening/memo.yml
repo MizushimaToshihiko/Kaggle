@@ -149,12 +149,13 @@ results:
   best_blend_type: "ridge"
   best_raw_cv_ba: 0.979638
   best_biased_cv_ba: 0.980126
+  best_public_lb: 0.97907
   summary_interpretation: >
     ridge screening では set5_018_025_026 が最良だった。
-    018+026 単独は弱く、026 は 025 と組ませた時に加算価値を持つ。
-    一方、simple average の値は 0.014 台で異常なので、
-    実装不備があり判断材料として使わない。
-  verdict: adopt
+    ただし Public LB は 0.97907 で、025 単体の 0.97981 を下回った。
+    したがって screening の CV 勝者をそのまま本番最優先とみなすのは危険。
+    また simple average の値は 0.014 台で異常なので、判断材料として使わない。
+  verdict: keep
 
 set_results:
   set1_018_024:
@@ -214,14 +215,16 @@ set_results:
 
 decision:
   implication_for_next_step: >
-    024 と 025 は競合枠だが、今回の screening では 025 がやや優勢。
-    026 は単独追加では弱く、025 と組ませた時に価値が出る。
+    028 の ridge screening では set5_018_025_026 が CV 最良だったが、
+    Public LB は 0.97907 で 025 単体の 0.97981 を下回った。
+    したがって CV screening の勝者をそのまま本番構成に採用するのではなく、
+    単体 025 を強い基準点として扱いながら再検討すべき。
   recommended_next_action: >
-    次は 018+025+026 を本命候補として、必要なら 018+024+026 と比較しつつ
-    本番用のより丁寧なスタックへ進む。
+    029 では 025 単体を基準に、
+    018+025+026 と 018+024+026 を比較しつつ、
+    LB を重視した本番寄り検証を行う。
   avoid_action: >
-    simple average の結果を根拠に判断しない。
-    また 026 を単独追加材として過大評価しない。
+    028 の CV 最良結果だけを根拠に、set5 を無条件で本命扱いしない。
 
 notes:
   - 今回は screening なので、hill climb や logit blend までは行かない
