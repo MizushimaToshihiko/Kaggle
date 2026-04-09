@@ -155,57 +155,57 @@ results:
 set_results:
   set1_018_024:
     simple_average:
-      raw_cv_ba: null
-      biased_cv_ba: null
-      best_class_weights: []
+      raw_cv_ba: 0.014670
+      biased_cv_ba: 0.015444
+      best_class_weights: [1.7, 1.5, 2.3]
     ridge:
-      raw_cv_ba: null
-      biased_cv_ba: null
-      best_class_weights: []
+      raw_cv_ba: 0.979550
+      biased_cv_ba: 0.979983
+      best_class_weights: [1.7, 1.5, 2.3]
     interpretation: ""
 
   set2_018_026:
     simple_average:
-      raw_cv_ba: null
-      biased_cv_ba: null
-      best_class_weights: []
+      raw_cv_ba: 0.014468
+      biased_cv_ba: 0.015004
+      best_class_weights: [1.7, 1.5, 2.3]
     ridge:
-      raw_cv_ba: null
-      biased_cv_ba: null
-      best_class_weights: []
+      raw_cv_ba: 0.979102
+      biased_cv_ba: 0.979267
+      best_class_weights: [1.7, 1.5, 2.3]
     interpretation: ""
 
   set3_018_024_026:
     simple_average:
-      raw_cv_ba: null
-      biased_cv_ba: null
-      best_class_weights: []
+      raw_cv_ba: 0.014699
+      biased_cv_ba: 0.015417
+      best_class_weights: [1.7, 1.5, 2.3]
     ridge:
-      raw_cv_ba: null
-      biased_cv_ba: null
-      best_class_weights: []
+      raw_cv_ba: 0.979484
+      biased_cv_ba: 0.979974
+      best_class_weights: [1.8, 1.5, 2.4]
     interpretation: ""
 
   set4_018_025:
     simple_average:
-      raw_cv_ba: null
-      biased_cv_ba: null
-      best_class_weights: []
+      raw_cv_ba: 0.014345
+      biased_cv_ba: 0.015015
+      best_class_weights: [1.7, 1.5, 2.3]
     ridge:
-      raw_cv_ba: null
-      biased_cv_ba: null
-      best_class_weights: []
+      raw_cv_ba: 0.979681
+      biased_cv_ba: 0.979951
+      best_class_weights: [1.7, 1.5, 2.3]
     interpretation: ""
 
   set5_018_025_026:
     simple_average:
-      raw_cv_ba: null
-      biased_cv_ba: null
-      best_class_weights: []
+      raw_cv_ba: 0.014375
+      biased_cv_ba: 0.015124
+      best_class_weights: [1.7, 1.5, 2.3]
     ridge:
-      raw_cv_ba: null
-      biased_cv_ba: null
-      best_class_weights: []
+      raw_cv_ba: 0.979638
+      biased_cv_ba: 0.980126
+      best_class_weights: [1.5, 1.3, 1.8]
     interpretation: ""
 
 decision:
@@ -232,11 +232,11 @@ artifacts:
     - memo.yml
 
 post_run_fill:
-  completed_at: ""
-  runtime_note: ""
+  completed_at: "2026-04-09"
+  runtime_note: "39s"
   file_check:
-    all_npy_loaded: false
-    class_order_fix_applied: false
-    screening_results_saved: false
-    best_submission_saved: false
+    all_npy_loaded: true
+    class_order_fix_applied: true
+    screening_results_saved: true
+    best_submission_saved: true
   final_comment: ""
