@@ -147,41 +147,46 @@ results:
   final_summary_table: []
 
   baseline_025:
-    best_alpha: Nan
-    raw_cv_ba: 0.014638
-    biased_cv_ba: 0.015312
+    best_alpha: null
+    raw_cv_ba: null
+    biased_cv_ba: null
     public_lb: 0.97981
-    best_class_weights: [-]
-    interpretation: "異常に低いので、実装が壊れていると思われる。信頼できない値"
+    best_class_weights: []
+    interpretation: "029 notebook 上の baseline CV は実装不備で壊れているため不採用。比較基準としては 025 単体の既知 LB 0.97981 を使う。"
 
   main_018_025_026:
-    best_alpha: 10.0000
+    best_alpha: 10.0
     raw_cv_ba: 0.979633
     biased_cv_ba: 0.980131
     public_lb: 0.97907
     best_class_weights: [1.5, 1.3, 1.8]
-    interpretation: ""
+    interpretation: "alpha 最適化後も CV は最良だが、LB は 025 単体未満。本命昇格は不可。"
 
   compare_018_024_026:
-    best_alpha: 30.0000
+    best_alpha: 30.0
     raw_cv_ba: 0.979510
     biased_cv_ba: 0.979997
     public_lb: null
     best_class_weights: [1.8, 1.5, 2.4]
-    interpretation: ""
+    interpretation: "main よりやや弱い。逆転は起きなかった。"
 
   best_overall_set: "main_018_025_026"
-  best_overall_alpha: 10.0000
+  best_overall_alpha: 10.0
   best_overall_raw_cv_ba: 0.979633
   best_overall_biased_cv_ba: 0.980131
   best_overall_public_lb: 0.97907
-  summary_interpretation: "CVは誤差の範囲で上がったが、lbは028と変わらず"
-  verdict: pending
+  summary_interpretation: "alpha 最適化で CV は微増したが、LB は 028 から改善せず、025 単体を下回った。"
+  verdict: keep
 
 decision:
-  implication_for_next_step: ""
-  recommended_next_action: ""
-  avoid_action: ""
+  implication_for_next_step: >
+    029 により、stack 側の alpha 最適化では 025 単体優位を覆せないことが確認された。
+    現時点では 025 単体を本命基準とし、stack は補助候補として扱うべき。
+  recommended_next_action: >
+    025 単体を主提出候補として維持しつつ、必要なら 018+025+026 は副提出候補として比較する。
+    新しい実験をするなら、ridge alpha の微調整ではなく、まったく別の低相関候補探索に戻る。
+  avoid_action: >
+    CV 最良だけを根拠に main_018_025_026 を本命扱いしない。
 
 notes:
   - 今回は refinement 実験であり、候補追加のフェーズではない
