@@ -216,8 +216,8 @@ notes:
   - Optuna は今はやらない
 
 post_run_fill:
-  completed_at: ""
-  runtime_note: ""
+  completed_at: "2026-04-09"
+  runtime_note: "39m 3s · GPU P100"
   file_check:
     oof_saved: true
     pred_saved: true
