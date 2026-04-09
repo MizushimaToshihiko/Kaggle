@@ -1,0 +1,206 @@
+experiment:
+  exp_id: exp_20260409_024_xgb_digit_orderedte_min
+  title: XGB digit features + OrderedTE minimum reproduction
+  competition: PS S6E4 Predicting Irrigation Need
+  objective: >
+    yunsuxiaozi_xgb_lb0.98011 の骨格から、
+    digit features + frequency remap + OrderedTE + XGBClassifier
+    だけを残した最小再現版を作る。
+    018 と異なる人格の候補になりうるかを確認する。
+
+status:
+  stage: done
+  verdict: pending
+
+source_reference:
+  notebook_name: code_yunsuxiaozi_xgb_lb0.98011
+  reference_type: shared_code
+  key_elements:
+    - digit features
+    - category frequency remap
+    - OrderedTE
+    - XGBClassifier
+    - class weight tuning
+  intentionally_removed:
+    - Optuna class weight tuning
+    - OrderedTE 4x augmentation
+    - extra surrounding optimization
+
+design:
+  model_family: XGBoost
+  target_type: multiclass
+  seed: 2026
+  n_folds: 5
+  cv_type: KFold
+  use_digit_features: true
+  use_frequency_remap: true
+  use_ordered_te: true
+  use_optuna: false
+  ordered_te_repeat: 1
+  bias_tuning_type: simple_manual_grid
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  target_col: Irrigation_Need
+  id_col: id
+
+features:
+  raw_categorical:
+    - Soil_Type
+    - Crop_Type
+    - Crop_Growth_Stage
+    - Season
+    - Irrigation_Type
+    - Water_Source
+    - Mulching_Used
+    - Region
+
+  raw_numeric:
+    - Soil_pH
+    - Soil_Moisture
+    - Organic_Carbon
+    - Electrical_Conductivity
+    - Temperature_C
+    - Humidity
+    - Rainfall_mm
+    - Sunlight_Hours
+    - Wind_Speed_kmh
+    - Field_Area_hectare
+    - Previous_Irrigation_mm
+
+  feature_engineering:
+    digit_features:
+      enabled: true
+      rule: >
+        各数値列について k=-4..3 の digit 特徴を作成し、
+        その後に元数値列を最大値に応じて round(3/2/1) する。
+    drop_constant_digit_columns:
+      enabled: true
+    frequency_remap:
+      enabled: true
+      대상: raw_categorical + digit_features
+      rule: >
+        train の value_counts() を使い、count>=5 のカテゴリを順に id 化し、
+        それ未満は default bucket に落とす。
+    ordered_te:
+      enabled: true
+      target_type: multiclass
+      target_columns:
+        base_features: true
+      note: >
+        shared code の 4回増殖は行わず、1回のみで最小再現する。
+
+xgb_params:
+  max_depth: 4
+  colsample_bytree: 0.8
+  subsample: 0.8
+  n_estimators: 512
+  learning_rate: 0.1
+  early_stopping_rounds: 100
+  random_state: 2026
+  n_jobs: -1
+  enable_categorical: true
+  alpha: 5
+  reg_lambda: 5
+  max_leaves: 30
+  min_child_weight: 2
+  tree_method: hist
+  max_bin: 10000
+  device: cuda_if_available_else_cpu
+
+class_weighting:
+  base_sample_weight:
+    enabled: true
+    rule: balanced_per_class_frequency
+  post_bias_tuning:
+    enabled: true
+    method: simple_grid
+    note: >
+      shared code の Optuna は使わず、
+      少数の class weight 候補のみで簡易確認する。
+
+hypothesis:
+  - digit + OrderedTE の骨格だけでも実戦圏に乗る可能性がある
+  - 018 とは設計がかなり異なるため、低相関候補になる可能性がある
+  - shared code の全部再現ではなく最小再現でも、別人格候補かどうかは判定できる
+
+comparison_plan:
+  primary_compare_to:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+  secondary_compare_to:
+    - exp_20260405_008_cat_digit_min_bias
+    - exp_20260405_006_cat_strict_baseline_bias_wide
+    - exp_20260405_011_cat_log_min_bias
+  metrics:
+    - raw_cv_ba
+    - biased_cv_ba
+    - public_lb
+    - future_corr_vs_018
+
+expected_read:
+  strong_result:
+    raw_cv_ba: "0.976台後半以上"
+    biased_cv_ba: "0.978台前後以上"
+    interpretation: >
+      最小再現でも実戦圏。低相関候補として強く検討する価値あり。
+  medium_result:
+    raw_cv_ba: "0.974台〜0.976前半"
+    biased_cv_ba: "0.976台〜0.977前半"
+    interpretation: >
+      単体最強ではないが、低相関候補として keep 価値あり。
+  weak_result:
+    raw_cv_ba: "< 0.974"
+    biased_cv_ba: "< 0.976"
+    interpretation: >
+      最小再現では弱い。OrderedTE や bias の追加検討前に一旦 drop 寄り。
+
+results:
+  raw_cv_ba: null
+  biased_cv_ba: null
+  public_lb: null
+  improvement_from_bias: null
+  n_features_before_te: null
+  n_features_after_te: null
+  fold_scores: []
+  best_class_weights: []
+  summary_interpretation: ""
+  verdict: pending
+
+future_corr_check:
+  planned: true
+  target_mainline: exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+  raw_pearson_flatten: null
+  rank_spearman_flatten: null
+  interpretation: ""
+
+artifacts:
+  planned_outputs:
+    - oof_xgb_digit_orderedte_min_proba.npy
+    - pred_xgb_digit_orderedte_min_proba.npy
+    - oof_xgb_digit_orderedte_min_proba_biased.npy
+    - pred_xgb_digit_orderedte_min_proba_biased.npy
+    - submission_xgb_digit_orderedte_min.csv
+    - feature_columns.csv
+    - cv_result.json
+
+decision:
+  implication_for_next_step: ""
+  recommended_next_action: ""
+  avoid_action: ""
+
+notes:
+  - この実験は shared code 全再現ではなく、別人格候補判定のための最小再現
+  - 結果が中途半端でも、相関が低そうなら keep 候補
+  - 単体CVだけで採否を即断しない
+  - Optuna は今はやらない
+
+post_run_fill:
+  completed_at: ""
+  runtime_note: ""
+  file_check:
+    oof_saved: false
+    pred_saved: false
+    submission_saved: false
+    cv_result_saved: false
+  final_comment: ""
