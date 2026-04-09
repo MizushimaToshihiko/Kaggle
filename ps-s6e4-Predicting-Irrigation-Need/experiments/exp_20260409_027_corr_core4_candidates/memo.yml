@@ -1,0 +1,199 @@
+experiment:
+  exp_id: exp_20260409_027_corr_core4_candidates
+  title: Correlation check for current 4 core candidates
+  competition: PS S6E4 Predicting Irrigation Need
+  objective: >
+    現時点の主力4候補
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260409_024_xgb_digit_orderedte_min
+    - exp_20260409_025_lgb_digit_te_min
+    - exp_20260409_026_realmlp_pair_te_min
+    の OOF / TEST probability の相関を整理し、
+    近縁候補と別枠候補を明確にする。
+
+status:
+  stage: done
+  verdict: pending
+
+analysis_type:
+  kind: correlation_check
+  target_space: multiclass probability
+  primary_view:
+    - raw_pearson_flatten
+    - rank_spearman_flatten
+  secondary_view:
+    - classwise_cross_corr
+    - row_sum_sanity_check
+
+models:
+  - exp_id: exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    short_name: 018_cat_pairwise
+    role_before_analysis: pairwise_mainline
+    artifact:
+      oof: oof_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
+      pred: pred_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
+    class_order_fix:
+      applied: true
+      permutation: [2, 0, 1]
+
+  - exp_id: exp_20260409_024_xgb_digit_orderedte_min
+    short_name: 024_xgb_digit_orderedte
+    role_before_analysis: xgb_digit_te_candidate
+    artifact:
+      oof: oof_xgb_digit_orderedte_min_proba_biased.npy
+      pred: pred_xgb_digit_orderedte_min_proba_biased.npy
+    class_order_fix:
+      applied: true
+      permutation: [2, 0, 1]
+
+  - exp_id: exp_20260409_025_lgb_digit_te_min
+    short_name: 025_lgb_digit_te
+    role_before_analysis: lgb_digit_te_candidate
+    artifact:
+      oof: oof_lgb_digit_te_min_proba_biased.npy
+      pred: pred_lgb_digit_te_min_proba_biased.npy
+    class_order_fix:
+      applied: true
+      permutation: [2, 0, 1]
+
+  - exp_id: exp_20260409_026_realmlp_pair_te_min
+    short_name: 026_realmlp_pair_te
+    role_before_analysis: realmlp_candidate
+    artifact:
+      oof: oof_realmlp_pair_te_min_proba_biased.npy
+      pred: pred_realmlp_pair_te_min_proba_biased.npy
+    class_order_fix:
+      applied: true
+      permutation: [2, 0, 1]
+
+method:
+  notebook_base: code_show_corr.txt
+  probability_version: biased
+  flatten_before_global_corr: true
+  rank_method: average
+  row_sum_check: true
+  classwise_cross_corr: true
+  notes:
+    - multiclass probability を flatten して raw Pearson / rank Pearson を確認する
+    - class 列順ズレを避けるため、必要なモデルには permutation [2,0,1] を適用する
+    - まず biased probability 同士で比較する
+
+results_tables:
+  oof_raw_corr: {}
+  test_raw_corr: {}
+  oof_rank_corr: {}
+  test_rank_corr: {}
+
+focused_results:
+  pair_018_024:
+    oof_raw: null
+    test_raw: null
+    oof_rank: null
+    test_rank: null
+    interpretation: ""
+
+  pair_018_025:
+    oof_raw: null
+    test_raw: null
+    oof_rank: null
+    test_rank: null
+    interpretation: ""
+
+  pair_018_026:
+    oof_raw: null
+    test_raw: null
+    oof_rank: null
+    test_rank: null
+    interpretation: ""
+
+  pair_024_025:
+    oof_raw: null
+    test_raw: null
+    oof_rank: null
+    test_rank: null
+    interpretation: ""
+
+  pair_024_026:
+    oof_raw: null
+    test_raw: null
+    oof_rank: null
+    test_rank: null
+    interpretation: ""
+
+  pair_025_026:
+    oof_raw: null
+    test_raw: null
+    oof_rank: null
+    test_rank: null
+    interpretation: ""
+
+classwise_cross_corr:
+  executed: false
+  target_focus_model: ""
+  notable_findings: []
+  interpretation: ""
+
+sanity_check:
+  executed: false
+  row_sum_ok: null
+  shape_ok: null
+  interpretation: ""
+
+role_clustering:
+  cluster_1: []
+  cluster_2: []
+  outlier_or_bridge: []
+  summary: ""
+
+expected_read:
+  high_corr_signal:
+    raw_pearson_flatten: ">= 0.998"
+    rank_spearman_flatten: ">= 0.990"
+    interpretation: "かなり近縁。役割重複の可能性が高い"
+  medium_corr_signal:
+    raw_pearson_flatten: "0.995 - 0.998"
+    rank_spearman_flatten: "0.930 - 0.990"
+    interpretation: "大枠は近いが、役割差を持つ可能性あり"
+  lower_corr_signal:
+    raw_pearson_flatten: "< 0.995"
+    rank_spearman_flatten: "< 0.930"
+    interpretation: "別枠候補として価値が高い"
+
+results_summary:
+  main_takeaway: ""
+  closest_pair: ""
+  most_distinct_pair: ""
+  018_position: ""
+  024_position: ""
+  025_position: ""
+  026_position: ""
+  overall_verdict: pending
+
+decision:
+  implication_for_next_step: ""
+  recommended_next_action: ""
+  avoid_action: ""
+
+artifacts:
+  planned_outputs:
+    - corr_matrix_raw_oof.csv
+    - corr_matrix_raw_test.csv
+    - corr_matrix_rank_oof.csv
+    - corr_matrix_rank_test.csv
+    - corr_summary.json
+    - memo.yml
+
+notes:
+  - この実験は最終確定ではなく、現時点の主力4候補の役割整理
+  - 単体CV/LBではなく、候補同士の位置関係を整理するための実験
+  - 024 と 025 の近縁性、026 の別枠性、018 の主軸性を確認する
+
+post_run_fill:
+  completed_at: ""
+  runtime_note: ""
+  file_check:
+    all_oof_loaded: false
+    all_pred_loaded: false
+    class_order_fix_applied: false
+    corr_tables_saved: false
+  final_comment: ""
