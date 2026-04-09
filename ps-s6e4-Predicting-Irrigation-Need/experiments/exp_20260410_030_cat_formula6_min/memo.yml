@@ -1,0 +1,222 @@
+experiment:
+  exp_id: exp_20260410_030_cat_formula6_min
+  title: CatBoost formula-inspired minimum model with 6 key features
+  competition: PS S6E4 Predicting Irrigation Need
+  objective: >
+    Chris Deotte の "Original Data's Exact Formula" discussion で示唆された
+    6重要特徴
+    - Soil_Moisture
+    - Rainfall_mm
+    - Temperature_C
+    - Wind_Speed_kmh
+    - Crop_Growth_Stage
+    - Mulching_Used
+    を使って、
+    threshold features + score features を明示的に作成した
+    formula-inspired な最小 CatBoost モデルを検証する。
+    018 / 024 / 025 / 026 とは異なる思想の別人格候補になるかを確認する。
+
+status:
+  stage: done
+  verdict: done
+
+source_reference:
+  discussion_title: Chris Deotte - Original Data's Exact Formula
+  source_type: competition_discussion
+  key_takeaways:
+    - original data は 6重要特徴と閾値ルールで完全分離できる
+    - 重要特徴は Soil_Moisture / Rainfall_mm / Temperature_C / Wind_Speed_kmh / Crop_Growth_Stage / Mulching_Used
+    - simple score rule でも元データの構造をかなり表現できる
+  intended_use:
+    - 重要特徴の絞り込み
+    - 閾値特徴の明示的作成
+    - formula_score 系特徴の作成
+
+design:
+  model_family: CatBoost
+  target_type: multiclass
+  seed: 42
+  n_folds: 5
+  cv_type: StratifiedKFold
+  use_original_data: true
+  use_pairwise: false
+  note: >
+    今回は 6特徴 + threshold + score の最小構成のみを見る。
+    6重要特徴同士の pair はまだ入れない。
+    まず formula 系特徴だけで人格が立つかを確認する。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  original_path: /kaggle/input/datasets/miadul/irrigation-water-requirement-prediction-dataset/irrigation_prediction.csv
+  target_col: Irrigation_Need
+  id_col: id
+
+features:
+  important_numeric:
+    - Soil_Moisture
+    - Rainfall_mm
+    - Temperature_C
+    - Wind_Speed_kmh
+
+  important_categorical:
+    - Crop_Growth_Stage
+    - Mulching_Used
+
+  threshold_features:
+    - soil_lt_25
+    - rain_lt_300
+    - temp_gt_30
+    - wind_gt_10
+
+  category_indicator_features:
+    - is_harvest
+    - is_sowing
+    - is_flowering
+    - is_vegetative
+    - mulch_yes
+    - mulch_no
+
+  score_features:
+    - high_score
+    - low_score
+    - formula_score
+    - score_abs
+    - soil_rain_combo
+    - temp_wind_combo
+
+  note: >
+    Chris discussion の簡易式を feature 化する。
+    high_score = 2*soil_lt_25 + 2*rain_lt_300 + temp_gt_30 + wind_gt_10
+    low_score = 2*is_harvest + 2*is_sowing + mulch_yes
+    formula_score = high_score - low_score
+
+catboost_params:
+  iterations: 3000
+  learning_rate: 0.03
+  depth: 6
+  grow_policy: SymmetricTree
+  loss_function: MultiClass
+  eval_metric: TotalF1:average=Macro
+  early_stopping_rounds: 150
+  task_type: GPU if torch.cuda.is_available() else CPU
+  devices: '"0" only if GPU'
+  verbose: 200
+
+postprocess:
+  bias_tuning:
+    enabled: true
+    method: simple_class_weight_grid
+    grid:
+      - [1.0, 1.0, 1.0]
+      - [1.2, 1.2, 1.2]
+      - [1.5, 1.5, 1.5]
+      - [1.5, 1.3, 1.8]
+      - [1.7, 1.5, 2.3]
+      - [1.8, 1.5, 2.4]
+
+hypothesis:
+  - 6重要特徴 + 閾値 + score だけでも、実戦圏の単体モデルになる可能性がある
+  - pairwise 全開や digit+TE 系とは異なる思想なので、相関妙味を持つ可能性がある
+  - 単体性能が少し弱くても、既存候補とズレるなら keep 候補になりうる
+
+comparison_plan:
+  primary_compare_to:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260409_024_xgb_digit_orderedte_min
+    - exp_20260409_025_lgb_digit_te_min
+    - exp_20260409_026_realmlp_pair_te_min
+  metrics:
+    - raw_cv_ba
+    - biased_cv_ba
+    - public_lb
+    - future_corr_vs_018
+    - future_corr_vs_024
+    - future_corr_vs_025
+    - future_corr_vs_026
+
+expected_read:
+  strong_result:
+    raw_cv_ba: "0.977台後半以上"
+    biased_cv_ba: "0.978台前半以上"
+    interpretation: >
+      formula-inspired 最小構成でも十分強い。単体でも keep、相関がズレれば有力。
+  medium_result:
+    raw_cv_ba: "0.976台後半〜0.977前半"
+    biased_cv_ba: "0.977台前半〜0.978未満"
+    interpretation: >
+      単体は少し弱いが、相関がズレるなら keep 候補。
+  weak_result:
+    raw_cv_ba: "< 0.9765"
+    biased_cv_ba: "< 0.9775"
+    interpretation: >
+      最小構成としては弱い。pair や他補助特徴追加前に一旦評価を止める。
+
+results:
+  raw_cv_ba: null
+  biased_cv_ba: null
+  public_lb: null
+  improvement_from_bias: null
+  n_features: null
+  original_formula_ba: null
+  fold_scores: []
+  best_class_weights: []
+  summary_interpretation: ""
+  verdict: pending
+
+feature_check:
+  threshold_features_worked: null
+  score_features_worked: null
+  top_importance_features: []
+  interpretation: ""
+
+future_corr_check:
+  planned: true
+  target_mainline:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260409_024_xgb_digit_orderedte_min
+    - exp_20260409_025_lgb_digit_te_min
+    - exp_20260409_026_realmlp_pair_te_min
+  raw_pearson_flatten_vs_018: null
+  rank_spearman_flatten_vs_018: null
+  raw_pearson_flatten_vs_024: null
+  rank_spearman_flatten_vs_024: null
+  raw_pearson_flatten_vs_025: null
+  rank_spearman_flatten_vs_025: null
+  raw_pearson_flatten_vs_026: null
+  rank_spearman_flatten_vs_026: null
+  interpretation: ""
+
+decision:
+  implication_for_next_step: ""
+  recommended_next_action: ""
+  avoid_action: ""
+
+notes:
+  - 今回は Chris discussion の仮説検証のための最小構成
+  - 6重要特徴同士の pair はまだ入れない
+  - まずは formula 系特徴だけで人格が立つかを確認する
+  - 単体CVだけで即 drop しない。相関妙味を必ず見る
+
+artifacts:
+  planned_outputs:
+    - oof_cat_formula6_min_proba.npy
+    - pred_cat_formula6_min_proba.npy
+    - oof_cat_formula6_min_proba_biased.npy
+    - pred_cat_formula6_min_proba_biased.npy
+    - submission_cat_formula6_min.csv
+    - feature_importance.csv
+    - feature_importance_by_fold.csv
+    - feature_columns.csv
+    - cv_result.json
+    - memo.yml
+
+post_run_fill:
+  completed_at: ""
+  runtime_note: ""
+  file_check:
+    oof_saved: false
+    pred_saved: false
+    submission_saved: false
+    cv_result_saved: false
+  final_comment: ""
