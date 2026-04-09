@@ -144,11 +144,11 @@ expected_read:
 
 results:
   screening_table: []
-  best_set_name: ""
-  best_models: []
-  best_blend_type: ""
-  best_raw_cv_ba: null
-  best_biased_cv_ba: null
+  best_set_name: "set5_018_025_026"
+  best_models: [018,025,026]
+  best_blend_type: "ridge"
+  best_raw_cv_ba: 0.979638
+  best_biased_cv_ba: 0.980125
   summary_interpretation: ""
   verdict: pending
 
