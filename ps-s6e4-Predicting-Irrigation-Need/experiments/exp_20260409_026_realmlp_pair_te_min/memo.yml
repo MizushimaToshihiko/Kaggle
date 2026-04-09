@@ -9,8 +9,8 @@ experiment:
     018 / 024 / 025 と異なる人格候補になりうるかを確認する。
 
 status:
-  stage: planned
-  verdict: pending
+  stage: done
+  verdict: adopt
 
 source_reference:
   notebook_name: code_Mahog_RealMLP_lb0.97685
@@ -178,17 +178,22 @@ expected_read:
       単体も弱く、相関妙味も薄ければ drop 寄り。
 
 results:
-  raw_cv_ba: null
-  biased_cv_ba: null
-  public_lb: null
-  improvement_from_bias: null
-  n_pair_columns: null
-  n_features_before_te: null
-  n_features_after_te: null
-  fold_scores: []
-  best_class_weights: []
-  summary_interpretation: ""
-  verdict: pending
+  raw_cv_ba: 0.9780230335327985
+  biased_cv_ba: 0.9781126952221663
+  public_lb: 0.97753
+  improvement_from_bias: 8.966168936774821e-05
+  n_pair_columns: 9
+  n_features_before_te: 39
+  n_features_after_te: 57
+  fold_scores:
+    - 0.9766656635058987
+    - 0.9780038327281773
+    - 0.9798216157622699
+    - 0.9778672307208415
+    - 0.9777564745148926
+  best_class_weights: [1.7, 1.5, 2.3]
+  summary_interpretation: "元の共有コードrawCV:0.9780230,lb0.97685に対し、rawCV-diff±0,lb-diff+0.00068とわずかに改善した"
+  verdict: "adopt"
 
 future_corr_check:
   planned: true
