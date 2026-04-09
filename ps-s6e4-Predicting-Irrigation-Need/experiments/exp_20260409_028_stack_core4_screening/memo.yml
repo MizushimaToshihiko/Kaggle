@@ -246,10 +246,12 @@ artifacts:
 
 post_run_fill:
   completed_at: "2026-04-09"
-  runtime_note: "39s"
+  runtime_note: "ridge screening では set5 が最良だったが、提出LBは 025 単体を下回った。"
   file_check:
     all_npy_loaded: true
     class_order_fix_applied: true
     screening_results_saved: true
     best_submission_saved: true
-  final_comment: ""
+  final_comment: >
+    screening 実験としては有効だったが、本番優位を保証する結果ではなかった。
+    025 単体は引き続き強い基準点として扱う。
