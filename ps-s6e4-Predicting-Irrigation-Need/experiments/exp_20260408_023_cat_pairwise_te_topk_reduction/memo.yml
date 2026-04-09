@@ -163,8 +163,8 @@ results:
   raw_cv_ba: 0.977212
   biased_cv_ba: 0.978898
   public_lb: 0.97719
-  selected_pair_count: null
-  n_final_features: null
+  selected_pair_count: 64
+  n_final_features: 233
   best_bias: [-1.0799999237060547, -1.1999999284744263, 1.0]
   fold_scores_raw:
     - fold 1/5 raw_ba = 0.976371
@@ -202,7 +202,7 @@ post_run_fill:
   completed_at: ""
   runtime_note: ""
   file_check:
-    feature_importance_loaded: false
-    pair_importance_reconstructed: false
-    selected_pair_cols_saved: false
+    feature_importance_loaded: true
+    pair_importance_reconstructed: true
+    selected_pair_cols_saved: true
   final_comment: ""
