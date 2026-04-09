@@ -192,7 +192,9 @@ future_corr_check:
   rank_spearman_flatten_vs_018: 0.945456
   raw_pearson_flatten_vs_024: 0.998641
   rank_spearman_flatten_vs_024: 0.992057
-  interpretation: "別人格とはいいがたいが相関は低めだった"
+  interpretation: >
+    018 に対してはそこそこズレているが、024 に対しては非常に高相関。
+    完全な別人格とは言えず、digit+TE 系の近縁候補とみなすのが妥当。
 
 artifacts:
   planned_outputs:
@@ -205,9 +207,14 @@ artifacts:
     - cv_result.json
 
 decision:
-  implication_for_next_step: ""
-  recommended_next_action: ""
-  avoid_action: ""
+  implication_for_next_step: >
+    025 は単体性能は非常に強いが、024 と高相関で役割が近い。
+    したがって 024 と 025 を同時に深掘りするより、
+    まずはより異なる系統の候補探索を優先すべき。
+  recommended_next_action: >
+    025 は keep するが、次は Mahog_RealMLP の最小再現に進む。
+  avoid_action: >
+    025 を 024 とは独立した強い別人格として過大評価しない。
 
 notes:
   - この実験は shared code 全再現ではなく、別人格候補判定のための最小再現
