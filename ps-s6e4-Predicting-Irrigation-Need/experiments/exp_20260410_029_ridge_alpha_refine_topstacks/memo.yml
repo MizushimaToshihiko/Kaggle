@@ -1,0 +1,218 @@
+experiment:
+  exp_id: exp_20260410_029_ridge_alpha_refine_topstacks
+  title: Ridge alpha refinement for top stack candidates
+  competition: PS S6E4 Predicting Irrigation Need
+  objective: >
+    028 の screening で有望だった stack 候補について、
+    ridge alpha を coarse -> local の二段階で詰めて、
+    CV 最良候補が本番でも有望かを確認する。
+    今回は simple blend は行わず、ridge のみを対象とする。
+
+status:
+  stage: done
+  verdict: done
+
+source_reference:
+  parent_experiment: exp_20260409_028_stack_core4_screening
+  reason_for_this_exp: >
+    028 では ridge alpha=1.0 固定で screening を行ったが、
+    CV 最良だった set5_018_025_026 の Public LB は 0.97907 で、
+    025 単体の 0.97981 を下回った。
+    したがって、素材選定は維持しつつ alpha を詰めて再確認する必要がある。
+
+candidate_sets:
+  baseline_025:
+    models:
+      - "025"
+    purpose: "強い単体基準点として扱う"
+
+  main_018_025_026:
+    models:
+      - "018"
+      - "025"
+      - "026"
+    purpose: "028 の ridge screening で CV 最良だった本命候補"
+
+  compare_018_024_026:
+    models:
+      - "018"
+      - "024"
+      - "026"
+    purpose: "024 を使った比較候補"
+
+input_artifacts:
+  npy_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/
+  models:
+    "018":
+      oof: oof_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
+      pred: pred_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
+      class_order_fix:
+        applied: true
+        permutation: [2, 0, 1]
+
+    "024":
+      oof: oof_xgb_digit_orderedte_min_proba_biased.npy
+      pred: pred_xgb_digit_orderedte_min_proba_biased.npy
+      class_order_fix:
+        applied: true
+        permutation: [2, 0, 1]
+
+    "025":
+      oof: oof_lgb_digit_te_min_proba_biased.npy
+      pred: pred_lgb_digit_te_min_proba_biased.npy
+      class_order_fix:
+        applied: true
+        permutation: [2, 0, 1]
+
+    "026":
+      oof: oof_realmlp_pair_te_min_proba_biased.npy
+      pred: pred_realmlp_pair_te_min_proba_biased.npy
+      class_order_fix:
+        applied: true
+        permutation: [2, 0, 1]
+
+blend_method:
+  method: ridge_only
+  use_logit: false
+  note: >
+    028 の simple average は異常値だったため、今回は ridge のみを対象とする。
+    baseline_025 は実質的には単体そのままを基準として扱う。
+
+alpha_search:
+  strategy: two_stage
+  coarse_grid:
+    - 0.0001
+    - 0.0003
+    - 0.001
+    - 0.003
+    - 0.01
+    - 0.03
+    - 0.1
+    - 0.3
+    - 1.0
+    - 3.0
+    - 10.0
+    - 30.0
+    - 100.0
+
+  local_grid_rule: >
+    coarse best alpha の近傍だけを局所探索する。
+    例: best=1.0 なら [0.3, 0.5, 0.7, 1.0, 1.5, 2.0, 3.0]
+
+postprocess:
+  bias_tuning:
+    enabled: true
+    method: simple_class_weight_grid
+    grid:
+      - [1.0, 1.0, 1.0]
+      - [1.2, 1.2, 1.2]
+      - [1.5, 1.5, 1.5]
+      - [1.5, 1.3, 1.8]
+      - [1.7, 1.5, 2.3]
+      - [1.8, 1.5, 2.4]
+
+evaluation_priority:
+  primary:
+    - biased_cv_ba
+    - raw_cv_ba
+  secondary:
+    - public_lb
+  interpretation_rule:
+    - baseline_025 を強い基準点として扱う
+    - main_018_025_026 が CV で勝っても LB で負けるなら本命扱いしない
+    - compare_018_024_026 が main に迫るなら 024/025 の競合関係を再検討する
+
+hypothesis:
+  - 028 の set5_018_025_026 は alpha=1.0 固定では CV 最良だったが、alpha 最適化で性質が変わる可能性がある
+  - 025 単体は依然として強い基準点であり、stack がこれを超えられないなら本命化は危険
+  - compare_018_024_026 は main より少し弱かったが、alpha を詰めると逆転の余地があるかもしれない
+
+expected_read:
+  strong_result:
+    biased_cv_ba: "025 単体を安定して上回る"
+    interpretation: >
+      stack の本番価値が高い。main または compare を本命候補として昇格できる。
+  medium_result:
+    biased_cv_ba: "025 単体と同等か微差"
+    interpretation: >
+      stack は keep だが、本命扱いは保留。LB を見て判断する。
+  weak_result:
+    biased_cv_ba: "025 単体を下回る"
+    interpretation: >
+      stack の優位は薄い。単体 025 を優先すべき。
+
+results:
+  coarse_results_table: []
+  local_results_table: []
+  final_summary_table: []
+
+  baseline_025:
+    best_alpha: null
+    raw_cv_ba: null
+    biased_cv_ba: null
+    public_lb: null
+    best_class_weights: []
+    interpretation: ""
+
+  main_018_025_026:
+    best_alpha: null
+    raw_cv_ba: null
+    biased_cv_ba: null
+    public_lb: null
+    best_class_weights: []
+    interpretation: ""
+
+  compare_018_024_026:
+    best_alpha: null
+    raw_cv_ba: null
+    biased_cv_ba: null
+    public_lb: null
+    best_class_weights: []
+    interpretation: ""
+
+  best_overall_set: ""
+  best_overall_alpha: null
+  best_overall_raw_cv_ba: null
+  best_overall_biased_cv_ba: null
+  best_overall_public_lb: null
+  summary_interpretation: ""
+  verdict: pending
+
+decision:
+  implication_for_next_step: ""
+  recommended_next_action: ""
+  avoid_action: ""
+
+notes:
+  - 今回は refinement 実験であり、候補追加のフェーズではない
+  - simple blend はやらない
+  - 025 単体を必ず基準点として残す
+  - CV 勝者をそのまま本命扱いしない
+  - 提出できた場合は LB を必ず memo に残す
+
+artifacts:
+  planned_outputs:
+    - coarse_alpha_results.csv
+    - local_alpha_results.csv
+    - final_summary_results.csv
+    - coarse_alpha_results.json
+    - local_alpha_results.json
+    - submission_best_set_ridge_refined.csv
+    - oof_best_set_ridge_refined_proba.npy
+    - pred_best_set_ridge_refined_proba.npy
+    - oof_best_set_ridge_refined_proba_biased.npy
+    - pred_best_set_ridge_refined_proba_biased.npy
+    - meta_note.json
+    - memo.yml
+
+post_run_fill:
+  completed_at: ""
+  runtime_note: ""
+  file_check:
+    all_npy_loaded: false
+    class_order_fix_applied: false
+    coarse_results_saved: false
+    local_results_saved: false
+    final_summary_saved: false
+    best_submission_saved: false
+  final_comment: ""
