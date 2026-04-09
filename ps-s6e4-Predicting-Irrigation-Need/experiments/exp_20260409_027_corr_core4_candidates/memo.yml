@@ -213,11 +213,11 @@ notes:
   - 024 と 025 の近縁性、026 の別枠性、018 の主軸性を確認する
 
 post_run_fill:
-  completed_at: ""
-  runtime_note: ""
+  completed_at: "2026-04-09"
+  runtime_note: "11s"
   file_check:
-    all_oof_loaded: false
-    all_pred_loaded: false
-    class_order_fix_applied: false
-    corr_tables_saved: false
+    all_oof_loaded: true
+    all_pred_loaded: true
+    class_order_fix_applied: true
+    corr_tables_saved: true
   final_comment: ""
