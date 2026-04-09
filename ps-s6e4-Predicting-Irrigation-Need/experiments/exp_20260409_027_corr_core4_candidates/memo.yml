@@ -79,62 +79,86 @@ method:
     - まず biased probability 同士で比較する
 
 results_tables:
-  oof_raw_corr: {}
-  test_raw_corr: {}
-  oof_rank_corr: {}
-  test_rank_corr: {}
+  oof_raw_corr: {
+  	018cat_pairwise_te_bias_from_shared_min_proba	024xgb_digit_orderedte_min_biased	025lgb_digit_te_min_biased	026realmlp_pair_te_min_biased
+    018cat_pairwise_te_bias_from_shared_min_proba	1.000000	0.995078	0.994775	0.994960
+    024xgb_digit_orderedte_min_biased	0.995078	1.000000	0.998641	0.995699
+    025lgb_digit_te_min_biased	0.994775	0.998641	1.000000	0.995700
+    026realmlp_pair_te_min_biased	0.994960	0.995699	0.995700	1.000000
+  }
+  test_raw_corr: {
+  	018cat_pairwise_te_bias_from_shared_min_proba	024xgb_digit_orderedte_min_biased	025lgb_digit_te_min_biased	026realmlp_pair_te_min_biased
+    018cat_pairwise_te_bias_from_shared_min_proba	1.000000	0.996178	0.995935	0.995901
+    024xgb_digit_orderedte_min_biased	0.996178	1.000000	0.999317	0.997025
+    025lgb_digit_te_min_biased	0.995935	0.999317	1.000000	0.997172
+    026realmlp_pair_te_min_biased	0.995901	0.997025	0.997172	1.000000
+  }
+  oof_rank_corr: {
+  	018cat_pairwise_te_bias_from_shared_min_proba	024xgb_digit_orderedte_min_biased	025lgb_digit_te_min_biased	026realmlp_pair_te_min_biased
+    018cat_pairwise_te_bias_from_shared_min_proba	1.000000	0.942156	0.945456	0.911784
+    024xgb_digit_orderedte_min_biased	0.942156	1.000000	0.992057	0.908159
+    025lgb_digit_te_min_biased	0.945456	0.992057	1.000000	0.909005
+    026realmlp_pair_te_min_biased	0.911784	0.908159	0.909005	1.000000
+  }
+  test_rank_corr: {
+  	018cat_pairwise_te_bias_from_shared_min_proba	024xgb_digit_orderedte_min_biased	025lgb_digit_te_min_biased	026realmlp_pair_te_min_biased
+    018cat_pairwise_te_bias_from_shared_min_proba	1.000000	0.945409	0.952764	0.952204
+    024xgb_digit_orderedte_min_biased	0.945409	1.000000	0.996804	0.928774
+    025lgb_digit_te_min_biased	0.952764	0.996804	1.000000	0.937726
+    026realmlp_pair_te_min_biased	0.952204	0.928774	0.937726	1.000000
+  }
 
 focused_results:
   pair_018_024:
-    oof_raw: null
-    test_raw: null
-    oof_rank: null
-    test_rank: null
+    oof_raw: 0.995078
+    test_raw: 0.996178
+    oof_rank: 0.942156
+    test_rank: 0.945409
     interpretation: ""
 
   pair_018_025:
-    oof_raw: null
-    test_raw: null
-    oof_rank: null
-    test_rank: null
+    oof_raw: 0.994775
+    test_raw: 0.995935
+    oof_rank: 0.945456
+    test_rank: 0.952764
     interpretation: ""
 
   pair_018_026:
-    oof_raw: null
-    test_raw: null
-    oof_rank: null
-    test_rank: null
+    oof_raw: 0.994960
+    test_raw: 0.995901
+    oof_rank: 0.911784
+    test_rank: 0.952204
     interpretation: ""
 
   pair_024_025:
-    oof_raw: null
-    test_raw: null
-    oof_rank: null
-    test_rank: null
+    oof_raw: 0.998641
+    test_raw: 0.999317
+    oof_rank: 0.992057
+    test_rank: 0.996804
     interpretation: ""
 
   pair_024_026:
-    oof_raw: null
-    test_raw: null
-    oof_rank: null
-    test_rank: null
+    oof_raw: 0.995699
+    test_raw: 0.997025
+    oof_rank: 0.908159
+    test_rank: 0.928774
     interpretation: ""
 
   pair_025_026:
-    oof_raw: null
-    test_raw: null
-    oof_rank: null
-    test_rank: null
+    oof_raw: 0.995700
+    test_raw: 0.997172
+    oof_rank: 0.909005
+    test_rank: 0.937726
     interpretation: ""
 
 classwise_cross_corr:
-  executed: false
+  executed: true
   target_focus_model: ""
   notable_findings: []
   interpretation: ""
 
 sanity_check:
-  executed: false
+  executed: true
   row_sum_ok: null
   shape_ok: null
   interpretation: ""
