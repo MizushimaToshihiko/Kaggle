@@ -177,7 +177,9 @@ future_corr_check:
   target_mainline: exp_20260407_018_cat_pairwise_te_bias_from_shared_min
   raw_pearson_flatten: 0.995078
   rank_spearman_flatten: 0.942156
-  interpretation: "別人格かな？"
+  interpretation: >
+    raw相関は高いが rank相関は十分下がっている。
+    完全な別人格ではないが、018近傍派生よりはズレた候補として keep 価値あり。
 
 artifacts:
   planned_outputs:
@@ -190,9 +192,14 @@ artifacts:
     - cv_result.json
 
 decision:
-  implication_for_next_step: ""
-  recommended_next_action: ""
-  avoid_action: ""
+  implication_for_next_step: >
+    024 は最小再現でも 018 に近い単体性能を出し、LB では上回った。
+    raw相関は高いが rank相関は十分下がっており、018 近傍派生よりは
+    ブレンド候補としての価値がある。
+  recommended_next_action: >
+    024 を keep し、次は yunsuxiaozi_lgb の最小再現に進む。
+  avoid_action: >
+    024 を「完全な低相関新人格」と過大評価しない。
 
 notes:
   - この実験は shared code 全再現ではなく、別人格候補判定のための最小再現
@@ -201,8 +208,8 @@ notes:
   - Optuna は今はやらない
 
 post_run_fill:
-  completed_at: ""
-  runtime_note: ""
+  completed_at: "2026-04-09"
+  runtime_note: "22m 58s · GPU P100"
   file_check:
     oof_saved: true
     pred_saved: true
