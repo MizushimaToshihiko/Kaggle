@@ -147,35 +147,35 @@ results:
   final_summary_table: []
 
   baseline_025:
-    best_alpha: null
-    raw_cv_ba: null
-    biased_cv_ba: null
-    public_lb: null
-    best_class_weights: []
-    interpretation: ""
+    best_alpha: Nan
+    raw_cv_ba: 0.014638
+    biased_cv_ba: 0.015312
+    public_lb: 0.97981
+    best_class_weights: [-]
+    interpretation: "異常に低いので、実装が壊れていると思われる。信頼できない値"
 
   main_018_025_026:
-    best_alpha: null
-    raw_cv_ba: null
-    biased_cv_ba: null
-    public_lb: null
-    best_class_weights: []
+    best_alpha: 10.0000
+    raw_cv_ba: 0.979633
+    biased_cv_ba: 0.980131
+    public_lb: 0.97907
+    best_class_weights: [1.5, 1.3, 1.8]
     interpretation: ""
 
   compare_018_024_026:
-    best_alpha: null
-    raw_cv_ba: null
-    biased_cv_ba: null
+    best_alpha: 30.0000
+    raw_cv_ba: 0.979510
+    biased_cv_ba: 0.979997
     public_lb: null
-    best_class_weights: []
+    best_class_weights: [1.8, 1.5, 2.4]
     interpretation: ""
 
-  best_overall_set: ""
-  best_overall_alpha: null
-  best_overall_raw_cv_ba: null
-  best_overall_biased_cv_ba: null
-  best_overall_public_lb: null
-  summary_interpretation: ""
+  best_overall_set: "main_018_025_026"
+  best_overall_alpha: 10.0000
+  best_overall_raw_cv_ba: 0.979633
+  best_overall_biased_cv_ba: 0.980131
+  best_overall_public_lb: 0.97907
+  summary_interpretation: "CVは誤差の範囲で上がったが、lbは028と変わらず"
   verdict: pending
 
 decision:
@@ -206,13 +206,13 @@ artifacts:
     - memo.yml
 
 post_run_fill:
-  completed_at: ""
-  runtime_note: ""
+  completed_at: "2026-04-09"
+  runtime_note: "46s"
   file_check:
-    all_npy_loaded: false
-    class_order_fix_applied: false
-    coarse_results_saved: false
-    local_results_saved: false
-    final_summary_saved: false
-    best_submission_saved: false
+    all_npy_loaded: true
+    class_order_fix_applied: true
+    coarse_results_saved: true
+    local_results_saved: true
+    final_summary_saved: true
+    best_submission_saved: true
   final_comment: ""
