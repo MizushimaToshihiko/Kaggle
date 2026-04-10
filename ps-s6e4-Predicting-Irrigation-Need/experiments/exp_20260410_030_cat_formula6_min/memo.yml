@@ -190,7 +190,7 @@ future_corr_check:
   rank_spearman_flatten_vs_025: 0.824640
   raw_pearson_flatten_vs_026: 0.895344
   rank_spearman_flatten_vs_026: 0.911624
-  interpretation: ""
+  interpretation: "別人格といえるくらいの低相関になった。これを強くしたら可能性があるかも。"
 
 decision:
   implication_for_next_step: ""
