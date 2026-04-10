@@ -165,15 +165,25 @@ results:
     - 0.9595134693362463
     - 0.9607346387921293
     - 0.958455981294798
-  best_class_weights: [1,1,1]
-  summary_interpretation: ""
-  verdict: pending
+  best_class_weights: [1, 1, 1]
+  summary_interpretation: >
+    formula-inspired 最小構成は、既存主力群に対してかなり低相関だったが、
+    単体性能は大きく不足した。別人格性は確認できたが、
+    現時点では本番候補としては弱すぎる。
+  verdict: drop
 
 feature_check:
-  threshold_features_worked: ?
-  score_features_worked: ?
-  top_importance_features: [formula_score]
-  interpretation: ""
+  threshold_features_worked: true
+  score_features_worked: true
+  top_importance_features:
+    - formula_score
+    - score_abs
+    - low_score
+  interpretation: >
+    formula 系特徴は実際に主役として使われていた。
+    特に formula_score が圧倒的に最大 importance であり、
+    030 が弱かった原因は特徴が無視されたことではなく、
+    formula 系最小構成そのものの表現力不足だと考えられる。
 
 future_corr_check:
   planned: true
@@ -190,12 +200,22 @@ future_corr_check:
   rank_spearman_flatten_vs_025: 0.824640
   raw_pearson_flatten_vs_026: 0.895344
   rank_spearman_flatten_vs_026: 0.911624
-  interpretation: "別人格といえるくらいの低相関になった。これを強くしたら可能性があるかも。"
+  interpretation: >
+    既存主力群に対して明確に低相関で、formula 系は別人格として成立している。
+    ただし現状の最小構成は弱すぎるため、
+    今後やるなら 030 そのものを keep するのではなく、
+    formula 系強化版の新実験として扱うべき。
 
 decision:
-  implication_for_next_step: ""
-  recommended_next_action: ""
-  avoid_action: ""
+  implication_for_next_step: >
+    formula 系は相関面では面白いが、最小構成のままでは本番候補に届かない。
+    したがって 030 自体は drop とし、必要なら別日に
+    formula 系の強化版を新実験として切り出す。
+  recommended_next_action: >
+    今すぐ主戦場にしない。まずは既存主力群の整理を優先し、
+    formula 系は後続の派生実験として扱う。
+  avoid_action: >
+    低相関という理由だけで 030 を本番候補に残さない。
 
 notes:
   - 今回は Chris discussion の仮説検証のための最小構成
@@ -224,4 +244,6 @@ post_run_fill:
     pred_saved: true
     submission_saved: true
     cv_result_saved: true
-  final_comment: ""
+   final_comment: >
+    相関妙味は確認できたが、単体性能不足により 030 自体は drop。
+    formula 系は将来の派生実験候補として保留。
