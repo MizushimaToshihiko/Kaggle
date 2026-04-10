@@ -1,0 +1,212 @@
+experiment:
+  exp_id: exp_20260410_033_cat_formula6_orig_pair
+  title: Cat formula6 strengthened with original priors and limited pairwise TE
+  competition: PS S6E4 Predicting Irrigation Need
+  objective: >
+    030 の formula6 系最小構成をベースに、
+    original target priors と limited pairwise TE を追加して強化する。
+    formula 系を主役として残したまま、
+    単体性能を底上げし、低相関の別人格候補として再評価する。
+
+status:
+  stage: done
+  verdict: done
+
+parent_experiment:
+  exp_id: exp_20260410_030_cat_formula6_min
+  raw_cv_ba: 0.959898
+  biased_cv_ba: 0.959898
+  public_lb: 0.95678
+  lesson: >
+    formula 系特徴は主役として機能していたが、
+    最小構成のままでは表現力不足で本番候補には届かなかった。
+
+design:
+  model_family: CatBoost
+  target_type: multiclass
+  seed: 42
+  n_folds: 5
+  te_cv: 3
+  original_weighted_merge: true
+  original_row_weight: 0.35
+  bias_tuning: true
+
+features:
+  formula_core:
+    enabled: true
+    components:
+      - f_low_moisture
+      - f_high_temp
+      - f_low_rain
+      - f_high_wind
+      - f_no_mulch
+      - f_sensitive_stage
+      - formula_score
+      - score_abs
+      - low_score
+      - mid_score
+      - high_score
+      - formula_score_x_moisture
+      - formula_score_x_rain
+      - formula_score_x_temp
+
+  original_target_priors:
+    enabled: true
+    source_cols:
+      - ALL_BASE
+      - formula_score
+      - score_abs
+    note: >
+      018 で効いた orig 系を formula 系へ接ぎ木する。
+      ただし全部盛りにはしない。
+
+  pairwise:
+    enabled: true
+    source_cols:
+      - Soil_Moisture
+      - Temperature_C
+      - Rainfall_mm
+      - Wind_Speed_kmh
+      - Mulching_Used
+      - Crop_Growth_Stage
+      - Season
+      - Region
+    min_unique: 2
+    max_unique: 200
+    topk_pairwise: 24
+    note: >
+      formula 系と相性が良さそうな列だけを pair source にし、
+      pairwise TE は限定的に入れる。
+      018 の完全再現にはしない。
+
+catboost_params:
+  iterations: 3000
+  learning_rate: 0.03
+  depth: 8
+  grow_policy: SymmetricTree
+  loss_function: MultiClass
+  eval_metric: TotalF1:average=Macro
+  early_stopping_rounds: 150
+  task_type: GPU if available else CPU
+  devices: "0 only if GPU"
+  verbose: 200
+
+bias_tuning:
+  enabled: true
+  method: simple_class_weight_grid
+  grid:
+    - [1.0, 1.0, 1.0]
+    - [1.2, 1.2, 1.2]
+    - [1.5, 1.5, 1.5]
+    - [1.5, 1.3, 1.8]
+    - [1.7, 1.5, 2.3]
+    - [1.8, 1.5, 2.4]
+
+hypothesis:
+  - formula 系は相関面では既存主力群と十分ズレる
+  - 030 の弱さは思想の失敗ではなく表現力不足だった
+  - orig と limited pair を足すことで、低相関を保ちつつ単体性能を底上げできる可能性がある
+
+comparison_plan:
+  primary_compare_to:
+    - exp_20260410_030_cat_formula6_min
+  secondary_compare_to:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260409_024_xgb_digit_orderedte_min
+    - exp_20260409_025_lgb_digit_te_min
+    - exp_20260409_026_realmlp_pair_te_min
+  metrics:
+    - raw_cv_ba
+    - biased_cv_ba
+    - public_lb
+    - future_corr_vs_mainlines
+
+expected_read:
+  strong_result:
+    raw_cv_ba: "0.970台後半以上"
+    biased_cv_ba: "0.972台以上"
+    interpretation: >
+      030 より大幅改善。低相関の芽として keep 価値が出る。
+  medium_result:
+    raw_cv_ba: "0.967台〜0.970前半"
+    biased_cv_ba: "0.968台〜0.971前半"
+    interpretation: >
+      まだ主力には届かないが、強化方向としては成立。
+  weak_result:
+    raw_cv_ba: "< 0.967"
+    biased_cv_ba: "< 0.968"
+    interpretation: >
+      formula 系の強化としても弱い。今は主戦場にしない。
+
+results:
+  raw_cv_ba: null
+  biased_cv_ba: null
+  public_lb: null
+  improvement_from_bias: null
+  n_formula_features: null
+  n_pair_columns: null
+  n_features_total: null
+  fold_scores: []
+  best_class_weights: []
+  summary_interpretation: ""
+  verdict: pending
+
+feature_check:
+  threshold_features_worked: null
+  score_features_worked: null
+  pair_features_worked: null
+  orig_features_worked: null
+  top_importance_features: []
+  interpretation: ""
+
+future_corr_check:
+  planned: true
+  target_mainline:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260409_024_xgb_digit_orderedte_min
+    - exp_20260409_025_lgb_digit_te_min
+    - exp_20260409_026_realmlp_pair_te_min
+  raw_pearson_flatten_vs_018: null
+  rank_spearman_flatten_vs_018: null
+  raw_pearson_flatten_vs_024: null
+  rank_spearman_flatten_vs_024: null
+  raw_pearson_flatten_vs_025: null
+  rank_spearman_flatten_vs_025: null
+  raw_pearson_flatten_vs_026: null
+  rank_spearman_flatten_vs_026: null
+  interpretation: ""
+
+decision:
+  implication_for_next_step: ""
+  recommended_next_action: ""
+  avoid_action: ""
+
+notes:
+  - 030 自体は drop だが、formula 系の思想は keep
+  - 033 は 030 の採用ではなく、030 の強化版実験
+  - 018 の完全コピーにはしない
+  - 低相関の芽を潰さないことを優先する
+
+artifacts:
+  planned_outputs:
+    - oof_cat_formula6_orig_pair_proba.npy
+    - pred_cat_formula6_orig_pair_proba.npy
+    - oof_cat_formula6_orig_pair_proba_biased.npy
+    - pred_cat_formula6_orig_pair_proba_biased.npy
+    - submission_cat_formula6_orig_pair.csv
+    - feature_importance.csv
+    - feature_importance_by_fold.csv
+    - pair_rank_df.csv
+    - cv_result.json
+    - memo.yml
+
+post_run_fill:
+  completed_at: ""
+  runtime_note: ""
+  file_check:
+    oof_saved: false
+    pred_saved: false
+    submission_saved: false
+    feature_importance_saved: false
+    cv_result_saved: false
+  final_comment: ""
