@@ -146,11 +146,13 @@ comparison:
     - exp_20260409_025_lgb_digit_te_min
     - exp_20260409_026_realmlp_pair_te_min
   compare_items:
-    - raw_cv
-    - public_lb
+    - raw_cv:0.977920<-0.977355
+    - public_lb:0.97697<-0.97725
     - raw_corr
+      018:0.996174	024:0.997369	025:0.996576	026:0.995699	033:0.993232	034:0.998701
     - rank_corr
-    - feature_importance_top
+      018:0.937743	024:0.979616	025:0.972389	026:0.901127	033:0.963662	034:0.989002	
+    - feature_importance_top:logit(P(y=High))
 
 decision_rule:
   keep:
