@@ -185,7 +185,7 @@ post_run_fill:
   runtime_note: "39s"
   file_check:
     all_npy_loaded: true
-    class_order_fix_applied: true
+    class_order_fix_applied: false
     hc_results_saved: true
     hc_histories_saved: true
     best_submission_saved: true
