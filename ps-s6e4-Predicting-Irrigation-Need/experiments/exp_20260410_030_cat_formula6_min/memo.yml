@@ -153,21 +153,26 @@ expected_read:
       最小構成としては弱い。pair や他補助特徴追加前に一旦評価を止める。
 
 results:
-  raw_cv_ba: null
-  biased_cv_ba: null
-  public_lb: null
-  improvement_from_bias: null
-  n_features: null
-  original_formula_ba: null
-  fold_scores: []
-  best_class_weights: []
+  raw_cv_ba: 0.9598984123192418
+  biased_cv_ba: 0.9598984123192418
+  public_lb: 0.95678
+  improvement_from_bias: 0.0
+  n_features: 22
+  original_formula_ba: 1
+  fold_scores:
+    - 0.9595034087768575
+    - 0.9612844297002984
+    - 0.9595134693362463
+    - 0.9607346387921293
+    - 0.958455981294798
+  best_class_weights: [1,1,1]
   summary_interpretation: ""
   verdict: pending
 
 feature_check:
-  threshold_features_worked: null
-  score_features_worked: null
-  top_importance_features: []
+  threshold_features_worked: ?
+  score_features_worked: ?
+  top_importance_features: [formula_score]
   interpretation: ""
 
 future_corr_check:
@@ -177,14 +182,14 @@ future_corr_check:
     - exp_20260409_024_xgb_digit_orderedte_min
     - exp_20260409_025_lgb_digit_te_min
     - exp_20260409_026_realmlp_pair_te_min
-  raw_pearson_flatten_vs_018: null
-  rank_spearman_flatten_vs_018: null
-  raw_pearson_flatten_vs_024: null
-  rank_spearman_flatten_vs_024: null
-  raw_pearson_flatten_vs_025: null
-  rank_spearman_flatten_vs_025: null
-  raw_pearson_flatten_vs_026: null
-  rank_spearman_flatten_vs_026: null
+  raw_pearson_flatten_vs_018: 0.891434
+  rank_spearman_flatten_vs_018: 0.796306
+  raw_pearson_flatten_vs_024: 0.893989
+  rank_spearman_flatten_vs_024: 0.828625
+  raw_pearson_flatten_vs_025: 0.892384
+  rank_spearman_flatten_vs_025: 0.824640
+  raw_pearson_flatten_vs_026: 0.895344
+  rank_spearman_flatten_vs_026: 0.911624
   interpretation: ""
 
 decision:
@@ -212,11 +217,11 @@ artifacts:
     - memo.yml
 
 post_run_fill:
-  completed_at: ""
-  runtime_note: ""
+  completed_at: "2026-04-09"
+  runtime_note: "1m 11s · GPU T4 x2"
   file_check:
-    oof_saved: false
-    pred_saved: false
-    submission_saved: false
-    cv_result_saved: false
+    oof_saved: true
+    pred_saved: true
+    submission_saved: true
+    cv_result_saved: true
   final_comment: ""
