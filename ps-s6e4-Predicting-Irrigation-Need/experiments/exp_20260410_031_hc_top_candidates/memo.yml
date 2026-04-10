@@ -1,0 +1,181 @@
+experiment:
+  exp_id: exp_20260410_031_hc_top_candidates
+  title: Hill Climbing for top candidate stacks
+  competition: PS S6E4 Predicting Irrigation Need
+  objective: >
+    029 までで残った上位候補
+    - 018 + 025 + 026
+    - 018 + 024 + 026
+    に対して Hill Climbing を行い、
+    025 単体を基準点として最終比較する。
+    今回は HC のみを対象とし、Nelder-Mead は次段階に回す。
+
+status:
+  stage: planned
+  verdict: pending
+
+source_reference:
+  parent_experiments:
+    - exp_20260409_028_stack_core4_screening
+    - exp_20260410_029_ridge_alpha_refine_topstacks
+  reason_for_this_exp: >
+    029 までで ridge による比較は終わったため、
+    次は HC による重み最適化で上振れ余地があるかを確認する。
+    025 単体を必ず基準点として残す。
+
+candidate_sets:
+  baseline_025:
+    models:
+      - "025"
+    purpose: "強い単体基準点"
+
+  hc_main_018_025_026:
+    models:
+      - "018"
+      - "025"
+      - "026"
+    purpose: "本命候補"
+
+  hc_compare_018_024_026:
+    models:
+      - "018"
+      - "024"
+      - "026"
+    purpose: "比較候補"
+
+input_artifacts:
+  npy_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/
+  models:
+    "018":
+      oof: oof_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
+      pred: pred_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
+      class_order_fix:
+        applied: true
+        permutation: [2, 0, 1]
+
+    "024":
+      oof: oof_xgb_digit_orderedte_min_proba_biased.npy
+      pred: pred_xgb_digit_orderedte_min_proba_biased.npy
+      class_order_fix:
+        applied: true
+        permutation: [2, 0, 1]
+
+    "025":
+      oof: oof_lgb_digit_te_min_proba_biased.npy
+      pred: pred_lgb_digit_te_min_proba_biased.npy
+      class_order_fix:
+        applied: true
+        permutation: [2, 0, 1]
+
+    "026":
+      oof: oof_realmlp_pair_te_min_proba_biased.npy
+      pred: pred_realmlp_pair_te_min_proba_biased.npy
+      class_order_fix:
+        applied: true
+        permutation: [2, 0, 1]
+
+blend_method:
+  method: hill_climbing
+  target_space: probability_weighted_average
+  note: >
+    HC は probability weighted average 上で実行する。
+    031 では Nelder-Mead は行わない。
+
+hc_search:
+  step_grid:
+    - 0.20
+    - 0.10
+    - 0.05
+    - 0.02
+    - 0.01
+    - 0.005
+  max_rounds_per_step: 50
+  initial_weights: equal_weight
+
+evaluation_priority:
+  primary:
+    - raw_cv_ba
+  secondary:
+    - public_lb
+  interpretation_rule:
+    - hc_main が baseline_025 を上回れば、本命 stack として昇格候補
+    - hc_compare が hc_main を上回れば、024 と 025 の競合関係を再検討
+    - どちらも baseline_025 を上回れなければ、HC 後でも単体 025 優先
+
+hypothesis:
+  - 026 は ridge では単独追加材としては弱かったが、HC でより適切な重みがつけば価値が出るかもしれない
+  - 025 は依然として強い基準点であり、stack がこれを超えられないなら本命扱いは危険
+  - HC の勝者だけに次段階で Nelder-Mead をかければ十分
+
+expected_read:
+  strong_result:
+    raw_cv_ba: "baseline_025 を安定して上回る"
+    interpretation: "HC による stack 最終候補として価値あり"
+  medium_result:
+    raw_cv_ba: "baseline_025 と同等か微差"
+    interpretation: "Nelder-Mead に進めるかは LB を見て判断"
+  weak_result:
+    raw_cv_ba: "baseline_025 を下回る"
+    interpretation: "HC でも stack の優位は薄い"
+
+results:
+  hc_results_table: []
+
+  baseline_025:
+    weights: [1.0]
+    raw_cv_ba: null
+    public_lb: null
+    interpretation: ""
+
+  hc_main_018_025_026:
+    weights: []
+    raw_cv_ba: null
+    public_lb: null
+    interpretation: ""
+
+  hc_compare_018_024_026:
+    weights: []
+    raw_cv_ba: null
+    public_lb: null
+    interpretation: ""
+
+  best_set: ""
+  best_models: []
+  best_weights: []
+  best_raw_cv_ba: null
+  best_public_lb: null
+  summary_interpretation: ""
+  verdict: pending
+
+decision:
+  implication_for_next_step: ""
+  recommended_next_action: ""
+  avoid_action: ""
+
+notes:
+  - 今回は HC のみ
+  - Nelder-Mead は 031 の勝者に対してだけ次段階で行う
+  - 025 単体を必ず基準点として残す
+  - CV 勝者をそのまま本命扱いせず、LB も確認する
+
+artifacts:
+  planned_outputs:
+    - hc_results.csv
+    - hc_results.json
+    - hc_histories.json
+    - submission_best_set_hc.csv
+    - oof_best_set_hc_proba.npy
+    - pred_best_set_hc_proba.npy
+    - meta_note.json
+    - memo.yml
+
+post_run_fill:
+  completed_at: ""
+  runtime_note: ""
+  file_check:
+    all_npy_loaded: false
+    class_order_fix_applied: false
+    hc_results_saved: false
+    hc_histories_saved: false
+    best_submission_saved: false
+  final_comment: ""
