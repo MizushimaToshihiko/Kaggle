@@ -1,0 +1,185 @@
+experiment:
+  exp_id: exp_20260410_035_dao_xgb_pair_te_plus_formula_min
+  title: Dao XGB pairwise TE plus formula/logit minimum graft
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: balanced_accuracy
+  status: done
+
+purpose:
+  objective: >
+    034 core-min に Traiko 由来の threshold/logit 特徴だけを追加し、
+    Dao 系の強さが pairwise 主体なのか、formula/logit でさらに押し上がるのかを確認する。
+  questions:
+    - 034 比で CV / LB は改善するか
+    - 025 との相関は下がるか
+    - 018 の近縁補助候補から一段ずれた素材になるか
+    - feature importance 上位に logit 3本が入るか
+
+design:
+  base_parent: exp_20260410_034_dao_xgb_pair_te_core_min
+  model_family: xgb
+  algorithm: XGBoost multiclass softprob
+  cv:
+    fold_type: StratifiedKFold
+    n_splits: 5
+    seed: 42
+  pairwise:
+    source_columns:
+      - Soil_pH
+      - Soil_Moisture
+      - Organic_Carbon
+      - Electrical_Conductivity
+      - Temperature_C
+      - Humidity
+      - Rainfall_mm
+      - Sunlight_Hours
+      - Wind_Speed_kmh
+      - Field_Area_hectare
+      - Previous_Irrigation_mm
+      - Soil_Type
+      - Crop_Type
+      - Crop_Growth_Stage
+      - Season
+      - Irrigation_Type
+      - Water_Source
+      - Mulching_Used
+      - Region
+    raw_pair_count: 171
+    acceptance_rule: nunique_total <= total_rows_combined * 0.5
+    expected_pair_count: 135
+  target_encoding:
+    enabled: true
+    scope: pairwise_columns_only
+    type: multiclass_target_encoder
+    inner_cv: 5
+    leak_free: true
+
+kept_elements:
+  - raw numerical 11
+  - raw categorical 8
+  - pairwise interactions
+  - pairwise multiclass TE
+  - class weights
+  - XGB core training
+  - threshold features
+  - precomputed logit features
+
+removed_elements:
+  - pseudo-label
+  - post-hoc class weight optimization
+  - digit features
+  - ordered target encoding
+  - original merge
+  - original priors
+  - massive combo freq
+  - NUM_AS_CAT
+
+formula_features:
+  threshold_binary:
+    - soil_lt_25
+    - temp_gt_30
+    - rain_lt_300
+    - wind_gt_10
+  logits:
+    - logit(P(y=Low))
+    - logit(P(y=Medium))
+    - logit(P(y=High))
+
+features:
+  raw_numeric:
+    - Soil_pH
+    - Soil_Moisture
+    - Organic_Carbon
+    - Electrical_Conductivity
+    - Temperature_C
+    - Humidity
+    - Rainfall_mm
+    - Sunlight_Hours
+    - Wind_Speed_kmh
+    - Field_Area_hectare
+    - Previous_Irrigation_mm
+  raw_categorical:
+    - Soil_Type
+    - Crop_Type
+    - Crop_Growth_Stage
+    - Season
+    - Irrigation_Type
+    - Water_Source
+    - Mulching_Used
+    - Region
+  expected_base_feature_count: 26
+  expected_pair_te_feature_count: 135 * 3
+
+params:
+  xgb:
+    n_estimators: 20000
+    max_depth: 4
+    learning_rate: 0.03
+    min_child_weight: 2.333941903991847
+    subsample: 0.9766412297733108
+    colsample_bytree: 0.535324419516146
+    gamma: 4.258489082295074
+    reg_alpha: 4.082875850185249e-08
+    reg_lambda: 0.00013528868091784412
+    objective: multi:softprob
+    num_class: 3
+    tree_method: hist
+    eval_metric: mlogloss
+    random_state: 42
+    early_stopping_rounds: 300
+
+artifacts:
+  outputs:
+    - oof_dao_xgb_pair_te_plus_formula_min_proba.npy
+    - pred_dao_xgb_pair_te_plus_formula_min_proba.npy
+    - submission_dao_xgb_pair_te_plus_formula_min.csv
+    - feature_columns.csv
+    - feature_importance.csv
+    - pair_feature_meta.csv
+    - cv_result.json
+
+comparison:
+  baseline_parent:
+    - exp_20260410_034_dao_xgb_pair_te_core_min
+  primary_targets:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260409_025_lgb_digit_te_min
+    - exp_20260409_026_realmlp_pair_te_min
+  compare_items:
+    - raw_cv
+    - public_lb
+    - raw_corr
+    - rank_corr
+    - feature_importance_top
+
+decision_rule:
+  keep:
+    - 034 比で CV / LB が改善
+    - 025 との rank 相関が少しでも下がる
+    - logit 3本または threshold 特徴が上位寄与に入る
+  hold:
+    - 数字は同程度だが 025 との距離がわずかに改善
+    - 018 補助候補としては意味が残る
+  drop:
+    - 034 比で数字も相関も改善しない
+    - formula/logit graft が実質ノーインパクト
+
+expected_interpretation:
+  best_case: >
+    Dao pairwise 本体に formula/logit を接ぐことで、
+    034 より一段違う誤差構造を持つ XGB 素材になる。
+  neutral_case: >
+    単体改善は小さいが、018 補助候補としての価値は維持される。
+  worst_case: >
+    034 とほぼ同じで、Traiko 部品は Dao 系には不要と判断される。
+
+implementation_note:
+  pair_build_function: build_pairwise_features_concat
+  reason: >
+    pairwise 列を dict に溜めて最後に DataFrame 化し、逐次列追加による
+    pandas fragmentation warning を避ける。
+
+next_action:
+  if_good: exp_20260410_036_dao_xgb_pair_te_pseudo_only
+  if_unclear: correlation notebook against 034 / 018 / 025 / 026
+  if_bad: drop formula/logit graft and keep 034 only
