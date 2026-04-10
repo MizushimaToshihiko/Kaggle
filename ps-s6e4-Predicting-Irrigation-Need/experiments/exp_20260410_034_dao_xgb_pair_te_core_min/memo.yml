@@ -129,10 +129,12 @@ comparison:
     - exp_20260409_025_lgb_digit_te_min
     - exp_20260409_026_realmlp_pair_te_min
   compare_items:
-    - raw_cv
-    - public_lb
+    - raw_cv:0.977355
+    - public_lb:0.97725
     - raw_corr
+      018:0.996317	024:0.996957	025:0.996357	026:0.995773	033:0.992423
     - rank_corr
+      018:0.938409	024:0.985251	025:0.978616	026:0.903430	033:0.961895
 
 decision_rule:
   keep:
