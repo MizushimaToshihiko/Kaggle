@@ -11,8 +11,8 @@ experiment:
     今回は HC のみを対象とし、Nelder-Mead は次段階に回す。
 
 status:
-  stage: planned
-  verdict: pending
+  stage: done
+  verdict: done
 
 source_reference:
   parent_experiments:
@@ -50,28 +50,28 @@ input_artifacts:
       oof: oof_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
       pred: pred_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
       class_order_fix:
-        applied: true
+        applied: false
         permutation: [2, 0, 1]
 
     "024":
       oof: oof_xgb_digit_orderedte_min_proba_biased.npy
       pred: pred_xgb_digit_orderedte_min_proba_biased.npy
       class_order_fix:
-        applied: true
+        applied: false
         permutation: [2, 0, 1]
 
     "025":
       oof: oof_lgb_digit_te_min_proba_biased.npy
       pred: pred_lgb_digit_te_min_proba_biased.npy
       class_order_fix:
-        applied: true
+        applied: false
         permutation: [2, 0, 1]
 
     "026":
       oof: oof_realmlp_pair_te_min_proba_biased.npy
       pred: pred_realmlp_pair_te_min_proba_biased.npy
       class_order_fix:
-        applied: true
+        applied: false
         permutation: [2, 0, 1]
 
 blend_method:
@@ -119,33 +119,38 @@ expected_read:
     interpretation: "HC でも stack の優位は薄い"
 
 results:
-  hc_results_table: []
+  hc_results_table: [
+  	set_name	models	weights	raw_cv_ba
+0	hc_main_018_025_026	018+025+026	[0.273224043715847, 0.5191256830601094, 0.2076...	0.980055
+1	hc_compare_018_024_026	018+024+026	[0.11845730027548208, 0.5234159779614325, 0.35...	0.980010
+2	baseline_025	025	[1.0]	0.979396
+  ]
 
   baseline_025:
     weights: [1.0]
-    raw_cv_ba: null
-    public_lb: null
+    raw_cv_ba: 0.9793964215510967
+    public_lb: 0.97981
     interpretation: ""
 
   hc_main_018_025_026:
-    weights: []
-    raw_cv_ba: null
-    public_lb: null
+    weights: [0.273224043715847, 0.5191256830601094, 0.20765027322404372]
+    raw_cv_ba: 0.9800547965657039
+    public_lb: 0.97902
     interpretation: ""
 
   hc_compare_018_024_026:
-    weights: []
-    raw_cv_ba: null
+    weights: [0.11845730027548208, 0.5234159779614325, 0.3581267217630854]
+    raw_cv_ba: 0.9800100572223786
     public_lb: null
     interpretation: ""
 
-  best_set: ""
-  best_models: []
-  best_weights: []
-  best_raw_cv_ba: null
-  best_public_lb: null
-  summary_interpretation: ""
-  verdict: pending
+  best_set: "hc_main_018_025_026"
+  best_models: [018,025,026]
+  best_weights: [0.273224043715847, 0.5191256830601094, 0.20765027322404372]
+  best_raw_cv_ba: 0.9800547965657039
+  best_public_lb: 0.97902
+  summary_interpretation: "029と同様に025単体に対してCVは微差で上がったもののLBは及ばなかった"
+  verdict: hold
 
 decision:
   implication_for_next_step: ""
@@ -170,12 +175,12 @@ artifacts:
     - memo.yml
 
 post_run_fill:
-  completed_at: ""
-  runtime_note: ""
+  completed_at: "2026-04-10"
+  runtime_note: "39s"
   file_check:
-    all_npy_loaded: false
-    class_order_fix_applied: false
-    hc_results_saved: false
-    hc_histories_saved: false
-    best_submission_saved: false
+    all_npy_loaded: true
+    class_order_fix_applied: true
+    hc_results_saved: true
+    hc_histories_saved: true
+    best_submission_saved: true
   final_comment: ""
