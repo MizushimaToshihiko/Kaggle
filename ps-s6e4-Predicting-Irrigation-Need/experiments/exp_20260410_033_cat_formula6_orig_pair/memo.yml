@@ -152,17 +152,23 @@ results:
     - 0.9617572702683436
     - 0.9619484627885028
     - 0.9605207483957127
-  best_class_weights: [1,1,1]
-  summary_interpretation: ""
+  best_class_weights: [1, 1, 1]
+  summary_interpretation: >
+    030 からはわずかに改善したが、改善幅は小さく、
+    主力群に届く水準ではない。さらに pair/orig を追加した結果、
+    formula 系の主役性も薄れた可能性がある。
   verdict: drop
 
 feature_check:
-  threshold_features_worked: null
-  score_features_worked: null
-  pair_features_worked: null
-  orig_features_worked: null
-  top_importance_features: [TE_pair_3:17.152822704860803]
-  interpretation: ""
+  threshold_features_worked: false
+  score_features_worked: false
+  pair_features_worked: true
+  orig_features_worked: true
+  top_importance_features:
+    - TE_pair_3
+  interpretation: >
+    強化後は formula 系そのものより pair/orig 側の特徴が前面に出た。
+    formula を主役に残したまま強化する狙いは達成できなかった。
 
 future_corr_check:
   planned: true
@@ -179,12 +185,19 @@ future_corr_check:
   rank_spearman_flatten_vs_025: 0.951944
   raw_pearson_flatten_vs_026: 0.989536
   rank_spearman_flatten_vs_026: 0.885193
-  interpretation: ""
+  interpretation: >
+    030 よりは改善したが、相関は既存主力群へやや近づいた。
+    低相関の芽を育てる実験としても中途半端で、現時点では継続優先度は低い。
 
 decision:
-  implication_for_next_step: ""
-  recommended_next_action: ""
-  avoid_action: ""
+  implication_for_next_step: >
+    formula 系強化は 030/033 の2本で十分検証できた。
+    現時点では性能不足かつ別人格性も薄れたため、
+    このラインを主戦場として掘る価値は低い。
+  recommended_next_action: >
+    033 は drop とし、既存主力群の整理または別 family の探索へ戻る。
+  avoid_action: >
+    030/033 ラインをさらに小改良して追いかけない。
 
 notes:
   - 030 自体は drop だが、formula 系の思想は keep
@@ -206,12 +219,13 @@ artifacts:
     - memo.yml
 
 post_run_fill:
-  completed_at: ""
-  runtime_note: ""
+  completed_at: "2026-04-10"
+  runtime_note: "030 より微改善したが、pair/orig 側に寄り、主力候補化はできなかった。"
   file_check:
-    oof_saved: false
-    pred_saved: false
-    submission_saved: false
-    feature_importance_saved: false
-    cv_result_saved: false
-  final_comment: ""
+    oof_saved: true
+    pred_saved: true
+    submission_saved: true
+    feature_importance_saved: true
+    cv_result_saved: true
+  final_comment: >
+    formula 系の思想は確認済みだが、現時点では主戦場にしない。
