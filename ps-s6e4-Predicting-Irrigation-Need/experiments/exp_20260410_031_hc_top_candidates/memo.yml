@@ -153,9 +153,15 @@ results:
   verdict: hold
 
 decision:
-  implication_for_next_step: ""
-  recommended_next_action: ""
-  avoid_action: ""
+  implication_for_next_step: >
+    HC では 018+025+026 が CV 最良だったが、Public LB は 025 単体を下回った。
+    したがって、HC 勝者をそのまま本命化するのは危険であり、
+    現時点では 025 単体を安定本命として維持するのが妥当。
+  recommended_next_action: >
+    025 単体を本命軸として扱い、hc_main_018_025_026 は保険候補として keep する。
+    compare 側を提出していないなら、その LB を確認してから次の判断を行う。
+  avoid_action: >
+    HC の CV 改善だけを根拠に、そのまま Nelder-Mead に進まない。
 
 notes:
   - 今回は HC のみ
