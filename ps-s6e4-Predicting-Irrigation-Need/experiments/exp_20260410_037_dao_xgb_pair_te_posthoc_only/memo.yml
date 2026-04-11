@@ -1,0 +1,88 @@
+experiment:
+  exp_id: exp_20260410_037_dao_xgb_pair_te_posthoc_only
+  title: Dao XGB pairwise TE post-hoc optimization only
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: balanced_accuracy
+  status: planned
+
+purpose:
+  objective: >
+    034 core-min の raw probability に対して post-hoc class multiplier optimization だけを適用し、
+    Dao 系 notebook の見かけ上の強さのうち後処理の寄与を切り分ける。
+  questions:
+    - raw CV から optimized CV はどれだけ上がるか
+    - Public LB に変換されるか
+    - 018 の bias と同様の実戦的補正なのか
+    - それとも CV 迎合寄りの tricks なのか
+
+design:
+  base_parent: exp_20260410_034_dao_xgb_pair_te_core_min
+  approach: posthoc_only
+  optimization_target: class_multipliers
+  search_style: coarse_to_fine_grid
+  uses_existing_oof_pred: true
+
+kept_elements:
+  - 034 raw oof proba
+  - 034 raw test proba
+  - class multiplier optimization
+
+removed_elements:
+  - pseudo-label
+  - formula/logit graft
+  - retraining
+  - original merge
+  - ordered target encoding
+  - digit features
+
+artifacts:
+  inputs:
+    - oof_dao_xgb_pair_te_core_min_proba.npy
+    - pred_dao_xgb_pair_te_core_min_proba.npy
+  outputs:
+    - oof_dao_xgb_pair_te_posthoc_only_proba.npy
+    - pred_dao_xgb_pair_te_posthoc_only_proba.npy
+    - best_class_multipliers.npy
+    - submission_dao_xgb_pair_te_posthoc_only.csv
+    - cv_result.json
+
+comparison:
+  baseline_parent:
+    - exp_20260410_034_dao_xgb_pair_te_core_min
+  primary_targets:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260409_025_lgb_digit_te_min
+    - exp_20260409_026_realmlp_pair_te_min
+  compare_items:
+    - raw_cv
+    - optimized_cv
+    - public_lb
+    - best_multipliers
+
+decision_rule:
+  keep:
+    - optimized CV improves
+    - public LB also improves
+    - gain is meaningful relative to almost-zero runtime cost
+  hold:
+    - optimized CV improves slightly
+    - LB is flat
+    - optional submission variant
+  drop:
+    - CV gain is tiny or none
+    - LB does not improve
+    - looks like CV-only fitting
+
+expected_interpretation:
+  best_case: >
+    post-hoc optimization is a real contributor and should be considered
+    as a cheap practical add-on to 034.
+  neutral_case: >
+    CV improves slightly but LB is flat, so it remains optional only.
+  worst_case: >
+    post-hoc optimization is mostly CV-facing and should not be used.
+
+next_action:
+  if_good: compare 034 vs 037 correlation and decide whether to keep both
+  if_unclear: test submission only and inspect multiplier direction
+  if_bad: close Dao branch with 034 only
