@@ -3,7 +3,7 @@ experiment:
   title: Dao XGB pairwise TE pseudo-label only
   competition: PS S6E4 Predicting Irrigation Need
   metric: balanced_accuracy
-  status: planned
+  status: failed
 
 purpose:
   objective: >
@@ -21,7 +21,7 @@ design:
   algorithm: XGBoost multiclass softprob
   cv:
     fold_type: StratifiedKFold
-    n_splits: 5
+    n_splits: 5 -> 1
     seed: 42
   target_encoding:
     enabled: true
@@ -75,7 +75,7 @@ removed_elements:
 
 pseudo_label:
   enabled: true
-  threshold: 0.92
+  threshold: 0.99
   adopt_rule: use pseudo-retrained model only if fold validation improves
   record_items:
     - pseudo_count_per_fold
@@ -145,12 +145,12 @@ comparison:
     - exp_20260409_025_lgb_digit_te_min
     - exp_20260409_026_realmlp_pair_te_min
   compare_items:
-    - raw_cv
-    - public_lb
-    - raw_corr
-    - rank_corr
-    - pseudo_count
-    - pseudo_rate
+    - raw_cv: 0.461913
+    - public_lb: numm
+    - raw_corr: null
+    - rank_corr: null
+    - pseudo_count: 200407 / 270000
+    - pseudo_rate: 74.2248%
 
 decision_rule:
   keep:
@@ -185,3 +185,4 @@ next_action:
   if_good: exp_20260410_037_dao_xgb_pair_te_posthoc_only
   if_unclear: compare 036 vs 034 correlation and inspect pseudo_summary
   if_bad: drop pseudo-label route and proceed to 037
+  -> proceed to 037
