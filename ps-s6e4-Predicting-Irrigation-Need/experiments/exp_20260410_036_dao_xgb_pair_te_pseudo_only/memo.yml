@@ -181,8 +181,22 @@ implementation_note:
     pairwise 列を dict に溜めて最後に DataFrame 化し、逐次列追加による
     pandas fragmentation warning を避ける。
 
+verdict: drop
+status: cancelled_early
+
+result:
+  note: >
+    Pseudo-label route was stopped after debug evaluation on fold1.
+    Even with PSEUDO_THRESHOLD=0.99, pseudo adoption candidates remained too large
+    (200407 / 270000 = 74.2248%), and fold1 balanced accuracy worsened
+    from 0.976291 to 0.976169, so pseudo retraining was rejected.
+    Considering GPU cost and low expected value, this route was terminated.
+
+why_drop:
+  - pseudo sample rate remained far too high even after raising threshold to 0.99
+  - fold1 validation BA worsened after pseudo retraining
+  - runtime cost was too large relative to expected upside
+  - current objective is efficient contribution analysis, not expensive low-probability tricks
+
 next_action:
-  if_good: exp_20260410_037_dao_xgb_pair_te_posthoc_only
-  if_unclear: compare 036 vs 034 correlation and inspect pseudo_summary
-  if_bad: drop pseudo-label route and proceed to 037
-  -> proceed to 037
+  - move to exp_20260410_037_dao_xgb_pair_te_posthoc_only
