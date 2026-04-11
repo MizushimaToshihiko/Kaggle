@@ -1,0 +1,187 @@
+experiment:
+  exp_id: exp_20260410_036_dao_xgb_pair_te_pseudo_only
+  title: Dao XGB pairwise TE pseudo-label only
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: balanced_accuracy
+  status: planned
+
+purpose:
+  objective: >
+    034 core-min に対して pseudo-label だけを追加し、
+    Dao 系の見かけ上の強さのうち pseudo-label がどれだけ寄与しているかを切り分ける。
+  questions:
+    - pseudo-label は fold 単位で一貫して改善するか
+    - 034 比で CV / LB に変換されるか
+    - pseudo 採用件数は多すぎないか
+    - test 自己学習込みでやっと成立する系なのか、本体が強いだけなのか
+
+design:
+  base_parent: exp_20260410_034_dao_xgb_pair_te_core_min
+  model_family: xgb
+  algorithm: XGBoost multiclass softprob
+  cv:
+    fold_type: StratifiedKFold
+    n_splits: 5
+    seed: 42
+  target_encoding:
+    enabled: true
+    scope: pairwise_columns_only
+    type: multiclass_target_encoder
+    inner_cv: 5
+    leak_free: true
+  pairwise:
+    source_columns:
+      - Soil_pH
+      - Soil_Moisture
+      - Organic_Carbon
+      - Electrical_Conductivity
+      - Temperature_C
+      - Humidity
+      - Rainfall_mm
+      - Sunlight_Hours
+      - Wind_Speed_kmh
+      - Field_Area_hectare
+      - Previous_Irrigation_mm
+      - Soil_Type
+      - Crop_Type
+      - Crop_Growth_Stage
+      - Season
+      - Irrigation_Type
+      - Water_Source
+      - Mulching_Used
+      - Region
+    raw_pair_count: 171
+    acceptance_rule: nunique_total <= total_rows_combined * 0.5
+    expected_pair_count: 135
+
+kept_elements:
+  - raw numerical 11
+  - raw categorical 8
+  - pairwise interactions
+  - pairwise multiclass TE
+  - class weights
+  - XGB core training
+  - pseudo-label retrain
+
+removed_elements:
+  - post-hoc class weight optimization
+  - formula/logit features
+  - digit features
+  - ordered target encoding
+  - original merge
+  - original priors
+  - massive combo freq
+  - NUM_AS_CAT
+
+pseudo_label:
+  enabled: true
+  threshold: 0.92
+  adopt_rule: use pseudo-retrained model only if fold validation improves
+  record_items:
+    - pseudo_count_per_fold
+    - pseudo_rate_per_fold
+    - score_before_pseudo
+    - score_after_selection
+
+features:
+  raw_numeric:
+    - Soil_pH
+    - Soil_Moisture
+    - Organic_Carbon
+    - Electrical_Conductivity
+    - Temperature_C
+    - Humidity
+    - Rainfall_mm
+    - Sunlight_Hours
+    - Wind_Speed_kmh
+    - Field_Area_hectare
+    - Previous_Irrigation_mm
+  raw_categorical:
+    - Soil_Type
+    - Crop_Type
+    - Crop_Growth_Stage
+    - Season
+    - Irrigation_Type
+    - Water_Source
+    - Mulching_Used
+    - Region
+  expected_base_feature_count: 19
+  expected_pair_te_feature_count: 135 * 3
+
+params:
+  xgb:
+    n_estimators: 20000
+    max_depth: 4
+    learning_rate: 0.03
+    min_child_weight: 2.333941903991847
+    subsample: 0.9766412297733108
+    colsample_bytree: 0.535324419516146
+    gamma: 4.258489082295074
+    reg_alpha: 4.082875850185249e-08
+    reg_lambda: 0.00013528868091784412
+    objective: multi:softprob
+    num_class: 3
+    tree_method: hist
+    eval_metric: mlogloss
+    random_state: 42
+    early_stopping_rounds: 300
+
+artifacts:
+  outputs:
+    - oof_dao_xgb_pair_te_pseudo_only_proba.npy
+    - pred_dao_xgb_pair_te_pseudo_only_proba.npy
+    - submission_dao_xgb_pair_te_pseudo_only.csv
+    - feature_columns.csv
+    - feature_importance.csv
+    - pair_feature_meta.csv
+    - pseudo_summary.csv
+    - cv_result.json
+
+comparison:
+  baseline_parent:
+    - exp_20260410_034_dao_xgb_pair_te_core_min
+  primary_targets:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260409_025_lgb_digit_te_min
+    - exp_20260409_026_realmlp_pair_te_min
+  compare_items:
+    - raw_cv
+    - public_lb
+    - raw_corr
+    - rank_corr
+    - pseudo_count
+    - pseudo_rate
+
+decision_rule:
+  keep:
+    - fold-wise improvements are mostly consistent
+    - CV and LB both improve over 034
+    - pseudo counts are not excessively large relative to test size
+  hold:
+    - CV improves slightly but LB is flat
+    - fold-wise results are mixed
+    - may still be usable as optional submission variant
+  drop:
+    - LB does not improve
+    - fold improvements are unstable
+    - pseudo counts are too large and behavior looks brittle
+
+expected_interpretation:
+  best_case: >
+    034 core-min に対する実戦的な上積みとして pseudo-label が機能し、
+    Dao 系の notebook strength の一部が test 自己学習込みでも再現できる。
+  neutral_case: >
+    CV は少し上がるが LB 変換が弱く、optional trick 止まり。
+  worst_case: >
+    pseudo-label は不安定で、Dao 本体の評価を濁らせるだけと判断される。
+
+implementation_note:
+  pair_build_function: build_pairwise_features_concat
+  reason: >
+    pairwise 列を dict に溜めて最後に DataFrame 化し、逐次列追加による
+    pandas fragmentation warning を避ける。
+
+next_action:
+  if_good: exp_20260410_037_dao_xgb_pair_te_posthoc_only
+  if_unclear: compare 036 vs 034 correlation and inspect pseudo_summary
+  if_bad: drop pseudo-label route and proceed to 037
