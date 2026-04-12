@@ -86,7 +86,7 @@ result:
   notes: ""
 
   cv:
-    baseline_025: null
+    baseline_025: 0.979378
     set_018_025: null
     set_018_025_026: null
     set_018_025_037: null
@@ -95,13 +95,13 @@ result:
     set_018_037: null
 
   lb_public:
-    baseline_025: null
-    set_018_025: null
-    set_018_025_026: null
-    set_018_025_037: null
-    set_018_025_026_037: null
-    set_025_037: null
-    set_018_037: null
+    baseline_025: 0.97842
+    set_018_025: 0.97841
+    set_018_025_026: 0.97827
+    set_018_025_037: 0.97651
+    set_018_025_026_037: 0.97634
+    set_025_037: 0.97710
+    set_018_037: 0.97619
 
   delta:
     vs_baseline_025:
