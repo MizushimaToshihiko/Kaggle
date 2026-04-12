@@ -81,9 +81,12 @@ comparison:
 
 result:
   summary: ""
-  verdict: ""
-  best_set: ""
-  notes: ""
+  verdict: "drop"
+  best_set: "018 + 025"
+  notes:
+     - adding 037 consistently degraded ridge screening CV
+     - 037 is acceptable as a single-model reference, but not as a stack material
+     - Dao branch is closed as an ensemble candidate
 
   cv:
     baseline_025: 0.979378
