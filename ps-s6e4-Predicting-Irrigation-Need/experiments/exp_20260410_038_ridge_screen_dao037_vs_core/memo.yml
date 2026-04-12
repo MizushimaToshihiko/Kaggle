@@ -1,0 +1,204 @@
+experiment:
+  exp_id: exp_20260410_038_ridge_screen_dao037_vs_core
+  title: Ridge screening of dao037 against core stack
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: balanced_accuracy
+  status: planned
+
+purpose:
+  objective: >
+    037 を既存主力群に加えたとき、025 単体や既存 core set を超えるかを確認し、
+    Dao 系が最終スタック候補として意味を持つかを判定する。
+  questions:
+    - 037 を足すと 025 単体を超えるか
+    - 018/025/026 の既存 core set に対して追加価値があるか
+    - 037 は置換候補か、追加候補か
+    - Dao 系は単体止まりか、stack 素材として生き残るか
+
+design:
+  blend_type: ridge_screening
+  use_raw_proba: true
+  cv:
+    fold_type: StratifiedKFold
+    n_splits: 5
+    seed: 42
+  ridge:
+    alphas: logspace(-3, 3, 25)
+
+inputs:
+  candidates:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260409_025_lgb_digit_te_min
+    - exp_20260409_026_realmlp_pair_te_min
+    - exp_20260410_037_dao_xgb_pair_te_posthoc_only
+
+screen_sets:
+  primary:
+    baseline_025:
+      - exp_20260409_025_lgb_digit_te_min
+    set_018_025:
+      - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+      - exp_20260409_025_lgb_digit_te_min
+    set_018_025_026:
+      - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+      - exp_20260409_025_lgb_digit_te_min
+      - exp_20260409_026_realmlp_pair_te_min
+    set_018_025_037:
+      - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+      - exp_20260409_025_lgb_digit_te_min
+      - exp_20260410_037_dao_xgb_pair_te_posthoc_only
+    set_018_025_026_037:
+      - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+      - exp_20260409_025_lgb_digit_te_min
+      - exp_20260409_026_realmlp_pair_te_min
+      - exp_20260410_037_dao_xgb_pair_te_posthoc_only
+  optional:
+    set_025_037:
+      - exp_20260409_025_lgb_digit_te_min
+      - exp_20260410_037_dao_xgb_pair_te_posthoc_only
+    set_018_037:
+      - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+      - exp_20260410_037_dao_xgb_pair_te_posthoc_only
+
+records:
+  save_items:
+    - cv_per_set
+    - public_lb_per_set
+    - ridge_coefficients
+    - raw_correlations
+    - rank_correlations
+    - delta_vs_baseline_025
+    - delta_vs_set_018_025_026
+
+comparison:
+  baseline_single:
+    - exp_20260409_025_lgb_digit_te_min
+  baseline_core:
+    - set_018_025_026
+  main_focus:
+    - set_018_025_037
+    - set_018_025_026_037
+
+result:
+  summary: ""
+  verdict: ""
+  best_set: ""
+  notes: ""
+
+  cv:
+    baseline_025: null
+    set_018_025: null
+    set_018_025_026: null
+    set_018_025_037: null
+    set_018_025_026_037: null
+    set_025_037: null
+    set_018_037: null
+
+  lb_public:
+    baseline_025: null
+    set_018_025: null
+    set_018_025_026: null
+    set_018_025_037: null
+    set_018_025_026_037: null
+    set_025_037: null
+    set_018_037: null
+
+  delta:
+    vs_baseline_025:
+      set_018_025: null
+      set_018_025_026: null
+      set_018_025_037: null
+      set_018_025_026_037: null
+      set_025_037: null
+      set_018_037: null
+    vs_set_018_025_026:
+      set_018_025_037: null
+      set_018_025_026_037: null
+
+  coefficient_check:
+    baseline_025: ""
+    set_018_025: ""
+    set_018_025_026: ""
+    set_018_025_037: ""
+    set_018_025_026_037: ""
+    set_025_037: ""
+    set_018_037: ""
+
+  correlation_check:
+    important_pairs:
+      "018_vs_025":
+        raw_corr: null
+        rank_corr: null
+      "018_vs_026":
+        raw_corr: null
+        rank_corr: null
+      "018_vs_037":
+        raw_corr: null
+        rank_corr: null
+      "025_vs_026":
+        raw_corr: null
+        rank_corr: null
+      "025_vs_037":
+        raw_corr: null
+        rank_corr: null
+      "026_vs_037":
+        raw_corr: null
+        rank_corr: null
+
+decision_rule:
+  keep:
+    - set with 037 exceeds baseline_025
+    - 037 has meaningful positive role in ridge coefficients
+    - cv/lb improvement is not negligible
+  hold:
+    - cv improves slightly but lb is flat
+    - 037 coefficient is small but positive
+    - potential auxiliary material
+  drop:
+    - adding 037 does not beat baseline_025
+    - coefficients are near zero or unstable
+    - cv/lb do not improve
+
+expected_interpretation:
+  best_case: >
+    037 is not only a strong single model but also a useful stack material,
+    especially as an additional component on top of 018/025/026.
+  neutral_case: >
+    037 is a decent single but only a weak additive material.
+  worst_case: >
+    037 is just a sharpened version of 034 and does not materially help the final stack.
+
+artifacts:
+  expected_outputs:
+    - ridge_screen_results.csv
+    - ridge_screen_coef_summary.csv
+    - pairwise_corr_summary.csv
+    - cv_result.json
+    - oof_baseline_025.npy
+    - pred_baseline_025.npy
+    - oof_set_018_025.npy
+    - pred_set_018_025.npy
+    - oof_set_018_025_026.npy
+    - pred_set_018_025_026.npy
+    - oof_set_018_025_037.npy
+    - pred_set_018_025_037.npy
+    - oof_set_018_025_026_037.npy
+    - pred_set_018_025_026_037.npy
+    - submission_baseline_025.csv
+    - submission_set_018_025.csv
+    - submission_set_018_025_026.csv
+    - submission_set_018_025_037.csv
+    - submission_set_018_025_026_037.csv
+
+judgement_template:
+  what_happened: ""
+  why_it_matters: ""
+  next_decision: ""
+
+next_action:
+  if_good: >
+    keep 037 as a stack candidate and consider HC or rank blend with 037 included.
+  if_unclear: >
+    inspect coefficients and raw/rank correlations more closely and compare against 025 single.
+  if_bad: >
+    close Dao branch as stack candidate and keep 037 only as single-model reference.
