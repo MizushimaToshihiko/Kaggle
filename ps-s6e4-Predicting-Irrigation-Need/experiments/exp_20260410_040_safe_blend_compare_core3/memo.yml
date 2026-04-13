@@ -101,8 +101,8 @@ comparison:
 result:
   summary: ""
   verdict: ""
-  best_strategy: ""
-  notes: ""
+  best_strategy: "nelder_mead"
+  notes: "CVは改善したがLBは伸びなかった"
 
   cv:
     single_018: 0.9793964215510967
