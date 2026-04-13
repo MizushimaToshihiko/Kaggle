@@ -1,0 +1,180 @@
+experiment:
+  exp_id: exp_20260410_040_safe_blend_compare_core3
+  title: Safe blend comparison for core 018 / 025 / 026
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: balanced_accuracy
+  status: planned
+
+purpose:
+  objective: >
+    018 / 025 / 026 を使って、安全寄りのブレンド比較を行い、
+    025単体や set_018_025 に対してどの戦略が実戦候補になるかを確認する。
+  questions:
+    - equal average は基準線としてどこに位置するか
+    - ridge / Nelder-Mead / HC / LR stacking のどれが最も安定して強いか
+    - 026 は本当に足す価値があるか
+    - 025単体や 018+025 を超える戦略があるか
+
+design:
+  safe_mode: true
+  candidates:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260409_025_lgb_digit_te_min
+    - exp_20260409_026_realmlp_pair_te_min
+  compared_strategies:
+    - single_018
+    - single_025
+    - single_026
+    - equal_avg
+    - ridge
+    - nelder_mead
+    - hill_climb
+    - stack_lr
+  excluded_strategies:
+    - stack_lgb
+  exclusion_reason: >
+    Nonlinear meta learner can look too strong on OOF in a similar-model setting and is not adopted in this safe comparison.
+
+inputs:
+  oof:
+    "018": oof_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
+    "025": oof_lgb_digit_te_min_proba_biased.npy
+    "026": oof_realmlp_pair_te_min_proba.npy
+  pred:
+    "018": pred_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
+    "025": pred_lgb_digit_te_min_proba_biased.npy
+    "026": pred_realmlp_pair_te_min_proba.npy
+
+params:
+  cv:
+    fold_type: StratifiedKFold
+    n_splits: 5
+    seed: 42
+  ridge:
+    alphas: logspace(-3, 3, 25)
+  logistic_regression:
+    C: 1.0
+    max_iter: 2000
+    class_weight: balanced
+  nelder_mead:
+    restarts: 20
+    maxiter: 3000
+    constraint: softmax_nonnegative_sum1
+  hill_climb:
+    max_slots: 25
+    with_replacement: true
+
+records:
+  save_items:
+    - blend_strategy_results.csv
+    - pairwise_corr_summary.csv
+    - nelder_mead_weights.csv
+    - hill_climb_weights.csv
+    - hill_climb_history.csv
+    - ridge_alpha_summary.csv
+    - cv_result.json
+    - oof_equal_avg.npy
+    - pred_equal_avg.npy
+    - oof_nelder_mead.npy
+    - pred_nelder_mead.npy
+    - oof_hill_climb.npy
+    - pred_hill_climb.npy
+    - oof_ridge.npy
+    - pred_ridge.npy
+    - oof_stack_lr.npy
+    - pred_stack_lr.npy
+    - submission_equal_avg.csv
+    - submission_nelder_mead.csv
+    - submission_hill_climb.csv
+    - submission_ridge.csv
+    - submission_stack_lr.csv
+
+comparison:
+  baselines:
+    - single_025
+    - set_018_025_implicit_reference
+  main_focus:
+    - whether any strategy beats single_025
+    - whether 026 helps in blended form
+    - whether LR stack is truly additive or just OOF-friendly
+
+result:
+  summary: ""
+  verdict: ""
+  best_strategy: ""
+  notes: ""
+
+  cv:
+    single_018: null
+    single_025: null
+    single_026: null
+    equal_avg: null
+    ridge: null
+    nelder_mead: null
+    hill_climb: null
+    stack_lr: null
+
+  lb_public:
+    single_025_reference: null
+    equal_avg: null
+    ridge: null
+    nelder_mead: null
+    hill_climb: null
+    stack_lr: null
+
+  delta_vs_single_025:
+    equal_avg: null
+    ridge: null
+    nelder_mead: null
+    hill_climb: null
+    stack_lr: null
+
+  weight_check:
+    nelder_mead: ""
+    hill_climb: ""
+    ridge: ""
+    stack_lr: ""
+
+  correlation_check:
+    "018_vs_025":
+      raw_corr: null
+      rank_corr: null
+    "018_vs_026":
+      raw_corr: null
+      rank_corr: null
+    "025_vs_026":
+      raw_corr: null
+      rank_corr: null
+
+decision_rule:
+  keep:
+    - strategy beats single_025 in cv and is not obviously unstable
+    - public LB is at least consistent with cv direction
+    - weights or role allocation look natural
+  hold:
+    - cv improves slightly but lb is flat
+    - worth keeping as secondary submission candidate
+  drop:
+    - strategy does not beat single_025
+    - or improves only on OOF with unstable-looking behavior
+
+expected_interpretation:
+  best_case: >
+    Ridge or another simple method beats single_025 and becomes a practical mainline ensemble candidate.
+  neutral_case: >
+    Improvements are marginal, but a secondary candidate is identified.
+  worst_case: >
+    Single_025 remains better than all safe blends, so blending should not be forced.
+
+judgement_template:
+  what_happened: ""
+  why_it_matters: ""
+  next_decision: ""
+
+next_action:
+  if_good: >
+    submit top 1-2 safe strategies and compare public LB against single_025.
+  if_unclear: >
+    inspect weights and public LB before choosing between ridge / NM / HC / LR.
+  if_bad: >
+    keep single_025 or set_018_025-style logic as mainline and stop forcing blend complexity.
