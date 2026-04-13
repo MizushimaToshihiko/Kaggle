@@ -1,0 +1,155 @@
+experiment:
+  exp_id: exp_20260410_041_trompt_strict_min
+  title: Trompt strict minimum reproduction
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: balanced_accuracy
+  status: planned
+
+purpose:
+  objective: >
+    共有コードの Trompt notebook を strict 化し、fold外fit を除去した状態で
+    実力を再測定する。強single候補ではなく、第4素材候補になれるかを確認する。
+  questions:
+    - strict 化後も 0.975 近辺を維持できるか
+    - 018 / 025 / 026 と比べてどれだけ別人格か
+    - NN family として keep する価値があるか
+    - weighted sampler を含む構成が有効か
+
+design:
+  model_family: trompt
+  algorithm: torch_frame Trompt
+  cv:
+    fold_type: StratifiedKFold
+    n_splits: 5
+    seed: 42
+
+strict_fixes:
+  - feature_engineering fit is moved inside each fold
+  - MinMaxScaler fit is moved inside each fold
+  - KBinsDiscretizer fit is moved inside each fold
+  - OOF/test probabilities are saved properly as 3-class outputs
+
+kept_elements:
+  - Trompt backbone
+  - rainfall cyclic encoding
+  - floor-based categoricalization for numericals
+  - Temperature_C quantile bins
+  - WeightedRandomSampler
+  - 5-fold CV
+  - OneCycleLR
+
+removed_elements:
+  - fold-outside feature fitting
+  - fold-outside scaler fitting
+  - fold-outside KBins fitting
+  - any optimistic interpretation of source OOF
+
+features:
+  base_raw:
+    - 19 original features
+  added_numeric:
+    - _Rainfall_mm_sin_100
+  added_categorical:
+    - "{num_col}_cat_ for all base numeric columns"
+    - "Temperature_C_5_quantile_bin_"
+    - "Temperature_C_40_quantile_bin_"
+
+params:
+  model:
+    channels: 64
+    prompts: 8
+    layers: 4
+  training:
+    epochs: 6
+    lr: 0.001
+    weight_decay: 0.0001
+    warmup: 0.15
+    batch_size: 512
+
+artifacts:
+  expected_outputs:
+    - oof_trompt_strict_min_proba.npy
+    - pred_trompt_strict_min_proba.npy
+    - oof_trompt_strict_min.csv
+    - test_trompt_strict_min.csv
+    - submission_trompt_strict_min.csv
+    - fold_feature_meta.csv
+    - cv_result.json
+
+comparison:
+  primary_targets:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260409_025_lgb_digit_te_min
+    - exp_20260409_026_realmlp_pair_te_min
+  compare_items:
+    - raw_cv
+    - public_lb
+    - raw_corr
+    - rank_corr
+    - optional_ridge_screen_if_promising
+
+result:
+  summary: ""
+  verdict: ""
+  notes: ""
+
+  cv:
+    single_041: null
+
+  lb_public:
+    single_041: null
+
+  correlation_check:
+    vs_018:
+      raw_corr: null
+      rank_corr: null
+    vs_025:
+      raw_corr: null
+      rank_corr: null
+    vs_026:
+      raw_corr: null
+      rank_corr: null
+
+  feature_check:
+    fold_meta_summary: ""
+    promising_signals: ""
+    concerns: ""
+
+  optional_followup:
+    run_ridge_with_025: false
+    cv_025_041: null
+    lb_025_041: null
+    notes: ""
+
+decision_rule:
+  keep:
+    - strict CV remains reasonably high
+    - and correlation is clearly lower than existing cores
+    - and there is plausible value as a 4th material
+  hold:
+    - cv is only moderate but correlation is meaningfully lower
+    - possible auxiliary candidate
+  drop:
+    - strict CV drops too much
+    - and correlation is not low enough to justify keeping it
+
+expected_interpretation:
+  best_case: >
+    Trompt survives strictification and becomes a genuine lower-correlation auxiliary family.
+  neutral_case: >
+    Trompt weakens but still remains different enough to keep as a low-priority auxiliary.
+  worst_case: >
+    Source score was inflated by fold-outside fitting, and strict Trompt is not competitive enough.
+
+judgement_template:
+  what_happened: ""
+  why_it_matters: ""
+  next_decision: ""
+
+next_action:
+  if_good: >
+    compute raw/rank correlations vs 018/025/026 and run a small safe blend check with 025.
+  if_unclear: >
+    inspect fold stability and correlation before deciding.
+  if_bad: >
+    close Trompt branch and move to another shared-code family.
