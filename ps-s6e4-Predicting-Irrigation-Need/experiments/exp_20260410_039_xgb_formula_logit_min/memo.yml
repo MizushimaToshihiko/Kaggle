@@ -115,8 +115,8 @@ comparison:
 
 result:
   summary: ""
-  verdict: ""
-  notes: ""
+  verdict: "drop"
+  notes: "CV,LBは悪くなかったが、相関がそれほど下がらず、Ridgeブレンドの結果は025単体を下回った"
 
   cv:
     single_039: 0.971128
@@ -141,10 +141,10 @@ result:
     top_importance_features: []
 
   optional_ridge_screen:
-    run: false
-    cv_025_039: null
-    lb_025_039: null
-    notes: ""
+    run: true
+    cv_025_039: 0.974187
+    lb_025_039: 0.97184
+    notes: "CV,LB共に025単体を超えることはできなかった"
 
 decision_rule:
   keep:
