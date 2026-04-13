@@ -119,21 +119,21 @@ result:
   notes: ""
 
   cv:
-    single_039: null
+    single_039: 0.971128
 
   lb_public:
-    single_039: null
+    single_039: 0.96906
 
   correlation_check:
     vs_018:
-      raw_corr: null
-      rank_corr: null
+      raw_corr: 0.991117
+      rank_corr: 0.914542
     vs_025:
-      raw_corr: null
-      rank_corr: null
+      raw_corr: 0.993389
+      rank_corr: 0.964676
     vs_026:
-      raw_corr: null
-      rank_corr: null
+      raw_corr: 0.992565
+      rank_corr: 0.893232
 
   feature_check:
     threshold_features_worked: ""
