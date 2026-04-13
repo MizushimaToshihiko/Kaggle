@@ -1,0 +1,179 @@
+experiment:
+  exp_id: exp_20260410_039_xgb_formula_logit_min
+  title: XGB formula/logit minimum reproduction
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: balanced_accuracy
+  status: done
+
+purpose:
+  objective: >
+    Traiko 由来の threshold/logit 部品だけを独立 family として最小再現し、
+    018/025/026 の外側にある軽い別人格候補になりうるかを確認する。
+  questions:
+    - raw base + threshold/logit だけでどこまで戦えるか
+    - 018/025/026 とどれくらい相関がズレるか
+    - Dao graft ではなく独立 family として意味があるか
+    - formula/logit は単体弱くても補助候補として残せるか
+
+design:
+  model_family: xgb
+  algorithm: XGBoost multiclass softprob
+  cv:
+    fold_type: StratifiedKFold
+    n_splits: 5
+    seed: 42
+
+kept_elements:
+  - raw numerical 11
+  - raw categorical 8
+  - threshold features 4
+  - precomputed logits 3
+  - XGB core training
+
+removed_elements:
+  - pairwise interactions
+  - pairwise target encoding
+  - pseudo-label
+  - post-hoc optimization
+  - original merge
+  - original priors
+  - digit features
+  - ordered target encoding
+  - massive combo freq
+  - NUM_AS_CAT
+
+features:
+  raw_numeric:
+    - Soil_pH
+    - Soil_Moisture
+    - Organic_Carbon
+    - Electrical_Conductivity
+    - Temperature_C
+    - Humidity
+    - Rainfall_mm
+    - Sunlight_Hours
+    - Wind_Speed_kmh
+    - Field_Area_hectare
+    - Previous_Irrigation_mm
+  raw_categorical:
+    - Soil_Type
+    - Crop_Type
+    - Crop_Growth_Stage
+    - Season
+    - Irrigation_Type
+    - Water_Source
+    - Mulching_Used
+    - Region
+  threshold_features:
+    - soil_lt_25
+    - temp_gt_30
+    - rain_lt_300
+    - wind_gt_10
+  precomputed_logit_features:
+    - logit(P(y=Low))
+    - logit(P(y=Medium))
+    - logit(P(y=High))
+
+params:
+  xgb:
+    n_estimators: 5000
+    max_depth: 4
+    learning_rate: 0.03
+    min_child_weight: 2.0
+    subsample: 0.85
+    colsample_bytree: 0.60
+    gamma: 1.0
+    reg_alpha: 0.01
+    reg_lambda: 1.0
+    objective: multi:softprob
+    num_class: 3
+    tree_method: hist
+    eval_metric: mlogloss
+    random_state: 42
+    early_stopping_rounds: 200
+
+artifacts:
+  expected_outputs:
+    - oof_xgb_formula_logit_min_proba.npy
+    - pred_xgb_formula_logit_min_proba.npy
+    - submission_xgb_formula_logit_min.csv
+    - feature_columns.csv
+    - feature_importance.csv
+    - cv_result.json
+
+comparison:
+  primary_targets:
+    - exp_20260407_018_cat_pairwise_te_bias_from_shared_min
+    - exp_20260409_025_lgb_digit_te_min
+    - exp_20260409_026_realmlp_pair_te_min
+  compare_items:
+    - raw_cv
+    - public_lb
+    - raw_corr
+    - rank_corr
+    - ridge_2model_screen_if_needed
+
+result:
+  summary: ""
+  verdict: ""
+  notes: ""
+
+  cv:
+    single_039: null
+
+  lb_public:
+    single_039: null
+
+  correlation_check:
+    vs_018:
+      raw_corr: null
+      rank_corr: null
+    vs_025:
+      raw_corr: null
+      rank_corr: null
+    vs_026:
+      raw_corr: null
+      rank_corr: null
+
+  feature_check:
+    threshold_features_worked: ""
+    precomputed_logits_worked: ""
+    top_importance_features: []
+
+  optional_ridge_screen:
+    run: false
+    cv_025_039: null
+    lb_025_039: null
+    notes: ""
+
+decision_rule:
+  keep:
+    - single model is somewhat weaker but correlation is clearly lower than 018/025/026
+    - or 2-model ridge with 025 shows additive value
+  hold:
+    - cv/lb are mediocre but correlation is meaningfully lower
+    - possible auxiliary material for later blending
+  drop:
+    - single model is weak and correlations are still close to existing cores
+    - no evidence of additive value
+
+expected_interpretation:
+  best_case: >
+    threshold/logit features form a lightweight independent family and provide a new error pattern.
+  neutral_case: >
+    single-model strength is limited, but the model remains as a low-correlation auxiliary candidate.
+  worst_case: >
+    formula/logit family is weak and still too close to existing cores, so the branch is closed.
+
+judgement_template:
+  what_happened: ""
+  why_it_matters: ""
+  next_decision: ""
+
+next_action:
+  if_good: >
+    run raw/rank correlation analysis and possibly a small ridge screen with 025.
+  if_unclear: >
+    inspect feature importance and compare against 018/025/026 before deciding.
+  if_bad: >
+    close formula/logit branch and move to another shared-code family.
