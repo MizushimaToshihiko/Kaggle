@@ -105,46 +105,58 @@ result:
   notes: ""
 
   cv:
-    single_018: null
-    single_025: null
-    single_026: null
-    equal_avg: null
-    ridge: null
-    nelder_mead: null
-    hill_climb: null
-    stack_lr: null
+    single_018: 0.9793964215510967
+    single_025: 0.9793964215510967
+    single_026: 0.9781126952221663
+    equal_avg: 0.9798447194031888
+    ridge: 0.9796229785166801
+    nelder_mead: 0.9800277140400162
+    hill_climb: 0.9800263197715751
+    stack_lr: 0.9797097730943692
 
   lb_public:
-    single_025_reference: null
-    equal_avg: null
-    ridge: null
-    nelder_mead: null
-    hill_climb: null
-    stack_lr: null
+    single_025_reference: 0.97981
+    equal_avg: 0.97808
+    ridge: 0.97827
+    nelder_mead: 0.97860
+    hill_climb: 0.97860
+    stack_lr: 0.97928
 
   delta_vs_single_025:
-    equal_avg: null
-    ridge: null
-    nelder_mead: null
-    hill_climb: null
-    stack_lr: null
+    equal_avg: 0.0004482978520921055
+    ridge: 0.0002265569655833799
+    nelder_mead: 0.000631292488919466
+    hill_climb: 0.0006298982204783199
+    stack_lr: 0.0003133515432724998
 
   weight_check:
-    nelder_mead: ""
-    hill_climb: ""
-    ridge: ""
-    stack_lr: ""
+    nelder_mead: 
+      - 018: 0.26026661921601796
+      - 025: 0.43821255949612253
+      - 026: 0.30152082128785956
+    hill_climb: 
+      - 018: 0.260869562625885
+      - 025: 0.43478259444236755
+      - 026: 0.30434781312942505
+    ridge: 
+      - 018: 
+      - 025: 
+      - 026: 
+    stack_lr: 
+      - 018: 
+      - 025: 
+      - 026: 
 
   correlation_check:
     "018_vs_025":
-      raw_corr: null
-      rank_corr: null
+      raw_corr: 0.9871382575246613
+      rank_corr: 0.9391454006500348
     "018_vs_026":
-      raw_corr: null
-      rank_corr: null
+      raw_corr: 0.9869739841590697
+      rank_corr: 0.8648030629171283
     "025_vs_026":
-      raw_corr: null
-      rank_corr: null
+      raw_corr: 0.9885450005089996
+      rank_corr: 0.8625046269686599
 
 decision_rule:
   keep:
