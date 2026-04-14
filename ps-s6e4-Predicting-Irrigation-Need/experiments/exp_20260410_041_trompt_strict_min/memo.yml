@@ -91,24 +91,24 @@ comparison:
 result:
   summary: ""
   verdict: ""
-  notes: ""
+  notes: "共有元コードCV:0.97584,diff:-0.000428,LB:0.97625,diff:-0.00174"
 
   cv:
-    single_041: null
+    single_041: 0.975412
 
   lb_public:
-    single_041: null
+    single_041: 0.97451
 
   correlation_check:
     vs_018:
-      raw_corr: null
-      rank_corr: null
+      raw_corr: 0.976979079
+      rank_corr: 0.899020239
     vs_025:
-      raw_corr: null
-      rank_corr: null
+      raw_corr: 0.981989612752157
+      rank_corr: 0.932775740389543
     vs_026:
-      raw_corr: null
-      rank_corr: null
+      raw_corr: 0.980734827537967
+      rank_corr: 0.809269730935496
 
   feature_check:
     fold_meta_summary: ""
