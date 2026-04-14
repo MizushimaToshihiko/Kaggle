@@ -1,0 +1,114 @@
+experiment:
+  exp_id: exp_20260410_042_xgb024_bias_refine
+  title: Refine bias tuning for 024 XGB digit orderedTE
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: balanced_accuracy
+  status: done
+
+purpose:
+  objective: >
+    024 の既存 bias が局所解でないかを確認し、
+    bias 後処理だけを再探索して単体CV/LBの微更新を狙う。
+  questions:
+    - 024 の current best bias は十分詰め切れているか
+    - raw CV からさらに biased CV を押し上げられるか
+    - Public LB が改善するか
+    - 025 に近縁な 024 を、単体更新候補として残せるか
+
+design:
+  base_parent: exp_20260409_024_xgb_digit_orderedte_min
+  retraining: false
+  posthoc_only: true
+  bias_space: class-wise additive bias in log-prob space
+  search_style: coarse_to_local_to_ultra_local
+
+inputs:
+  raw_oof: oof_xgb_digit_orderedte_min_proba.npy
+  raw_pred: pred_xgb_digit_orderedte_min_proba.npy
+
+search_plan:
+  stage1:
+    range: [-1.0, 1.0]
+    step: 0.1
+  stage2:
+    width_around_stage1_best: 0.10
+    step: 0.02
+  stage3:
+    width_around_stage2_best: 0.02
+    step: 0.005
+
+artifacts:
+  expected_outputs:
+    - oof_xgb_digit_orderedte_min_proba_biased_refined.npy
+    - pred_xgb_digit_orderedte_min_proba_biased_refined.npy
+    - best_class_bias_refined.npy
+    - submission_xgb_digit_orderedte_min_bias_refined.csv
+    - cv_result.json
+
+comparison:
+  primary_baselines:
+    - current_024_raw
+    - current_024_biased
+    - single_025
+  compare_items:
+    - raw_cv
+    - refined_biased_cv
+    - public_lb
+    - delta_vs_old_biased_cv
+    - delta_vs_single_025_lb
+
+result:
+  summary: ""
+  verdict: ""
+  notes: ""
+
+  cv:
+    raw_024: null
+    old_biased_024: null
+    refined_biased_024: null
+
+  lb_public:
+    old_biased_024: null
+    refined_biased_024: null
+    single_025_reference: 0.97981
+
+  delta:
+    refined_vs_old_biased_cv: null
+    refined_vs_old_biased_lb: null
+    refined_vs_single_025_lb: null
+
+  best_bias:
+    old_bias: []
+    refined_bias: []
+
+decision_rule:
+  keep:
+    - refined biased CV improves over old biased CV
+    - and Public LB also improves
+  hold:
+    - CV improves slightly but LB is flat
+    - still usable as refreshed 024 reference
+  drop:
+    - no meaningful CV gain
+    - and LB does not improve
+
+expected_interpretation:
+  best_case: >
+    024 can be refreshed as a stronger near-mainline single model.
+  neutral_case: >
+    bias refinement gives only a tiny gain and does not change overall ranking.
+  worst_case: >
+    current 024 bias was already near-optimal, and extra search is wasted motion.
+
+judgement_template:
+  what_happened: ""
+  why_it_matters: ""
+  next_decision: ""
+
+next_action:
+  if_good: >
+    compare refreshed 024 against 025 again and reconsider 024's priority.
+  if_unclear: >
+    keep refined 024 as reference but do not overinvest further.
+  if_bad: >
+    stop spending time on 024 bias refinement and move to 026 or 041 lightweight checks.
