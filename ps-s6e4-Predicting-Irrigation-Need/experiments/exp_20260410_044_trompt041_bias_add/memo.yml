@@ -61,8 +61,10 @@ comparison:
 
 result:
   summary: ""
-  verdict: ""
-  notes: "bias追加前CV0.975412よりも改善したが、LBはbias追加前0.97451から0.00001の改善にとどまった"
+  verdict: "keep"
+  notes: >
+    bias追加前CV0.975412よりも改善したが、LBはbias追加前0.97451から0.00001の改善にとどまった
+    PS S6E4 Safe blend Compareで入れ替えて実行したところ、stacl_lrのCVが悪化（0.980061->0.980025)がLBが改善（0.97968->0.97974)したのでkeepとする
 
   cv:
     raw_041: 0.975412
