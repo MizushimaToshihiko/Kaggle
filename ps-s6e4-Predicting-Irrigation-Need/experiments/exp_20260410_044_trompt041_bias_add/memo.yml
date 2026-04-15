@@ -62,26 +62,26 @@ comparison:
 result:
   summary: ""
   verdict: ""
-  notes: ""
+  notes: "bias追加前CV0.975412よりも改善したが、LBはbias追加前0.97451から0.00001の改善にとどまった"
 
   cv:
-    raw_041: null
-    biased_041: null
+    raw_041: 0.975412
+    biased_041: 0.975716
 
   lb_public:
-    biased_041: null
+    biased_041: 0.97452
     single_025_reference: 0.97981
     refined_024_reference: 0.97976
-    refined_026_reference: null
+    refined_026_reference: 0.97759
 
   delta:
-    biased_vs_raw_cv: null
-    biased_vs_single_025_lb: null
-    biased_vs_refined_024_lb: null
-    biased_vs_refined_026_lb: null
+    biased_vs_raw_cv: 0.000304
+    biased_vs_single_025_lb: -0.00529
+    biased_vs_refined_024_lb: -0.00524
+    biased_vs_refined_026_lb: -0.00307
 
   best_bias:
-    added_bias: []
+    added_bias: [-0.44, -1.01, -1.1]
 
 decision_rule:
   keep:
