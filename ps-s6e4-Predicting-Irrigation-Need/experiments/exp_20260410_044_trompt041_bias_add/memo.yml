@@ -1,0 +1,117 @@
+experiment:
+  exp_id: exp_20260410_044_trompt041_bias_add
+  title: Add bias tuning to 041 strict Trompt
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: balanced_accuracy
+  status: done
+
+purpose:
+  objective: >
+    041 strict Trompt に cheap な post-hoc bias を一度だけ追加し、
+    単体CV/LB が少しでも伸びるかを確認する。
+    本命化ではなく、hold 維持か打ち止めかの判定が目的。
+  questions:
+    - 041 は bias で少しでも伸びるか
+    - Public LB が改善するか
+    - 補助候補として延命する価値があるか
+    - これ以上 041 を触る必要があるか
+
+design:
+  base_parent: exp_20260410_041_trompt_strict_min
+  retraining: false
+  posthoc_only: true
+  bias_space: class-wise additive bias in log-prob space
+  search_style: coarse_to_local_to_ultra_local
+
+inputs:
+  raw_oof: oof_trompt_strict_min_proba.npy
+  raw_pred: pred_trompt_strict_min_proba.npy
+
+search_plan:
+  stage1:
+    range: [-1.0, 1.0]
+    step: 0.1
+  stage2:
+    width_around_stage1_best: 0.10
+    step: 0.02
+  stage3:
+    width_around_stage2_best: 0.02
+    step: 0.005
+
+artifacts:
+  expected_outputs:
+    - oof_trompt_strict_min_proba_biased.npy
+    - pred_trompt_strict_min_proba_biased.npy
+    - best_class_bias.npy
+    - submission_trompt_strict_min_bias.csv
+    - cv_result.json
+
+comparison:
+  primary_baselines:
+    - current_041_raw
+    - single_025
+    - refined_024
+    - refined_026
+  compare_items:
+    - raw_cv
+    - biased_cv
+    - public_lb
+    - delta_vs_raw_cv
+    - delta_vs_single_025_lb
+
+result:
+  summary: ""
+  verdict: ""
+  notes: ""
+
+  cv:
+    raw_041: null
+    biased_041: null
+
+  lb_public:
+    biased_041: null
+    single_025_reference: 0.97981
+    refined_024_reference: 0.97976
+    refined_026_reference: null
+
+  delta:
+    biased_vs_raw_cv: null
+    biased_vs_single_025_lb: null
+    biased_vs_refined_024_lb: null
+    biased_vs_refined_026_lb: null
+
+  best_bias:
+    added_bias: []
+
+decision_rule:
+  keep:
+    - biased CV improves
+    - and Public LB also improves meaningfully
+    - and 041 becomes a more plausible auxiliary candidate
+  hold:
+    - CV improves slightly but LB is flat
+    - 041 remains a low-priority auxiliary candidate
+  drop:
+    - no meaningful CV gain
+    - and LB does not improve
+
+expected_interpretation:
+  best_case: >
+    041 becomes a somewhat stronger auxiliary NN-family candidate after cheap bias tuning.
+  neutral_case: >
+    small gain only; 041 remains hold.
+  worst_case: >
+    bias does not help, and 041 branch can be closed.
+
+judgement_template:
+  what_happened: ""
+  why_it_matters: ""
+  next_decision: ""
+
+next_action:
+  if_good: >
+    keep 041 biased as a low-priority auxiliary candidate and stop further deep work.
+  if_unclear: >
+    keep 041 as hold but do not spend more time soon.
+  if_bad: >
+    close 041 branch and move on.
