@@ -62,28 +62,29 @@ comparison:
 result:
   summary: ""
   verdict: ""
-  notes: ""
+  notes: >
+    CV,LB共に改善したが、微差にとどまった
 
   cv:
-    raw_026: null
-    old_biased_026: null
-    refined_biased_026: null
+    raw_026: 0.978023
+    old_biased_026: 0.978113
+    refined_biased_026: 0.978162
 
   lb_public:
-    old_biased_026: null
-    refined_biased_026: null
+    old_biased_026: 0.97753
+    refined_biased_026: 0.97759
     single_025_reference: 0.97981
     refined_024_reference: 0.97976
 
   delta:
-    refined_vs_old_biased_cv: null
-    refined_vs_old_biased_lb: null
-    refined_vs_single_025_lb: null
-    refined_vs_refined_024_lb: null
+    refined_vs_old_biased_cv: 0.000049
+    refined_vs_old_biased_lb: 0.00006
+    refined_vs_single_025_lb: -0.00222
+    refined_vs_refined_024_lb: -0.00217
 
   best_bias:
-    old_bias: []
-    refined_bias: []
+    old_bias: [1.7, 1.5, 2.3]
+    refined_bias: [-0.915, -1.095, -0.68]
 
 decision_rule:
   keep:
