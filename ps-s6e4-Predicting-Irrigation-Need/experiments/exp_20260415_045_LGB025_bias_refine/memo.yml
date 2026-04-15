@@ -60,27 +60,29 @@ comparison:
 
 result:
   summary: ""
-  verdict: ""
-  notes: ""
+  verdict: "drop"
+  notes: >
+    CVは改善したがLBは悪化した。PS S6E4 Safe Blend Compareで025を入れ替えて実行提出したら、
+    CV(0.980025->0.980015),LB(0.97974->0.97939)共に悪化したのでdrop。
 
   cv:
-    raw_025: null
+    raw_025: 0.979227
     old_biased_025: 0.979396
-    refined_biased_025: null
+    refined_biased_025: 0.979430
 
   lb_public:
     old_biased_025: 0.97981
-    refined_biased_025: null
+    refined_biased_025: 0.97810
     refined_024_reference: 0.97976
 
   delta:
-    refined_vs_old_biased_cv: null
-    refined_vs_old_biased_lb: null
-    refined_vs_refined_024_lb: null
+    refined_vs_old_biased_cv: 0.000034
+    refined_vs_old_biased_lb: -0.00171
+    refined_vs_refined_024_lb: -0.00166
 
   best_bias:
-    old_bias: []
-    refined_bias: []
+    old_bias: [1.8, 1.5, 2.4]
+    refined_bias: [-1.06, -1.09, 0.905]
 
 decision_rule:
   keep:
