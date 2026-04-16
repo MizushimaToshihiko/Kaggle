@@ -1,22 +1,24 @@
 experiment:
   exp_id: exp_20260416_046b_xgb_digit_orderedte_min_with_optuna_params
-  title: 024 backbone run with 046a Optuna best params
+  title: Validate 046a best params on 024 backbone with bias refine
   competition: PS S6E4 Predicting Irrigation Need
   metric: balanced_accuracy
   status: done
 
 purpose:
   objective: >
-    046a で得た best_params を、024 の骨格に差し替えて 1 回だけ本実行する。
-    目的は Optuna 結果の採用ではなく、046a の best params が 024 系で本当に使い物になるかを確認すること。
+    046a で得た best params を 024 の骨格に差し替えて 1 回だけ本実行し、
+    その params が 024 系で本当に使い物になるかを確認する。
+    採用前提ではなく、Optuna 結果の妥当性確認が主目的。
+    あわせて bias refine まで実施し、raw / biased の両方で比較する。
   questions:
-    - 046a の best params で raw CV は 024 raw を上回るか
-    - refined 024 や 025 と比較して実戦価値があるか
-    - 046a の低い CV は探索設計由来なのか、best params 自体が弱いのか
-    - この系統を続ける価値があるか
+    - 046a の best params で raw CV は old raw 024 を上回るか
+    - bias refine 後に refined_024 や 025 に近づけるか
+    - 046a の低い CV は探索設計由来か、best params 自体が弱いのか
+    - 046 枝を続ける価値があるか、それとも close すべきか
 
 design:
-  phase: fixed_train_with_best_params
+  phase: fixed_train_validation
   base_parent: exp_20260409_024_xgb_digit_orderedte_min
   best_params_source: exp_20260415_046a_xgb024_optuna_only/best_params.json
   feature_pipeline: same_as_024
@@ -30,26 +32,27 @@ design:
     random_state: 42
   model_seed: 2026
 
-inputs:
-  train: /kaggle/input/competitions/playground-series-s6e4/train.csv
-  test: /kaggle/input/competitions/playground-series-s6e4/test.csv
-  best_params_json: /kaggle/input/datasets/mizushimatoshihiko/npy-files/best_params.json
-
 run_policy:
   intent: >
     This is a one-shot validation run.
     If this run is weak, the 046 branch should be closed.
   adoption_rule: >
-    Do not adopt merely because best_params came from Optuna.
-    Adopt only if CV and LB justify it against current references.
+    Do not adopt merely because params came from Optuna.
+    Adopt only if raw / biased results justify it against current references.
+
+inputs:
+  train: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  best_params_json: /kaggle/input/datasets/mizushimatoshihiko/npy-files/best_params.json
 
 artifacts:
   expected_outputs:
     - submission_xgb_digit_orderedte_min_with_optuna_params.csv
     - oof_xgb_digit_orderedte_min_with_optuna_params_proba.npy
     - pred_xgb_digit_orderedte_min_with_optuna_params_proba.npy
-    - oof_xgb_digit_orderedte_min_with_optuna_params_proba_biased.npy
-    - pred_xgb_digit_orderedte_min_with_optuna_params_proba_biased.npy
+    - oof_xgb_digit_orderedte_min_optuna_biased_refined.npy
+    - pred_xgb_digit_orderedte_min_optuna_biased_refined.npy
+    - best_class_bias_refined.npy
     - cv_result.json
     - feature_columns.csv
 
@@ -60,7 +63,7 @@ comparison:
     - exp_20260409_025_lgb_digit_te_min
   compare_items:
     - raw_cv
-    - biased_cv
+    - refined_biased_cv
     - public_lb
     - delta_vs_old_raw_024
     - delta_vs_refined_024
@@ -75,47 +78,48 @@ result:
     old_raw_024: 0.978635
     refined_024_reference: 0.979624
     raw_046b: null
-    biased_046b: null
+    refined_biased_046b: null
 
   lb_public:
     refined_024_reference: 0.97976
     single_025_reference: 0.97981
     raw_046b: null
-    biased_046b: null
+    refined_biased_046b: null
 
   delta:
     raw_046b_vs_old_raw_024: null
-    biased_046b_vs_refined_024: null
-    biased_046b_vs_single_025: null
+    refined_biased_046b_vs_refined_024: null
+    refined_biased_046b_vs_single_025: null
 
   best_params_check:
-    best_trial_number: 5
-    best_cv_from_046a: 0.9727920177584345
-    loaded_params: {
-      "n_estimators": 2000,
-      "max_depth": 3,
-      "learning_rate": 0.06016832894292281,
-      "min_child_weight": 3.807051834468596,
-      "subsample": 0.7329719157023926,
-      "colsample_bytree": 0.5993541429636924,
-      "gamma": 0.519482574636954,
-      "reg_alpha": 0.0001502432786862596,
-      "reg_lambda": 9.89057165344654,
-      "max_delta_step": 1.600676312834703
-    }
+    best_trial_number: null
+    best_cv_from_046a: null
+    loaded_params: {}
+
+  bias_refine:
+    best_bias: []
+    search:
+      stage1:
+        range: [-1.0, 1.0]
+        step: 0.1
+      stage2:
+        width: 0.10
+        step: 0.02
+      stage3:
+        width: 0.02
+        step: 0.005
 
 decision_rule:
   keep:
     - raw_046b exceeds old_raw_024
-    - and biased_046b is at least competitive with refined_024
+    - and refined_biased_046b is at least competitive with refined_024
     - and public LB is not clearly worse
   hold:
-    - some CV improvement exists but LB is flat
-    - may remain as reference only
+    - some movement exists but refined_024 remains the better practical reference
   drop:
     - raw_046b fails to beat old_raw_024
-    - or biased_046b is clearly worse than refined_024
-    - or public LB is weak enough that 046 branch should be closed
+    - or refined_biased_046b is clearly worse than refined_024
+    - or public LB is weak enough that the 046 branch should be closed
 
 expected_interpretation:
   best_case: >
@@ -132,7 +136,7 @@ judgement_template:
 
 next_action:
   if_good: >
-    Compare directly with refined_024 and 025, then decide whether one more bias refine is worth doing.
+    Compare directly with refined_024 and 025, then decide whether one more narrow bias check is worth doing.
   if_unclear: >
     Keep only as reference and avoid deeper investment.
   if_bad: >
