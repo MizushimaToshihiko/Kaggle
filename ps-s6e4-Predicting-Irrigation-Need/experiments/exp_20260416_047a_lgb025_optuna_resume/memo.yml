@@ -1,0 +1,170 @@
+experiment:
+  exp_id: exp_20260416_047a_lgb025_optuna_resume
+  title: Optuna only for 025 LGB digit TE with trial-level resume
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: balanced_accuracy
+  status: planned
+
+purpose:
+  objective: >
+    025 の骨格を維持したまま、LGBM のハイパーパラメータだけを Optuna で探索する。
+    Notebook 停止後も trial 単位で再開できる構成にし、まずは探索結果だけを取得する。
+    重い本学習と submission 生成は 047b へ分離する。
+  questions:
+    - 025 raw モデル本体に改善余地があるか
+    - Optuna best trial の raw CV は current 025 raw を上回るか
+    - 有望なパラメータ帯はどこか
+    - 047b に進む価値があるか
+
+design:
+  phase: optuna_only_resume
+  base_parent: exp_20260409_025_lgb_digit_te_min
+  feature_pipeline: same_as_025
+  ordered_te_in_fold: true
+  retraining: false
+  posthoc_bias_included: false
+  resume_unit: trial
+  storage:
+    type: sqlite
+    study_name: ps_s6e4_047a_lgb025_optuna_resume
+    path: /kaggle/working/exp_20260416_047a_lgb025_optuna_resume/optuna_study.db
+  cv:
+    fold_type: KFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  model_seed: 2026
+
+search_space:
+  learning_rate:
+    low: 0.01
+    high: 0.10
+    log: true
+  num_leaves:
+    low: 16
+    high: 128
+    step: 8
+  max_depth:
+    low: 3
+    high: 10
+  min_data_in_leaf:
+    low: 20
+    high: 200
+    step: 10
+  feature_fraction:
+    low: 0.60
+    high: 1.0
+  bagging_fraction:
+    low: 0.60
+    high: 1.0
+  bagging_freq:
+    low: 1
+    high: 10
+  lambda_l1:
+    low: 1.0e-8
+    high: 10.0
+    log: true
+  lambda_l2:
+    low: 1.0e-8
+    high: 20.0
+    log: true
+  min_gain_to_split:
+    low: 0.0
+    high: 2.0
+  max_bin:
+    low: 127
+    high: 511
+    step: 64
+  n_estimators:
+    low: 500
+    high: 2000
+    step: 250
+
+optuna:
+  n_trials_total: 10
+  direction: maximize
+  pruner:
+    type: MedianPruner
+    n_startup_trials: 1
+    n_warmup_steps: 1
+
+runtime_policy:
+  intent: >
+    This notebook may be run multiple times.
+    Completed trials should be reused via SQLite storage.
+  note: >
+    Resume is at trial level, not at fold level.
+    An interrupted trial may need to be rerun from the start.
+
+artifacts:
+  expected_outputs:
+    - optuna_study.db
+    - optuna_trials.csv
+    - best_params.json
+    - cv_result.json
+
+comparison:
+  primary_baselines:
+    - exp_20260409_025_lgb_digit_te_min
+    - exp_20260416_046b_xgb_digit_orderedte_min_with_optuna_params
+  compare_items:
+    - best_cv_raw
+    - best_params
+    - best_fold_scores
+    - trial_distribution
+
+result:
+  summary: ""
+  verdict: ""
+  notes: ""
+
+  cv:
+    old_raw_025: 0.979227
+    old_biased_025: 0.979396
+    optuna_best_raw_025: null
+
+  lb_public:
+    old_biased_025: 0.97981
+    ref_046b_biased: 0.97998
+    optuna_best_raw_025: null
+
+  delta:
+    optuna_vs_old_raw_025: null
+    optuna_vs_old_biased_025: null
+    optuna_vs_046b_lb: null
+
+  best_trial:
+    number: null
+    params: {}
+    fold_scores: []
+
+decision_rule:
+  keep:
+    - optuna best raw CV clearly improves over old raw 025
+    - and results justify running 047b
+  hold:
+    - some improvement exists but not enough to justify immediate 047b
+  drop:
+    - no meaningful improvement
+    - or explored region appears clearly worse than current 025
+
+expected_interpretation:
+  best_case: >
+    025 raw has clear headroom, and 047b fixed-train validation is justified.
+  neutral_case: >
+    raw CV improves only slightly; 047b is optional.
+  worst_case: >
+    025 is already near saturation and Optuna adds little practical value.
+
+judgement_template:
+  what_happened: ""
+  why_it_matters: ""
+  next_decision: ""
+
+next_action:
+  if_good: >
+    Run 047b using best_params.json to generate OOF/test predictions and compare against current 025 and 046b.
+  if_unclear: >
+    Inspect trial stability and parameter concentration before deciding on 047b.
+  if_bad: >
+    Stop deeper work on 025 Optuna and return focus to other families or blend validation.
