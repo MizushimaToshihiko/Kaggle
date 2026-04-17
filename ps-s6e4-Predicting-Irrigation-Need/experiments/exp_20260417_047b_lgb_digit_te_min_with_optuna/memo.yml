@@ -1,0 +1,141 @@
+experiment:
+  exp_id: exp_20260417_047b_lgb_digit_te_min_with_optuna
+  title: Validate 047a best params on 025 backbone with bias refine
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: balanced_accuracy
+  status: done
+
+purpose:
+  objective: >
+    047a で得た best params を 025 の骨格に差し替えて 1 回だけ本実行し、
+    その params が 025 系で本当に使い物になるかを確認する。
+    採用前提ではなく、Optuna 結果の妥当性確認が主目的。
+    あわせて bias refine まで実施し、raw / biased の両方で比較する。
+  questions:
+    - 047a の best params で raw CV は old raw 025 を上回るか
+    - bias refine 後に current 025 や 046b に近づけるか
+    - 047a の低い CV は探索設計由来か、best params 自体が弱いのか
+    - 047 枝を続ける価値があるか、それとも close すべきか
+
+design:
+  phase: fixed_train_validation
+  base_parent: exp_20260409_025_lgb_digit_te_min
+  best_params_source: exp_20260416_047a_lgb025_optuna_resume/best_params.json
+  feature_pipeline: same_as_025
+  ordered_te_in_fold: true
+  retraining: true
+  posthoc_bias_included: true
+  cv:
+    fold_type: KFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  model_seed: 2026
+
+run_policy:
+  intent: >
+    This is a one-shot validation run.
+    If this run is weak, the 047 branch should be closed.
+  adoption_rule: >
+    Do not adopt merely because params came from Optuna.
+    Adopt only if raw / biased results justify it against current references.
+
+inputs:
+  train: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  best_params_json: /kaggle/input/datasets/mizushimatoshihiko/npy-files/exp_20260416_047a_lgb025_optuna_resume/best_params.json
+
+artifacts:
+  expected_outputs:
+    - submission_lgb_digit_te_min_with_optuna.csv
+    - oof_lgb_digit_te_min_with_optuna_proba.npy
+    - pred_lgb_digit_te_min_with_optuna_proba.npy
+    - oof_lgb_digit_te_min_with_optuna_biased_refined.npy
+    - pred_lgb_digit_te_min_with_optuna_biased_refined.npy
+    - best_class_bias_refined.npy
+    - cv_result.json
+
+comparison:
+  primary_baselines:
+    - exp_20260409_025_lgb_digit_te_min
+    - exp_20260416_046b_xgb_digit_orderedte_min_with_optuna_params
+  compare_items:
+    - raw_cv
+    - refined_biased_cv
+    - public_lb
+    - delta_vs_old_raw_025
+    - delta_vs_old_biased_025
+    - delta_vs_046b
+
+result:
+  summary: ""
+  verdict: ""
+  notes: ""
+
+  cv:
+    old_raw_025: 0.979227
+    old_biased_025: 0.979396
+    raw_047b: null
+    refined_biased_047b: null
+
+  lb_public:
+    old_biased_025: 0.97981
+    ref_046b_biased: 0.97998
+    raw_047b: null
+    refined_biased_047b: null
+
+  delta:
+    raw_047b_vs_old_raw_025: null
+    refined_biased_047b_vs_old_biased_025: null
+    refined_biased_047b_vs_046b: null
+
+  best_params_check:
+    best_trial_number: null
+    best_cv_from_047a: null
+    loaded_params: {}
+
+  bias_refine:
+    best_bias: []
+    search:
+      stage1:
+        range: [-1.0, 1.0]
+        step: 0.1
+      stage2:
+        width: 0.10
+        step: 0.02
+      stage3:
+        width: 0.02
+        step: 0.005
+
+decision_rule:
+  keep:
+    - raw_047b exceeds old_raw_025
+    - and refined_biased_047b is at least competitive with old_biased_025
+    - and public LB is not clearly worse than current references
+  hold:
+    - some movement exists but current 025 or 046b remain better practical references
+  drop:
+    - raw_047b fails to beat old_raw_025
+    - or refined_biased_047b is clearly worse than old_biased_025
+    - or public LB is weak enough that the 047 branch should be closed
+
+expected_interpretation:
+  best_case: >
+    047a best params are genuinely useful, and 025 with optuna params becomes a real challenger.
+  neutral_case: >
+    Some movement exists, but current 025 or 046b remain better practical references.
+  worst_case: >
+    047a best params do not reproduce strength in the 025 backbone, and the 047 branch is closed.
+
+judgement_template:
+  what_happened: ""
+  why_it_matters: ""
+  next_decision: ""
+
+next_action:
+  if_good: >
+    Compare directly with current 025 and 046b, then decide whether one more narrow bias check is worth doing.
+  if_unclear: >
+    Keep only as reference and avoid deeper investment.
+  if_bad: >
+    Close the 047 branch and return focus to 046b or another family.
