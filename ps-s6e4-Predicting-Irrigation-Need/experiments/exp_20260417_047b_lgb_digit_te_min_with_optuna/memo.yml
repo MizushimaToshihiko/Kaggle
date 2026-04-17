@@ -69,8 +69,8 @@ comparison:
 
 result:
   summary: ""
-  verdict: ""
-  notes: ""
+  verdict: "drop"
+  notes: "RAW_CVは上がったが、biased_cvは下がり、LBはさらに下がった"
 
   cv:
     old_raw_025: 0.979227
