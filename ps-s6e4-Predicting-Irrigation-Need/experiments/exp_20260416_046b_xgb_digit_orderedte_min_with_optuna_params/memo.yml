@@ -77,14 +77,14 @@ result:
   cv:
     old_raw_024: 0.978635
     refined_024_reference: 0.979624
-    raw_046b: null
-    refined_biased_046b: null
+    raw_046b: 0.978356
+    refined_biased_046b: 0.979870
 
   lb_public:
     refined_024_reference: 0.97976
     single_025_reference: 0.97981
     raw_046b: null
-    refined_biased_046b: null
+    refined_biased_046b: 0.97998
 
   delta:
     raw_046b_vs_old_raw_024: null
@@ -92,12 +92,23 @@ result:
     refined_biased_046b_vs_single_025: null
 
   best_params_check:
-    best_trial_number: null
-    best_cv_from_046a: null
-    loaded_params: {}
+    best_trial_number: 5
+    best_cv_from_046a: 0.9727920177584345
+    loaded_params: {
+      "n_estimators": 2500, # changed from 2000
+      "max_depth": 3,
+      "learning_rate": 0.06016832894292281,
+      "min_child_weight": 3.807051834468596,
+      "subsample": 0.7329719157023926,
+      "colsample_bytree": 0.5993541429636924,
+      "gamma": 0.519482574636954,
+      "reg_alpha": 0.0001502432786862596,
+      "reg_lambda": 9.89057165344654,
+      "max_delta_step": 1.600676312834703
+    }
 
   bias_refine:
-    best_bias: []
+    best_bias: [-0.94, -1.075, 0.0999]
     search:
       stage1:
         range: [-1.0, 1.0]
