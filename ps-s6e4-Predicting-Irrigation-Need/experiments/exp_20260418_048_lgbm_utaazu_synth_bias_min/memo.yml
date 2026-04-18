@@ -1,0 +1,180 @@
+experiment:
+  id: exp_20260418_048_lgbm_utaazu_synth_bias_min
+  title: UtaAzu LGBM synthetic bias minimum reproduction
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: multiclass balanced accuracy
+  status: done
+
+objective:
+  summary: >
+    UtaAzu notebook "S6E4 EDA: Decoding Synthetic Bias & Optimized LGBM"
+    の最小再現を行い、raw CV / biased CV / Public LB / OOF / pred を取得する。
+    その上で、024(=046系), 025, 046b との相関を確認し、
+    単体候補または低相関補助候補になりうるかを判定する。
+  success_criteria:
+    - raw_cv を取得
+    - biased_cv を取得
+    - public_lb を記録
+    - oof / pred を保存
+    - 024系, 025, 046b との raw / rank 相関を確認
+    - 必要なら safer HC / LogReg に1回だけ投入して変換率を見る
+
+source:
+  notebook_name: S6E4 EDA: Decoding Synthetic Bias & Optimized LGBM
+  author: UtaAzu
+  reference_type: kaggle notebook
+  notes: >
+    添付コードを参照して再構成。完全写経ではなく、
+    実験用の最小再現 + 保存機能追加版。
+
+model:
+  family: LightGBM
+  estimator: LGBMClassifier
+  params:
+    objective: multiclass
+    num_class: 3
+    metric: multi_logloss
+    learning_rate: 0.03
+    num_leaves: 127
+    min_child_samples: 50
+    subsample: 0.8
+    colsample_bytree: 0.6
+    n_estimators: 2000
+    random_state: 42
+    n_jobs: -1
+    verbose: -1
+
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+
+target:
+  column: Irrigation_Need
+  mapping:
+    Low: 0
+    Medium: 1
+    High: 2
+
+features:
+  base_categorical:
+    - Soil_Type
+    - Crop_Type
+    - Crop_Growth_Stage
+    - Season
+    - Irrigation_Type
+    - Water_Source
+    - Mulching_Used
+    - Region
+  base_numeric:
+    - Soil_pH
+    - Soil_Moisture
+    - Organic_Carbon
+    - Electrical_Conductivity
+    - Temperature_C
+    - Humidity
+    - Rainfall_mm
+    - Sunlight_Hours
+    - Wind_Speed_kmh
+    - Field_Area_hectare
+    - Previous_Irrigation_mm
+  engineered:
+    - deotte_score
+    - adaptive_rounding for all numeric columns
+    - is_canyon_A
+    - is_canyon_B
+    - q3_rain_breach
+    - mulch_moisture_interaction
+  target_encoding:
+    method: sklearn TargetEncoder
+    target_type: multiclass
+    fit_scope: fold_inner_train_only
+    columns:
+      - all categorical base columns
+      - all *_rounded columns
+    concat:
+      - base_cols
+      - encoded_cols
+
+training:
+  sample_weight:
+    method: compute_sample_weight
+    mode: balanced
+  early_stopping_rounds: 50
+  eval_set: validation fold only
+
+postprocess:
+  bias_tuning: true
+  method: optuna
+  target_space: log-probability bias
+  n_trials: 100
+  search_range:
+    b0: [-2.0, 2.0]
+    b1: [-2.0, 2.0]
+    b2: [-2.0, 2.0]
+
+artifacts:
+  save_dir: /kaggle/working/utaazu_lgbm_min_repro
+  files_expected:
+    - oof_utaazu_lgbm_min_repro_proba.npy
+    - pred_utaazu_lgbm_min_repro_proba.npy
+    - oof_utaazu_lgbm_min_repro_proba_biased.npy
+    - pred_utaazu_lgbm_min_repro_proba_biased.npy
+    - best_class_bias.npy
+    - feature_columns.csv
+    - feature_importance.csv
+    - cv_result.json
+    - submission_utaazu_lgbm_min_repro.csv
+    - submission_utaazu_lgbm_min_repro_biased.csv
+    - submission.csv
+
+comparison_plan:
+  compare_against:
+    - 018
+    - 024_current_046_variant
+    - 025
+    - 046b
+  checks:
+    - raw correlation by class
+    - rank correlation by class
+    - single model CV / LB comparison
+    - one-shot safer HC or LogReg conversion check if low-corr enough
+
+hypothesis:
+  main: >
+    UtaAzu notebook 由来の synthetic bias 特徴は、
+    025/046b と近縁でも少し違う誤差を持つ可能性がある。
+  alternative: >
+    025近縁の高相関素材に留まり、単体もブレンドも更新しない可能性がある。
+
+risk:
+  - 025近縁の高相関素材になるだけの可能性
+  - biased_cv は上がっても public_lb に変換されない可能性
+  - notebook 再現ではなく再構成なので、元 notebook のスコアをそのまま再現しない可能性
+
+decision_rule:
+  keep:
+    - raw_cv が十分強い
+    - または単体が少し弱くても 025 / 046b と相関が十分ずれる
+  hold:
+    - 単体は中位だが low-corr 補助候補
+  drop:
+    - 025 / 046b と高相関
+    - かつ CV / LB も更新不能
+
+result:
+  raw_cv: null
+  biased_cv: null
+  public_lb: null
+  raw_rank_corr_vs_018: null
+  raw_rank_corr_vs_024_current: null
+  raw_rank_corr_vs_025: null
+  raw_rank_corr_vs_046b: null
+  decision: null
+
+next_action:
+  - 実行して raw_cv / biased_cv / public_lb を記録
+  - 既存主力との raw / rank 相関を確認
+  - keep / hold / drop を判定
+  - keep or hold の場合のみ safer HC / LogReg に1回投入
