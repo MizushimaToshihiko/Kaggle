@@ -164,14 +164,14 @@ decision_rule:
     - かつ CV / LB も更新不能
 
 result:
-  raw_cv: null
-  biased_cv: null
-  public_lb: null
-  raw_rank_corr_vs_018: null
+  raw_cv: 0.974982
+  biased_cv: 0.979323
+  public_lb: 0.97961
+  raw_rank_corr_vs_018: 0.9896291918925587
   raw_rank_corr_vs_024_current: null
-  raw_rank_corr_vs_025: null
-  raw_rank_corr_vs_046b: null
-  decision: null
+  raw_rank_corr_vs_025: 0.9937636337892006
+  raw_rank_corr_vs_046b: 0.9923581600029777
+  decision: keep for blend
 
 next_action:
   - 実行して raw_cv / biased_cv / public_lb を記録
