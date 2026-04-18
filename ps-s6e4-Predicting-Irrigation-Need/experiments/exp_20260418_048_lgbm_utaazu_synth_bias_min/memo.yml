@@ -173,6 +173,38 @@ result:
   raw_rank_corr_vs_046b: 0.9923581600029777
   decision: keep for blend
 
+note: >
+  048 は完走。実験外で code_safe_blend_v6.txt に 048 の oof/pred を追加して
+  blend 比較を実施した結果、Nelder-Mead が
+  CV 0.980463 / Public LB 0.98046 で現時点の public best を更新した。
+  一方で、Hill Climb は CV 0.980454 / LB 0.97973、
+  LogReg は CV 0.980092 / LB 0.97978 で、048 追加後は NM 以外では優位性を示さなかった。
+  このため 048 は「万能補助素材」ではなく、「Nelder-Mead 向きの補助素材」と判断する。
+  現時点では HC mainline には入れず、NM 系の core material として keep。
+  次アクションは、048 を含む safer NM 圧縮版
+  （例: 024/018/025/048、024/018/025/037/048 など）
+  を比較し、0.98046 の本体が 048 単独寄与か、他補助素材込みかを切り分ける。
+
+blend_check_after_048:
+code: code_safe_blend_v6.txt
+strategies:
+nelder_mead:
+cv: 0.980463
+public_lb: 0.98046
+judgment: best
+hill_climb:
+cv: 0.980454
+public_lb: 0.97973
+judgment: worse_than_nm
+logreg:
+cv: 0.980092
+public_lb: 0.97978
+judgment: worse_than_nm
+interpretation: >
+048 はブレンドで効くが、効き方は離散加算型の HC よりも、
+連続重み同時最適化の NM に寄っている可能性が高い。
+よって 048 の役割は HC 用主力補完ではなく、NM 用の繊細な補助素材とみなす。
+
 next_action:
   - 実行して raw_cv / biased_cv / public_lb を記録
   - 既存主力との raw / rank 相関を確認
