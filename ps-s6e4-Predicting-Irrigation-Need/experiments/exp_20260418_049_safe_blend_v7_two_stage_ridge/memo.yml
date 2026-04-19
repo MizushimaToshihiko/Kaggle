@@ -1,0 +1,211 @@
+experiment:
+  id: exp_20260418_049_safe_blend_v7_two_stage_ridge
+  title: Safe blend v7 with NM/HC/LR/Ridge/AVG and two-stage ridge alpha search
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: multiclass balanced accuracy
+  status: done
+
+objective:
+  summary: >
+    同一 stack に対して NM / HC / LogReg / Ridge / equal_avg の5戦略を
+    共通条件で比較し、各 strategy の OOF / pred / submission を生成する。
+    その上で、CV上位の strategy を提出候補として管理する。
+    あわせて Ridge については alpha の2段階探索を導入し、
+    v6 時点の粗い alpha 探索による過小評価を避ける。
+  success_criteria:
+    - NM / HC / LogReg / Ridge / equal_avg の5戦略を全て実行
+    - 各 strategy について cv_score を取得
+    - 各 strategy について oof / pred / submission を保存
+    - cv_result.json に recommended_submit / reason を記録
+    - Ridge two-stage が v6 の Ridge より改善するか確認
+    - 提出候補を2〜3本に絞れる状態にする
+
+base_code:
+  source: code_safe_blend_v6.txt
+  revision: v7
+  changes:
+    - NM / HC / LogReg / Ridge / equal_avg の5戦略を常設比較
+    - 各戦略の submission csv を全生成
+    - recommended_submit / reason を追加
+    - Ridge alpha の two-stage search を追加
+    - ridge_alpha_summary.json を保存
+
+stack:
+  models:
+    - 018
+    - 024
+    - 025
+    - 026
+    - 037
+    - 039
+    - 041
+    - 048
+  notes: >
+    現時点では v6 と同じ stack を土台とする。
+    049 の目的は stack 素材の変更ではなく、
+    同一 stack に対する blend method 比較と Ridge 再審査である。
+
+npy_inputs:
+  OOF_018: oof_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
+  PRED_018: pred_cat_pairwise_te_bias_from_shared_min_proba_biased.npy
+
+  OOF_024: oof_xgb_digit_orderedte_min_optuna_biased_refined.npy
+  PRED_024: pred_xgb_digit_orderedte_min_optuna_biased_refined.npy
+
+  OOF_025: oof_lgb_digit_te_min_proba_biased.npy
+  PRED_025: pred_lgb_digit_te_min_proba_biased.npy
+
+  OOF_026: oof_realmlp_pair_te_min_proba_biased_refined.npy
+  PRED_026: pred_realmlp_pair_te_min_proba_biased_refined.npy
+
+  OOF_037: oof_dao_xgb_pair_te_posthoc_only_proba.npy
+  PRED_037: pred_dao_xgb_pair_te_posthoc_only_proba.npy
+
+  OOF_039: oof_xgb_formula_logit_min_proba.npy
+  PRED_039: pred_xgb_formula_logit_min_proba.npy
+
+  OOF_041: oof_trompt_strict_min_proba_biased.npy
+  PRED_041: pred_trompt_strict_min_proba_biased.npy
+
+  OOF_048: oof_utaazu_lgbm_min_repro_proba_biased.npy
+  PRED_048: pred_utaazu_lgbm_min_repro_proba_biased.npy
+
+blend_methods:
+  - name: nelder_mead
+    role: main candidate
+    expected_behavior: >
+      連続重み同時最適化。048 追加後の current best 候補。
+  - name: hill_climb
+    role: main comparison
+    expected_behavior: >
+      離散加算型。stack 内容によっては NM を上回る可能性あり。
+  - name: stack_lr
+    role: secondary comparison
+    expected_behavior: >
+      線形メタ学習の保険候補。
+  - name: ridge_two_stage
+    role: re-evaluation candidate
+    expected_behavior: >
+      alpha 2段階探索で v6 Ridge の再審査を行う。
+  - name: equal_avg
+    role: diagnostic baseline
+    expected_behavior: >
+      複雑ブレンドの有効性を測る下限比較。
+
+ridge:
+  enabled: true
+  previous_issue: >
+    v6 では alpha grid が粗く、CV 0.975626 と大きく沈んだため、
+    手法自体ではなく alpha 探索の粗さで過小評価されている可能性がある。
+  search:
+    stage1:
+      name: coarse
+      alphas: logspace(-5, 5, 41)
+    stage2:
+      name: fine
+      around_best_log10_width: 0.75
+      n_points: 31
+  selection_logic: >
+    class別に coarse -> fine の順で alpha を再探索し、
+    fold ごとの最終 alpha を用いて multiclass 回帰出力を作る。
+  expected_result: >
+    v6 Ridge より改善すれば keep。
+    それでも弱ければ、現 stack において Ridge は本当に弱いと判断してよい。
+
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+
+output:
+  dir: /kaggle/working/exp_20260418_049_safe_blend_v7_two_stage_ridge
+  files_expected:
+    - pairwise_corr_summary.csv
+    - single_model_scores.csv
+    - blend_strategy_results.csv
+    - nelder_mead_weights.csv
+    - hill_climb_weights.csv
+    - hill_climb_history.csv
+    - ridge_alpha_summary.json
+    - cv_result.json
+    - oof_equal_avg.npy
+    - pred_equal_avg.npy
+    - submission_equal_avg.csv
+    - oof_nelder_mead.npy
+    - pred_nelder_mead.npy
+    - submission_nelder_mead.csv
+    - oof_hill_climb.npy
+    - pred_hill_climb.npy
+    - submission_hill_climb.csv
+    - oof_ridge_two_stage.npy
+    - pred_ridge_two_stage.npy
+    - submission_ridge_two_stage.csv
+    - oof_stack_lr.npy
+    - pred_stack_lr.npy
+    - submission_stack_lr.csv
+
+decision_rule:
+  submit_policy: >
+    5戦略すべての submission は生成するが、
+    実際に提出するのは recommended_submit=true の上位2〜3本に絞る。
+  recommendation_logic: >
+    blend_strategy_results.csv / cv_result.json に
+    recommended_submit と reason を記録し、
+    提出判断を曖昧にしない。
+  keep:
+    - NM / HC / LogReg / Ridge / avg の比較が明確にできる
+    - Ridge two-stage が v6 Ridge より改善
+  hold:
+    - Ridge は改善したが主力には届かない
+  drop:
+    - Ridge two-stage でも明確に弱い
+    - equal_avg にも劣る
+
+risk:
+  - CV 上位が LB 上位にそのまま変換されるとは限らない
+  - 5戦略全生成と5本全提出は別問題であり、提出枠管理が必要
+  - Ridge two-stage を入れても NM / HC を逆転できる保証はない
+  - 048 のように strategy 相性で効き方が変わる素材があるため、一般化しすぎないこと
+
+comparison_to_previous:
+  v6_known_result:
+    nelder_mead:
+      cv: 0.980463
+      public_lb: 0.98046
+    hill_climb:
+      cv: 0.980454
+      public_lb: 0.97973
+    stack_lr:
+      cv: 0.980092
+      public_lb: 0.97978
+    ridge:
+      cv: 0.975626
+      public_lb: null
+    equal_avg:
+      cv: 0.980072
+      public_lb: null
+  interpretation: >
+    v6 時点では NM が最良。
+    049 ではこの関係が維持されるか、Ridge two-stage がどこまで回復するかを確認する。
+
+result:
+  nelder_mead_cv: null
+  hill_climb_cv: null
+  stack_lr_cv: null
+  ridge_two_stage_cv: null
+  equal_avg_cv: null
+  public_lb_nelder_mead: null
+  public_lb_hill_climb: null
+  public_lb_stack_lr: null
+  public_lb_ridge_two_stage: null
+  public_lb_equal_avg: null
+  best_strategy_by_cv: null
+  decision: null
+
+next_action:
+  - 049 を実行して5戦略の cv_score を取得
+  - recommended_submit=true の strategy を確認
+  - 提出は上位2〜3本に絞る
+  - Ridge two-stage の改善幅を v6 Ridge と比較
+  - 048 を含む safer core 圧縮の必要性を再判定
