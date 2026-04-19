@@ -204,6 +204,64 @@ result:
   decision: >
     keep for submission and search for the strong one in other famlies
 
+post_experiment_review:
+  summary: >
+    049 は完走。`ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb` にて
+    NM / HC / LogReg / Ridge / equal_avg の5戦略比較と、
+    Ridge alpha の two-stage search を実施した。
+    結果は `code_safe_blend_v6.txt` と実質同一であり、
+    blend 手法の相対序列は変化しなかった。
+    したがって、v6 時点で観測された
+    NM > HC > LogReg ≒ avg >> Ridge
+    という構図は維持されたと判断する。
+
+  main_findings:
+    - two-stage ridge alpha search を入れても v6 と同じ結果だった
+    - Ridge は alpha 探索の粗さが原因で弱かったのではなく、
+    現 stack との相性そのものが悪い可能性が高い
+    - NM / HC / LogReg / avg の相対関係にも有意な変化は見られなかった
+    - よって 049 は「新しい勝ち筋を作った実験」ではなく、
+    「Ridge を公平に再審査して close 判定した実験」と位置づけるのが正しい
+  
+  interpretation: >
+    049 の価値は、Ridge の弱さが実装の粗さによる見かけではなく、
+    現在の stack 素材群に対する本質的な不適合である可能性を確認した点にある。
+    これにより、今後の blend 比較で Ridge を主力候補として追う必要性は大きく下がった。
+    少なくとも現 stack では、blend method の深掘りよりも、
+    NM を前提とした safer core 圧縮の方が期待値が高い。
+  
+  decision:
+    ridge: close
+    nelder_mead: keep_as_main
+    hill_climb: keep_as_secondary
+    logreg: keep_as_backup
+    equal_avg: keep_as_diagnostic
+  
+  operational_rule_update: >
+    今後は、同一 stack に対して毎回
+    NM / HC / LogReg / avg を基本比較対象とし、
+    Ridge は参考出力に留めるか、原則として比較対象から外してよい。
+    少なくとも current stack に対しては、
+    Ridge 再評価のために追加計算資源を投下する優先度は低い。
+  
+  next_step_implication: >
+    049 により blend method 論点はほぼ整理されたため、
+    次の主戦場は blend 手法の改良ではなく、
+    048 を含む NM の safer 圧縮版比較である。
+    比較候補はまず
+    024/018/025/048、
+    024/018/025/037/048、
+    024/018/025/026/048、
+    024/018/025/026/037/048
+    あたりから始めるのが妥当。
+  
+  note_for_future: >
+    049 が v6 と同結果だった以上、
+    今後 Ridge を再度主力候補として扱うには、
+    stack 素材が明確に変わることが前提になる。
+    今の素材群のまま alpha 探索だけをさらに掘っても、
+    リターンは薄いとみなす。
+
 next_action:
   - 049 を実行して5戦略の cv_score を取得
   - recommended_submit=true の strategy を確認
