@@ -190,18 +190,19 @@ comparison_to_previous:
     049 ではこの関係が維持されるか、Ridge two-stage がどこまで回復するかを確認する。
 
 result:
-  nelder_mead_cv: null
-  hill_climb_cv: null
-  stack_lr_cv: null
-  ridge_two_stage_cv: null
-  equal_avg_cv: null
-  public_lb_nelder_mead: null
-  public_lb_hill_climb: null
-  public_lb_stack_lr: null
+  nelder_mead_cv: 0.980463
+  hill_climb_cv: 0.980454
+  stack_lr_cv: 0.980092
+  ridge_two_stage_cv: 0.979871
+  equal_avg_cv: 0.980072
+  public_lb_nelder_mead: 0.98046
+  public_lb_hill_climb: 0.97973
+  public_lb_stack_lr: 0.97978
   public_lb_ridge_two_stage: null
   public_lb_equal_avg: null
   best_strategy_by_cv: null
-  decision: null
+  decision: >
+    keep for submission and search for the strong one in other famlies
 
 next_action:
   - 049 を実行して5戦略の cv_score を取得
