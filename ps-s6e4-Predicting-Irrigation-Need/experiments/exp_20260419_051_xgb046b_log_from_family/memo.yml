@@ -226,9 +226,9 @@ decision_rule:
       単体も弱く、blend に入れても変換されない。
 
 result:
-  raw_cv: 0.977119 # without 050
-  refined_biased_cv: 0.979274 # without 050
-  public_lb: 0.97910 # without 050
+  raw_cv: 0.977119
+  refined_biased_cv: 0.979274
+  public_lb: 0.97910
   mean_raw_corr_vs_018: 0.9864718747615148
   mean_rank_corr_vs_018: 0.9386690173103277
   mean_raw_corr_vs_024_current: null
@@ -241,26 +241,26 @@ result:
   mean_rank_corr_vs_048: 0.9533666594566408
   mean_raw_corr_vs_050: 0.9780268621843312
   mean_rank_corr_vs_050: 0.9546186676163985
-  decision_single: drop寄りkeep
+  decision_single: keep
 
 post_blend_benchmark:
   executed: false
   benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
   mode: null
   stack_change:
-    type: null
-    description: null
+    type: NM,HC,lr,avg,ridge
+    description: member:018,024,025,026,037,039,041,048,051 # without 050
   results:
-    nelder_mead_cv: null
-    hill_climb_cv: null
-    stack_lr_cv: null
-    equal_avg_cv: null
-    ridge_cv: null
-    public_lb_nelder_mead: null
-    public_lb_hill_climb: null
-    public_lb_stack_lr: null
-    public_lb_equal_avg: null
-    public_lb_ridge: null
+    nelder_mead_cv: 0.980447
+    hill_climb_cv: 0.980296
+    stack_lr_cv: 0.980090
+    equal_avg_cv: 0.980177
+    ridge_cv: 0.975870
+    public_lb_nelder_mead: 0.97990
+    public_lb_hill_climb: 0.97993
+    public_lb_stack_lr: 0.97979
+    public_lb_equal_avg: 0.97950
+    public_lb_ridge: drop寄りkee
   interpretation: >
     blend benchmark 後の解釈を書く。
     例:
