@@ -235,9 +235,9 @@ decision_rule:
       単体も弱く、blend に入れても変換されない。
 
 result:
-  raw_cv: null
-  biased_cv: null
-  public_lb: null
+  raw_cv: 0.9698235647682939
+  biased_cv: 0.9719717837656457
+  public_lb: 0.96759
   mean_raw_corr_vs_018: null
   mean_rank_corr_vs_018: null
   mean_raw_corr_vs_024_current: null
