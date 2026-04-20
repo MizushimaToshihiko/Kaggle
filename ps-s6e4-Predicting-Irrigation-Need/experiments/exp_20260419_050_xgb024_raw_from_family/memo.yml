@@ -1,0 +1,303 @@
+experiment:
+  id: exp_20260419_050_xgb024_raw_from_family
+  title: XGB 024-family RAW sibling with in-fold OrderedTE and bias refine
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: multiclass balanced accuracy
+  status: planned
+
+objective:
+  summary: >
+    024 / 046 family の骨格をできるだけ維持したまま、
+    DIGIT branch を RAW branch に置き換えた sibling を作る。
+    単体CV/LBだけでなく、046b / 025 / 048 との相関、
+    および blend benchmark での変換可能性を確認する。
+  success_criteria:
+    - raw_cv を取得
+    - biased_cv を取得
+    - public_lb を記録
+    - oof / pred を保存
+    - 046b / 025 / 048 との raw / rank 相関を確認
+    - 条件を満たす場合のみ blend benchmark に投入する
+
+positioning:
+  experiment_type: low_corr_candidate
+  intended_role: aux_material
+  base_family: xgb
+  base_reference: >
+    024 / 046 family backbone。
+    046a actual reproduction を reference として参照しつつ、
+    実行対象は RAW sibling である。
+  why_now: >
+    共有コード由来の新規素材はややネタ切れであり、
+    今は既存主力 family の中で表現差を作る段階。
+    046b は強いが digit branch であり、同 family の RAW branch が
+    少し違う誤差を持つかを先に確認したい。
+
+gate_rule_before_blend:
+  summary: >
+    新モデルは単体実験だけで keep にしない。
+    以下のどちらかを満たした場合のみ
+    ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+    に追加または差し替えを行う。
+  conditions:
+    - 既存主力より単体CVまたはLBが明確に強い
+    - 単体は少し弱くても、046b / 025 / 048 との相関が少しでも下がっている
+  otherwise: >
+    条件を満たさない場合、blend benchmark には入れず、
+    この実験単体で close または drop 判定する。
+
+blend_benchmark_policy:
+  benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+  role: >
+    新モデルを最終候補に昇格させる前の共通評価台。
+    新モデル作成のたびに、この notebook で
+    NM / HC / LogReg / avg を比較する。
+    Ridge は参考枠または close 寄りで扱う。
+  add_or_replace_rule: >
+    046b の強化候補なら差し替え、
+    RAW 別人格候補なら追加で評価する。
+  keep_hold_drop_rule: >
+    単体CVでは採用しない。
+    blend benchmark の結果で keep / hold / drop を決める。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  target: Irrigation_Need
+  id_col: id
+  target_map:
+    Low: 0
+    Medium: 1
+    High: 2
+
+model:
+  family: xgb
+  estimator: XGBClassifier
+  seed: 2026
+  cv:
+    scheme: KFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  params:
+    n_estimators: 2000
+    max_depth: 3
+    learning_rate: 0.06
+    min_child_weight: 3.8
+    subsample: 0.73
+    colsample_bytree: 0.60
+    gamma: 0.52
+    reg_alpha: 0.00015
+    reg_lambda: 9.89
+    max_delta_step: 1.60
+    objective: multi:softprob
+    num_class: 3
+    eval_metric: mlogloss
+    tree_method: hist
+    early_stopping_rounds: 100
+    random_state: 2026
+    n_jobs: -1
+    verbosity: 0
+
+features:
+  base_features:
+    source: 024 / 046 family base
+  preprocessing:
+    summary: >
+      RAW-from-family。
+      046a actual reproduction / reference で使われている
+      frequency remap と fold 内 OrderedTE の流れは維持するが、
+      digit features は完全に外す。
+  engineered_features:
+    - temp_x_humidity
+    - moisture_x_rain
+    - sun_x_wind
+    - prev_plus_rain
+    - prev_minus_moisture
+    - field_x_prev
+    - ec_over_oc
+    - ph_x_moisture
+    - soil_lt_25
+    - rain_lt_300
+    - temp_gt_30
+    - wind_gt_10
+    - deotte_score_light
+    - numeric qbin features for all numeric columns
+    - selected pair categories
+  notes: >
+    046a actual reproduction では digit features を含む 024 pipeline を継承しているが、
+    本実験は family skeleton を保ちながら RAW sibling を作るため、
+    digit features は入れない。
+    046a の実コードは optuna-only branch であり、024 feature pipeline 継承である。 :contentReference[oaicite:0]{index=0}
+    046b は 024 backbone に 046a best params を戻し、bias refine した当たり枝である。 :contentReference[oaicite:1]{index=1}
+
+te_and_encoding:
+  ordered_te:
+    enabled: true
+    method: custom OrderedTE
+    fit_scope: fold_inner_train_only
+    target_type: multiclass
+    smoothing_a: 1
+    applied_to:
+      - original categorical columns
+      - qbin columns
+      - selected pair category columns
+  category_remap:
+    enabled: true
+    method: frequency-based remap
+    minimum_count: 5
+
+postprocess:
+  bias_refine:
+    enabled: true
+    method: greedy logit-space class bias refine
+    steps:
+      - 1.0
+      - 0.5
+      - 0.2
+      - 0.1
+      - 0.05
+      - 0.02
+      - 0.01
+      - 0.005
+      - 0.002
+
+hypothesis:
+  main: >
+    046 family の RAW sibling は、046b より単体は少し弱くても、
+    025 / 046b / 048 より少し違う誤差を持ち、
+    NM または LogReg で補助素材化する可能性がある。
+  failure_pattern: >
+    046b より単体が弱く、しかも相関も高い。
+    つまり RAW branch にしただけの近縁劣化版になる可能性がある。
+
+comparison_plan:
+  single_compare_against:
+    - 018
+    - 024_current
+    - 025
+    - 046b
+    - 048
+  metrics:
+    - raw_cv
+    - biased_cv
+    - public_lb
+    - mean_raw_corr
+    - mean_rank_corr
+  blend_compare:
+    enabled: true
+    notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+    mode: add
+    target_strategies:
+      - nelder_mead
+      - hill_climb
+      - stack_lr
+      - equal_avg
+    note: >
+      Ridge は参考枠。
+      主比較は NM / HC / LogReg / avg とする。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260419_050_xgb024_raw_from_family
+  files_expected:
+    - oof_xgb024_raw_from_family_proba.npy
+    - pred_xgb024_raw_from_family_proba.npy
+    - oof_xgb024_raw_from_family_proba_biased.npy
+    - pred_xgb024_raw_from_family_proba_biased.npy
+    - best_class_bias.npy
+    - cv_result.json
+    - feature_columns.csv
+    - feature_importance.csv
+    - submission_xgb024_raw_from_family.csv
+    - submission_xgb024_raw_from_family_biased.csv
+    - submission.csv
+  save_for_blend_benchmark:
+    - biased oof
+    - biased pred
+    - exact npy file names for npy-files dataset
+
+decision_rule:
+  single_model:
+    keep: >
+      046b や 025 に近い単体強度を持つ。
+      あるいは少し弱くても相関が明確に下がる。
+    hold: >
+      単体は少し弱いが、046b / 025 / 048 より別人格寄り。
+    drop: >
+      単体も弱く、相関も高い。
+  after_blend_benchmark:
+    keep: >
+      NM または LogReg で変換される。
+      もしくは current best stack を更新する。
+    hold: >
+      更新はしないが、低相関補助候補として意味がある。
+    drop: >
+      単体も弱く、blend に入れても変換されない。
+
+result:
+  raw_cv: null
+  biased_cv: null
+  public_lb: null
+  mean_raw_corr_vs_018: null
+  mean_rank_corr_vs_018: null
+  mean_raw_corr_vs_024_current: null
+  mean_rank_corr_vs_024_current: null
+  mean_raw_corr_vs_025: null
+  mean_rank_corr_vs_025: null
+  mean_raw_corr_vs_046b: null
+  mean_rank_corr_vs_046b: null
+  mean_raw_corr_vs_048: null
+  mean_rank_corr_vs_048: null
+  decision_single: null
+
+post_blend_benchmark:
+  executed: false
+  benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+  mode: null
+  stack_change:
+    type: null
+    description: null
+  results:
+    nelder_mead_cv: null
+    hill_climb_cv: null
+    stack_lr_cv: null
+    equal_avg_cv: null
+    ridge_cv: null
+    public_lb_nelder_mead: null
+    public_lb_hill_climb: null
+    public_lb_stack_lr: null
+    public_lb_equal_avg: null
+    public_lb_ridge: null
+  interpretation: >
+    blend benchmark 後の解釈を書く。
+    例:
+    - NM にだけ効いた
+    - HC では崩れた
+    - 追加価値なし
+    - 046b の補助 sibling として採用
+  decision_after_blend: null
+
+operational_notes:
+  summary: >
+    046a actual reproduction / reference は保持のみ。
+    先に実行するのは 046a_raw_from_024_family。
+    実コード準拠の 046a は reference 用であり、
+    今回の主目的は family 内の RAW vs DIGIT 比較である。
+  current_global_rule: >
+    新モデル作成のたびに blend benchmark を通す。
+    何でも benchmark に入れない。
+    主力更新候補は差し替え、別人格候補は追加。
+    提出は benchmark 上位2〜3本に絞る。 :contentReference[oaicite:2]{index=2}
+
+risk:
+  - 046b に対する近縁劣化版になる可能性
+  - RAW 化しても相関がほとんど下がらない可能性
+  - 単体微差改善が blend 改善に変換されない可能性
+  - Triko / formula 成分を足しすぎると family 比較が汚れる可能性
+
+next_action:
+  - 050 を実行して raw_cv / biased_cv / public_lb を記録
+  - 046b / 025 / 048 との raw / rank 相関を確認
+  - gate_rule_before_blend を満たすか判定
+  - 満たす場合のみ blend benchmark に追加
+  - keep / hold / drop を確定
