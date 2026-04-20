@@ -1,0 +1,304 @@
+experiment:
+  id: exp_20260420_052_xgb046b_raw_from_024_family
+  title: XGB 046b-family RAW sibling rebuilt from actual 046b skeleton
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: multiclass balanced accuracy
+  status: done
+
+objective:
+  summary: >
+    050 の RAW sibling を、046b の実コード骨格を土台にして作り直す。
+    目的は、前回 050 の弱さが RAW 自体の問題なのか、
+    それとも 046b family から骨格がズレていたことによる問題なのかを切り分けること。
+    単体CV/LBだけでなく、046b / 025 / 048 / 051 との相関、
+    および blend benchmark での変換可能性を確認する。
+  success_criteria:
+    - raw_cv を取得
+    - refined_biased_cv を取得
+    - public_lb を記録
+    - oof / pred を保存
+    - 046b / 025 / 048 / 051 との raw / rank 相関を確認
+    - 条件を満たす場合のみ blend benchmark に投入する
+
+positioning:
+  experiment_type: check_only
+  intended_role: aux_material
+  base_family: xgb
+  base_reference: >
+    exp_20260416_046b_xgb_digit_orderedte_min_with_optuna_params の実コード骨格をそのまま参照。
+    046b の
+    best_params 読み込み
+    category remap
+    fold 内 OrderedTE
+    XGB
+    3-stage bias refine
+    を維持し、digit FE だけを RAW block に置き換える。
+  why_now: >
+    050 は単体も blend も崩れて drop となったが、
+    その理由が RAW branch 自体の弱さなのか、
+    family 骨格からのズレによるものなのかが未確定だった。
+    そのため、046b skeleton に合わせた RAW 再試験を行う。
+
+gate_rule_before_blend:
+  summary: >
+    新モデルは単体実験だけで keep にしない。
+    以下のどちらかを満たした場合のみ
+    ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+    に追加または差し替えを行う。
+  conditions:
+    - 既存主力より単体CVまたはLBが明確に強い
+    - 単体は少し弱くても、046b / 025 / 048 / 051 との相関が少しでも下がっている
+  otherwise: >
+    条件を満たさない場合、blend benchmark には入れず、
+    この実験単体で close または drop 判定する。
+
+blend_benchmark_policy:
+  benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+  role: >
+    新モデルを最終候補に昇格させる前の共通評価台。
+    新モデル作成のたびに、この notebook で
+    NM / HC / LogReg / avg を比較する。
+    Ridge は参考枠または close 寄りで扱う。
+  add_or_replace_rule: >
+    046b の強化候補なら差し替え、
+    RAW 別人格候補なら追加で評価する。
+  keep_hold_drop_rule: >
+    単体CVだけで採用しない。
+    blend benchmark の結果で keep / hold / drop を決める。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  target: Irrigation_Need
+  id_col: id
+  target_map:
+    Low: 0
+    Medium: 1
+    High: 2
+
+model:
+  family: xgb
+  estimator: XGBClassifier
+  seed: 2026
+  cv:
+    scheme: KFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  params:
+    source: 046b best params json + 046b notebook default overwrite
+    notes: >
+      046b 実コードでは best_params.json を読み込み、
+      その後 n_estimators を 2500 に上書きしている。 :contentReference[oaicite:0]{index=0}
+    key_flow:
+      - best_params loaded from best_params.json
+      - n_estimators overwritten to 2500
+      - XGBClassifier
+      - early_stopping_rounds 100
+      - tree_method hist
+      - device cuda if available else cpu
+
+features:
+  base_features:
+    source: 046b / 024 family base
+  preprocessing:
+    summary: >
+      RAW-from-046b-skeleton。
+      046b 実コードの
+      digit FE + category remap + OrderedTE + XGB + 3-stage bias refine
+      の流れを保ちつつ、digit FE を RAW feature block に置き換える。 :contentReference[oaicite:1]{index=1}
+  engineered_features:
+    - temp_x_humidity
+    - moisture_x_rain
+    - sun_x_wind
+    - prev_plus_rain
+    - prev_minus_moisture
+    - field_x_prev
+    - ec_over_oc
+    - ph_x_moisture
+    - soil_lt_25
+    - temp_gt_30
+    - rain_lt_300
+    - wind_gt_10
+    - deotte_score_light
+    - qbin features for numeric columns
+    - selected pair categories
+  notes: >
+    旧 050 よりも family comparison を正しくするため、
+    実装骨格を 046b に寄せた版。
+    追加特徴は最小限に留め、RAW の人格差だけを確認する。
+    全部盛りの Triko 追加や別 notebook の混在は避ける。
+
+te_and_encoding:
+  ordered_te:
+    enabled: true
+    method: custom OrderedTE
+    fit_scope: fold_inner_train_only
+    target_type: multiclass
+    smoothing_a: 1
+    applied_to:
+      - remapped original categorical columns
+      - qbin columns
+      - selected pair category columns
+      - light formula-like flags
+  category_remap:
+    enabled: true
+    method: frequency-based remap
+    minimum_count: 5
+
+postprocess:
+  bias_refine:
+    enabled: true
+    method: 3-stage grid refine in log-prob space
+    stage1:
+      range: [-1.0, 1.0]
+      step: 0.1
+    stage2:
+      width: 0.10
+      step: 0.02
+    stage3:
+      width: 0.02
+      step: 0.005
+
+hypothesis:
+  main: >
+    046b 実コード骨格に合わせて RAW branch を作り直すことで、
+    旧 050 より単体CV/LBが改善する可能性がある。
+    ただし、046b や 025 に対して強い別人格になるとは限らず、
+    改善しても補助候補止まりの可能性が高い。
+  failure_pattern: >
+    旧 050 と同様に単体も弱く、相関も十分に下がらない。
+    その場合、046 family の RAW は骨格修正後でも close と判断してよい。
+
+comparison_plan:
+  single_compare_against:
+    - 018
+    - 024_current
+    - 025
+    - 046b
+    - 048
+    - 050
+    - 051
+  metrics:
+    - raw_cv
+    - refined_biased_cv
+    - public_lb
+    - mean_raw_corr
+    - mean_rank_corr
+  blend_compare:
+    enabled: true
+    notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+    mode: add
+    target_strategies:
+      - nelder_mead
+      - hill_climb
+      - stack_lr
+      - equal_avg
+    note: >
+      Ridge は参考枠。
+      主比較は NM / HC / LogReg / avg とする。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260420_052_xgb046b_raw_from_024_family
+  files_expected:
+    - oof_xgb_raw_orderedte_min_046bparams_raw.npy
+    - pred_xgb_raw_orderedte_min_046bparams_raw.npy
+    - oof_xgb_raw_orderedte_min_046bparams_biased_refined.npy
+    - pred_xgb_raw_orderedte_min_046bparams_biased_refined.npy
+    - best_class_bias_refined.npy
+    - feature_columns.csv
+    - feature_importance.csv
+    - cv_result.json
+    - submission_xgb_raw_orderedte_min_with_046b_skeleton.csv
+  save_for_blend_benchmark:
+    - biased oof
+    - biased pred
+    - exact npy file names for npy-files dataset
+
+decision_rule:
+  single_model:
+    keep: >
+      旧 050 より明確に改善し、
+      かつ 046b / 025 / 048 / 051 に対する相関が十分に下がる。
+    hold: >
+      旧 050 より改善したが、補助候補止まり。
+    drop: >
+      単体も弱く、相関も高い。
+  after_blend_benchmark:
+    keep: >
+      NM または LogReg で変換される。
+      もしくは current best stack を更新する。
+    hold: >
+      更新はしないが、低相関補助候補として意味がある。
+    drop: >
+      単体も弱く、blend に入れても変換されない。
+
+result:
+  raw_cv: null
+  refined_biased_cv: null
+  public_lb: null
+  mean_raw_corr_vs_018: null
+  mean_rank_corr_vs_018: null
+  mean_raw_corr_vs_024_current: null
+  mean_rank_corr_vs_024_current: null
+  mean_raw_corr_vs_025: null
+  mean_rank_corr_vs_025: null
+  mean_raw_corr_vs_046b: null
+  mean_rank_corr_vs_046b: null
+  mean_raw_corr_vs_048: null
+  mean_rank_corr_vs_048: null
+  mean_raw_corr_vs_050: null
+  mean_rank_corr_vs_050: null
+  mean_raw_corr_vs_051: null
+  mean_rank_corr_vs_051: null
+  decision_single: null
+
+post_blend_benchmark:
+  executed: false
+  benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+  mode: null
+  stack_change:
+    type: null
+    description: null
+  results:
+    nelder_mead_cv: null
+    hill_climb_cv: null
+    stack_lr_cv: null
+    equal_avg_cv: null
+    ridge_cv: null
+    public_lb_nelder_mead: null
+    public_lb_hill_climb: null
+    public_lb_stack_lr: null
+    public_lb_equal_avg: null
+    public_lb_ridge: null
+  interpretation: >
+    blend benchmark 後の解釈を書く。
+    例:
+    - 旧 050 より改善したが still 補助止まり
+    - NM にだけ効いた
+    - 046 family RAW は close 確定
+  decision_after_blend: null
+
+operational_notes:
+  summary: >
+    旧 050 は drop だったが、family 骨格のズレが原因だった可能性を切るため、
+    今回は 046b 実コード骨格に合わせた RAW 再試験を行う。
+    これで still 弱いなら、046 family の RAW は close してよい。
+  current_global_rule: >
+    新モデル作成のたびに blend benchmark を通す。
+    何でも benchmark に入れない。
+    主力更新候補は差し替え、別人格候補は追加。
+    提出は benchmark 上位2〜3本に絞る。 :contentReference[oaicite:2]{index=2}
+
+risk:
+  - 旧 050 と本質的に同じ結果になる可能性
+  - 046b に対する近縁劣化版になる可能性
+  - RAW 化しても相関が十分に下がらない可能性
+  - 単体微差改善が blend 改善に変換されない可能性
+
+next_action:
+  - 052 を実行して raw_cv / refined_biased_cv / public_lb を記録
+  - 046b / 025 / 048 / 050 / 051 との raw / rank 相関を確認
+  - gate_rule_before_blend を満たすか判定
+  - 満たす場合のみ blend benchmark に追加
+  - keep / hold / drop を確定
