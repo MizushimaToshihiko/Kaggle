@@ -229,16 +229,16 @@ result:
   raw_cv: 0.977119
   refined_biased_cv: 0.979274
   public_lb: 0.97910
-  mean_raw_corr_vs_018: null
-  mean_rank_corr_vs_018: null
+  mean_raw_corr_vs_018: 0.9864718747615148
+  mean_rank_corr_vs_018: 0.9386690173103277
   mean_raw_corr_vs_024_current: null
   mean_rank_corr_vs_024_current: null
-  mean_raw_corr_vs_025: null
-  mean_rank_corr_vs_025: null
-  mean_raw_corr_vs_046b: null
-  mean_rank_corr_vs_046b: null
-  mean_raw_corr_vs_048: null
-  mean_rank_corr_vs_048: null
+  mean_raw_corr_vs_025: 0.9927810435834893
+  mean_rank_corr_vs_025: 0.952268359821289
+  mean_raw_corr_vs_046b: 0.9949026472740331
+  mean_rank_corr_vs_046b: 0.968169704940796
+  mean_raw_corr_vs_048: 0.9928021204909644
+  mean_rank_corr_vs_048: 0.9533666594566408
   mean_raw_corr_vs_050: null
   mean_rank_corr_vs_050: null
   decision_single: null
