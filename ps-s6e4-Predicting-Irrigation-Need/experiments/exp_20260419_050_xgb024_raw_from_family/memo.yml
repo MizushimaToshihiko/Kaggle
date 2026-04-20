@@ -238,17 +238,17 @@ result:
   raw_cv: 0.9698235647682939
   biased_cv: 0.9719717837656457
   public_lb: 0.96759
-  mean_raw_corr_vs_018: null
-  mean_rank_corr_vs_018: null
+  mean_raw_corr_vs_018: 0.9676076595341793
+  mean_rank_corr_vs_018: 0.9246095282033943
   mean_raw_corr_vs_024_current: null
   mean_rank_corr_vs_024_current: null
-  mean_raw_corr_vs_025: null
-  mean_rank_corr_vs_025: null
-  mean_raw_corr_vs_046b: null
-  mean_rank_corr_vs_046b: null
-  mean_raw_corr_vs_048: null
-  mean_rank_corr_vs_048: null
-  decision_single: null
+  mean_raw_corr_vs_025: 0.9768518316361406
+  mean_rank_corr_vs_025: 0.9473263936926587
+  mean_raw_corr_vs_046b: 0.9783871094803996
+  mean_rank_corr_vs_046b: 0.9615946181146463
+  mean_raw_corr_vs_048: 0.9751072559785806
+  mean_rank_corr_vs_048: 0.949246488119967
+  decision_single: drop
 
 post_blend_benchmark:
   executed: false
@@ -258,24 +258,19 @@ post_blend_benchmark:
     type: null
     description: null
   results:
-    nelder_mead_cv: null
-    hill_climb_cv: null
-    stack_lr_cv: null
-    equal_avg_cv: null
-    ridge_cv: null
-    public_lb_nelder_mead: null
-    public_lb_hill_climb: null
-    public_lb_stack_lr: null
+    nelder_mead_cv: 0.980226
+    hill_climb_cv: 0.980454
+    stack_lr_cv: 0.980057
+    equal_avg_cv: 0.979846
+    ridge_cv: 0.975713
+    public_lb_nelder_mead: 0.97947
+    public_lb_hill_climb: 0.97973
+    public_lb_stack_lr: 0.97947
     public_lb_equal_avg: null
     public_lb_ridge: null
   interpretation: >
-    blend benchmark 後の解釈を書く。
-    例:
-    - NM にだけ効いた
-    - HC では崩れた
-    - 追加価値なし
-    - 046b の補助 sibling として採用
-  decision_after_blend: null
+    NM,HC,lrの全てにおいてCV,LB共に崩れた
+  decision_after_blend: drop
 
 operational_notes:
   summary: >
