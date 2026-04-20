@@ -226,9 +226,9 @@ decision_rule:
       単体も弱く、blend に入れても変換されない。
 
 result:
-  raw_cv: 0.977119
-  refined_biased_cv: 0.979274
-  public_lb: 0.97910
+  raw_cv: 0.977119 # without 050
+  refined_biased_cv: 0.979274 # without 050
+  public_lb: 0.97910 # without 050
   mean_raw_corr_vs_018: 0.9864718747615148
   mean_rank_corr_vs_018: 0.9386690173103277
   mean_raw_corr_vs_024_current: null
@@ -239,9 +239,9 @@ result:
   mean_rank_corr_vs_046b: 0.968169704940796
   mean_raw_corr_vs_048: 0.9928021204909644
   mean_rank_corr_vs_048: 0.9533666594566408
-  mean_raw_corr_vs_050: null
-  mean_rank_corr_vs_050: null
-  decision_single: null
+  mean_raw_corr_vs_050: 0.9780268621843312
+  mean_rank_corr_vs_050: 0.9546186676163985
+  decision_single: drop寄りkeep
 
 post_blend_benchmark:
   executed: false
