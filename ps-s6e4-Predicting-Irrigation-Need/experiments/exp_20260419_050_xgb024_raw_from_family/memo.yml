@@ -3,7 +3,7 @@ experiment:
   title: XGB 024-family RAW sibling with in-fold OrderedTE and bias refine
   competition: PS S6E4 Predicting Irrigation Need
   metric: multiclass balanced accuracy
-  status: planned
+  status: done
 
 objective:
   summary: >
@@ -80,7 +80,7 @@ model:
     shuffle: true
     random_state: 42
   params:
-    n_estimators: 2000
+    n_estimators: 3000 # changed from 2000
     max_depth: 3
     learning_rate: 0.06
     min_child_weight: 3.8
