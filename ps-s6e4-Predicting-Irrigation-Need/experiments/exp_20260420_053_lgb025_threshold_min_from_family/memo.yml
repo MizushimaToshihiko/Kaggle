@@ -1,0 +1,331 @@
+experiment:
+  id: exp_20260420_053_lgb025_threshold_min_from_family
+  title: LGB 025-family threshold-min sibling with 046b-style refined bias
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: multiclass balanced accuracy
+  status: done
+
+objective:
+  summary: >
+    025 family の骨格をできるだけ維持したまま、
+    synthetic-threshold-min を最小追加した sibling を作る。
+    目的は単体主力更新そのものではなく、
+    046b / 025 / 048 と少し違う synthetic bias を拾えるか、
+    そして blend benchmark で変換されるかを確認すること。
+    bias search は 025 の simple class-weight bias ではなく、
+    046b の 3-stage refine を使う。
+  success_criteria:
+    - raw_cv_ba を取得
+    - refined_biased_cv を取得
+    - public_lb を記録
+    - oof / pred を保存
+    - 025 / 046b / 048 との raw / rank 相関を確認
+    - 条件を満たす場合のみ blend benchmark に投入する
+
+positioning:
+  experiment_type: low_corr_candidate
+  intended_role: aux_material
+  base_family: lgbm
+  base_reference: >
+    exp_20260409_025_lgb_digit_te_min を base とする。
+    025 の
+    digit FE / category remap / multiclass TargetEncoder / LGBM
+    の骨格は維持し、
+    synthetic-threshold-min を最小追加する。
+    bias search は code_046b.txt の 3-stage refine を移植する。
+  why_now: >
+    discussion687460 由来の threshold / score 系知識は、
+    単独の最強モデルではなく synthetic artifact 補助特徴として使うのが筋である。
+    046 family の RAW/LOG/DIGIT ではすでに表現差を確認済みであり、
+    次は 025 family に最小追加して別人格化するかを確認する段階。
+    026 family に先に入れると、せっかくの別枠性を壊す可能性があるため、
+    まずは 025 family で最小検証する。
+
+gate_rule_before_blend:
+  summary: >
+    新モデルは単体実験だけで keep にしない。
+    以下のどちらかを満たした場合のみ
+    ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+    に追加または差し替えを行う。
+  conditions:
+    - 既存主力より単体CVまたはLBが明確に強い
+    - 単体は少し弱くても、025 / 046b / 048 との相関が少しでも下がっている
+  otherwise: >
+    条件を満たさない場合、blend benchmark には入れず、
+    この実験単体で close または drop 判定する。
+
+blend_benchmark_policy:
+  benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+  role: >
+    新モデルを最終候補に昇格させる前の共通評価台。
+    新モデル作成のたびに、この notebook で
+    NM / HC / LogReg / avg を比較する。
+    Ridge は参考枠または close 寄りで扱う。
+  add_or_replace_rule: >
+    025 の強化候補なら差し替え、
+    synthetic bias 補助候補なら追加で評価する。
+  keep_hold_drop_rule: >
+    単体CVだけで採用しない。
+    blend benchmark の結果で keep / hold / drop を決める。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  target: Irrigation_Need
+  id_col: id
+  target_map:
+    Low: 0
+    Medium: 1
+    High: 2
+
+model:
+  family: lgbm
+  estimator: LGBMClassifier
+  seed: 2026
+  cv:
+    scheme: KFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  params:
+    n_estimators: 6000
+    boosting_type: gbdt
+    max_depth: 4
+    num_leaves: 32
+    learning_rate: 0.05
+    feature_fraction: 0.6
+    bagging_fraction: 0.7
+    bagging_freq: 1
+    lambda_l1: 10
+    lambda_l2: 10
+    min_child_samples: 12
+    random_state: 2026
+    n_jobs: -1
+    max_bin: 15000
+    verbosity: -1
+    subsample: 0.5
+    subsample_for_bin: 100000
+    subsample_freq: 1
+    early_stopping_rounds: 250
+  notes: >
+    code_025.txt の骨格を維持する。:contentReference[oaicite:0]{index=0}
+
+features:
+  base_features:
+    source: 025 family base
+  preprocessing:
+    summary: >
+      025 family を維持した digit + multiclass TE + LGBM に、
+      synthetic-threshold-min を最小追加する。
+      046b や formula 系 notebook のように全部盛りにはしない。
+  engineered_features:
+    - digit features for all numeric columns
+    - soil_lt_25
+    - temp_gt_30
+    - rain_lt_300
+    - wind_gt_10
+    - deotte_high_score
+    - deotte_low_score
+    - deotte_score
+    - score_band
+  notes: >
+    discussion687460 の simple formula を、そのまま本体モデルにするのではなく、
+    synthetic artifact 補助特徴として使う。:contentReference[oaicite:1]{index=1}
+    追加は最小セットに留める。
+    目的は strongest single を作ることではなく、
+    025 family の出力を少しずらせるかの確認である。
+
+te_and_encoding:
+  target_encoding:
+    enabled: true
+    method: sklearn TargetEncoder
+    target_type: multiclass
+    smooth: auto
+    cv: 5
+    random_state: 42
+    fit_scope: fold_train_only
+    applied_to:
+      - category remapped original categorical columns
+      - digit columns
+      - threshold-derived categorical columns
+  category_remap:
+    enabled: true
+    method: frequency-based remap
+    minimum_count: 5
+
+threshold_block:
+  enabled: true
+  source: discussion687460 simple formula
+  rules:
+    - soil_lt_25 = Soil_Moisture < 25
+    - temp_gt_30 = Temperature_C > 30
+    - rain_lt_300 = Rainfall_mm < 300
+    - wind_gt_10 = Wind_Speed_kmh > 10
+  derived_scores:
+    - deotte_high_score = 2*soil_lt_25 + 2*rain_lt_300 + temp_gt_30 + wind_gt_10
+    - deotte_low_score = 2*(Crop_Growth_Stage==Harvest) + 2*(Crop_Growth_Stage==Sowing) + (Mulching_Used==Yes)
+    - deotte_score = deotte_high_score - deotte_low_score
+    - score_band from deotte_score
+  intent: >
+    original-like rule structure を proxy として取り込み、
+    synthetic bias を少量だけ補助信号として与える。
+
+postprocess:
+  bias_refine:
+    enabled: true
+    method: 046b-style 3-stage log-prob-space bias refine
+    stage1:
+      range: [-1.0, 1.0]
+      step: 0.1
+    stage2:
+      width: 0.10
+      step: 0.02
+    stage3:
+      width: 0.02
+      step: 0.005
+  notes: >
+    025 の元実装にあった simple class-weight bias ではなく、
+    code_046b.txt の bias search を使用する。:contentReference[oaicite:2]{index=2}
+
+hypothesis:
+  main: >
+    025 family に threshold-min を最小追加すると、
+    単体は 025 より少し弱くても、
+    046b / 025 / 048 と少し違う synthetic bias を拾い、
+    NM または LogReg で補助素材化する可能性がある。
+  failure_pattern: >
+    025 と 046b にさらに近づくだけで、単体更新も blend 変換も起きない。
+    つまり、特徴を足したのに人格差が増えない可能性がある。
+
+comparison_plan:
+  single_compare_against:
+    - 018
+    - 024_current
+    - 025
+    - 046b
+    - 048
+    - 052
+  metrics:
+    - raw_cv_ba
+    - refined_biased_cv
+    - public_lb
+    - mean_raw_corr
+    - mean_rank_corr
+  blend_compare:
+    enabled: true
+    notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+    mode: add
+    target_strategies:
+      - nelder_mead
+      - hill_climb
+      - stack_lr
+      - equal_avg
+    note: >
+      Ridge は参考枠。
+      主比較は NM / HC / LogReg / avg とする。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260420_053_lgb025_threshold_min_from_family
+  files_expected:
+    - oof_lgb_digit_te_threshold_min_from_family_proba.npy
+    - pred_lgb_digit_te_threshold_min_from_family_proba.npy
+    - oof_lgb_digit_te_threshold_min_from_family_proba_biased.npy
+    - pred_lgb_digit_te_threshold_min_from_family_proba_biased.npy
+    - best_class_bias_refined.npy
+    - cv_result.json
+    - feature_columns.csv
+    - feature_importance.csv
+    - summary.csv
+    - submission_lgb_digit_te_threshold_min_from_family.csv
+  save_for_blend_benchmark:
+    - biased oof
+    - biased pred
+    - exact npy file names for npy-files dataset
+
+decision_rule:
+  single_model:
+    keep: >
+      025 に近い単体強度を持つ。
+      あるいは少し弱くても、046b / 025 / 048 との相関が明確に下がる。
+    hold: >
+      単体は少し弱いが、別人格寄りで補助候補として意味がある。
+    drop: >
+      単体も弱く、相関も高い。
+  after_blend_benchmark:
+    keep: >
+      NM または LogReg で変換される。
+      もしくは current best stack を更新する。
+    hold: >
+      更新はしないが、低相関補助候補として意味がある。
+    drop: >
+      単体も弱く、blend に入れても変換されない。
+
+result:
+  raw_cv_ba: null
+  refined_biased_cv: null
+  public_lb: null
+  mean_raw_corr_vs_018: null
+  mean_rank_corr_vs_018: null
+  mean_raw_corr_vs_024_current: null
+  mean_rank_corr_vs_024_current: null
+  mean_raw_corr_vs_025: null
+  mean_rank_corr_vs_025: null
+  mean_raw_corr_vs_046b: null
+  mean_rank_corr_vs_046b: null
+  mean_raw_corr_vs_048: null
+  mean_rank_corr_vs_048: null
+  mean_raw_corr_vs_052: null
+  mean_rank_corr_vs_052: null
+  decision_single: null
+
+post_blend_benchmark:
+  executed: false
+  benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+  mode: null
+  stack_change:
+    type: null
+    description: null
+  results:
+    nelder_mead_cv: null
+    hill_climb_cv: null
+    stack_lr_cv: null
+    equal_avg_cv: null
+    ridge_cv: null
+    public_lb_nelder_mead: null
+    public_lb_hill_climb: null
+    public_lb_stack_lr: null
+    public_lb_equal_avg: null
+    public_lb_ridge: null
+  interpretation: >
+    blend benchmark 後の解釈を書く。
+    例:
+    - NM にだけ効いた
+    - HC では崩れた
+    - 追加価値なし
+    - 025 の補助 sibling として採用
+  decision_after_blend: null
+
+operational_notes:
+  summary: >
+    synthetic-threshold 系は discussion687460 由来の知識だが、
+    係数の厳密再現や exact formula の追求はしない。
+    目的は補助特徴の最小追加であり、主モデルの作り直しではない。
+    026 family にはまだ入れない。
+  current_global_rule: >
+    新モデル作成のたびに blend benchmark を通す。
+    何でも benchmark に入れない。
+    主力更新候補は差し替え、別人格候補は追加。
+    提出は benchmark 上位2〜3本に絞る。 
+
+risk:
+  - 025 と 046b にさらに近づくだけになる可能性
+  - threshold 追加で単体CVが微妙に悪化する可能性
+  - synthetic bias を拾っても blend 改善に変換されない可能性
+  - 046b のような XGB 系主力に寄りすぎて、LGB family の価値を失う可能性
+
+next_action:
+  - 053 を実行して raw_cv_ba / refined_biased_cv / public_lb を記録
+  - 025 / 046b / 048 / 052 との raw / rank 相関を確認
+  - gate_rule_before_blend を満たすか判定
+  - 満たす場合のみ blend benchmark に追加
+  - keep / hold / drop を確定
