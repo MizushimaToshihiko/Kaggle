@@ -234,41 +234,41 @@ decision_rule:
       単体も弱く、blend に入れても変換されない。
 
 result:
-  raw_cv: null
-  refined_biased_cv: null
-  public_lb: null
-  mean_raw_corr_vs_018: null
-  mean_rank_corr_vs_018: null
+  raw_cv: 0.976904
+  refined_biased_cv: 0.978830
+  public_lb: 0.97833
+  mean_raw_corr_vs_018: 0.985923268928382
+  mean_rank_corr_vs_018: 0.9311203781976873
   mean_raw_corr_vs_024_current: null
   mean_rank_corr_vs_024_current: null
-  mean_raw_corr_vs_025: null
-  mean_rank_corr_vs_025: null
-  mean_raw_corr_vs_046b: null
-  mean_rank_corr_vs_046b: null
-  mean_raw_corr_vs_048: null
-  mean_rank_corr_vs_048: null
+  mean_raw_corr_vs_025: 0.9919949010267691
+  mean_rank_corr_vs_025: 0.9425491691458
+  mean_raw_corr_vs_046b: 0.9941015972955253
+  mean_rank_corr_vs_046b: 0.9609898202587291
+  mean_raw_corr_vs_048: 0.9920801341563745
+  mean_rank_corr_vs_048: 0.9455700080090046
   mean_raw_corr_vs_050: null
   mean_rank_corr_vs_050: null
-  mean_raw_corr_vs_051: null
-  mean_rank_corr_vs_051: null
-  decision_single: null
+  mean_raw_corr_vs_051: 0.9979623204815716
+  mean_rank_corr_vs_051: 0.986478850694145
+  decision_single: keep
 
 post_blend_benchmark:
-  executed: false
+  executed: true
   benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
   mode: null
   stack_change:
-    type: null
-    description: null
+    type: HC,NM,lr,avg,ridge
+    description: 018,024,025,037,039,041,051,052
   results:
-    nelder_mead_cv: null
-    hill_climb_cv: null
-    stack_lr_cv: null
-    equal_avg_cv: null
-    ridge_cv: null
-    public_lb_nelder_mead: null
-    public_lb_hill_climb: null
-    public_lb_stack_lr: null
+    nelder_mead_cv: 0.980447
+    hill_climb_cv: 0.980223
+    stack_lr_cv: 0.980063
+    equal_avg_cv: 0.980102
+    ridge_cv: 0.975856
+    public_lb_nelder_mead: 0.97994
+    public_lb_hill_climb: 0.97993
+    public_lb_stack_lr: 0.97976
     public_lb_equal_avg: null
     public_lb_ridge: null
   interpretation: >
@@ -277,7 +277,7 @@ post_blend_benchmark:
     - 旧 050 より改善したが still 補助止まり
     - NM にだけ効いた
     - 046 family RAW は close 確定
-  decision_after_blend: null
+  decision_after_blend: drop寄りのkeep
 
 operational_notes:
   summary: >
