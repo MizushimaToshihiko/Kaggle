@@ -1,0 +1,359 @@
+experiment:
+  id: exp_20260420_054_realmlp026_threshold_min_from_family
+  title: RealMLP 026-family threshold-min sibling with 046b-style refined bias
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: multiclass balanced accuracy
+  status: done
+
+objective:
+  summary: >
+    026 family の骨格をできるだけ維持したまま、
+    synthetic-threshold-min を最小追加した sibling を作る。
+    目的は単体主力更新ではなく、
+    026 の別枠性を大きく壊さずに synthetic bias を少量取り込み、
+    025 / 046b / 048 とは少し違う補助素材になるかを確認すること。
+    bias search は 026 の simple class-weight bias ではなく、
+    046b の 3-stage refine を使う。
+  success_criteria:
+    - raw_cv_ba を取得
+    - refined_biased_cv を取得
+    - public_lb を記録
+    - oof / pred を保存
+    - 026 / 025 / 046b / 048 との raw / rank 相関を確認
+    - 条件を満たす場合のみ blend benchmark に投入する
+
+positioning:
+  experiment_type: low_corr_candidate
+  intended_role: aux_material
+  base_family: realmlp
+  base_reference: >
+    exp_20260409_026_realmlp_pair_te_min を base とする。
+    026 の
+    selected columns / pair combinations / multiclass TargetEncoder / RealMLP
+    の骨格は維持し、
+    synthetic-threshold-min を最小追加する。
+    bias search は code_046b.txt の 3-stage refine を移植する。
+  why_now: >
+    053 では 025 family に threshold-min を最小追加して
+    public LB の上振れを確認できたが、
+    025 / 046b にかなり近いままだった。
+    一方 026 family は元々別枠性があるため、
+    同じ threshold-min を入れても 025 より人格が崩れにくい可能性がある。
+    今回はその仮説を確認する。
+
+gate_rule_before_blend:
+  summary: >
+    新モデルは単体実験だけで keep にしない。
+    以下のどちらかを満たした場合のみ
+    ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+    に追加または差し替えを行う。
+  conditions:
+    - 既存主力より単体CVまたはLBが明確に強い
+    - 単体は少し弱くても、026 / 025 / 046b / 048 との相関が少しでも下がっている
+  otherwise: >
+    条件を満たさない場合、blend benchmark には入れず、
+    この実験単体で close または drop 判定する。
+
+blend_benchmark_policy:
+  benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+  role: >
+    新モデルを最終候補に昇格させる前の共通評価台。
+    新モデル作成のたびに、この notebook で
+    NM / HC / LogReg / avg を比較する。
+    Ridge は参考枠または close 寄りで扱う。
+  add_or_replace_rule: >
+    026 の強化候補なら差し替え、
+    synthetic bias 補助候補なら追加で評価する。
+  keep_hold_drop_rule: >
+    単体CVだけで採用しない。
+    blend benchmark の結果で keep / hold / drop を決める。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  orig_path: /kaggle/input/datasets/miadul/irrigation-water-requirement-prediction-dataset/irrigation_prediction.csv
+  target: Irrigation_Need
+  id_col: id
+  target_map:
+    Low: 0
+    Medium: 1
+    High: 2
+
+model:
+  family: realmlp
+  estimator: RealMLP_TD_Classifier
+  seed: 42
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  params:
+    n_ens: 8
+    embed_dim: 6
+    onehot_thresh: 8
+    hidden_dims: [512, 64, 128]
+    dropout: 0.05
+    activation: SiLU
+    add_front_scale: true
+    pbld_hidden_dim: 20
+    pbld_out_dim: 5
+    pbld_freq_scale: 1.0
+    pbld_activation: GELU
+    pbld_lr_factor: 0.1
+    lr: 0.01
+    mom: 0.9
+    sq_mom: 0.98
+    lr_sched: flat_cos
+    flat_ratio: 0.3
+    first_layer_lr_factor: 1.0
+    lr_scale_mult: 10.0
+    lr_bias_mult: 0.1
+    weight_decay: 0.01
+    wd_scale_mult: 0.1
+    wd_bias_mult: 0.5
+    grad_clip: 1.0
+    ls_eps: 0.04
+    ls_eps_sched: cos
+    p_drop_sched: expm4t
+    use_early_stopping: false
+    epochs: 3
+    train_bs: 256
+    eval_bs: 10240
+    device: cuda_or_cpu
+  notes: >
+    code_026.txt の骨格を維持する。pair source と RealMLP 本体は変えず、
+    threshold-min は最小追加に留める。 :contentReference[oaicite:0]{index=0}
+
+features:
+  base_features:
+    source: 026 family base
+  preprocessing:
+    summary: >
+      026 family を維持した
+      selected columns + pair combinations + multiclass TE + RealMLP
+      に、synthetic-threshold-min を最小追加する。
+      pair source には threshold 列を混ぜない。
+      026 の別枠性を壊しすぎないことを優先する。
+  engineered_features:
+    - original 026 numeric duplicate columns with _2 suffix
+    - original 026 pair columns from PAIR_SOURCE_COLUMNS
+    - soil_lt_25
+    - temp_gt_30
+    - rain_lt_300
+    - wind_gt_10
+    - deotte_high_score
+    - deotte_low_score
+    - deotte_score
+    - score_band
+  notes: >
+    discussion687460 の simple formula を、そのまま本体モデル化するのではなく、
+    synthetic artifact 補助特徴として使う。 :contentReference[oaicite:1]{index=1}
+    053 と同様に最小セットに留めるが、
+    026 では pair source に混ぜず、追加カテゴリとしてのみ扱う。
+
+pair_and_te:
+  pair_source_columns:
+    - Soil_Moisture
+    - Crop_Growth_Stage
+    - Temperature_C
+    - Mulching_Used
+    - Wind_Speed_kmh
+    - Rainfall_mm
+  pair_r: 2
+  pair_policy: >
+    code_026.txt の pair source を維持する。
+    threshold 列は pair combinations に入れない。 :contentReference[oaicite:2]{index=2}
+  target_encoding:
+    enabled: true
+    method: sklearn TargetEncoder
+    target_type: multiclass
+    cv: 5
+    random_state: 42
+    fit_scope: fold_train_only
+    applied_to:
+      - pair columns only
+  factorization_policy: >
+    026 と同様に、CATS + NUMS + THRESHOLD_COLS を combined 上で factorize し category 化する。
+
+threshold_block:
+  enabled: true
+  source: discussion687460 simple formula
+  rules:
+    - soil_lt_25 = Soil_Moisture < 25
+    - temp_gt_30 = Temperature_C > 30
+    - rain_lt_300 = Rainfall_mm < 300
+    - wind_gt_10 = Wind_Speed_kmh > 10
+  derived_scores:
+    - deotte_high_score = 2*soil_lt_25 + 2*rain_lt_300 + temp_gt_30 + wind_gt_10
+    - deotte_low_score = 2*(Crop_Growth_Stage==Harvest) + 2*(Crop_Growth_Stage==Sowing) + (Mulching_Used==Yes)
+    - deotte_score = deotte_high_score - deotte_low_score
+    - score_band from deotte_score
+  intent: >
+    original-like rule structure を proxy として取り込み、
+    026 family に少量だけ synthetic bias を与える。
+
+postprocess:
+  bias_refine:
+    enabled: true
+    method: 046b-style 3-stage log-prob-space bias refine
+    stage1:
+      range: [-1.0, 1.0]
+      step: 0.1
+    stage2:
+      width: 0.10
+      step: 0.02
+    stage3:
+      width: 0.02
+      step: 0.005
+  notes: >
+    026 の元実装にあった simple class-weight bias ではなく、
+    code_046b.txt の bias search を使用する。 :contentReference[oaicite:3]{index=3}
+
+hypothesis:
+  main: >
+    026 family に threshold-min を最小追加すると、
+    単体は 026 より少し改善するか同程度を維持しつつ、
+    025 / 046b / 048 とは異なる補助素材になる可能性がある。
+    053 よりも「相関を崩しながら残れるか」が重要。
+  failure_pattern: >
+    026 の別枠性を失い、025 / 046b に寄るだけになる。
+    あるいは単体も弱く、blend でも変換されない。
+  early_observation: >
+    CPU のお試し実行では raw_cv がほんの少し改善しているように見える。
+    ただしこの段階では過信せず、full 実行と相関確認が必要。
+
+comparison_plan:
+  single_compare_against:
+    - 018
+    - 024_current
+    - 025
+    - 026
+    - 046b
+    - 048
+    - 053
+  metrics:
+    - raw_cv_ba
+    - refined_biased_cv
+    - public_lb
+    - mean_raw_corr
+    - mean_rank_corr
+  blend_compare:
+    enabled: true
+    notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+    mode: add
+    target_strategies:
+      - nelder_mead
+      - hill_climb
+      - stack_lr
+      - equal_avg
+    note: >
+      Ridge は参考枠。
+      主比較は NM / HC / LogReg / avg とする。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260420_054_realmlp026_threshold_min_from_family
+  files_expected:
+    - oof_realmlp_pair_te_threshold_min_from_family_proba.npy
+    - pred_realmlp_pair_te_threshold_min_from_family_proba.npy
+    - oof_realmlp_pair_te_threshold_min_from_family_proba_biased.npy
+    - pred_realmlp_pair_te_threshold_min_from_family_proba_biased.npy
+    - best_class_bias_refined.npy
+    - cv_result.json
+    - feature_columns.csv
+    - summary.csv
+    - submission_realmlp_pair_te_threshold_min_from_family.csv
+  save_for_blend_benchmark:
+    - biased oof
+    - biased pred
+    - exact npy file names for npy-files dataset
+
+decision_rule:
+  single_model:
+    keep: >
+      026 に対して単体が維持または改善し、
+      かつ 025 / 046b / 048 と完全には近づかない。
+    hold: >
+      単体は少し弱いが、別人格寄りで補助候補として意味がある。
+    drop: >
+      単体も弱く、相関も高くなる。
+  after_blend_benchmark:
+    keep: >
+      NM または LogReg で変換される。
+      もしくは current best stack を更新する。
+    hold: >
+      更新はしないが、低相関補助候補として意味がある。
+    drop: >
+      単体も弱く、blend に入れても変換されない。
+
+result:
+  raw_cv_ba: null
+  refined_biased_cv: null
+  public_lb: null
+  mean_raw_corr_vs_018: null
+  mean_rank_corr_vs_018: null
+  mean_raw_corr_vs_024_current: null
+  mean_rank_corr_vs_024_current: null
+  mean_raw_corr_vs_025: null
+  mean_rank_corr_vs_025: null
+  mean_raw_corr_vs_026: null
+  mean_rank_corr_vs_026: null
+  mean_raw_corr_vs_046b: null
+  mean_rank_corr_vs_046b: null
+  mean_raw_corr_vs_048: null
+  mean_rank_corr_vs_048: null
+  mean_raw_corr_vs_053: null
+  mean_rank_corr_vs_053: null
+  decision_single: null
+
+post_blend_benchmark:
+  executed: false
+  benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+  mode: null
+  stack_change:
+    type: null
+    description: null
+  results:
+    nelder_mead_cv: null
+    hill_climb_cv: null
+    stack_lr_cv: null
+    equal_avg_cv: null
+    ridge_cv: null
+    public_lb_nelder_mead: null
+    public_lb_hill_climb: null
+    public_lb_stack_lr: null
+    public_lb_equal_avg: null
+    public_lb_ridge: null
+  interpretation: >
+    blend benchmark 後の解釈を書く。
+    例:
+    - NM にだけ効いた
+    - HC では崩れた
+    - 026 の補助 sibling として採用
+    - 053 より別人格性があった
+  decision_after_blend: null
+
+operational_notes:
+  summary: >
+    synthetic-threshold 系は discussion687460 由来の知識だが、
+    exact formula の追求はしない。
+    026 family の別枠性を壊さずに少量追加することが目的であり、
+    pair source の作り直しはしない。
+  current_global_rule: >
+    新モデル作成のたびに blend benchmark を通す。
+    何でも benchmark に入れない。
+    主力更新候補は差し替え、別人格候補は追加。
+    提出は benchmark 上位2〜3本に絞る。 
+
+risk:
+  - 026 の別枠性を壊す可能性
+  - threshold 追加で 025 / 046b に寄るだけになる可能性
+  - CPU お試しの微改善が full 実行では消える可能性
+  - 単体改善しても blend 改善に変換されない可能性
+
+next_action:
+  - 054 を full 実行して raw_cv_ba / refined_biased_cv / public_lb を記録
+  - 026 / 025 / 046b / 048 / 053 との raw / rank 相関を確認
+  - gate_rule_before_blend を満たすか判定
+  - 満たす場合のみ blend benchmark に追加
+  - keep / hold / drop を確定
