@@ -305,6 +305,10 @@ result:
   mean_raw_corr_vs_053: 0.9894269808990966
   mean_rank_corr_vs_053: 0.9387366587996805
   decision_single: keep
+  note: >
+    CVは元の026(raw:0.9780230,biased:0.9781126)よりraw:+0.0003501,biased:+0.0003334,
+    LBは026(0.97753)より+0.00033とちびっとだけ改善した
+    
 
 post_blend_benchmark:
   executed: true
