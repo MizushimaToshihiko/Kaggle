@@ -287,38 +287,38 @@ decision_rule:
       単体も弱く、blend に入れても変換されない。
 
 result:
-  raw_cv_ba: null
-  refined_biased_cv: null
-  public_lb: null
-  mean_raw_corr_vs_018: null
-  mean_rank_corr_vs_018: null
+  raw_cv_ba: 0.9783731
+  refined_biased_cv: 0.9784460975865542
+  public_lb: 0.97786
+  mean_raw_corr_vs_018: 0.9876109185288554
+  mean_rank_corr_vs_018: 0.9441036001614062
   mean_raw_corr_vs_024_current: null
   mean_rank_corr_vs_024_current: null
-  mean_raw_corr_vs_025: null
-  mean_rank_corr_vs_025: null
-  mean_raw_corr_vs_026: null
-  mean_rank_corr_vs_026: null
-  mean_raw_corr_vs_046b: null
-  mean_rank_corr_vs_046b: null
-  mean_raw_corr_vs_048: null
-  mean_rank_corr_vs_048: null
-  mean_raw_corr_vs_053: null
-  mean_rank_corr_vs_053: null
-  decision_single: null
+  mean_raw_corr_vs_025: 0.989059590784743
+  mean_rank_corr_vs_025: 0.9355698252241728
+  mean_raw_corr_vs_026: 0.9963150181505435
+  mean_rank_corr_vs_026: 0.8888615534779288
+  mean_raw_corr_vs_046b: 0.9887344920014817
+  mean_rank_corr_vs_046b: 0.9437248919448566
+  mean_raw_corr_vs_048: 0.9891677958942312
+  mean_rank_corr_vs_048: 0.9478934974301692
+  mean_raw_corr_vs_053: 0.9894269808990966
+  mean_rank_corr_vs_053: 0.9387366587996805
+  decision_single: keep
 
 post_blend_benchmark:
-  executed: false
+  executed: true
   benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
-  mode: null
+  mode: HC,NM,lr,avg,ridge
   stack_change:
     type: null
-    description: null
+    description: 018,024,025,026,037,039,041,048,053,054 # 024 was replaced with 046b
   results:
-    nelder_mead_cv: null
-    hill_climb_cv: null
-    stack_lr_cv: null
-    equal_avg_cv: null
-    ridge_cv: null
+    nelder_mead_cv: 0.9802935262806317
+    hill_climb_cv: 0.98050769458523
+    stack_lr_cv: 0.9801410638507063
+    equal_avg_cv: 0.9801193955034834
+    ridge_cv: 0.9758351540363335
     public_lb_nelder_mead: null
     public_lb_hill_climb: null
     public_lb_stack_lr: null
