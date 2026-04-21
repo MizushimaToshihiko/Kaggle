@@ -261,39 +261,39 @@ decision_rule:
       単体も弱く、blend に入れても変換されない。
 
 result:
-  raw_cv_ba: null
-  refined_biased_cv: null
-  public_lb: null
-  mean_raw_corr_vs_018: null
-  mean_rank_corr_vs_018: null
+  raw_cv_ba: 0.979083
+  refined_biased_cv: 0.979202
+  public_lb: 0.98053
+  mean_raw_corr_vs_018: 0.9872332178856101
+  mean_rank_corr_vs_018: 0.943895231932183
   mean_raw_corr_vs_024_current: null
   mean_rank_corr_vs_024_current: null
-  mean_raw_corr_vs_025: null
-  mean_rank_corr_vs_025: null
-  mean_raw_corr_vs_046b: null
-  mean_rank_corr_vs_046b: null
-  mean_raw_corr_vs_048: null
-  mean_rank_corr_vs_048: null
+  mean_raw_corr_vs_025: 0.9961542421029247
+  mean_rank_corr_vs_025: 0.9424257649042516
+  mean_raw_corr_vs_046b: 0.9944496059671893
+  mean_rank_corr_vs_046b: 0.9547520827744668
+  mean_raw_corr_vs_048: 0.9948290844629423
+  mean_rank_corr_vs_048: 0.9543419449405114
   mean_raw_corr_vs_052: null
   mean_rank_corr_vs_052: null
-  decision_single: null
+  decision_single: keep
 
 post_blend_benchmark:
-  executed: false
+  executed: true
   benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
-  mode: null
+  mode: HC,NM,avg,lr,ridge
   stack_change:
     type: null
-    description: null
+    description: 018,024,025,037,039,041,048,053
   results:
-    nelder_mead_cv: null
-    hill_climb_cv: null
-    stack_lr_cv: null
-    equal_avg_cv: null
-    ridge_cv: null
-    public_lb_nelder_mead: null
-    public_lb_hill_climb: null
-    public_lb_stack_lr: null
+    nelder_mead_cv: 0.980233
+    hill_climb_cv: 0.980477
+    stack_lr_cv: 0.980044
+    equal_avg_cv: 0.980066
+    ridge_cv: 0.975601
+    public_lb_nelder_mead: 0.97950
+    public_lb_hill_climb: 0.97978
+    public_lb_stack_lr: 0.97978
     public_lb_equal_avg: null
     public_lb_ridge: null
   interpretation: >
@@ -303,7 +303,9 @@ post_blend_benchmark:
     - HC では崩れた
     - 追加価値なし
     - 025 の補助 sibling として採用
-  decision_after_blend: null
+  decision_after_blend: keep
+  note: >
+    単体ではLBが最高だったがCVが低いので、Public過適合の疑いがあるものの、このコンペの特性からCVとPrivateLBの誤差が大きいことも考えられるので、keepとする
 
 operational_notes:
   summary: >
