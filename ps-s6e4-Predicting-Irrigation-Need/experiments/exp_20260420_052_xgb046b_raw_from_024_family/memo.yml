@@ -278,6 +278,10 @@ post_blend_benchmark:
     - NM にだけ効いた
     - 046 family RAW は close 確定
   decision_after_blend: drop寄りのkeep
+  note: >
+    052 により、050 の弱さは骨格ズレの影響もあったと確認できた。
+    ただし、046b skeleton に寄せても RAW branch は mainline 更新に至らず、
+    046 family の本線は引き続き DIGIT と判断する。
 
 operational_notes:
   summary: >
