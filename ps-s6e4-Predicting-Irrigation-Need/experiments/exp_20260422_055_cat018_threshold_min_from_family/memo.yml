@@ -1,0 +1,343 @@
+experiment:
+  id: exp_20260422_055_cat018_threshold_min_from_family
+  title: CatBoost 018-family threshold-min sibling with 046b-style refined bias
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: multiclass balanced accuracy
+  status: planned
+
+objective:
+  summary: >
+    018 family の骨格をできるだけ維持したまま、
+    synthetic-threshold-min を最小追加した sibling を作る。
+    目的は単体主力更新ではなく、
+    018 の pairwise / orig-prior family に threshold-min を足したときに、
+    025 / 046b / 048 / 053 / 054 とは少し違う補助素材になるかを確認すること。
+    bias search は 018 元実装の greedy bias ではなく、
+    046b の 3-stage refine を使う。 :contentReference[oaicite:0]{index=0} :contentReference[oaicite:1]{index=1}
+  success_criteria:
+    - raw_cv_ba を取得
+    - refined_biased_cv を取得
+    - public_lb を記録
+    - oof / pred を保存
+    - 018 / 025 / 046b / 048 / 053 / 054 との raw / rank 相関を確認
+    - 条件を満たす場合のみ blend benchmark に投入する
+
+positioning:
+  experiment_type: low_corr_candidate
+  intended_role: aux_material
+  base_family: catboost
+  base_reference: >
+    exp_20260407_018_cat_pairwise_te_bias_from_shared_min を base とする。
+    018 の
+    orig merge / pairwise combinations / pairwise columns の in-fold multiclass TE /
+    CatBoost / artifact 保存
+    の骨格は維持し、
+    synthetic-threshold-min を最小追加する。
+    bias search は code_046b.txt の 3-stage refine を移植する。 :contentReference[oaicite:2]{index=2} :contentReference[oaicite:3]{index=3}
+  why_now: >
+    053 では 025 family に threshold-min を最小追加して
+    public LB の上振れを確認できたが、025 / 046b にかなり近かった。
+    054 では 026 family に threshold-min を最小追加して
+    026 の別枠性をある程度保ったまま改善できた。
+    次は 018 family に同じ最小追加を入れたときに、
+    018 の pairwise / orig-prior 系の人格を残したまま補助素材化できるかを確認する。
+
+gate_rule_before_blend:
+  summary: >
+    新モデルは単体実験だけで keep にしない。
+    以下のどちらかを満たした場合のみ
+    ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+    に追加または差し替えを行う。
+  conditions:
+    - 既存主力より単体CVまたはLBが明確に強い
+    - 単体は少し弱くても、018 / 025 / 046b / 048 / 053 / 054 との相関が少しでも下がっている
+  otherwise: >
+    条件を満たさない場合、blend benchmark には入れず、
+    この実験単体で close または drop 判定する。
+
+blend_benchmark_policy:
+  benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+  role: >
+    新モデルを最終候補に昇格させる前の共通評価台。
+    新モデル作成のたびに、この notebook で
+    NM / HC / LogReg / avg を比較する。
+    Ridge は参考枠または close 寄りで扱う。
+  add_or_replace_rule: >
+    018 の強化候補なら差し替え、
+    synthetic bias 補助候補なら追加で評価する。
+  keep_hold_drop_rule: >
+    単体CVだけで採用しない。
+    blend benchmark の結果で keep / hold / drop を決める。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  orig_path: /kaggle/input/datasets/miadul/irrigation-water-requirement-prediction-dataset/irrigation_prediction.csv
+  target: Irrigation_Need
+  id_col: id
+  target_map:
+    Low: 0
+    Medium: 1
+    High: 2
+
+model:
+  family: catboost
+  estimator: CatBoostClassifier
+  seed: 42
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  params:
+    iterations: 3000
+    learning_rate: 0.03
+    depth: 8
+    grow_policy: SymmetricTree
+    loss_function: MultiClass
+    eval_metric: TotalF1:average=Macro
+    random_seed: 42
+    task_type: GPU_or_CPU
+    devices: "0"
+    verbose: 0
+    early_stopping_rounds: 150
+  notes: >
+    code_018.txt の minimum reproduction 骨格を維持する。 :contentReference[oaicite:4]{index=4}
+
+features:
+  base_features:
+    source: 018 family base
+  preprocessing:
+    summary: >
+      018 family の
+      add_physical_features + orig target prior + pairwise combinations +
+      pairwise columns の in-fold multiclass TE + CatBoost
+      を維持したまま、
+      synthetic-threshold-min を最小追加する。
+      018 の pairwise family 比較を崩さないことを優先する。 :contentReference[oaicite:5]{index=5}
+  engineered_features:
+    - ET_proxy
+    - water_deficit
+    - soil_quality
+    - TE_ORIG_* on base columns
+    - pairwise combinations from ALL_BASE_PLUS
+    - soil_lt_25
+    - temp_gt_30
+    - rain_lt_300
+    - wind_gt_10
+    - deotte_high_score
+    - deotte_low_score
+    - deotte_score
+    - score_band
+  notes: >
+    threshold-min は単独の最強式として使うのではなく、
+    synthetic artifact 補助特徴として最小追加する。
+    018 family では orig prior と pairwise の両方に乗るため、
+    効けば補助素材、外せば近縁化のリスクがある。
+
+orig_and_pair_policy:
+  orig_target_prior:
+    enabled: true
+    source_columns: ALL_BASE_PLUS
+    note: >
+      018 元実装では ALL_BASE に対して orig target prior を作る。
+      本実験では threshold-min 追加列も含めて ALL_BASE_PLUS に拡張する。 :contentReference[oaicite:6]{index=6}
+  pairwise_combinations:
+    enabled: true
+    source_columns: ALL_BASE_PLUS
+    note: >
+      018 元実装の pairwise combination 骨格を維持しつつ、
+      threshold-min 追加列も pair candidate に含める。 :contentReference[oaicite:7]{index=7}
+  pair_te:
+    enabled: true
+    method: sklearn TargetEncoder
+    target_type: multiclass
+    cv: 3
+    random_state: 42
+    fit_scope: outer_train_plus_orig_only
+    applied_to:
+      - accepted pairwise columns only
+
+threshold_block:
+  enabled: true
+  source: discussion687460 simple formula
+  rules:
+    - soil_lt_25 = Soil_Moisture < 25
+    - temp_gt_30 = Temperature_C > 30
+    - rain_lt_300 = Rainfall_mm < 300
+    - wind_gt_10 = Wind_Speed_kmh > 10
+  derived_scores:
+    - deotte_high_score = 2*soil_lt_25 + 2*rain_lt_300 + temp_gt_30 + wind_gt_10
+    - deotte_low_score = 2*(Crop_Growth_Stage==Harvest) + 2*(Crop_Growth_Stage==Sowing) + (Mulching_Used==Yes)
+    - deotte_score = deotte_high_score - deotte_low_score
+    - score_band from deotte_score
+  intent: >
+    original-like rule structure を proxy として取り込み、
+    018 family の pairwise / orig-prior 系に少量だけ synthetic bias を与える。
+
+postprocess:
+  bias_refine:
+    enabled: true
+    method: 046b-style 3-stage log-prob-space bias refine
+    stage1:
+      range: [-1.0, 1.0]
+      step: 0.1
+    stage2:
+      width: 0.10
+      step: 0.02
+    stage3:
+      width: 0.02
+      step: 0.005
+  notes: >
+    018 の元実装では greedy bias tuning だが、
+    本実験では code_046b.txt の 3-stage refine を使う。 :contentReference[oaicite:8]{index=8} :contentReference[oaicite:9]{index=9}
+
+hypothesis:
+  main: >
+    018 family に threshold-min を最小追加すると、
+    単体は 018 より少し改善するか同程度を維持しつつ、
+    025 / 046b / 048 / 053 / 054 と少し違う補助素材になる可能性がある。
+    018 はもともと人工構造を吸っているため、
+    threshold-min が補強として働く可能性と、近縁化する可能性の両方がある。
+  failure_pattern: >
+    018 の pairwise / orig-prior family が崩れ、
+    046b や 053 に寄るだけになる。
+    あるいは単体も弱く、blend でも変換されない。
+
+comparison_plan:
+  single_compare_against:
+    - 018
+    - 024_current
+    - 025
+    - 046b
+    - 048
+    - 053
+    - 054
+  metrics:
+    - raw_cv_ba
+    - refined_biased_cv
+    - public_lb
+    - mean_raw_corr
+    - mean_rank_corr
+  blend_compare:
+    enabled: true
+    notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+    mode: add
+    target_strategies:
+      - nelder_mead
+      - hill_climb
+      - stack_lr
+      - equal_avg
+    note: >
+      Ridge は参考枠。
+      主比較は NM / HC / LogReg / avg とする。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260422_055_cat018_threshold_min_from_family
+  files_expected:
+    - oof_cat_pairwise_te_threshold_min_from_family_proba.npy
+    - pred_cat_pairwise_te_threshold_min_from_family_proba.npy
+    - oof_cat_pairwise_te_threshold_min_from_family_proba_biased.npy
+    - pred_cat_pairwise_te_threshold_min_from_family_proba_biased.npy
+    - best_class_bias.npy
+    - oof_cat_pairwise_te_threshold_min_from_family_labels.csv
+    - cv_result.json
+    - feature_columns.csv
+    - feature_importance.csv
+    - summary.csv
+    - submission_cat_pairwise_te_threshold_min_from_family.csv
+  save_for_blend_benchmark:
+    - biased oof
+    - biased pred
+    - exact npy file names for npy-files dataset
+
+decision_rule:
+  single_model:
+    keep: >
+      018 に対して単体が維持または改善し、
+      かつ 025 / 046b / 048 / 053 / 054 と完全には近づかない。
+    hold: >
+      単体は少し弱いが、018 family の補助候補として意味がある。
+    drop: >
+      単体も弱く、相関も高くなる。
+  after_blend_benchmark:
+    keep: >
+      NM または LogReg で変換される。
+      もしくは current best stack を更新する。
+    hold: >
+      更新はしないが、低相関補助候補として意味がある。
+    drop: >
+      単体も弱く、blend に入れても変換されない。
+
+result:
+  raw_cv_ba: null
+  refined_biased_cv: null
+  public_lb: null
+  mean_raw_corr_vs_018: null
+  mean_rank_corr_vs_018: null
+  mean_raw_corr_vs_024_current: null
+  mean_rank_corr_vs_024_current: null
+  mean_raw_corr_vs_025: null
+  mean_rank_corr_vs_025: null
+  mean_raw_corr_vs_046b: null
+  mean_rank_corr_vs_046b: null
+  mean_raw_corr_vs_048: null
+  mean_rank_corr_vs_048: null
+  mean_raw_corr_vs_053: null
+  mean_rank_corr_vs_053: null
+  mean_raw_corr_vs_054: null
+  mean_rank_corr_vs_054: null
+  decision_single: null
+
+post_blend_benchmark:
+  executed: false
+  benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+  mode: null
+  stack_change:
+    type: null
+    description: null
+  results:
+    nelder_mead_cv: null
+    hill_climb_cv: null
+    stack_lr_cv: null
+    equal_avg_cv: null
+    ridge_cv: null
+    public_lb_nelder_mead: null
+    public_lb_hill_climb: null
+    public_lb_stack_lr: null
+    public_lb_equal_avg: null
+    public_lb_ridge: null
+  interpretation: >
+    blend benchmark 後の解釈を書く。
+    例:
+    - NM にだけ効いた
+    - HC では崩れた
+    - 018 の補助 sibling として採用
+    - 054 より近縁化した
+  decision_after_blend: null
+
+operational_notes:
+  summary: >
+    018 family はもともと pairwise / orig-prior / bias で人工構造を吸っている。
+    そのため threshold-min の追加は、
+    補強として働く可能性と近縁化のリスクが両方ある。
+    exact formula の追求はしない。
+    018 family の骨格比較を優先する。
+  current_global_rule: >
+    新モデル作成のたびに blend benchmark を通す。
+    何でも benchmark に入れない。
+    主力更新候補は差し替え、別人格候補は追加。
+    提出は benchmark 上位2〜3本に絞る。
+
+risk:
+  - 018 family の人工構造が強すぎて threshold-min が冗長になる可能性
+  - 046b や 053 に寄るだけになる可能性
+  - pairwise source の拡張で特徴が増えすぎる可能性
+  - 単体改善しても blend 改善に変換されない可能性
+
+next_action:
+  - 055 を実行して raw_cv_ba / refined_biased_cv / public_lb を記録
+  - 018 / 025 / 046b / 048 / 053 / 054 との raw / rank 相関を確認
+  - gate_rule_before_blend を満たすか判定
+  - 満たす場合のみ blend benchmark に追加
+  - keep / hold / drop を確定
