@@ -3,7 +3,7 @@ experiment:
   title: CatBoost 018-family threshold-min sibling with 046b-style refined bias
   competition: PS S6E4 Predicting Irrigation Need
   metric: multiclass balanced accuracy
-  status: planned
+  status: done
 
 objective:
   summary: >
