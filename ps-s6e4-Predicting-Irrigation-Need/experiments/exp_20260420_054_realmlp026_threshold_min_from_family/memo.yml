@@ -306,7 +306,7 @@ result:
   mean_rank_corr_vs_053: 0.9387366587996805
   decision_single: keep
   note: >
-    CVは元の026(raw:0.9780230,biased:0.9781126)よりraw:+0.0003501,biased:+0.0003334,
+    054単体でCVは元の026(raw:0.9780230,biased:0.9781126)よりraw:+0.0003501,biased:+0.0003334,
     LBは026(0.97753)より+0.00033とちびっとだけ改善した
     
 
@@ -323,19 +323,14 @@ post_blend_benchmark:
     stack_lr_cv: 0.9801410638507063
     equal_avg_cv: 0.9801193955034834
     ridge_cv: 0.9758351540363335
-    public_lb_nelder_mead: null
-    public_lb_hill_climb: null
-    public_lb_stack_lr: null
+    public_lb_nelder_mead: 0.97948
+    public_lb_hill_climb: 0.97984
+    public_lb_stack_lr: 0.97949
     public_lb_equal_avg: null
     public_lb_ridge: null
   interpretation: >
-    blend benchmark 後の解釈を書く。
-    例:
-    - NM にだけ効いた
-    - HC では崩れた
-    - 026 の補助 sibling として採用
-    - 053 より別人格性があった
-  decision_after_blend: null
+    CVは今までで最高になったがLBは下がった。Privateには刺さるかはわからないがこれを提出候補としたい。
+  decision_after_blend: keep
 
 operational_notes:
   summary: >
