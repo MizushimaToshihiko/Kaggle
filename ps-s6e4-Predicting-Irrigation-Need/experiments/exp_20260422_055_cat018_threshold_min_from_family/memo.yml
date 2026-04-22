@@ -99,7 +99,7 @@ model:
     random_seed: 42
     task_type: GPU_or_CPU
     devices: "0"
-    verbose: 0
+    verbose: 500
     early_stopping_rounds: 150
   notes: >
     code_018.txt の minimum reproduction 骨格を維持する。 :contentReference[oaicite:4]{index=4}
