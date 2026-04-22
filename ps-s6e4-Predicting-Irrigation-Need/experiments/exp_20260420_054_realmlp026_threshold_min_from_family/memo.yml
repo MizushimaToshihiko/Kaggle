@@ -316,16 +316,18 @@ post_blend_benchmark:
   mode: HC,NM,lr,avg,ridge
   stack_change:
     type: null
-    description: 018,024,025,026,037,039,041,048,053,054 # 024 was replaced with 046b
+    description: >
+      018,046b,025,026,037,039,041,048,053,054のうちHCでweightが0のもの(039,041,053)を除外して
+      018,046b,025,026,037,048,054で実行
   results:
-    nelder_mead_cv: 0.9802935262806317
-    hill_climb_cv: 0.98050769458523
-    stack_lr_cv: 0.9801410638507063
-    equal_avg_cv: 0.9801193955034834
-    ridge_cv: 0.9758351540363335
-    public_lb_nelder_mead: 0.97948
-    public_lb_hill_climb: 0.97984
-    public_lb_stack_lr: 0.97949
+    nelder_mead_cv: 0.9804389238375765
+    hill_climb_cv: 0.9804809375488995
+    stack_lr_cv: 0.979906364515949
+    equal_avg_cv: 0.9801477991400714
+    ridge_cv: 0.9765153763178823
+    public_lb_nelder_mead: 0.98014
+    public_lb_hill_climb: 0.98036
+    public_lb_stack_lr: 0.97989
     public_lb_equal_avg: null
     public_lb_ridge: null
   interpretation: >
