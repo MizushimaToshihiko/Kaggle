@@ -287,7 +287,7 @@ result:
   mean_rank_corr_vs_053: null
   mean_raw_corr_vs_054: null
   mean_rank_corr_vs_054: null
-  decision_single: null
+  decision_single: drop
 
 post_blend_benchmark:
   executed: true
@@ -316,7 +316,9 @@ post_blend_benchmark:
     - HC では崩れた
     - 018 の補助 sibling として採用
     - 054 より近縁化した
-  decision_after_blend: null
+  decision_after_blend: >
+    055 素材: hold 寄り drop
+    current stack への常設追加: 不採用
 
 operational_notes:
   summary: >
