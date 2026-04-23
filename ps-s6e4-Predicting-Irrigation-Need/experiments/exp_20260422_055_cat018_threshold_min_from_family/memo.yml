@@ -270,19 +270,19 @@ decision_rule:
       単体も弱く、blend に入れても変換されない。
 
 result:
-  raw_cv_ba: null
-  refined_biased_cv: null
-  public_lb: null
-  mean_raw_corr_vs_018: null
-  mean_rank_corr_vs_018: null
+  raw_cv_ba: 0.977059
+  refined_biased_cv: 0.9785391983258066
+  public_lb: 0.97767
+  mean_raw_corr_vs_018: 0.986221439521108
+  mean_rank_corr_vs_018: 0.8371705285302425
   mean_raw_corr_vs_024_current: null
   mean_rank_corr_vs_024_current: null
-  mean_raw_corr_vs_025: null
-  mean_rank_corr_vs_025: null
-  mean_raw_corr_vs_046b: null
-  mean_rank_corr_vs_046b: null
-  mean_raw_corr_vs_048: null
-  mean_rank_corr_vs_048: null
+  mean_raw_corr_vs_025: 0.9872002774730011
+  mean_rank_corr_vs_025: 0.8451256860977354
+  mean_raw_corr_vs_046b: 0.9858805962737706
+  mean_rank_corr_vs_046b: 0.8509618158107565
+  mean_raw_corr_vs_026: 0.985714423360578
+  mean_rank_corr_vs_026: 0.7471294540638359
   mean_raw_corr_vs_053: null
   mean_rank_corr_vs_053: null
   mean_raw_corr_vs_054: null
@@ -290,21 +290,23 @@ result:
   decision_single: null
 
 post_blend_benchmark:
-  executed: false
+  executed: true
   benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
   mode: null
   stack_change:
-    type: null
-    description: null
+    type: avg,NM,HC,lr,ridge
+    description: >
+      avg,NM -> 018,024(046b),025,026,037,039,041,048,051,052,053,054,055
+      HC,lr,ridge -> '024', '025', '026', '037', '048', '051', '053', '055'
   results:
-    nelder_mead_cv: null
-    hill_climb_cv: null
-    stack_lr_cv: null
-    equal_avg_cv: null
-    ridge_cv: null
-    public_lb_nelder_mead: null
-    public_lb_hill_climb: null
-    public_lb_stack_lr: null
+    nelder_mead_cv: 0.980249
+    hill_climb_cv: 0.980548
+    stack_lr_cv: 0.980165
+    equal_avg_cv: 0.980122
+    ridge_cv: 0.977344
+    public_lb_nelder_mead: 0.97922
+    public_lb_hill_climb: 0.97909
+    public_lb_stack_lr: 0.97962
     public_lb_equal_avg: null
     public_lb_ridge: null
   interpretation: >
