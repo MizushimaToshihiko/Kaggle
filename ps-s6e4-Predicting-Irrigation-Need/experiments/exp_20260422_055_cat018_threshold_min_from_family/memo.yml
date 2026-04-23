@@ -296,7 +296,7 @@ post_blend_benchmark:
   stack_change:
     type: avg,NM,HC,lr,ridge
     description: >
-      avg,NM -> 018,024(046b),025,026,037,039,041,048,051,052,053,054,055
+      avg,NM -> 018,024(046b),025,026,037,048,051,052,053,054,055
       HC,lr,ridge -> '024', '025', '026', '037', '048', '051', '053', '055'
   results:
     nelder_mead_cv: 0.980249
