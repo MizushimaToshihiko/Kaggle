@@ -1,0 +1,295 @@
+experiment:
+  id: exp_20260423_056_cat018_threshold_min_from_family_ch_params_for_gpu
+  title: CatBoost 018-family threshold-min sibling with GPU-default-gap parameter fix
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: multiclass balanced accuracy
+  status: done
+
+objective:
+  summary: >
+    055 の feature pipeline と学習骨格を完全に維持したまま、
+    CatBoost の GPU 側で CPU/GPU の暗黙 default 差分になりやすい
+    パラメータだけを明示指定して挙動を確認する。:contentReference[oaicite:0]{index=0}
+    目的は新しい family を作ることではなく、
+    055 の弱さが threshold-min 自体によるものなのか、
+    それとも GPU 側 default 差分の影響を含んでいたのかを切り分けること。
+  success_criteria:
+    - raw_cv_ba を取得
+    - refined_biased_cv を取得
+    - public_lb を記録
+    - oof / pred を保存
+    - 055 と単体CV/LBを比較
+    - 条件を満たした場合のみ blend benchmark に投入する
+
+positioning:
+  experiment_type: check_only
+  intended_role: diagnostic
+  base_family: catboost
+  base_reference: >
+    exp_20260422_055_cat018_threshold_min_from_family をそのまま親実験とする。
+    055 の
+    threshold-min
+    orig prior
+    pairwise combinations
+    pairwise TE
+    CatBoost
+    3-stage bias refine
+    を維持し、
+    CatBoost の GPU 関連パラメータだけを明示変更する。:contentReference[oaicite:1]{index=1}
+  why_now: >
+    055 は単体・blend ともに mainline 更新に失敗したが、
+    CatBoost は GPU で CPU と暗黙 default がズレる可能性があるため、
+    055 の評価を確定させる前にその差分だけを切り分ける価値がある。
+    ここで feature や bias まで同時に変えると何が効いたか分からなくなるため、
+    今回はパラメータ差分のみに限定する。
+
+gate_rule_before_blend:
+  summary: >
+    この実験は本来 diagnostic であり、
+    単体の改善が見えない限り blend benchmark には入れない。
+    以下のどちらかを満たした場合のみ
+    ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+    に追加で確認する。
+  conditions:
+    - 055 より単体CVまたはLBが明確に改善する
+    - 055 と同等以上で、かつ current stack で NM / HC / LogReg のいずれかに変換される余地がある
+  otherwise: >
+    条件を満たさない場合、この実験は diagnostic close とし、
+    blend benchmark には入れない。
+
+blend_benchmark_policy:
+  benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+  role: >
+    056 は基本的に単体診断用。
+    055 を置き換える価値が出た場合のみ、同 notebook 上で差し替え評価する。
+  add_or_replace_rule: >
+    追加ではなく、055 の差し替え候補としてのみ扱う。
+  keep_hold_drop_rule: >
+    055 を単体または blend で明確に上回らない限り keep しない。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  orig_path: /kaggle/input/datasets/miadul/irrigation-water-requirement-prediction-dataset/irrigation_prediction.csv
+  target: Irrigation_Need
+  id_col: id
+  target_map:
+    Low: 0
+    Medium: 1
+    High: 2
+
+model:
+  family: catboost
+  estimator: CatBoostClassifier
+  seed: 42
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  params:
+    iterations: 3000
+    learning_rate: 0.03
+    depth: 8
+    grow_policy: SymmetricTree
+    loss_function: MultiClass
+    eval_metric: TotalF1:average=Macro
+    random_seed: 42
+    task_type: GPU_or_CPU_auto
+    devices: "0"
+    verbose: 500
+    early_stopping_rounds: 150
+    bootstrap_type: Bernoulli
+    subsample: 0.8
+    border_count: 254
+    verbose: 500
+  params_changed_from_055:
+    - bootstrap_type: Bernoulli
+    - subsample: 0.8
+    - border_count: 254
+  notes: >
+    055 からの変更点は CatBoost パラメータのみ。
+    feature pipeline や bias search は不変。:contentReference[oaicite:2]{index=2}
+
+features:
+  base_features:
+    source: 055 / 018 threshold-min family
+  preprocessing:
+    summary: >
+      055 と同一。
+      add_physical_features
+      + threshold-min
+      + TE_ORIG on ALL_BASE_PLUS
+      + pairwise combinations on ALL_BASE_PLUS
+      + pairwise columns の in-fold multiclass TE
+      + CatBoost
+      + 046b-style 3-stage bias refine。:contentReference[oaicite:3]{index=3}
+  engineered_features:
+    - ET_proxy
+    - water_deficit
+    - soil_quality
+    - TE_ORIG_* on ALL_BASE_PLUS
+    - pairwise combinations from ALL_BASE_PLUS
+    - soil_lt_25
+    - temp_gt_30
+    - rain_lt_300
+    - wind_gt_10
+    - deotte_high_score
+    - deotte_low_score
+    - deotte_score
+    - score_band
+  notes: >
+    今回は feature 側を一切いじらない。
+    threshold-min の是非ではなく、GPU 側 CatBoost 設定差分の切り分けが目的。
+
+orig_and_pair_policy:
+  orig_target_prior:
+    enabled: true
+    source_columns: ALL_BASE_PLUS
+  pairwise_combinations:
+    enabled: true
+    source_columns: ALL_BASE_PLUS
+  pair_te:
+    enabled: true
+    method: sklearn TargetEncoder
+    target_type: multiclass
+    cv: 3
+    random_state: 42
+    fit_scope: outer_train_plus_orig_only
+    applied_to:
+      - accepted pairwise columns only
+
+postprocess:
+  bias_refine:
+    enabled: true
+    method: 046b-style 3-stage log-prob-space bias refine
+    stage1:
+      range: [-1.0, 1.0]
+      step: 0.1
+    stage2:
+      width: 0.10
+      step: 0.02
+    stage3:
+      width: 0.02
+      step: 0.005
+  notes: >
+    bias search は 055 と完全同一。
+    ここを変えないことで、CatBoost 側設定変更の効果だけを見る。:contentReference[oaicite:4]{index=4}
+
+hypothesis:
+  main: >
+    056 は 055 より raw CV / biased CV / LB が少し改善する可能性がある。
+    ただし大幅改善は期待しない。
+    改善するなら、055 の一部弱さは threshold-min 自体ではなく
+    GPU default 差分由来だったと解釈できる。
+  failure_pattern: >
+    055 と同等か悪化する。
+    その場合、055 の弱さは GPU 側 default 差分よりも、
+    018 family に threshold-min を足したこと自体に起因すると考える。
+
+comparison_plan:
+  single_compare_against:
+    - 018
+    - 055
+    - 025
+    - 046b
+    - 054
+  metrics:
+    - raw_cv_ba
+    - refined_biased_cv
+    - public_lb
+  blend_compare:
+    enabled: conditional
+    notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+    mode: replace
+    target_strategies:
+      - nelder_mead
+      - hill_climb
+      - stack_lr
+      - equal_avg
+    note: >
+      055 を明確に上回った場合のみ差し替え評価。
+      056 を新規追加はしない。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260423_056_cat018_threshold_min_from_family_ch_params_for_gpu
+  files_expected:
+    - oof_cat_pairwise_te_threshold_min_from_family_ch_params_for_gpu_proba.npy
+    - pred_cat_pairwise_te_threshold_min_from_family_ch_params_for_gpu_proba.npy
+    - oof_cat_pairwise_te_threshold_min_from_family_ch_params_for_gpu_proba_biased.npy
+    - pred_cat_pairwise_te_threshold_min_from_family_ch_params_for_gpu_proba_biased.npy
+    - best_class_bias.npy
+    - oof_cat_pairwise_te_threshold_min_from_family_ch_params_for_gpu_labels.csv
+    - cv_result.json
+    - feature_columns.csv
+    - feature_importance.csv
+    - summary.csv
+    - submission_cat_pairwise_te_threshold_min_from_family_ch_params_for_gpu.csv
+  save_for_blend_benchmark:
+    - biased oof
+    - biased pred
+    - exact npy file names for npy-files dataset
+
+decision_rule:
+  single_model:
+    keep: >
+      055 を単体CVまたはLBで明確に上回る。
+    hold: >
+      055 とほぼ同等だが、再現性確認として意味がある。
+    drop: >
+      055 と同等未満で、置換価値がない。
+  after_blend_benchmark:
+    keep: >
+      055 差し替えで current stack の CV / LB を改善する。
+    hold: >
+      単体は改善したが blend で差が出ない。
+    drop: >
+      単体も blend も 055 を更新しない。
+
+result:
+  raw_cv_ba: null
+  refined_biased_cv: null
+  public_lb: null
+  delta_raw_cv_vs_055: null
+  delta_biased_cv_vs_055: null
+  delta_public_lb_vs_055: null
+  decision_single: null
+
+post_blend_benchmark:
+  executed: false
+  benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
+  mode: replace
+  replaced_model: 055
+  results:
+    nelder_mead_cv: null
+    hill_climb_cv: null
+    stack_lr_cv: null
+    equal_avg_cv: null
+    public_lb_nelder_mead: null
+    public_lb_hill_climb: null
+    public_lb_stack_lr: null
+    public_lb_equal_avg: null
+  interpretation: >
+    056 が 055 の単なるパラメータ差分に留まるのか、
+    実際に stack 改善へ変換されるのかを書く。
+  decision_after_blend: null
+
+operational_notes:
+  summary: >
+    056 は 055 の feature 実験ではない。
+    CatBoost の GPU 側 default 差分を明示指定する診断実験。
+    したがって、パラメータ以外は一切動かさない。
+  current_global_rule: >
+    切り分け実験では変更点を 1 つに限定する。
+    今回は CatBoost の GPU 関連パラメータのみ。
+
+risk:
+  - 055 とほぼ同じ結果になり、診断実験としてしか意味が残らない可能性
+  - slight improvement が public だけのノイズで終わる可能性
+  - CPU 実行時には GPU 側差分の検証としては不完全になる可能性
+
+next_action:
+  - 056 を実行して raw_cv_ba / refined_biased_cv / public_lb を記録
+  - 055 との差分を整理
+  - 055 を明確に上回る場合のみ blend notebook で差し替え確認
+  - 改善しなければ Cat018 threshold-min 系は close
