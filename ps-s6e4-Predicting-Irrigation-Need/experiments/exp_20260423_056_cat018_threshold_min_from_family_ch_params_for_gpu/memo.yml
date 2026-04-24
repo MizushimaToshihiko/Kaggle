@@ -247,32 +247,34 @@ decision_rule:
       単体も blend も 055 を更新しない。
 
 result:
-  raw_cv_ba: null
-  refined_biased_cv: null
-  public_lb: null
-  delta_raw_cv_vs_055: null
-  delta_biased_cv_vs_055: null
-  delta_public_lb_vs_055: null
-  decision_single: null
+  raw_cv_ba: 0.977540
+  refined_biased_cv: 0.979425
+  public_lb: 0.97791
+  delta_raw_cv_vs_055: +0.000481(055:0.977059)
+  delta_biased_cv_vs_055: +0.000886(055:0.978539)
+  delta_public_lb_vs_055: +0.00024(055:0.97767)
+  decision_single: keep
 
 post_blend_benchmark:
-  executed: false
+  executed: true
   benchmark_notebook: ps-s6e4-safe-blend-v7-two-stage-ridge.ipynb
   mode: replace
   replaced_model: 055
   results:
-    nelder_mead_cv: null
-    hill_climb_cv: null
-    stack_lr_cv: null
-    equal_avg_cv: null
-    public_lb_nelder_mead: null
-    public_lb_hill_climb: null
-    public_lb_stack_lr: null
+    nelder_mead_cv: 0.980451
+    hill_climb_cv: 0.980619
+    stack_lr_cv: 0.980424
+    equal_avg_cv: 0.980265
+    public_lb_nelder_mead: 0.97968
+    public_lb_hill_climb: 0.97978
+    public_lb_stack_lr: 0.97940
     public_lb_equal_avg: null
   interpretation: >
     056 が 055 の単なるパラメータ差分に留まるのか、
     実際に stack 改善へ変換されるのかを書く。
-  decision_after_blend: null
+  decision_after_blend: keep
+  note: >
+    CVは過去最高となったがPublic LBはあまり伸びなかった
 
 operational_notes:
   summary: >
