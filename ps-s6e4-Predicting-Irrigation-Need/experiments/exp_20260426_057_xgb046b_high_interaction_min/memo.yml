@@ -1,0 +1,197 @@
+experiment:
+  id: exp_20260426_057_xgb046b_high_interaction_min
+  title: xgb046b_high_interaction_min
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: multiclass balanced accuracy
+  status: done
+
+objective:
+  summary: >
+    046b backbone をできるだけ維持したまま、High class の分離改善を狙う
+    interaction FE を最小追加する。
+    目的は単体主力の更新候補になるか、または S3-LR への補助素材になるかを確認すること。
+  success_criteria:
+    - raw_cv を取得
+    - refined_biased_cv を取得
+    - oof / pred を保存
+    - 046b / 025 / 018 / 056 との相関を確認
+    - S3-LR に追加する価値があるか判断する
+
+positioning:
+  experiment_type: update_candidate
+  intended_role: main_replacement_or_aux_material
+  base_family: xgb
+  base_reference: exp_20260416_046b_xgb_digit_orderedte_min_with_optuna_params
+  why_now: >
+    S0/S1/S2/S3/S4 の圧縮比較で、HC/NMのCVはPublic LBに変換されにくく、
+    一方で S3-LR が LB 0.98014 と比較的良好だった。
+    既存blendの重み調整より、High class 境界を直接改善する特徴量差分を確認する方が
+    期待値が高いと判断した。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  target: Irrigation_Need
+  id_col: id
+  target_map:
+    Low: 0
+    Medium: 1
+    High: 2
+
+model:
+  family: xgb
+  estimator: XGBClassifier
+  seed: 2026
+  cv:
+    scheme: KFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  params:
+    source: /kaggle/input/datasets/mizushimatoshihiko/npy-files/best_params.json
+    base: 046b XGB_PARAMS
+    n_estimators: 2500
+    early_stopping_rounds: 100
+    enable_categorical: true
+    tree_method: hist
+    max_bin: 10000
+    device: cuda_if_available_else_cpu
+
+features:
+  base_features:
+    source: 046b backbone
+    blocks:
+      - raw numerical features
+      - original categorical features
+      - digit features k=-4..3 for each numeric column
+      - category remap with train frequency >= 5
+      - OrderedTE for FEATURES
+      - class-weighted training
+  added_features:
+    high_flags:
+      - moisture_low: Soil_Moisture < 25
+      - rain_low: Rainfall_mm < 300
+      - temp_high: Temperature_C > 30
+      - wind_high: Wind_Speed_kmh > 10
+    high_categorical_interactions:
+      - moisture_low_x_stage
+      - rain_low_x_stage
+      - temp_high_x_stage
+      - wind_high_x_mulching
+      - irrigation_x_source
+      - crop_x_stage
+      - high_pressure_score
+    high_numeric_interactions:
+      - moisture_deficit
+      - rain_deficit
+      - temp_excess
+      - wind_excess
+  notes: >
+    046b骨格を壊さないことを最優先する。
+    category remap は1回だけ実行する。
+    CVループ内では CATS + HIGH_CATS をdropする。
+    High interaction以外の新規大規模FEは追加しない。
+
+training:
+  class_weight:
+    enabled: true
+    method: balanced sample_weight
+  target_encoding:
+    method: OrderedTE
+    smoothing_a: 1
+    target_cols: FEATURES
+  bias_refine:
+    enabled: true
+    method: 046b three-stage grid search
+    stage1:
+      range: [-1.0, 1.0]
+      step: 0.1
+    stage2:
+      width: 0.10
+      step: 0.02
+    stage3:
+      width: 0.02
+      step: 0.005
+
+comparison_plan:
+  single_compare_against:
+    - 046b
+    - 025
+    - 018
+    - 048
+    - 056
+  metrics:
+    - raw_cv
+    - refined_biased_cv
+    - public_lb
+    - mean_raw_corr
+    - mean_rank_corr
+  blend_compare:
+    enabled: true
+    condition: >
+      refined_biased_cv が 0.9800 以上、または 046b/025 との rank_corr が十分に下がる場合のみ実施。
+    target_stack:
+      base: S3-LR
+      models:
+        - 046b
+        - 018
+        - 025
+        - 056
+        - 057
+    target_strategies:
+      - stack_lr
+      - equal_avg
+      - hill_climb_reference
+      - nelder_mead_reference
+
+artifacts:
+  outdir: /kaggle/working/exp_20260426_057_xgb046b_high_interaction_min
+  files_expected:
+    - oof_xgb046b_high_interaction_min_biased.npy
+    - pred_xgb046b_high_interaction_min_biased.npy
+    - best_class_bias_refined.npy
+    - submission_xgb046b_high_interaction_min.csv
+    - cv_result.json
+  optional_files:
+    - corr_vs_existing_oof.csv
+    - feature_columns.csv
+
+decision_rule:
+  single_model:
+    keep: >
+      refined_biased_cv が 046b に近い、または上回り、Public LB も 0.980 近辺以上。
+    hold: >
+      単体は046b未満でも、046b/025/056とのrank相関が低く、S3-LR補助素材として意味がある。
+    drop: >
+      refined_biased_cv が弱く、相関も高い。特に046b近縁劣化なら即close。
+  after_blend:
+    keep: >
+      S3-LR に追加して CV または Public LB が改善する。
+    hold: >
+      LB更新はしないが、Private耐性候補として残す理由がある。
+    drop: >
+      S3-LRに入れても更新せず、HC/NMだけがCV上昇する。
+
+expected_interpretation:
+  if_success: >
+    High class 境界を直接狙う interaction FE が有効。
+    046b派生の新補助素材として S3-LR 系に投入する。
+  if_failure: >
+    046b近傍のFE追加では限界。
+    High interaction追加はcloseし、新素材探索またはMikhail depth=2 CatBoost相関確認へ移る。
+
+result:
+  raw_cv: null
+  refined_biased_cv: null
+  public_lb: null
+  best_bias: null
+  mean_raw_corr_vs_046b: null
+  mean_rank_corr_vs_046b: null
+  mean_raw_corr_vs_025: null
+  mean_rank_corr_vs_025: null
+  mean_raw_corr_vs_018: null
+  mean_rank_corr_vs_018: null
+  mean_raw_corr_vs_056: null
+  mean_rank_corr_vs_056: null
+  decision: null
+  notes: null
