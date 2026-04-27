@@ -1,0 +1,178 @@
+experiment:
+  id: exp_20260427_058_mikhail_cat2_8_repro
+  title: mikhail_cat2_8_repro
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: multiclass balanced accuracy
+  status: done
+
+objective:
+  summary: >
+    Mikhail共有コードのCAT2_8相当を再学習し、OOF/predをnpy化する。
+    目的は単体更新ではなく、S3+057 LR に追加したときの補助素材価値を確認すること。
+  success_criteria:
+    - raw CVを取得
+    - class multiplier最適化後CVを取得
+    - thresholded_norm OOF/predを保存
+    - 既存主力との相関を確認
+    - S3+057+058 LRでPublic LB改善有無を確認
+
+positioning:
+  experiment_type: external_shared_code_repro
+  intended_role: low_to_mid_corr_aux_material
+  base_reference: Mikhail shared code, CAT2_8
+  why_now: >
+    S3+057 LRがPublic LB 0.98021まで改善したため、次は同系統の046b派生ではなく、
+    depth=2 CatBoost系の外部共有コード素材を追加し、LRで効くか確認する。
+    HC/NMはCV過大傾向があるため、提出判断はLR中心とする。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  original_path: /kaggle/input/datasets/miadul/irrigation-water-requirement-prediction-dataset/irrigation_prediction.csv
+  target: Irrigation_Need
+  id_col: id
+  target_map:
+    Low: 0
+    Medium: 1
+    High: 2
+
+model:
+  family: CatBoost
+  model_name: CAT2_8
+  estimator: CatBoostClassifier
+  seed: 42
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 10
+    shuffle: true
+    random_state: 42
+  params:
+    loss_function: MultiClass
+    eval_metric: MultiClass
+    n_estimators: 20000
+    learning_rate: 0.05
+    depth: 2
+    min_data_in_leaf: 32
+    l2_leaf_reg: 0.11885685483992375
+    bagging_temperature: 0.5220357703483831
+    random_strength: 0.33867398942718874
+    early_stopping_rounds: 100
+    task_type: GPU
+    verbose: 500
+
+features:
+  source: Mikhail shared preprocessing
+  blocks:
+    - original dataset target mean features for categorical and numerical columns
+    - numeric qcut bin features
+    - numeric-to-category features
+    - categorical pair-combination features
+    - logit_low/logit_med/logit_high formula features
+    - digit features k=-4..3
+    - rounded numeric features
+    - frequency encoding for original categorical columns
+    - sklearn TargetEncoder with target_type=multiclass, cv=10
+  notes: >
+    共有コードではCAT2_8単体が有効。
+    共有コード名はxgb_lgb_cat_ensだが、今回の再現対象はCatBoost depth=2単体。
+    TargetEncoder後、元カテゴリ列をdropし、数値化済み特徴とTE特徴をCatBoostに入力する。
+
+training:
+  class_weight:
+    enabled: true
+    method: compute_sample_weight(class_weight="balanced")
+  threshold_optimization:
+    enabled: true
+    method: differential_evolution
+    bounds:
+      - [0.0, 3.0]
+      - [0.0, 3.0]
+      - [0.0, 3.0]
+    seed: 42
+    maxiter: 1000
+    tol: 1.0e-8
+  output_variant:
+    raw: raw probability
+    thresholded: class-multiplied probability
+    thresholded_norm: class-multiplied then row-normalized probability
+  preferred_for_blend: thresholded_norm
+
+reference_scores:
+  shared_code:
+    CAT2_8_raw_cv: 0.9781817
+    thresholded_cv: 0.9800430
+    best_weights:
+      - 1.01946599
+      - 0.77661234
+      - 2.71450934
+    public_lb_reference: 0.98011
+
+comparison_plan:
+  single_compare_against:
+    - 018
+    - 046b
+    - 025
+    - 056
+    - 057
+  blend_compare:
+    enabled: true
+    target_stack:
+      base: S3_plus_057
+      models:
+        - 046b
+        - 018
+        - 025
+        - 056
+        - 057
+        - 058
+    primary_strategy: stack_lr
+    reference_strategies:
+      - equal_avg
+      - hill_climb_reference_only
+      - nelder_mead_reference_only
+      - ridge_reference_only
+  notes: >
+    HC/NMはCV過大傾向が強いため、提出判断には使わない。
+    058はLR用の補助素材として評価する。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260427_058_mikhail_cat2_8_repro
+  files_expected:
+    - oof_mikhail_cat2_8_raw.npy
+    - pred_mikhail_cat2_8_raw.npy
+    - oof_mikhail_cat2_8_thresholded.npy
+    - pred_mikhail_cat2_8_thresholded.npy
+    - oof_mikhail_cat2_8_thresholded_norm.npy
+    - pred_mikhail_cat2_8_thresholded_norm.npy
+    - submission_mikhail_cat2_8_thresholded_norm.csv
+    - cv_result.json
+    - corr_vs_existing_oof.csv
+
+decision_rule:
+  keep: >
+    S3+057+058 LRでPublic LBがS3+057 LRの0.98021を上回る、
+    または相関が十分に低くPrivate耐性候補として意味がある。
+  hold: >
+    単体Public LBやCVは弱いが、既存主力とrank corrが低く、LRで悪化しない。
+  drop: >
+    相関が高く、S3+057+058 LRで改善しない。
+    特にHC/NMだけCV改善する場合はdrop寄り。
+
+result:
+  raw_cv: null
+  thresholded_cv: null
+  thresholded_norm_cv: null
+  public_lb: null
+  best_weights: null
+  mean_raw_corr_vs_046b: null
+  mean_rank_corr_vs_046b: null
+  mean_raw_corr_vs_025: null
+  mean_rank_corr_vs_025: null
+  mean_raw_corr_vs_056: null
+  mean_rank_corr_vs_056: null
+  mean_raw_corr_vs_057: null
+  mean_rank_corr_vs_057: null
+  blend_s3_057_058_lr_cv: null
+  blend_s3_057_058_lr_public_lb: null
+  decision: null
+  notes: null
