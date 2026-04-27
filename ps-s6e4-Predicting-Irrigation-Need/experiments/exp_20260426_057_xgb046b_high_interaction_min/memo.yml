@@ -181,10 +181,10 @@ expected_interpretation:
     High interaction追加はcloseし、新素材探索またはMikhail depth=2 CatBoost相関確認へ移る。
 
 result:
-  raw_cv: null
-  refined_biased_cv: null
-  public_lb: null
-  best_bias: null
+  raw_cv: 0.977587
+  refined_biased_cv: 0.9797185002067851
+  public_lb: 0.97992
+  best_bias: [-1.1050000000000004, -1.0, 0.36499999999999977]
   mean_raw_corr_vs_046b: null
   mean_rank_corr_vs_046b: null
   mean_raw_corr_vs_025: null
