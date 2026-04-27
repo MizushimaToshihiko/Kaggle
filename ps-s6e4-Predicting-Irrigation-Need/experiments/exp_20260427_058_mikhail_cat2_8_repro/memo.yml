@@ -159,20 +159,21 @@ decision_rule:
     特にHC/NMだけCV改善する場合はdrop寄り。
 
 result:
-  raw_cv: null
-  thresholded_cv: null
-  thresholded_norm_cv: null
-  public_lb: null
-  best_weights: null
-  mean_raw_corr_vs_046b: null
-  mean_rank_corr_vs_046b: null
-  mean_raw_corr_vs_025: null
-  mean_rank_corr_vs_025: null
-  mean_raw_corr_vs_056: null
-  mean_rank_corr_vs_056: null
-  mean_raw_corr_vs_057: null
-  mean_rank_corr_vs_057: null
-  blend_s3_057_058_lr_cv: null
-  blend_s3_057_058_lr_public_lb: null
-  decision: null
-  notes: null
+  raw_cv: 0.9780582138011317
+  thresholded_cv: 0.9798411062610158
+  thresholded_norm_cv: 0.9798411062610158
+  public_lb: 0.97917
+  best_weights: [0.85315427 0.89558784 2.72593577]
+  mean_raw_corr_vs_046b: 0.993082
+  mean_rank_corr_vs_046b: 0.959005
+  mean_raw_corr_vs_025: 0.993405
+  mean_rank_corr_vs_025: 0.951290
+  mean_raw_corr_vs_056: 0.990957
+  mean_rank_corr_vs_056: 0.948458
+  mean_raw_corr_vs_057: 0.993444
+  mean_rank_corr_vs_057: 0.961972
+  blend_s3_057_058_lr_cv: 0.980028
+  blend_s3_057_058_lr_public_lb: 0.97969
+  decision: drop
+  notes: >
+    Mikhailコードの完全再現とはいかなかった。細かい原因を調べる時間がありません。
