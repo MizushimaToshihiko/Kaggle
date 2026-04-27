@@ -176,4 +176,4 @@ result:
   blend_s3_057_058_lr_public_lb: 0.97969
   decision: drop
   notes: >
-    Mikhailコードの完全再現とはいかなかった。細かい原因を調べる時間がありません。
+    Mikhailコードの完全再現とはいかなかった。原因が気になるが原因を細かく調べる時間がありません。
