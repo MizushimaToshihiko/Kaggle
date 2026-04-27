@@ -1,0 +1,240 @@
+experiment:
+  id: exp_20260427_060_cat_depth1_formula_min
+  title: cat_depth1_formula_min
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: multiclass balanced accuracy
+  status: done
+
+objective:
+  summary: >
+    既存主力である 046b / 025 / 018 / 056 / 057 とは異なる誤差を作るため、
+    極浅 CatBoost に formula/logit 系の最小特徴だけを与えた補助素材を作る。
+    単体更新ではなく、S3+057 LR に追加したときに Public LB が改善するかを見る。
+  success_criteria:
+    - raw CV を取得
+    - refined biased CV を取得
+    - OOF / pred を npy 保存
+    - 既存主力との相関を確認
+    - S3+057+060 LR の Public LB を確認
+
+positioning:
+  experiment_type: low_correlation_aux_material
+  intended_role: auxiliary_for_lr_stack
+  priority: high
+  base_reference: none
+  why_now: >
+    058 は Mikhail保存済みOOFの再現ではなく、再学習版としては S3+057 LR を悪化させた。
+    private dataset の保存済みOOFは利用できないため、Mikhail再現追跡は打ち切る。
+    次は単体強化ではなく、既存主力と異なる境界を持つ弱素材を作る方が合理的。
+  expected_behavior: >
+    単体CVは高くなくてよい。
+    重要なのは rank correlation が低く、LR stack に入れたときに境界が少し改善すること。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  target: Irrigation_Need
+  id_col: id
+  target_map:
+    Low: 0
+    Medium: 1
+    High: 2
+
+model:
+  family: CatBoost
+  estimator: CatBoostClassifier
+  model_name: cat_depth1_formula_min
+  seed: 42
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  params:
+    loss_function: MultiClass
+    eval_metric: MultiClass
+    iterations: 20000
+    learning_rate: 0.03
+    depth: 1
+    l2_leaf_reg: 8.0
+    random_strength: 1.0
+    bagging_temperature: 0.5
+    border_count: 128
+    early_stopping_rounds: 300
+    task_type: GPU
+    verbose: 500
+    allow_writing_files: false
+
+features:
+  used:
+    raw_features:
+      - raw numerical features
+      - raw categorical features
+    formula_features:
+      - logit_low
+      - logit_med
+      - logit_high
+      - formula_margin_high_low
+      - formula_margin_high_med
+    high_flags:
+      - soil_lt_25
+      - temp_gt_30
+      - rain_lt_300
+      - wind_gt_10
+      - high_pressure_score
+    deficit_excess_features:
+      - moisture_deficit
+      - rain_deficit
+      - temp_excess
+      - wind_excess
+  explicitly_not_used:
+    - TargetEncoder
+    - digit features
+    - pairwise categorical combinations
+    - original target mean features
+    - frequency encoding
+    - high-cardinality interaction expansion
+  notes: >
+    060は既存主力と似せないことが目的。
+    CVを上げるためにTEやdigitを追加すると、046b/025/057近縁素材になりやすいため禁止。
+    CatBoostには元カテゴリをそのまま渡す。
+
+training:
+  class_weight:
+    enabled: true
+    method: compute_sample_weight(class_weight="balanced")
+  cat_features:
+    handling: native_catboost
+  bias_refine:
+    enabled: true
+    method: 046b-style three-stage grid search
+    stage1:
+      range: [-1.0, 1.0]
+      step: 0.1
+    stage2:
+      width: 0.10
+      step: 0.02
+    stage3:
+      width: 0.02
+      step: 0.005
+
+reference_context:
+  current_keep_candidates:
+    - name: S3+057 LR
+      public_lb: 0.98021
+      role: current hedge / insurance candidate
+    - name: 046b
+      raw_cv: 0.978356
+      refined_biased_cv: 0.979870
+      public_lb: 0.97998
+      role: strongest single model
+    - name: 025
+      raw_cv: 0.979227
+      biased_cv: 0.979396
+      public_lb: 0.97981
+      role: stable second single model
+    - name: 056
+      raw_cv: 0.977540
+      refined_biased_cv: 0.979425
+      public_lb: 0.97791
+      role: 055 successor, useful in S3 LR
+  dropped_or_low_priority:
+    - name: 058
+      reason: >
+        Mikhail保存済みOOFはprivate datasetで利用不可。
+        再学習版058は単体LBおよびS3+057+058 LRで悪化したためdrop。
+    - name: S4
+      reason: >
+        048/054/056を詰め込むとCVは上がるがLBが悪化。
+    - name: 054
+      reason: >
+        S2で弱く、HC重みも小さいため優先度低。
+
+comparison_plan:
+  single_compare_against:
+    - 018
+    - 046b
+    - 025
+    - 056
+    - 057
+  correlation_metrics:
+    - mean_raw_corr
+    - mean_rank_corr
+  blend_compare:
+    enabled: true
+    primary_stack:
+      name: S3_plus_057_plus_060
+      models:
+        - 046b
+        - 018
+        - 025
+        - 056
+        - 057
+        - 060
+    primary_strategy: stack_lr
+    reference_strategies:
+      - equal_avg
+      - hill_climb_reference_only
+      - nelder_mead_reference_only
+      - ridge_reference_only
+  notes: >
+    HC/NMはこれまでCV過大傾向が強いため、提出判断には使わない。
+    060の価値判断は、S3+057 LRのPublic LB 0.98021を超えるかどうかを最優先する。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260427_060_cat_depth1_formula_min
+  files_expected:
+    - oof_cat_depth1_formula_min_raw.npy
+    - pred_cat_depth1_formula_min_raw.npy
+    - oof_cat_depth1_formula_min_biased.npy
+    - pred_cat_depth1_formula_min_biased.npy
+    - best_class_bias_refined.npy
+    - submission_cat_depth1_formula_min.csv
+    - cv_result.json
+    - corr_vs_existing_oof.csv
+
+decision_rule:
+  keep: >
+    S3+057+060 LRで Public LB が 0.98021 を上回る。
+    または、単体CVは低くても既存主力との rank corr が十分低く、LRで悪化しない。
+  hold: >
+    単体は弱いが、rank corr vs 046b/025/056/057 が 0.95 以下で、
+    private耐性用の異質素材として残す意味がある。
+  drop: >
+    相関が高く、S3+057+060 LRでも改善しない。
+    HC/NMだけCVが上がる場合もdrop寄り。
+  thresholds:
+    acceptable_single_cv_floor: 0.977
+    useful_rank_corr_target: 0.95
+    current_lr_lb_to_beat: 0.98021
+
+risk_notes:
+  - >
+    depth=1のため単体CVは低く出る可能性が高い。
+    ただし、それ自体は失敗ではない。
+  - >
+    TEやdigitを足したくなるが、それをすると既存主力に近づき、この実験の意味がなくなる。
+  - >
+    CatBoost GPUは多少の非決定性があり得るため、微差CVだけで判断しない。
+  - >
+    Public LBに一度も変換されない場合、formula-only CatBoost系は打ち切る。
+
+result:
+  raw_cv: null
+  refined_biased_cv: null
+  public_lb: null
+  best_bias: null
+  mean_raw_corr_vs_018: null
+  mean_rank_corr_vs_018: null
+  mean_raw_corr_vs_046b: null
+  mean_rank_corr_vs_046b: null
+  mean_raw_corr_vs_025: null
+  mean_rank_corr_vs_025: null
+  mean_raw_corr_vs_056: null
+  mean_rank_corr_vs_056: null
+  mean_raw_corr_vs_057: null
+  mean_rank_corr_vs_057: null
+  blend_s3_057_060_lr_cv: null
+  blend_s3_057_060_lr_public_lb: null
+  decision: null
+  notes: null
