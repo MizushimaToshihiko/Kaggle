@@ -234,7 +234,9 @@ result:
   mean_rank_corr_vs_056: 0.933228
   mean_raw_corr_vs_057: 0.974151
   mean_rank_corr_vs_057: 0.940344
-  blend_s3_057_060_lr_cv: null
-  blend_s3_057_060_lr_public_lb: null
-  decision: null
-  notes: null
+  blend_s3_057_060_lr_cv: 0.980012
+  blend_s3_057_060_lr_public_lb: 0.98021
+  decision: keep
+  notes: >
+    CVが同じで、LBが以前提出したstack_lr:0.98021よりもLB降順で下に来たのでより低いが、
+    こちらの方が多様性がありそうなので、提出枠の一つをこちらにします
