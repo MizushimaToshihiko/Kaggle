@@ -263,22 +263,26 @@ risk_notes:
     060bはFE差分ではないため、060と高度に近い場合は片方だけ残す。
 
 result:
-  raw_cv: null
-  refined_biased_cv: null
-  public_lb: null
-  best_bias: null
-  mean_raw_corr_vs_018: null
-  mean_rank_corr_vs_018: null
-  mean_raw_corr_vs_046b: null
-  mean_rank_corr_vs_046b: null
-  mean_raw_corr_vs_025: null
-  mean_rank_corr_vs_025: null
-  mean_raw_corr_vs_056: null
-  mean_rank_corr_vs_056: null
-  mean_raw_corr_vs_057: null
-  mean_rank_corr_vs_057: null
-  mean_raw_corr_vs_060: null
-  mean_rank_corr_vs_060: null
+  raw_cv: 0.9712866029568512
+  refined_biased_cv: 0.9716779701333916
+  public_lb: 0.96860
+  best_bias: [
+    -1.12,
+    -0.8,
+    -0.5200000000000001
+  ]
+  mean_raw_corr_vs_018: 0.964635
+  mean_rank_corr_vs_018: 0.906574
+  mean_raw_corr_vs_046b: 0.975484
+  mean_rank_corr_vs_046b: 0.943468
+  mean_raw_corr_vs_025: 0.975416
+  mean_rank_corr_vs_025: 0.933644
+  mean_raw_corr_vs_056: 0.974031
+  mean_rank_corr_vs_056: 0.933959
+  mean_raw_corr_vs_057: 0.974456
+  mean_rank_corr_vs_057: 0.940373
+  mean_raw_corr_vs_060: 0.999654
+  mean_rank_corr_vs_060: 0.998789
   blend_s3_057_060b_lr_cv: null
   blend_s3_057_060b_lr_public_lb: null
   blend_s3_057_060_060b_lr_cv: null
