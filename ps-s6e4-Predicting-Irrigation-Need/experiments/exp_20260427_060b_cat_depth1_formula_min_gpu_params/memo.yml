@@ -1,0 +1,287 @@
+experiment:
+  id: exp_20260427_060b_cat_depth1_formula_min_gpu_params
+  title: cat_depth1_formula_min_gpu_params
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: multiclass balanced accuracy
+  status: done
+
+objective:
+  summary: >
+    060_cat_depth1_formula_min の特徴量構成は維持したまま、
+    CatBoost GPU向けのパラメータ差分のみを加えて、低相関補助素材としての挙動を比較する。
+    目的は単体更新ではなく、S3+057 LR または S3+057+060 LR に追加したときに
+    Public LB が改善するかを確認すること。
+  success_criteria:
+    - raw CV を取得
+    - refined biased CV を取得
+    - OOF / pred を npy 保存
+    - 060および既存主力との相関を確認
+    - S3+057+060b LR の Public LB を確認
+    - 必要なら S3+057+060+060b LR も確認
+
+positioning:
+  experiment_type: parameter_ablation
+  intended_role: auxiliary_for_lr_stack
+  base_parent: exp_20260427_060_cat_depth1_formula_min
+  priority: medium
+  why_now: >
+    060は単体CV/LBは弱いが、既存主力とのrank corrが低く、
+    S3+057 LRのPublic LB 0.98021を維持したため、低相関保険素材としてkeepになった。
+    060bでは特徴量は一切変えず、CatBoost GPU時の分割・サンプリング挙動だけを変え、
+    低相関性を保ったまま安定化または微改善できるか確認する。
+  expected_behavior: >
+    単体CVの改善は参考値にすぎない。
+    最重要なのは、060と同程度の低相関性を維持しつつ、LR stackで悪化しないかどうか。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  target: Irrigation_Need
+  id_col: id
+  target_map:
+    Low: 0
+    Medium: 1
+    High: 2
+
+model:
+  family: CatBoost
+  estimator: CatBoostClassifier
+  model_name: cat_depth1_formula_min_gpu_params
+  seed: 42
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  params:
+    loss_function: MultiClass
+    eval_metric: MultiClass
+    iterations: 20000
+    learning_rate: 0.03
+    depth: 1
+    l2_leaf_reg: 8.0
+    random_strength: 1.0
+    border_count: 254
+    bootstrap_type: Bernoulli
+    subsample: 0.8
+    early_stopping_rounds: 300
+    task_type: GPU
+    verbose: 500
+    allow_writing_files: false
+  changed_from_060:
+    - border_count: 128 -> 254
+    - bootstrap_type: default -> Bernoulli
+    - subsample: null -> 0.8
+    - bagging_temperature: 0.5 -> removed
+  unchanged_from_060:
+    - depth
+    - learning_rate
+    - l2_leaf_reg
+    - random_strength
+    - feature_engineering
+    - cv_scheme
+    - class_weight
+    - bias_refine
+
+features:
+  used:
+    raw_features:
+      - raw numerical features
+      - raw categorical features
+    formula_features:
+      - logit_low
+      - logit_med
+      - logit_high
+      - formula_margin_high_low
+      - formula_margin_high_med
+    high_flags:
+      - soil_lt_25
+      - temp_gt_30
+      - rain_lt_300
+      - wind_gt_10
+      - high_pressure_score
+    deficit_excess_features:
+      - moisture_deficit
+      - rain_deficit
+      - temp_excess
+      - wind_excess
+  explicitly_not_used:
+    - TargetEncoder
+    - digit features
+    - pairwise categorical combinations
+    - original target mean features
+    - frequency encoding
+    - high-cardinality interaction expansion
+  notes: >
+    060bは060のパラメータ差分実験であり、FE差分実験ではない。
+    TEやdigitを追加すると別実験になるため禁止。
+    CatBoostには元カテゴリをそのまま渡す。
+
+training:
+  class_weight:
+    enabled: true
+    method: compute_sample_weight(class_weight="balanced")
+  cat_features:
+    handling: native_catboost
+  bias_refine:
+    enabled: true
+    method: 046b-style three-stage grid search
+    stage1:
+      range: [-1.0, 1.0]
+      step: 0.1
+    stage2:
+      width: 0.10
+      step: 0.02
+    stage3:
+      width: 0.02
+      step: 0.005
+
+reference_context:
+  current_keep_candidates:
+    - name: 053_lgb025_threshold_min_from_family
+      role: highest Public LB single candidate / mainline candidate
+      note: >
+        CVは控えめだがPublic LBが最も高い場合、最終提出の本命枠候補。
+    - name: S3+057 LR
+      public_lb: 0.98021
+      role: hedge candidate
+    - name: S3+057+060 LR
+      public_lb: 0.98021
+      role: low-correlation hedge candidate
+    - name: 060
+      raw_cv: 0.970958
+      refined_biased_cv: 0.971590
+      public_lb: 0.96874
+      role: low-correlation auxiliary material
+      decision: keep
+  dropped_or_low_priority:
+    - name: 058
+      reason: >
+        Mikhail保存済みOOFはprivate datasetで利用不可。
+        再学習版058は単体LBおよびS3+057+058 LRで悪化したためdrop。
+    - name: 054
+      reason: >
+        S2で弱く、優先度低。
+    - name: S4
+      reason: >
+        048/054/056を詰め込むとCVは上がるがLBが悪化。
+
+comparison_plan:
+  single_compare_against:
+    - 018
+    - 046b
+    - 025
+    - 056
+    - 057
+    - 060
+  correlation_metrics:
+    - mean_raw_corr
+    - mean_rank_corr
+  blend_compare:
+    enabled: true
+    primary_stacks:
+      - name: S3_plus_057_plus_060b
+        models:
+          - 046b
+          - 018
+          - 025
+          - 056
+          - 057
+          - 060b
+        primary_strategy: stack_lr
+      - name: S3_plus_057_plus_060_plus_060b
+        models:
+          - 046b
+          - 018
+          - 025
+          - 056
+          - 057
+          - 060
+          - 060b
+        primary_strategy: stack_lr
+        run_condition: >
+          060bが060と十分に異なる、または060b単体・相関・CVのいずれかで確認価値がある場合のみ。
+    reference_strategies:
+      - equal_avg
+      - hill_climb_reference_only
+      - nelder_mead_reference_only
+      - ridge_reference_only
+  notes: >
+    HC/NMはこれまでCV過大傾向が強いため、提出判断には使わない。
+    060bの採否はLR stackのPublic LBと060との相関で判断する。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260427_060b_cat_depth1_formula_min_gpu_params
+  files_expected:
+    - oof_cat_depth1_formula_min_gpu_params_raw.npy
+    - pred_cat_depth1_formula_min_gpu_params_raw.npy
+    - oof_cat_depth1_formula_min_gpu_params_biased.npy
+    - pred_cat_depth1_formula_min_gpu_params_biased.npy
+    - best_class_bias_refined.npy
+    - submission_cat_depth1_formula_min_gpu_params.csv
+    - cv_result.json
+    - corr_vs_existing_oof.csv
+  optional_files:
+    - pairwise_corr_summary.csv
+    - blend_strategy_results.csv
+    - oof_stack_lr.npy
+    - pred_stack_lr.npy
+    - submission_stack_lr.csv
+
+decision_rule:
+  keep: >
+    S3+057+060b LR、または S3+057+060+060b LRで Public LB が 0.98021 を上回る。
+    または、060と同程度の低相関性を維持し、LRで悪化しない。
+  hold: >
+    Public LBは同等だが、060とは異なる相関構造を持ち、
+    private耐性用の異質素材として残す意味がある。
+  prefer_060_over_060b: >
+    060bの単体CVが上がっても、既存主力との相関が上がる、
+    あるいはLR stackでPublic LBが悪化する場合。
+  prefer_060b_over_060: >
+    060bが060と同程度のrank corrを維持し、
+    S3+057系LRでPublic LBを改善または同等上位にする場合。
+  drop: >
+    相関が高くなり、S3+057系LRでも改善しない。
+    HC/NMだけCVが上がる場合もdrop寄り。
+  thresholds:
+    useful_rank_corr_target: 0.95
+    current_lr_lb_to_beat: 0.98021
+    single_cv_is_reference_only: true
+
+risk_notes:
+  - >
+    CatBoost GPUのパラメータ変更により単体CVが上がっても、
+    それがPublic LBやprivate耐性につながるとは限らない。
+  - >
+    border_count=254で既存CatBoost系に近づく可能性がある。
+    その場合は060の方が保険素材として有利。
+  - >
+    Bernoulli bootstrapにより予測の揺れ方が変わるが、
+    低相関性が失われた場合は採用しない。
+  - >
+    060bはFE差分ではないため、060と高度に近い場合は片方だけ残す。
+
+result:
+  raw_cv: null
+  refined_biased_cv: null
+  public_lb: null
+  best_bias: null
+  mean_raw_corr_vs_018: null
+  mean_rank_corr_vs_018: null
+  mean_raw_corr_vs_046b: null
+  mean_rank_corr_vs_046b: null
+  mean_raw_corr_vs_025: null
+  mean_rank_corr_vs_025: null
+  mean_raw_corr_vs_056: null
+  mean_rank_corr_vs_056: null
+  mean_raw_corr_vs_057: null
+  mean_rank_corr_vs_057: null
+  mean_raw_corr_vs_060: null
+  mean_rank_corr_vs_060: null
+  blend_s3_057_060b_lr_cv: null
+  blend_s3_057_060b_lr_public_lb: null
+  blend_s3_057_060_060b_lr_cv: null
+  blend_s3_057_060_060b_lr_public_lb: null
+  decision: null
+  notes: null
