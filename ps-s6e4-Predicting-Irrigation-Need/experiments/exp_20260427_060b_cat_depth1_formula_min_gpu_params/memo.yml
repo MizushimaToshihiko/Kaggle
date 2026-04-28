@@ -283,9 +283,17 @@ result:
   mean_rank_corr_vs_057: 0.940373
   mean_raw_corr_vs_060: 0.999654
   mean_rank_corr_vs_060: 0.998789
-  blend_s3_057_060b_lr_cv: null
-  blend_s3_057_060b_lr_public_lb: null
+  blend_s3_057_060b_lr_cv: 0.980012
+  blend_s3_057_060b_lr_public_lb: 0.98021
   blend_s3_057_060_060b_lr_cv: 0.980012
   blend_s3_057_060_060b_lr_public_lb: 0.98021
-  decision: null
-  notes: null
+  decision: keep
+  notes: >
+    blendコードについてHC実行時に下記で060bも060もweightが0なので、avg,NM以外は実質どちらもS3+057
+    	model	weight
+      0	046b	0.478261
+      3	056	0.304348
+      1	018	0.086957
+      2	025	0.086957
+      4	057	0.043478
+      5	060b	0.000000
