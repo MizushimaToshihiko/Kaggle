@@ -285,7 +285,7 @@ result:
   mean_rank_corr_vs_060: 0.998789
   blend_s3_057_060b_lr_cv: null
   blend_s3_057_060b_lr_public_lb: null
-  blend_s3_057_060_060b_lr_cv: null
-  blend_s3_057_060_060b_lr_public_lb: null
+  blend_s3_057_060_060b_lr_cv: 0.980012
+  blend_s3_057_060_060b_lr_public_lb: 0.98021
   decision: null
   notes: null
