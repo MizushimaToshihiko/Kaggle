@@ -220,20 +220,20 @@ risk_notes:
     Public LBに一度も変換されない場合、formula-only CatBoost系は打ち切る。
 
 result:
-  raw_cv: null
-  refined_biased_cv: null
-  public_lb: null
-  best_bias: null
-  mean_raw_corr_vs_018: null
-  mean_rank_corr_vs_018: null
-  mean_raw_corr_vs_046b: null
-  mean_rank_corr_vs_046b: null
-  mean_raw_corr_vs_025: null
-  mean_rank_corr_vs_025: null
-  mean_raw_corr_vs_056: null
-  mean_rank_corr_vs_056: null
-  mean_raw_corr_vs_057: null
-  mean_rank_corr_vs_057: null
+  raw_cv: 0.970958103592748
+  refined_biased_cv: 0.9715896098214883
+  public_lb: 0.96874
+  best_bias: (np.float64(-1.12), np.float64(-0.8499999999999999), np.float64(-0.585))
+  mean_raw_corr_vs_018: 0.964508
+  mean_rank_corr_vs_018: 0.906975
+  mean_raw_corr_vs_046b: 0.975197
+  mean_rank_corr_vs_046b: 0.943623
+  mean_raw_corr_vs_025: 0.975184
+  mean_rank_corr_vs_025: 0.933865
+  mean_raw_corr_vs_056: 0.973805
+  mean_rank_corr_vs_056: 0.933228
+  mean_raw_corr_vs_057: 0.974151
+  mean_rank_corr_vs_057: 0.940344
   blend_s3_057_060_lr_cv: null
   blend_s3_057_060_lr_public_lb: null
   decision: null
