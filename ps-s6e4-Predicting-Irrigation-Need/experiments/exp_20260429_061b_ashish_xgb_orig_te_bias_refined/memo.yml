@@ -243,4 +243,4 @@ result:
   mean_rank_corr_vs_060: 0.927957
   decision: hold
   notes: >
-    CV,LB
+    CV,LB共に微増したので、単体最高スコアとして提出2つのうち一つに割り当てる
