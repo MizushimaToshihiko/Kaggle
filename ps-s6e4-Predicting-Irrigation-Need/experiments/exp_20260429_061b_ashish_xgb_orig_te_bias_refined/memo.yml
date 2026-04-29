@@ -1,0 +1,246 @@
+experiment:
+  id: exp_20260429_061b_ashish_xgb_orig_te_bias_refined
+  title: ashish_xgb_orig_te_bias_refined
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: multiclass balanced accuracy
+  status: done
+
+objective:
+  summary: >
+    061 Ashish XGB の再学習は行わず、保存済み raw OOF / raw pred に対して
+    bias search を局所的に細分化する後処理実験。
+    目的は 061単体 Public LB 0.98109 を超えるか確認すること。
+  success_criteria:
+    - 061 raw OOF / raw pred を読み込む
+    - 061既存bias近傍で細かいbias refineを行う
+    - refined OOF / pred / submission を保存する
+    - Public LBが061単体 0.98109 を超えるか確認する
+
+positioning:
+  experiment_type: postprocess_only
+  intended_role: mainline_refinement_candidate
+  base_parent: exp_20260428_061_ashish_xgb_orig_te_bias
+  priority: medium
+  why_now: >
+    061単体が Public LB 0.98109 を再現し、現時点の本命枠になった。
+    ただし061の強さは raw CV 0.978266 から bias tuning後 CV 0.980162 への
+    大きな後処理改善に依存している。
+    締切前の低コスト実験として、再学習なしでbias近傍を細かく探索する。
+  expected_behavior: >
+    改善幅はあっても小さい想定。
+    CVが微増してもPublic LBが下がる可能性があるため、
+    採用判断はPublic LBを最優先する。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  target: Irrigation_Need
+  id_col: id
+  target_map:
+    Low: 0
+    Medium: 1
+    High: 2
+
+inputs:
+  parent_experiment: exp_20260428_061_ashish_xgb_orig_te_bias
+  required_files:
+    - oof_ashish_xgb_orig_te_raw.npy
+    - pred_ashish_xgb_orig_te_raw.npy
+  optional_files:
+    - best_class_bias.npy
+  fallback_base_bias:
+    - -1.357
+    - -1.193
+    - 0.0
+  notes: >
+    best_class_bias.npy がnpy dataset内に存在しない場合は、
+    共有コードおよび061再現結果の bias [-1.357, -1.193, 0.0] を使う。
+    High class biasを0.0に固定し、Low/Mediumのみ探索する。
+
+model:
+  family: none
+  estimator: none
+  retraining: false
+  source_model: Ashish XGB
+  source_model_experiment: exp_20260428_061_ashish_xgb_orig_te_bias
+  note: >
+    061bはモデル学習を行わない。
+    既存予測確率に対するlog-probability bias補正のみ。
+
+postprocess:
+  method: local_grid_bias_refine
+  transform: log_probability_plus_bias
+  prediction_rule: argmax(log(probability) + class_bias)
+  class_bias_constraint:
+    fixed_high_bias: 0.0
+    searched_classes:
+      - Low
+      - Medium
+  base_bias_normalization: >
+    読み込んだbase_biasについて、High class biasを基準にして
+    base_bias = base_bias - base_bias[2] とし、Highを0.0に固定する。
+  search:
+    stage1:
+      center: base_bias
+      width: 0.03
+      step: 0.001
+      searched_dimensions:
+        - Low
+        - Medium
+      fixed:
+        High: 0.0
+    stage2:
+      center: stage1_best_bias
+      width: 0.005
+      step: 0.0002
+      searched_dimensions:
+        - Low
+        - Medium
+      fixed:
+        High: 0.0
+  implementation_notes:
+    - log_oof は探索前に一度だけ事前計算する
+    - 内側ループで np.log(np.clip(oof_raw)) を再計算しない
+    - best_bias ではなく stage2_best_bias を最終保存する
+    - cv_result.json の構文崩れに注意する
+
+reference_context:
+  parent_061:
+    raw_cv: 0.978266
+    tuned_cv: 0.980162
+    public_lb: 0.98109
+    role: current main submission candidate
+    best_bias_reference:
+      - -1.357
+      - -1.193
+      - 0.0
+  current_final_submission_plan_before_061b:
+    - slot: 1
+      candidate: 061 Ashish XGB single
+      role: main / highest Public LB
+    - slot: 2
+      candidate: 049 Nelder-Mead 0.98046
+      role: non-061 blend hedge
+  important_note: >
+    061bが061単体のPublic LB 0.98109を超えなければ、
+    最終提出計画は変更しない。
+
+comparison_plan:
+  primary_compare:
+    baseline: 061 Ashish XGB single
+    baseline_public_lb: 0.98109
+    candidate: 061b refined bias submission
+  metrics:
+    - parent_bias_cv
+    - refined_cv
+    - gain_vs_parent_bias
+    - public_lb
+  optional_correlation_check:
+    enabled: true
+    compare_against:
+      - 018
+      - 046b
+      - 025
+      - 053
+      - 056
+      - 057
+      - 060
+    note: >
+      biasだけの変更なので相関は061とほぼ同一になる想定。
+      相関確認は記録用であり、採否の主判断には使わない。
+  no_blend_required: >
+    061bは061単体の置換候補であり、blend素材探索ではない。
+    Public LBが061を上回らない限り、追加blend実験は不要。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260429_061b_ashish_xgb_orig_te_bias_refined
+  files_expected:
+    - oof_ashish_xgb_orig_te_bias_refined.npy
+    - pred_ashish_xgb_orig_te_bias_refined.npy
+    - best_class_bias_refined.npy
+    - submission_ashish_xgb_orig_te_bias_refined.csv
+    - cv_result.json
+  optional_files:
+    - corr_vs_existing_oof.csv
+
+decision_rule:
+  promote:
+    condition: >
+      Public LBが061単体の0.98109を明確に上回る。
+    action: >
+      最終提出1枠目を061から061bへ置換する。
+  keep_parent:
+    condition: >
+      Public LBが061単体以下、または同点でも順位・小数以下で061より弱い。
+    action: >
+      061bはdropまたは記録のみ。最終提出は061単体を維持する。
+  drop:
+    condition: >
+      CVが微増してもPublic LBが下がる。
+    action: >
+      OOF過適合と判断し、061bは採用しない。
+  thresholds:
+    parent_public_lb_to_beat: 0.98109
+    cv_gain_required: reference_only
+    public_lb_is_primary: true
+
+risk_notes:
+  - >
+    bias searchを細かくすると、OOFへの過適合が強くなる可能性がある。
+    CV改善だけで採用してはいけない。
+  - >
+    061はすでにbias tuningで大きく改善しており、
+    追加refineの改善余地は小さい。
+  - >
+    Public LBが同等以下なら、061bは不要。
+  - >
+    061bは061とほぼ同じ予測なので、Private hedgeにはならない。
+    2枠目のNelder-Mead 0.98046とは役割が異なる。
+  - >
+    この実験は暇つぶし寄りの低コスト確認であり、
+    最終提出候補を無理に変えるためのものではない。
+
+result:
+  raw_cv: 0.9782662097040803
+  parent_bias_cv: 0.9801615755373589
+  refined_cv: 0.9801687843616809
+  biased_check: 0.9801687843616808
+  gain_vs_raw: 0.0019025746576005753
+  gain_vs_parent_bias: 0.000007208824321924823
+  base_bias: [
+    -1.3569999933242798,
+    -1.1929999589920044,
+    0
+  ]
+  stage1_best_bias: [
+    -1.347999993324284,
+    -1.1919999589920078,
+    0
+  ]
+  stage2_best_bias: [
+    -1.3473999933242846,
+    -1.1913999589920083,
+    0
+  ]
+  public_lb: 0.98110
+  submission_distribution:
+    Low: 0.590307
+    Medium: 0.371493
+    High: 0.038200
+  mean_raw_corr_vs_018: 0.989579
+  mean_rank_corr_vs_018: 0.946778
+  mean_raw_corr_vs_046b: 0.991481
+  mean_rank_corr_vs_046b: 0.961018
+  mean_raw_corr_vs_025: 0.991522
+  mean_rank_corr_vs_025: 0.949087
+  mean_raw_corr_vs_053: 0.992548
+  mean_rank_corr_vs_053: 0.956728
+  mean_raw_corr_vs_056: 0.992102
+  mean_rank_corr_vs_056: 0.943069
+  mean_raw_corr_vs_057: 0.991397
+  mean_rank_corr_vs_057: 0.964924
+  mean_raw_corr_vs_060: 0.972226
+  mean_rank_corr_vs_060: 0.927957
+  decision: hold
+  notes: >
+    CV,LB
