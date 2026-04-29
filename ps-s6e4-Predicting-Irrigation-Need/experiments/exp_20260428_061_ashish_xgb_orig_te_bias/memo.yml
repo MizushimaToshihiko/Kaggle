@@ -374,32 +374,50 @@ risk_notes:
     まず相関とPublic LBで判断する。
 
 result:
-  raw_cv: null
-  tuned_cv: null
-  biased_check: null
-  gain_bias: null
-  public_lb: null
-  best_bias: null
-  fold_scores: null
+  raw_cv: 0.9782662097040803
+  tuned_cv: 0.9801615755373589
+  biased_check: 0.9801615755373589
+  gain_bias: 0.0018953658332786505
+  public_lb: 0.98109
+  best_bias: [
+    -1.357,
+    -1.193,
+    0
+  ]
+  fold_scores: [
+    0.9771574126806727,
+    0.9776091564568681,
+    0.979566343078158,
+    0.9784631281682387,
+    0.9785347189613055
+  ]
   submission_distribution:
-    Low: null
-    Medium: null
-    High: null
-  mean_raw_corr_vs_018: null
-  mean_rank_corr_vs_018: null
-  mean_raw_corr_vs_046b: null
-  mean_rank_corr_vs_046b: null
-  mean_raw_corr_vs_025: null
-  mean_rank_corr_vs_025: null
-  mean_raw_corr_vs_053: null
-  mean_rank_corr_vs_053: null
-  mean_raw_corr_vs_056: null
-  mean_rank_corr_vs_056: null
-  mean_raw_corr_vs_057: null
-  mean_rank_corr_vs_057: null
-  mean_raw_corr_vs_060: null
-  mean_rank_corr_vs_060: null
-  blend_s3_057_060_061_lr_cv: null
-  blend_s3_057_060_061_lr_public_lb: null
-  decision: null
-  notes: null
+    Low: 0.590293
+    Medium: 0.371504
+    High: 0.038204
+  mean_raw_corr_vs_018: 0.989559
+  mean_rank_corr_vs_018: 0.946777
+  mean_raw_corr_vs_046b: 0.991471
+  mean_rank_corr_vs_046b: 0.960947
+  mean_raw_corr_vs_025: 0.991512
+  mean_rank_corr_vs_025: 0.949017
+  mean_raw_corr_vs_053: 0.992540
+  mean_rank_corr_vs_053: 0.956727
+  mean_raw_corr_vs_056: 0.992101
+  mean_rank_corr_vs_056: 0.943018
+  mean_raw_corr_vs_057: 0.991391
+  mean_rank_corr_vs_057: 0.964873
+  mean_raw_corr_vs_060: 0.972215
+  mean_rank_corr_vs_060: 0.927905
+  blend_s3_057_060_061_lr_cv: 0.980245
+  blend_s3_057_060_061_lr_public_lb: 0.98037
+  decision: hold
+  notes: >
+    Ashish XGB単体は完全再現できた。Blendは下表のとおりCVはAshish XGB単体を上回ったが、
+    Public LBはstack_lrが0.98037,nelder-meadは0.97956と振るわなかった。
+              strategy  cv_score  gain_vs_single_046b  recommended_submit  \
+    0       hill_climb  0.980634             0.000763                True   
+    1      nelder_mead  0.980575             0.000704                True   
+    2        equal_avg  0.980401             0.000530                True   
+    3         stack_lr  0.980245             0.000374               False   
+    4  ridge_two_stage  0.979968             0.000097               False  
