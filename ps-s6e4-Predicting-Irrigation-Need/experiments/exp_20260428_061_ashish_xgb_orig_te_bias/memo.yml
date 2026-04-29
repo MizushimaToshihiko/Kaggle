@@ -1,0 +1,405 @@
+experiment:
+  id: exp_20260428_061_ashish_xgb_orig_te_bias
+  title: ashish_xgb_orig_te_bias
+  competition: PS S6E4 Predicting Irrigation Need
+  metric: multiclass balanced accuracy
+  status: done
+
+objective:
+  summary: >
+    Kaggle共有コード「s6e4-highest-score-xgboost-cv-0-98109」を再現し、
+    単体提出および既存stackへの追加価値を確認する。
+    共有コード上では raw OOF BA 0.978266、bias tuning後 OOF BA 0.980162、
+    notebook title / Public LB文脈では LB 0.98109 が示されている。
+  success_criteria:
+    - raw CVを取得
+    - bias tuning後CVを取得
+    - OOF / predをnpy保存
+    - 単体submissionを作成
+    - Public LB再現性を確認
+    - 既存主力との相関を確認
+    - 必要に応じてS3+057+060+061 LR blendを確認
+
+positioning:
+  experiment_type: external_shared_code_repro
+  intended_role: mainline_candidate_or_blend_material
+  priority: very_high
+  source:
+    url: https://www.kaggle.com/code/rawashishsin/s6e4-highest-score-xgboost-cv-0-98109
+    author: rawashishsin / Ashish Singh Rawat
+    claimed_public_lb: 0.98109
+    code_reported_raw_oof_ba: 0.978266
+    code_reported_tuned_oof_ba: 0.980162
+  why_now: >
+    現在の最有力本命候補は053 LGB単体、保険候補はS3+057+060 LR。
+    ただし共有コードで単体Public LB 0.98109相当のXGBモデルが見つかったため、
+    最終提出候補を更新できる可能性がある。
+    まず単体再現を優先し、LBが再現すれば本命枠へ昇格する。
+  expected_behavior: >
+    CVよりPublic LBが高く出ている可能性があるため、Public適合の疑いはある。
+    ただし、単体LBが本当に0.981前後で再現するなら、提出候補として無視できない。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e4/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e4/test.csv
+  original_path: /kaggle/input/datasets/miadul/irrigation-water-requirement-prediction-dataset/irrigation_prediction.csv
+  target: Irrigation_Need
+  id_col: id
+  target_map:
+    Low: 0
+    Medium: 1
+    High: 2
+  original_data_usage:
+    enabled: true
+    method: >
+      各foldのtrain側にoriginal datasetを結合し、TargetEncoderとXGB学習に利用する。
+    orig_row_weight: 0.5
+    note: >
+      validation foldにはoriginal dataを混ぜない。
+      original dataはfold内train側だけに追加する。
+
+model:
+  family: XGBoost
+  estimator: XGBClassifier
+  model_name: ashish_xgb_orig_te_bias
+  seed: 42
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  params:
+    objective: multi:softprob
+    num_class: 3
+    n_estimators: 2600
+    learning_rate: 0.05
+    max_depth: 3
+    subsample: 0.9
+    colsample_bytree: 0.8
+    max_bin: 1100
+    eval_metric: mlogloss
+    n_jobs: -1
+    random_state: 42
+    device: cuda
+    enable_categorical: true
+
+features:
+  base_columns:
+    categorical:
+      - Soil_Type
+      - Crop_Type
+      - Crop_Growth_Stage
+      - Season
+      - Irrigation_Type
+      - Water_Source
+      - Mulching_Used
+      - Region
+    numerical:
+      - Soil_pH
+      - Soil_Moisture
+      - Organic_Carbon
+      - Electrical_Conductivity
+      - Temperature_C
+      - Humidity
+      - Rainfall_mm
+      - Sunlight_Hours
+      - Wind_Speed_kmh
+      - Field_Area_hectare
+      - Previous_Irrigation_mm
+  top_columns:
+    top_cat_cols:
+      - Crop_Growth_Stage
+      - Mulching_Used
+      - Crop_Type
+    top_num_cols:
+      - Soil_Moisture
+      - Temperature_C
+      - Wind_Speed_kmh
+      - Rainfall_mm
+    top_cols:
+      - Soil_Moisture
+      - Crop_Growth_Stage
+      - Temperature_C
+      - Mulching_Used
+      - Wind_Speed_kmh
+      - Rainfall_mm
+  engineered_blocks:
+    threshold_flags:
+      - soil_lt_25
+      - wind_gt_10
+      - temp_gt_30
+      - rain_lt_300
+    domain_numeric:
+      - moist_rain
+      - moist_temp
+      - moist_wind
+      - ET_proxy
+      - heat_stress
+      - dfrying_force
+      - water_supply
+      - water_dfeficit
+      - soil_quality
+      - moist_x_temp
+      - windf_x_temp
+    formula_features:
+      - high_score
+      - low_score
+      - formula_score
+      - formula_pred
+    ngram_features:
+      - BG_* from top_cat_cols pairs
+      - TG_* from top_cat_cols triple
+    bin_cat_interactions:
+      description: >
+        top_num_colsを5分位bin化し、top_cat_colsとの組み合わせを整数化する。
+      count_expected: 12
+    numeric_category_aggregations:
+      description: >
+        top_cat_colsごとにtop_num_colsの平均、差分、比率を作る。
+      count_expected: 36
+    round_digit_decimal_bin_features:
+      round_features:
+        source_columns:
+          - Soil_Moisture
+          - Temperature_C
+          - Rainfall_mm
+          - Wind_Speed_kmh
+      digit_features:
+        source_columns:
+          - Soil_Moisture
+          - Temperature_C
+          - Rainfall_mm
+          - Wind_Speed_kmh
+      decimal_features:
+        source_columns:
+          - Soil_Moisture
+          - Temperature_C
+          - Wind_Speed_kmh
+          - Rainfall_mm
+      qcut_bin_features:
+        source_columns:
+          - Soil_Moisture
+          - Temperature_C
+          - Wind_Speed_kmh
+          - Rainfall_mm
+    pair_features:
+      description: >
+        top_colsの全ペアを文字列結合し、train/test/orig結合上でfactorizeする。
+      expected_count_from_source: 9
+  target_encoding:
+    enabled: true
+    encoder: sklearn.preprocessing.TargetEncoder
+    target_type: multiclass
+    smooth: auto
+    cv: 5
+    random_state: 42
+    fit_data: fold_train_plus_original
+    transform_data:
+      - fold_train_plus_original
+      - fold_valid
+      - test
+  dropped_after_te:
+    description: >
+      PAIRS + NUM_CAT_AGG_COLS + BIN_CAT_INT_COLS をdropする。
+      これらはTE fit対象には含めるが、最終XGB入力からは外す。
+  notes: >
+    共有コード再現を優先するため、typo風の特徴名 dfrying_force / water_dfeficit も維持する。
+    まずは改善ではなく再現を目的にする。
+
+training:
+  fold_loop:
+    - split train by StratifiedKFold
+    - concat fold_train with original dataset
+    - fit TargetEncoder on fold_train_plus_original
+    - transform fold_train_plus_original / fold_valid / test
+    - drop specified wide interaction columns
+    - compute sample_weight balanced on fold_train_plus_original
+    - multiply original rows weight by 0.5
+    - train XGBClassifier
+    - save fold OOF and averaged test prediction
+  sample_weight:
+    enabled: true
+    method: compute_sample_weight("balanced")
+    original_rows_multiplier: 0.5
+  bias_tuning:
+    enabled: true
+    method: coordinate_descent_on_log_prob
+    steps:
+      - 1.0
+      - 0.5
+      - 0.2
+      - 0.1
+      - 0.05
+      - 0.02
+      - 0.01
+      - 0.005
+      - 0.002
+    source_reference_best_bias:
+      - -1.357
+      - -1.193
+      - 0.0
+    note: >
+      共有コードではlog(probability)+biasでargmaxし、balanced accuracyを最大化している。
+
+reference_context:
+  current_candidates_before_061:
+    - name: 053_lgb025_threshold_min_from_family
+      role: highest Public LB single candidate before 061
+      note: >
+        現時点で最もPublic LBが高い単体候補として本命枠扱い。
+    - name: S3+057+060 LR
+      public_lb: 0.98021
+      role: low-correlation hedge candidate
+    - name: S3+057 LR
+      public_lb: 0.98021
+      role: hedge candidate
+    - name: 060
+      role: low-correlation weak auxiliary
+      decision: keep
+    - name: 060b
+      role: 060 parameter ablation
+      decision: hold_or_drop
+  important_caution: >
+    061はCV 0.980162に対してPublic LB 0.98109が示されているため、
+    Publicに強く噛み合っている可能性がある。
+    ただし最終提出候補としては、単体LB再現結果を優先する。
+
+comparison_plan:
+  phase1_single_reproduction:
+    actions:
+      - run notebook as-is with artifact saving
+      - submit submission_ashish_xgb_orig_te_bias.csv
+      - compare Public LB with reported 0.98109
+    decision:
+      if_public_lb_near_0_981:
+        action: promote_to_main_submission_candidate
+      if_public_lb_below_053:
+        action: demote_to_blend_material
+  phase2_correlation:
+    compare_against:
+      - 018
+      - 046b
+      - 025
+      - 053
+      - 056
+      - 057
+      - 060
+    metrics:
+      - mean_raw_corr
+      - mean_rank_corr
+  phase3_blend:
+    run_condition: >
+      単体LBが強い、または相関が既存主力と十分に違う場合のみ実施。
+    primary_stack:
+      name: S3_plus_057_plus_060_plus_061
+      models:
+        - 046b
+        - 018
+        - 025
+        - 056
+        - 057
+        - 060
+        - 061
+      primary_strategy: stack_lr
+    alternative_stack:
+      name: 053_plus_061_or_core_plus_061
+      note: >
+        061単体が非常に強い場合、blendで薄めるより単体提出を優先する。
+        053との単純比較・補完性確認は任意。
+    reference_strategies:
+      - equal_avg
+      - hill_climb_reference_only
+      - nelder_mead_reference_only
+      - ridge_reference_only
+  notes: >
+    HC/NMはこれまでCV過大傾向があるため、提出判断は単体Public LBとLR stackを優先する。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260428_061_ashish_xgb_orig_te_bias
+  files_expected:
+    - oof_ashish_xgb_orig_te_raw.npy
+    - pred_ashish_xgb_orig_te_raw.npy
+    - oof_ashish_xgb_orig_te_bias.npy
+    - pred_ashish_xgb_orig_te_bias.npy
+    - best_class_bias.npy
+    - submission_ashish_xgb_orig_te_bias.csv
+    - cv_result.json
+    - corr_vs_existing_oof.csv
+  optional_files:
+    - classification_report.txt
+    - confusion_matrix.csv
+    - pairwise_corr_summary.csv
+    - blend_strategy_results.csv
+    - submission_stack_lr.csv
+
+decision_rule:
+  promote_to_mainline:
+    condition: >
+      単体Public LBが0.981前後で再現し、既存最高LB候補を明確に上回る。
+    action: >
+      最終提出2枠の本命枠候補にする。
+  keep_as_blend_material:
+    condition: >
+      単体LBが053未満でも、既存主力との相関が低く、
+      S3+057+060+061 LRで0.98021を上回る。
+  hold:
+    condition: >
+      単体LBは強いがPublic適合疑いが強く、Private hedgeとしては不安が残る。
+      もう一枠をS3+057+060 LRなど構造違いにする。
+  drop:
+    condition: >
+      単体LBが再現せず、blendでも改善せず、相関も高い。
+  thresholds:
+    reported_lb_to_compare: 0.98109
+    current_hedge_lb_to_beat: 0.98021
+    current_mainline_single_to_beat: 053_public_lb
+    cv_is_secondary: true
+
+risk_notes:
+  - >
+    共有コードのnotebook titleはCV 0.98109のように見えるが、
+    添付コード内のCVはraw 0.978266、bias後 0.980162。
+    0.98109はPublic LBとして扱う。
+  - >
+    bias tuningによる改善幅が約+0.0019と大きいため、
+    Publicに噛み合っているだけの可能性がある。
+  - >
+    original datasetをfold trainに混ぜるため、外部データ依存が強い。
+    originalのweightやTE fit範囲を変えると再現性が崩れる可能性がある。
+  - >
+    ブレンドで薄めると単体LBの強さが消える可能性がある。
+    単体LBが再現した場合は単体提出を優先する。
+  - >
+    061のFEは既存046b/025/057と一部重なるが、original混合・FE幅・bias tuningが異なるため、
+    まず相関とPublic LBで判断する。
+
+result:
+  raw_cv: null
+  tuned_cv: null
+  biased_check: null
+  gain_bias: null
+  public_lb: null
+  best_bias: null
+  fold_scores: null
+  submission_distribution:
+    Low: null
+    Medium: null
+    High: null
+  mean_raw_corr_vs_018: null
+  mean_rank_corr_vs_018: null
+  mean_raw_corr_vs_046b: null
+  mean_rank_corr_vs_046b: null
+  mean_raw_corr_vs_025: null
+  mean_rank_corr_vs_025: null
+  mean_raw_corr_vs_053: null
+  mean_rank_corr_vs_053: null
+  mean_raw_corr_vs_056: null
+  mean_rank_corr_vs_056: null
+  mean_raw_corr_vs_057: null
+  mean_rank_corr_vs_057: null
+  mean_raw_corr_vs_060: null
+  mean_rank_corr_vs_060: null
+  blend_s3_057_060_061_lr_cv: null
+  blend_s3_057_060_061_lr_public_lb: null
+  decision: null
+  notes: null
