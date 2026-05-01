@@ -2,7 +2,7 @@ experiment:
   id: exp_20260501_001_lgb_strict_raw_baseline
   competition: PS S6E5 Predicting F1 Pit Stops
   metric: AUC
-  status: submitted_or_completed
+  status: submitted
 
 objective:
   summary: >
@@ -26,9 +26,26 @@ data_check:
   tyre_like_cols:
   time_like_cols:
   original_dataset:
-    found: true_or_false
-    path:
-    notes:
+    found: true
+    path: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+    notes: >
+      Columns
+        - Year – Season of the race
+        - Race – Grand Prix name
+        - Driver – Driver code
+        - LapNumber – Lap index within the race
+        - Position – Driver’s position on that lap
+        - LapTime (s) – Lap time in seconds
+        - Stint – Tire stint number
+        - TyreLife – Number of laps on current tire
+        - Normalized_TyreLife – Tire life normalized within stint
+        - Compound_Encoded – Tire compound
+        - LapTime_Delta – Change in lap time from previous lap
+        - Cumulative_Degradation – Accumulated tire performance drop
+        - Position_Change – Position gain/loss compared to previous lap
+        - RaceProgress – Fraction of race completed (0 → 1)
+        - PitStop – Whether the driver pitted on that lap (0/1)
+        - PitNextLap – Target variable: whether the driver will pit next lap (0/1)
 
 model:
   family: LightGBM
@@ -43,12 +60,20 @@ model:
     leakage_control: no target encoding, no original, no pseudo
 
 result:
-  cv_auc:
-  fold_scores:
-  public_lb:
-  oof_path:
-  pred_path:
-  submission_path:
+  cv_auc: 0.940723081019204
+  fold_scores: [
+    0.9418569729643931,
+    0.9399882194264875,
+    0.9407860524454004,
+    0.9401639493973424,
+    0.940841362387212
+  ]
+  public_lb: 0.94088
+  oof_path: /kaggle/working/exp_20260501_001_lgb_strict_raw_baseline/oof_exp_20260501_001_lgb_strict_raw_baseline.npy
+  pred_path: /kaggle/working/exp_20260501_001_lgb_strict_raw_baseline/pred_exp_20260501_001_lgb_strict_raw_baseline.npy
+  submission_path: /kaggle/working/exp_20260501_001_lgb_strict_raw_baseline/submission_exp_20260501_001_lgb_strict_raw_baseline.csv
+  note: >
+    LBはCVに近いか、+α程度となっているようです
 
 decision:
   judgment: keep_as_baseline
