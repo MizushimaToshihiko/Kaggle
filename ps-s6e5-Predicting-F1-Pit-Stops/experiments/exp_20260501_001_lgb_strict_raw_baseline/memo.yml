@@ -1,0 +1,59 @@
+experiment:
+  id: exp_20260501_001_lgb_strict_raw_baseline
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: submitted_or_completed
+
+objective:
+  summary: >
+    S6E5のstrict RAW baselineを作成し、
+    CV AUCとPublic LBの対応を見る。
+    FEを盛る前の基準線としてOOF/predを保存する。
+
+data_check:
+  train_shape:
+  test_shape:
+  sample_submission_shape:
+  id_col:
+  target_col:
+  target_distribution:
+  missing_summary:
+  categorical_cols:
+  numerical_cols:
+  race_like_cols:
+  driver_team_like_cols:
+  lap_stint_pit_like_cols:
+  tyre_like_cols:
+  time_like_cols:
+  original_dataset:
+    found: true_or_false
+    path:
+    notes:
+
+model:
+  family: LightGBM
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  features:
+    type: RAW
+    encoding: OrdinalEncoder for categorical
+    leakage_control: no target encoding, no original, no pseudo
+
+result:
+  cv_auc:
+  fold_scores:
+  public_lb:
+  oof_path:
+  pred_path:
+  submission_path:
+
+decision:
+  judgment: keep_as_baseline
+  next_action:
+    - run CatBoost strict RAW baseline
+    - compare CV/Public LB
+    - inspect artifact columns
+    - then create RAW/LOG/DIGIT variants
