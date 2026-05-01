@@ -3,7 +3,7 @@ experiment:
   title: CatBoost strict RAW baseline
   competition: PS S6E5 Predicting F1 Pit Stops
   metric: AUC
-  status: completed
+  status: submitted
   created_at: 2026-05-01
 
 objective:
@@ -117,11 +117,17 @@ model:
     random_state: 42
 
 result:
-  cv_auc: null
-  fold_scores: []
-  fold_best_iterations: []
-  public_lb: null
-  train_time: null
+  cv_auc: 0.9485020378244504
+  fold_scores: [
+    0.9495223944826923,
+    0.9474257131896614,
+    0.9486724350007573,
+    0.9479074974156053,
+    0.9489950784969443
+  ]
+  fold_best_iterations: [4999, 4997, 4997, 4997, 4996]
+  public_lb: 0.94797
+  train_time: 2h 54m 43s
   notes_after_run: >
     実行後にCV、fold score、Public LB、001との差分を記載する。
 
