@@ -1,0 +1,204 @@
+experiment:
+  id: exp_20260501_002_cat_strict_raw_baseline
+  title: CatBoost strict RAW baseline
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
+  created_at: 2026-05-01
+
+objective:
+  summary: >
+    S6E5のCatBoost strict RAW baselineを作成する。
+    exp_20260501_001_lgb_strict_raw_baseline と同じRAW特徴量・同じ5fold CVで、
+    LightGBM baselineとの相対性能、CV/LB対応、カテゴリ列の扱いに対するCatBoostの適性を確認する。
+  purpose:
+    - LightGBM RAW baselineとの比較
+    - CatBoostを今後の主軸候補にする価値があるか確認
+    - OOF/predを保存し、後続blend台の初期素材にする
+  success_criteria:
+    - CV AUCを取得
+    - fold別AUCを取得
+    - Public LBを記録
+    - oof/pred/submissionを保存
+    - 001 LightGBM baselineと比較する
+
+data:
+  competition_data:
+    train_path: /kaggle/input/playground-series-s6e5/train.csv
+    test_path: /kaggle/input/playground-series-s6e5/test.csv
+    sample_submission_path: /kaggle/input/playground-series-s6e5/sample_submission.csv
+  original_data:
+    dataset: aadigupta1601/f1-strategy-dataset-pit-stop-prediction
+    note: >
+      original dataset は competition Data ページで案内されている。
+      ただし本実験ではまだ使用しない。
+      Normalized_TyreLife は original には存在するが、competition train/test からは意図的に削除されているため、
+      mainline baseline には入れない。
+  id_col: id
+  target_col: PitNextLap
+  target_type: binary
+  target_distribution:
+    train:
+      fill_after_run: true
+  schema_notes:
+    - train/test は id を除き同じ特徴量構成
+    - original dataset とのschema確認は別実験 001b_original_schema_check で行う
+    - Compound_Encoded ではなく original 側も Compound である可能性が高いが、実読み込みで確認する
+
+features:
+  feature_set: RAW
+  used_features:
+    - Driver
+    - Compound
+    - Race
+    - Year
+    - PitStop
+    - LapNumber
+    - Stint
+    - TyreLife
+    - Position
+    - LapTime (s)
+    - LapTime_Delta
+    - Cumulative_Degradation
+    - RaceProgress
+    - Position_Change
+  categorical_features:
+    - Driver
+    - Compound
+    - Race
+    - Year
+  numerical_features:
+    - PitStop
+    - LapNumber
+    - Stint
+    - TyreLife
+    - Position
+    - LapTime (s)
+    - LapTime_Delta
+    - Cumulative_Degradation
+    - RaceProgress
+    - Position_Change
+  preprocessing:
+    categorical:
+      - object/category columns are passed to CatBoost as categorical features
+      - missing categorical values are filled with __MISSING__
+    numerical:
+      - no scaling
+      - no log transform
+      - no digit features
+      - no target encoding
+      - no original priors
+  leakage_control:
+    - no target encoding
+    - no original dataset
+    - no pseudo label
+    - no Normalized_TyreLife
+    - no future-looking stint normalization
+
+model:
+  family: CatBoost
+  estimator: CatBoostClassifier
+  task: binary classification
+  params:
+    loss_function: Logloss
+    eval_metric: AUC
+    iterations: 5000
+    learning_rate: 0.03
+    depth: 6
+    l2_leaf_reg: 3.0
+    random_seed: 42
+    early_stopping_rounds: 300
+    verbose: 300
+    allow_writing_files: false
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+
+result:
+  cv_auc: null
+  fold_scores: []
+  fold_best_iterations: []
+  public_lb: null
+  train_time: null
+  notes_after_run: >
+    実行後にCV、fold score、Public LB、001との差分を記載する。
+
+comparison:
+  baseline_reference:
+    id: exp_20260501_001_lgb_strict_raw_baseline
+    model: LightGBM
+    cv_auc: 0.940723
+    public_lb: 0.94088
+  compare_points:
+    - CV AUCが001を上回るか
+    - Public LBが001を上回るか
+    - fold stdが001より大きくないか
+    - CatBoostがカテゴリ列 Driver / Compound / Race / Year をうまく扱えているか
+    - OOF相関が001と高すぎるか、別素材になりうるか
+
+artifacts:
+  outdir: /kaggle/working/exp_20260501_002_cat_strict_raw_baseline
+  expected_files:
+    - oof_exp_20260501_002_cat_strict_raw_baseline.npy
+    - pred_exp_20260501_002_cat_strict_raw_baseline.npy
+    - submission_exp_20260501_002_cat_strict_raw_baseline.csv
+    - cv_result.json
+    - feature_columns.csv
+  save_for_blend: true
+
+column_hypothesis:
+  Driver: >
+    ドライバー固有の戦略傾向というより、team/strategy/車性能/役割の代理変数として効く可能性がある。
+  Compound: >
+    HARD/MEDIUM/SOFT の劣化速度差を表す重要カテゴリ。
+    後続では Compound x TyreLife, Compound x Cumulative_Degradation を試す価値が高い。
+  Race: >
+    サーキット特性、周回数、戦略傾向、デグラデーション傾向の代理変数。
+  Year: >
+    連続数値というよりカテゴリ扱いが自然。
+  LapNumber: >
+    ピットウィンドウやレース進行の代理。
+    後続では lap bin や RaceProgress との関係を見る。
+  Stint: >
+    戦略段階を表す重要特徴。
+    数値扱いとカテゴリ扱いの両方を試す価値がある。
+  TyreLife: >
+    大きいほど次周ピットしやすい可能性が高い。
+    単体より Compound x TyreLife が本命。
+  Position: >
+    絶対順位より上位/中団/下位binやPosition_Changeとの組み合わせが効く可能性。
+  LapTime_s: >
+    絶対値はRace差が大きいため、後続ではRace内平均との差やdriver/race平均との差が候補。
+  LapTime_Delta: >
+    ピット周辺の異常挙動を拾う可能性がある。
+    ただしPitStop直後の影響や他車状況も混ざるため過信しない。
+  Cumulative_Degradation: >
+    大きいほどピットしやすい可能性。
+    CompoundやTyreLifeとのinteractionが候補。
+  RaceProgress: >
+    レース進行度。終盤ではピット率が下がる可能性。
+  Position_Change: >
+    順位変動は原因と結果が混ざりやすいため、仮説扱いに留める。
+  PitStop: >
+    直近でピットしたかを表す強い特徴の可能性。
+    PitStop=1なら次周連続ピットは少ない可能性がある。
+  Normalized_TyreLife: >
+    original datasetには存在するが、competition側では意図的に削除されている。
+    予測をtrivialにする危険列としてmainlineでは使用しない。
+
+decision:
+  judgment: pending
+  keep_condition:
+    - CVまたはPublic LBが001 LightGBM baselineを明確に上回る
+    - 001と近い性能で、OOF相関が少しでも低くblend素材になる
+  hold_condition:
+    - 単体は001未満だが、CatBoost特有の別人格が見える
+  drop_condition:
+    - CV/LBともに001より明確に弱く、OOF相関も高い
+  next_action_after_run:
+    - 001とのCV/LB比較
+    - 001とのOOF相関確認
+    - 001b_original_schema_check
+    - 003_lgb_safe_fe_min または 003_lgb_original_prior_min_without_normalized を検討
