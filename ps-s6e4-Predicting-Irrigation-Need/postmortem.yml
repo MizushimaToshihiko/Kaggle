@@ -1,0 +1,16 @@
+PS S6E4 final result:
+Final rank: 471 / 4316
+Selected best private: 0.98021
+
+Unselected private best:
+S7 LR private 0.98088 / public 0.98010
+S81 LR private 0.98078 / public 0.98016
+
+Main failure:
+Final submission selection over-weighted high Public LB single model 061.
+061 single Public 0.98109 was likely public-fit.
+Best private solutions were LR stacks using 061b inside broader S5/S8 style stacks.
+
+Future rule:
+When a late high-public single model appears, do not select it alone without also considering its LR-stack version.
+Reserve one final slot for stable LR blend even if its Public LB is lower.
