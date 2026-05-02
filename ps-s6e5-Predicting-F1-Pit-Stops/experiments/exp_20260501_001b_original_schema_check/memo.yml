@@ -1,0 +1,236 @@
+experiment:
+  id: exp_20260501_001b_original_schema_check
+  title: Original dataset schema and Normalized_TyreLife check
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: schema_check
+  status: done
+  created_at: 2026-05-01
+
+objective:
+  summary: >
+    competition train/test と公式案内の original dataset
+    aadigupta1601/f1-strategy-dataset-pit-stop-prediction の列対応、分布差、
+    target分布、Normalized_TyreLife の危険度を確認する。
+    本実験ではモデル学習・OOF/pred作成・提出は行わない。
+  purpose:
+    - original dataset の実列名を確定する
+    - Compound か Compound_Encoded かを確認する
+    - original に Normalized_TyreLife が存在するか確認する
+    - train/test/original のschema差分を確認する
+    - original と competition train の target率・主要特徴量分布差を確認する
+    - original prior min without Normalized_TyreLife に進むべきか判断する
+  success_criteria:
+    - selected original csv path を確定
+    - train_only_vs_original を記録
+    - original_only_vs_train を記録
+    - common columns を記録
+    - dtype/missing/nunique比較を保存
+    - categorical value rate比較を保存
+    - numeric distribution比較を保存
+    - target分布比較を保存
+    - Normalized_TyreLife danger summary を保存
+    - exact row overlap summary を保存
+
+data:
+  competition_data:
+    train_path: /kaggle/input/playground-series-s6e5/train.csv
+    test_path: /kaggle/input/playground-series-s6e5/test.csv
+    sample_submission_path: /kaggle/input/playground-series-s6e5/sample_submission.csv
+  original_data:
+    dataset: aadigupta1601/f1-strategy-dataset-pit-stop-prediction
+    expected_paths:
+      - /kaggle/input/f1-strategy-dataset-pit-stop-prediction
+      - /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction
+    selected_original_path: null
+    note: >
+      Kaggle competition Data page によれば、competition train/test は
+      F1 strategy dataset に inspired されたデータであり、
+      feature distributions are close to, but not exactly the same と説明されている。
+      また Normalized_TyreLife は予測を trivial にするため意図的に削除されている。
+  id_col: id
+  target_col: PitNextLap
+  danger_col: Normalized_TyreLife
+
+baseline_context:
+  exp_20260501_001_lgb_strict_raw_baseline:
+    model: LightGBM
+    cv_auc: 0.940723
+    public_lb: 0.94088
+    role: >
+      初期LGB RAW baseline。
+  exp_20260501_002_cat_strict_raw_baseline:
+    model: CatBoost
+    cv_auc: 0.9485020378244504
+    public_lb: 0.94797
+    role: >
+      現時点の主軸baseline。
+  exp_20260501_003_lgb_compound_tyrelife_min:
+    model: LightGBM
+    cv_auc: 0.9413109
+    public_lb: 0.94150
+    judgment: hold
+    role: >
+      Compound/TyreLife系FEの小幅改善確認。
+  exp_20260501_004_lgb_lap_race_time_norm_min:
+    model: LightGBM
+    cv_auc: 0.9416811403305019
+    public_lb: 0.94166
+    judgment: hold
+    role: >
+      Race/Driver相対化FEの小幅改善確認。
+      LGB系では003より前進したが、002 CatBoostには遠い。
+
+checks:
+  csv_discovery:
+    description: >
+      /kaggle/input 以下のcsvを列挙し、competition csv以外からoriginal候補を抽出する。
+    output_file: original_csv_candidates.csv
+  schema_comparison:
+    description: >
+      train/test/originalの列名を比較し、train_only_vs_original、
+      original_only_vs_train、common_train_originalを記録する。
+    expected_ideal_result:
+      train_only_vs_original: []
+      original_only_vs_train:
+        - Normalized_TyreLife
+    output_files:
+      - schema_summary.json
+      - train_only_vs_original.csv
+      - original_only_vs_train.csv
+  dtype_missing_nunique:
+    description: >
+      共通列について dtype / missing / nunique を train/test/original で比較する。
+    output_file: dtype_missing_nunique_comparison.csv
+  categorical_value_rate:
+    description: >
+      categorical-like columns について、train/test/original の値分布差を比較する。
+      Driver / Compound / Race / Year / LapNumber / PitStop / Position / Stint などを確認する。
+    output_file: categorical_value_rate_comparison.csv
+  numeric_distribution:
+    description: >
+      numeric common columns について、mean/std/min/quantile/max を train/test/original で比較する。
+      特に TyreLife, LapTime, LapTime_Delta, Cumulative_Degradation, RaceProgress, Position_Change を確認する。
+    output_file: numeric_distribution_comparison.csv
+  target_distribution:
+    description: >
+      competition train と original の PitNextLap 比率を比較する。
+    output_file: target_distribution_summary.json
+  original_target_priors:
+    description: >
+      original と competition train のカテゴリ別 PitNextLap率を比較する。
+      original prior min を作る価値と危険度を見る。
+    output_file: original_vs_train_target_priors_by_category.csv
+  normalized_tyrelife_danger:
+    description: >
+      original の Normalized_TyreLife について、
+      targetとの相関、TyreLifeとの相関、Race×Driver×Stint内の
+      TyreLife/stint_max proxy との相関を見る。
+      これは使用するためではなく、危険度を確認するためのEDA。
+    output_files:
+      - normalized_tyrelife_danger_summary.json
+      - normalized_tyrelife_target_rate_by_bin.csv
+      - normalized_tyrelife_proxy_inspection_sample.csv
+  exact_row_overlap:
+    description: >
+      train/test/original の共通特徴量で exact row overlap を確認する。
+      competition data は original に inspired された合成データなので、完全一致は多くない想定。
+    output_file: row_overlap_summary.json
+
+leakage_policy:
+  normalized_tyrelife:
+    mainline_use: false
+    proxy_use: false
+    reason: >
+      competition側で意図的に削除されており、predictionをtrivialにする列と説明されている。
+      直接使用も、test全体やstint最終TyreLifeを使った再構成もmainlineでは禁止扱い。
+  original_dataset:
+    mainline_use: pending
+    allowed_candidate_usage:
+      - original target prior without Normalized_TyreLife
+      - original category-level/group-level aggregate features
+      - original distribution comparison
+    risky_usage:
+      - Normalized_TyreLife
+      - Normalized_TyreLife proxy
+      - original rowsをそのままtrainへ重み付き結合すること
+      - train/test分布差が大きい列の強いprior
+  target_encoding:
+    note: >
+      本実験ではtarget encodingはしない。
+      後続でcompetition train targetを使う場合はfold内fitを徹底する。
+
+result:
+  selected_original_path: null
+  train_shape: null
+  test_shape: null
+  original_shape: null
+  schema:
+    train_only_vs_original: null
+    original_only_vs_train: null
+    common_train_original_count: null
+    has_normalized_tyrelife_in_original: null
+    has_normalized_tyrelife_in_train: null
+    has_normalized_tyrelife_in_test: null
+    compound_column_name_in_original: null
+  target_distribution:
+    competition_train_class_0_rate: null
+    competition_train_class_1_rate: null
+    original_class_0_rate: null
+    original_class_1_rate: null
+    abs_class_1_rate_diff: null
+  normalized_tyrelife:
+    exists: null
+    corr_with_target: null
+    corr_with_TyreLife: null
+    corr_with_naive_TyreLife_div_stint_max_by_Race_Driver_Stint: null
+    target_rate_by_bins_summary: null
+  row_overlap:
+    exact_train_rows_found_in_original: null
+    exact_test_rows_found_in_original: null
+    exact_train_rows_found_in_original_rate: null
+    exact_test_rows_found_in_original_rate: null
+  distribution_notes: >
+    実行後に、originalとcompetition train/testで差が大きい列を記載する。
+  prior_notes: >
+    実行後に、original prior min に進めるかを記載する。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260501_001b_original_schema_check
+  expected_files:
+    - check_result.json
+    - schema_summary.json
+    - original_csv_candidates.csv
+    - train_only_vs_original.csv
+    - original_only_vs_train.csv
+    - dtype_missing_nunique_comparison.csv
+    - categorical_value_rate_comparison.csv
+    - numeric_distribution_comparison.csv
+    - target_distribution_summary.json
+    - original_vs_train_target_priors_by_category.csv
+    - normalized_tyrelife_danger_summary.json
+    - normalized_tyrelife_target_rate_by_bin.csv
+    - normalized_tyrelife_proxy_inspection_sample.csv
+    - row_overlap_summary.json
+  creates_oof: false
+  creates_prediction: false
+  creates_submission: false
+  save_for_blend: false
+
+decision:
+  judgment: pending
+  proceed_to_original_prior_min_condition:
+    - original_only_vs_train が Normalized_TyreLife のみ、または列対応が明確である
+    - Compound列名が competition と original で一致、または安全に対応表を作れる
+    - target率が大きく乖離していない
+    - 主要特徴量の分布差が極端ではない
+    - Normalized_TyreLifeを除外したoriginal priorなら安全に試せる
+  stop_original_usage_condition:
+    - originalとcompetition train/testのschema差が大きい
+    - target率や主要特徴量分布が大きく異なる
+    - カテゴリ値の対応が曖昧
+    - Normalized_TyreLife由来の情報を除外すると使える情報が乏しい
+  next_action_after_run:
+    - check_result.json と schema_summary.json を確認
+    - Normalized_TyreLife はmainline禁止扱いを維持
+    - 条件が良ければ 006_original_prior_min_without_normalized を作る
+    - 条件が悪ければ 005_cat_safe_fe_min を先に進める
