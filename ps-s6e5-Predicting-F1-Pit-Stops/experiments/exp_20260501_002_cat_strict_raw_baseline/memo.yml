@@ -131,6 +131,8 @@ result:
   notes_after_run: >
     実行後にCV、fold score、Public LB、001との差分を記載する。
     -> 001との差分:CV+0.007779, LB+0.00709
+    001と002のOOF相関:corr(oof_cat,oof_lgb) = 0.9695990619798982
+    -> 別人格とまでは言えないがある程度低い
 
 comparison:
   baseline_reference:
