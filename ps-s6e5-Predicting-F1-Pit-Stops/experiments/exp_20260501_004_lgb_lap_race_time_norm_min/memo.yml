@@ -351,24 +351,15 @@ artifacts:
   save_for_blend: true
 
 decision:
-  judgment: pending
-  keep_condition:
-    - 001 LGB RAW baselineをCV/LBで明確に上回る
-    - 003 LGB Compound系FEをCV/LBで上回る
-    - added features が feature importance 上位に入る
-    - 002 CatBoost RAWと相関が少しでもズレ、blendでAUCが改善する
-  hold_condition:
-    - 001/003より少し改善するが002には遠い
-    - 単体は弱いが002との相関が十分に低い
-    - added featuresの一部が効いており、CatBoost版やXGB版で再利用価値がある
-  drop_condition:
-    - 001または003と同等以下
-    - added features がほぼ使われない
-    - 002と高相関で、かつ単体性能も弱い
-    - avg_002_004 が002単体を大きく下回る
-  next_action_after_run:
-    - Public LBを提出して記録
-    - 001/002/003/004のOOF相関確認
-    - avg_002_004, avg_001_002_004, avg_001_002_003_004 のCV確認
-    - 効いた場合は 005_cat_lap_race_time_norm_min を検討
-    - 効かなかった場合は original_schema_check または Race x LapNumber を隔離実験で検討
+  judgment: hold
+  reason: >
+    004は001 LGB RAW baselineおよび003 LGB Compound系FEをCV/LBともに更新した。
+    Race/Driver相対化とTyreLife/RaceProgress系interactionはLGBMに対して一定の効果がある。
+    一方で、002 CatBoost RAW baselineにはCV/LBともに大きく届かず、
+    avg_002_004も002単体を下回った。
+    したがって、現時点では主軸候補でも強いblend素材でもなく、
+    LGB系の部品候補としてholdする。
+  next_action:
+    - 004をそのままCatBoostへ移植する優先度は中程度
+    - 先に001b_original_schema_checkを実施してoriginalの列差分とNormalized_TyreLifeの扱いを確定する
+    - 次の主実験は002 CatBoost RAWを基準にしたCatBoost safe FE、またはoriginal prior最小版を検討する
