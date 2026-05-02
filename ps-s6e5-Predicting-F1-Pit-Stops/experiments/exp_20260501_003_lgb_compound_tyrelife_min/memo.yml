@@ -1,0 +1,282 @@
+experiment:
+  id: exp_20260501_003_lgb_compound_tyrelife_min
+  title: LightGBM Compound TyreLife minimal safe FE
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
+  created_at: 2026-05-01
+
+objective:
+  summary: >
+    001 LightGBM strict RAW baseline に対して、
+    Compound と TyreLife / Cumulative_Degradation / RaceProgress / Stint の安全な相互作用特徴を最小追加し、
+    LGBM側でCompound系FEが効くかを確認する。
+    目的は002 CatBoost RAWを即座に超えることではなく、
+    001 LGB RAWからの上積みと、002 CatBoost RAWとは異なる残差を作れるかを確認すること。
+  purpose:
+    - LGBM RAW baselineに対するCompound系FEの効果確認
+    - Compound x TyreLife 仮説の最小検証
+    - dry compoundとwet compoundを分けた表現の効果確認
+    - 後続blend用のOOF/pred素材作成
+  success_criteria:
+    - CV AUCを取得
+    - fold別AUCを取得
+    - Public LBを記録
+    - oof/pred/submissionを保存
+    - 001 LGB RAW baselineとのCV/LB差分を確認
+    - 002 CatBoost RAW baselineとのOOF相関を確認
+    - added features の feature importance を確認
+
+data:
+  competition_data:
+    train_path: /kaggle/input/playground-series-s6e5/train.csv
+    test_path: /kaggle/input/playground-series-s6e5/test.csv
+    sample_submission_path: /kaggle/input/playground-series-s6e5/sample_submission.csv
+  original_data:
+    dataset: aadigupta1601/f1-strategy-dataset-pit-stop-prediction
+    used: false
+    note: >
+      original dataset は competition Data ページで案内されているが、
+      本実験ではまだ使用しない。
+      Normalized_TyreLife は original には存在するが、competition train/test から意図的に削除されている。
+      本実験では Normalized_TyreLife proxy や stint終了周推定は作らない。
+  id_col: id
+  target_col: PitNextLap
+  target_type: binary
+  target_distribution:
+    train:
+      class_0_count: null
+      class_1_count: null
+      class_0_rate: null
+      class_1_rate: null
+  schema_notes:
+    - train/test は id と target を除いて同じ特徴量構成
+    - 欠損は001/002ログ上では全列0
+    - Compound は HARD, MEDIUM, INTERMEDIATE, SOFT, WET の5種類
+    - HARD/MEDIUM/SOFT はdry compoundとして順序化可能
+    - INTERMEDIATE/WET はwet-weather compoundとして別扱いする
+
+baseline_references:
+  exp_20260501_001_lgb_strict_raw_baseline:
+    model: LightGBM
+    feature_set: RAW
+    cv_auc: 0.940723
+    public_lb: 0.94088
+    role: >
+      同一familyの直接比較対象。
+      003は001からCompound系FEでどれだけ改善するかを見る。
+  exp_20260501_002_cat_strict_raw_baseline:
+    model: CatBoost
+    feature_set: RAW
+    cv_auc: 0.9485020378244504
+    public_lb: 0.94797
+    oof_corr_vs_001: 0.9695990619798982
+    role: >
+      現時点の主軸baseline。
+      003は単体で002を超えることより、002とは異なる残差を作れるかを見る。
+
+features:
+  feature_set: compound_tyrelife_min
+  base_features:
+    - Driver
+    - Compound
+    - Race
+    - Year
+    - PitStop
+    - LapNumber
+    - Stint
+    - TyreLife
+    - Position
+    - LapTime (s)
+    - LapTime_Delta
+    - Cumulative_Degradation
+    - RaceProgress
+    - Position_Change
+  categorical_features:
+    - Driver
+    - Compound
+    - Race
+    - Year
+    - LapNumber
+    - PitStop
+    - Position
+    - Stint
+  numerical_base_features:
+    - TyreLife
+    - LapTime (s)
+    - LapTime_Delta
+    - Cumulative_Degradation
+    - RaceProgress
+    - Position_Change
+  added_features:
+    compound_encoding:
+      - Compound_softness_dry
+      - Compound_code_all
+      - Compound_is_dry
+      - Compound_is_wet
+      - Compound_is_hard
+      - Compound_is_medium
+      - Compound_is_soft
+      - Compound_is_intermediate
+      - Compound_is_wet_tyre
+    dry_softness_interactions:
+      - dry_softness_x_TyreLife
+      - dry_softness_x_Cumulative_Degradation
+      - dry_softness_x_RaceProgress
+    dry_wet_interactions:
+      - is_dry_x_TyreLife
+      - is_dry_x_Cumulative_Degradation
+      - is_dry_x_RaceProgress
+      - is_wet_x_TyreLife
+      - is_wet_x_Cumulative_Degradation
+      - is_wet_x_RaceProgress
+    compound_specific_interactions:
+      - Compound_is_hard_x_TyreLife
+      - Compound_is_hard_x_Cumulative_Degradation
+      - Compound_is_hard_x_RaceProgress
+      - Compound_is_medium_x_TyreLife
+      - Compound_is_medium_x_Cumulative_Degradation
+      - Compound_is_medium_x_RaceProgress
+      - Compound_is_soft_x_TyreLife
+      - Compound_is_soft_x_Cumulative_Degradation
+      - Compound_is_soft_x_RaceProgress
+      - Compound_is_intermediate_x_TyreLife
+      - Compound_is_intermediate_x_Cumulative_Degradation
+      - Compound_is_intermediate_x_RaceProgress
+      - Compound_is_wet_tyre_x_TyreLife
+      - Compound_is_wet_tyre_x_Cumulative_Degradation
+      - Compound_is_wet_tyre_x_RaceProgress
+    stint_interactions:
+      - Stint_x_TyreLife
+      - Stint_x_Cumulative_Degradation
+      - Stint_x_RaceProgress
+      - Stint_x_dry_softness
+      - Stint_x_is_wet
+  preprocessing:
+    categorical:
+      - categorical columns are ordinal-encoded for LightGBM
+      - unknown categories are encoded as -1
+      - missing categorical values are encoded as -2
+    numerical:
+      - no scaling
+      - no log transform
+      - no digit features
+      - LightGBM handles missing values
+      - Compound_softness_dry is NaN for INTERMEDIATE/WET by design
+  leakage_control:
+    - no target encoding
+    - no original dataset
+    - no pseudo label
+    - no Normalized_TyreLife
+    - no stint final TyreLife estimation
+    - no test-wide future information
+  notes:
+    - Compound remains as categorical feature
+    - Compound_softness_dry only encodes HARD/MEDIUM/SOFT as 0/1/2
+    - INTERMEDIATE/WET are not forced into dry ordinal scale
+    - Compound_code_all is only a fallback code, not a physical order
+
+model:
+  family: LightGBM
+  estimator: LGBMClassifier
+  task: binary classification
+  params:
+    objective: binary
+    metric: auc
+    boosting_type: gbdt
+    learning_rate: 0.03
+    num_leaves: 64
+    max_depth: -1
+    min_child_samples: 40
+    subsample: 0.85
+    subsample_freq: 1
+    colsample_bytree: 0.85
+    reg_alpha: 0.1
+    reg_lambda: 1.0
+    n_estimators: 5000
+    random_state: 42
+    verbosity: -1
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  early_stopping:
+    rounds: 200
+    log_evaluation: 200
+
+hypothesis:
+  main: >
+    PitNextLap はタイヤ寿命だけでなく、タイヤ種別ごとの劣化特性に依存する。
+    HARD/MEDIUM/SOFT はdry compoundとして硬さ・劣化しやすさの順序を持つため、
+    Compound_softness_dry x TyreLife や Compound_softness_dry x Cumulative_Degradation が効く可能性がある。
+    一方、INTERMEDIATE/WETは雨用タイヤなのでdry compoundの順序には入れず、
+    wet flagやcompound別flagで分ける。
+  expected_effect:
+    - 001 LGB RAW baseline よりCV/LBが改善する
+    - added features が feature_importance 上位に入る
+    - 002 CatBoost RAWとは相関が完全一致せず、blend素材として残る
+  failure_pattern:
+    - added features がほぼ使われない
+    - 001 LGB RAWとCV/LBがほぼ変わらない
+    - 002 CatBoost RAWと高相関かつ単体も弱い
+    - LGBMがカテゴリ・interactionをうまく拾えず、002との差が縮まらない
+
+result:
+  cv_auc: null
+  fold_scores: []
+  fold_mean: null
+  fold_std: null
+  fold_best_iterations: []
+  public_lb: null
+  train_time: null
+  comparison:
+    vs_001_lgb_raw:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+    vs_002_cat_raw:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+  blend_probe:
+    avg_001_003_auc: null
+    avg_002_003_auc: null
+    avg_001_002_003_auc: null
+  feature_importance_notes: >
+    実行後にadded featuresが上位に入ったかを記載する。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260501_003_lgb_compound_tyrelife_min
+  expected_files:
+    - oof_exp_20260501_003_lgb_compound_tyrelife_min.npy
+    - pred_exp_20260501_003_lgb_compound_tyrelife_min.npy
+    - submission_exp_20260501_003_lgb_compound_tyrelife_min.csv
+    - cv_result.json
+    - feature_columns.csv
+    - feature_importance.csv
+    - feature_importance_by_fold.csv
+  save_for_blend: true
+
+decision:
+  judgment: pending
+  keep_condition:
+    - 001 LGB RAW baselineをCV/LBで明確に上回る
+    - added features が feature importance 上位に入る
+    - 002 CatBoost RAWと相関が少しでもズレ、blendでAUCが改善する
+  hold_condition:
+    - 001より少し改善するが002には遠い
+    - 単体は弱いが002との相関が十分に低い
+    - Compound系FEの一部だけが効いており、CatBoost版やXGB版で再利用価値がある
+  drop_condition:
+    - 001とほぼ同じ、または悪化
+    - added features がほぼ使われない
+    - 002と高相関で、かつ単体性能も弱い
+  next_action_after_run:
+    - Public LBを提出して記録
+    - 001/002/003のOOF相関確認
+    - avg_001_003, avg_002_003, avg_001_002_003 のCV確認
+    - 効いた場合は 004_cat_compound_tyrelife_min を検討
+    - 効かなかった場合は original_schema_check または LapTime/Race正規化系へ進む
