@@ -1,0 +1,311 @@
+experiment:
+  id: exp_20260501_004_lgb_lap_race_time_norm_min
+  title: LightGBM Race/Driver LapTime normalization minimal FE
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
+  created_at: 2026-05-01
+
+objective:
+  summary: >
+    003でCompound系FEは001 LGB RAW baselineを小幅改善したが、
+    002 CatBoost RAW baselineには届かず、avg_002_003でも002単体を下回った。
+    そのため、004ではCompound深掘りを一旦止め、
+    001〜003のimportance上位に出ている Race / Driver / LapNumber / LapTime / TyreLife /
+    Cumulative_Degradation / Position 系の相対化を最小確認する。
+    目的は、LGBM側でRace単位・Driver×Race単位のスケール差を補正し、
+    001/003より強いLGB素材、または002 CatBoostとは異なる残差を作ること。
+  purpose:
+    - LGBMにRace内・Driver×Race内の相対特徴が効くか確認する
+    - LapTimeやTyreLifeの絶対値に混ざるRace差・Driver差を補正する
+    - 003 Compound系より有効なLGB系FE軸か確認する
+    - 後続blend用のOOF/pred素材を作成する
+  success_criteria:
+    - CV AUCを取得
+    - fold別AUCを取得
+    - Public LBを記録
+    - oof/pred/submissionを保存
+    - 001/003 LGB系baselineより改善するか確認
+    - 002 CatBoost RAW baselineとのOOF相関を確認
+    - avg_002_004 が002単体に近づく、または超えるか確認
+    - added features の feature importance を確認
+
+data:
+  competition_data:
+    train_path: /kaggle/input/playground-series-s6e5/train.csv
+    test_path: /kaggle/input/playground-series-s6e5/test.csv
+    sample_submission_path: /kaggle/input/playground-series-s6e5/sample_submission.csv
+  original_data:
+    dataset: aadigupta1601/f1-strategy-dataset-pit-stop-prediction
+    used: false
+    note: >
+      original dataset は competition Data ページで案内されているが、本実験では使用しない。
+      Normalized_TyreLife は original には存在するが、competition train/test から意図的に削除されている。
+      本実験では Normalized_TyreLife proxy や stint終了周推定は作らない。
+  id_col: id
+  target_col: PitNextLap
+  target_type: binary
+  target_distribution:
+    train:
+      class_0_count: null
+      class_1_count: null
+      class_0_rate: null
+      class_1_rate: null
+  schema_notes:
+    - train/test は id と target を除いて同じ特徴量構成
+    - 欠損は001/002/003ログ上では全列0
+    - 本実験ではtrain+testの特徴量分布だけを使ったunsupervised group statsを作る
+    - targetは一切使わない
+    - Race x LapNumber group stats は本実験では使わない
+
+baseline_references:
+  exp_20260501_001_lgb_strict_raw_baseline:
+    model: LightGBM
+    feature_set: RAW
+    cv_auc: 0.940723
+    public_lb: 0.94088
+    role: >
+      同一familyのRAW baseline。
+      004は001からRace/Driver相対化でどれだけ改善するかを見る。
+  exp_20260501_002_cat_strict_raw_baseline:
+    model: CatBoost
+    feature_set: RAW
+    cv_auc: 0.9485020378244504
+    public_lb: 0.94797
+    oof_corr_vs_001: 0.9695990619798982
+    role: >
+      現時点の主軸baseline。
+      004は単体で002を超えることより、002とは異なる残差を作れるかを見る。
+  exp_20260501_003_lgb_compound_tyrelife_min:
+    model: LightGBM
+    feature_set: compound_tyrelife_min
+    cv_auc: 0.9413109
+    public_lb: 0.94150
+    judgment: hold
+    role: >
+      直前のLGBM FE比較対象。
+      Compound系FEは001を小幅改善したが、002には遠く、avg_002_003でも002単体を下回った。
+
+features:
+  feature_set: lap_race_time_norm_min
+  base_features:
+    - Driver
+    - Compound
+    - Race
+    - Year
+    - PitStop
+    - LapNumber
+    - Stint
+    - TyreLife
+    - Position
+    - LapTime (s)
+    - LapTime_Delta
+    - Cumulative_Degradation
+    - RaceProgress
+    - Position_Change
+  categorical_features:
+    - Driver
+    - Compound
+    - Race
+    - Year
+    - LapNumber
+    - PitStop
+    - Position
+    - Stint
+  numerical_base_features:
+    - TyreLife
+    - LapTime (s)
+    - LapTime_Delta
+    - Cumulative_Degradation
+    - RaceProgress
+    - Position_Change
+  added_features:
+    race_level_group_stats:
+      group_key:
+        - Race
+      value_columns:
+        - LapTime (s)
+        - LapTime_Delta
+        - TyreLife
+        - Cumulative_Degradation
+        - Position
+        - Position_Change
+      generated_per_value:
+        - race_{value}_mean
+        - race_{value}_std
+        - race_{value}_median
+        - {value}_minus_race_mean
+        - {value}_minus_race_median
+        - {value}_z_by_race
+        - {value}_div_race_mean
+    driver_race_level_group_stats:
+      group_key:
+        - Driver
+        - Race
+      value_columns:
+        - LapTime (s)
+        - LapTime_Delta
+        - TyreLife
+        - Cumulative_Degradation
+        - Position
+        - Position_Change
+      generated_per_value:
+        - driver_race_{value}_mean
+        - driver_race_{value}_std
+        - driver_race_{value}_median
+        - {value}_minus_driver_race_mean
+        - {value}_minus_driver_race_median
+        - {value}_z_by_driver_race
+        - {value}_div_driver_race_mean
+    progress_lap_interactions:
+      - LapNumber_x_RaceProgress
+      - TyreLife_x_RaceProgress
+      - Cumulative_Degradation_x_RaceProgress
+      - LapTime_Delta_x_RaceProgress
+    pitstop_interactions:
+      - PitStop_x_TyreLife
+      - PitStop_x_RaceProgress
+      - PitStop_x_LapTime_Delta
+  preprocessing:
+    categorical:
+      - categorical columns are ordinal-encoded for LightGBM
+      - unknown categories are encoded as -1
+      - missing categorical values are encoded as -2
+    numerical:
+      - no scaling
+      - no log transform
+      - no digit features
+      - LightGBM handles missing values
+      - group std zero division is handled by NaN
+      - infinite values are replaced by NaN
+  leakage_control:
+    - no target encoding
+    - no original dataset
+    - no pseudo label
+    - no Normalized_TyreLife
+    - no stint final TyreLife estimation
+    - no Race x LapNumber group stats in this minimal version
+    - no target-derived aggregation
+  train_test_usage:
+    group_stats_source: train_plus_test_features_only
+    note: >
+      group stats は train/test の特徴量分布のみを使うunsupervised transformation。
+      targetは使わない。
+      ただし同時刻情報・未来情報に見える可能性を避けるため、
+      本実験では Race x LapNumber 集約は使わず、Race単位とDriver×Race単位に限定する。
+
+model:
+  family: LightGBM
+  estimator: LGBMClassifier
+  task: binary classification
+  params:
+    objective: binary
+    metric: auc
+    boosting_type: gbdt
+    learning_rate: 0.03
+    num_leaves: 64
+    max_depth: -1
+    min_child_samples: 40
+    subsample: 0.85
+    subsample_freq: 1
+    colsample_bytree: 0.85
+    reg_alpha: 0.1
+    reg_lambda: 1.0
+    n_estimators: 5000
+    random_state: 42
+    verbosity: -1
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  early_stopping:
+    rounds: 200
+    log_evaluation: 200
+
+hypothesis:
+  main: >
+    PitNextLapの予測では、LapTimeやTyreLifeの絶対値よりも、
+    Race内・Driver×Race内でどれだけ遅い/劣化している/順位変動しているかが効く可能性がある。
+    Raceごとにラップタイムのスケールや戦略傾向が異なり、
+    Driver×Raceごとにも基準ペースやタイヤ運用が異なるため、
+    相対化特徴によりLGBMが拾いにくい局所差を補える可能性がある。
+  expected_effect:
+    - 001 LGB RAW baseline よりCV/LBが改善する
+    - 003 Compound系FEよりCV/LBが改善する
+    - added features が feature_importance 上位に入る
+    - 002 CatBoost RAWとは相関が完全一致せず、blend素材として残る
+  failure_pattern:
+    - group statsがtrain/test分布差を拾いすぎてPublic LBに変換されない
+    - added features がほぼ使われない
+    - 001/003とCV/LBがほぼ変わらない
+    - 002 CatBoost RAWと高相関かつ単体も弱い
+    - Race/Driver集約が粗すぎて、LapNumber単位のpit windowを拾えない
+
+result:
+  cv_auc: null
+  fold_scores: []
+  fold_mean: null
+  fold_std: null
+  fold_best_iterations: []
+  public_lb: null
+  train_time: null
+  comparison:
+    vs_001_lgb_raw:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+    vs_002_cat_raw:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+    vs_003_lgb_compound_tyrelife:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+  blend_probe:
+    avg_001_004_auc: null
+    avg_002_004_auc: null
+    avg_003_004_auc: null
+    avg_001_002_004_auc: null
+    avg_001_002_003_004_auc: null
+  feature_importance_notes: >
+    実行後にadded featuresが上位に入ったかを記載する。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260501_004_lgb_lap_race_time_norm_min
+  expected_files:
+    - oof_exp_20260501_004_lgb_lap_race_time_norm_min.npy
+    - pred_exp_20260501_004_lgb_lap_race_time_norm_min.npy
+    - submission_exp_20260501_004_lgb_lap_race_time_norm_min.csv
+    - cv_result.json
+    - feature_columns.csv
+    - feature_importance.csv
+    - feature_importance_by_fold.csv
+  save_for_blend: true
+
+decision:
+  judgment: pending
+  keep_condition:
+    - 001 LGB RAW baselineをCV/LBで明確に上回る
+    - 003 LGB Compound系FEをCV/LBで上回る
+    - added features が feature importance 上位に入る
+    - 002 CatBoost RAWと相関が少しでもズレ、blendでAUCが改善する
+  hold_condition:
+    - 001/003より少し改善するが002には遠い
+    - 単体は弱いが002との相関が十分に低い
+    - added featuresの一部が効いており、CatBoost版やXGB版で再利用価値がある
+  drop_condition:
+    - 001または003と同等以下
+    - added features がほぼ使われない
+    - 002と高相関で、かつ単体性能も弱い
+    - avg_002_004 が002単体を大きく下回る
+  next_action_after_run:
+    - Public LBを提出して記録
+    - 001/002/003/004のOOF相関確認
+    - avg_002_004, avg_001_002_004, avg_001_002_003_004 のCV確認
+    - 効いた場合は 005_cat_lap_race_time_norm_min を検討
+    - 効かなかった場合は original_schema_check または Race x LapNumber を隔離実験で検討
