@@ -246,13 +246,13 @@ result:
     vs_001_lgb_raw:
       cv_diff: +0.000587 (0.941310-0.940723)
       lb_diff: +0.00062 (0.94150-0.94088)
-      pearson_corr: null
-      spearman_corr: null
+      pearson_corr: 0.993262
+      spearman_corr: 0.9925588
     vs_002_cat_raw:
-      cv_diff: null
+      cv_diff: 
       lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
+      pearson_corr: 0.971019
+      spearman_corr: 0.963512
   blend_probe:
     avg_001_003_auc: null
     avg_002_003_auc: null
