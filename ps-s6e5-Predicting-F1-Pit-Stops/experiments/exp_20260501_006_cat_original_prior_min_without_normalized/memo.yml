@@ -1,0 +1,337 @@
+experiment:
+  id: exp_20260501_006_cat_original_prior_min_without_normalized
+  title: CatBoost original prior minimal without Normalized_TyreLife
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
+  created_at: 2026-05-01
+
+objective:
+  summary: >
+    002 CatBoost strict RAW baseline をベースに、公式 original dataset から作った
+    coarse original prior features を最小追加する。
+    Normalized_TyreLife は competition 側で意図的に削除された危険列であり、
+    本実験では完全に除外する。
+    original rows を competition train に混ぜるのではなく、
+    original 上のカテゴリ別・数値bin別・粗いpair別 PitNextLap率だけを特徴量として付与する。
+  purpose:
+    - original dataset がS6E5で有効な外部情報源になるか確認する
+    - 002 CatBoost RAW baseline を更新できるか確認する
+    - original prior がCV/LBに変換されるか確認する
+    - Normalized_TyreLife なしでも original 由来情報に価値があるか確認する
+    - 後続blend用のOOF/pred素材を作成する
+  success_criteria:
+    - CV AUCを取得
+    - fold別AUCを取得
+    - Public LBを記録
+    - oof/pred/submissionを保存
+    - 002 CatBoost RAW baselineとのCV/LB差分を確認
+    - 002とのOOF相関を確認
+    - avg_002_006 が002単体を上回るか確認
+    - original prior features の feature importance を確認する
+
+data:
+  competition_data:
+    train_path: /kaggle/input/playground-series-s6e5/train.csv
+    test_path: /kaggle/input/playground-series-s6e5/test.csv
+    sample_submission_path: /kaggle/input/playground-series-s6e5/sample_submission.csv
+  original_data:
+    dataset: aadigupta1601/f1-strategy-dataset-pit-stop-prediction
+    selected_original_path: null
+    expected_file: f1_strategy_dataset_v4.csv
+    used: true
+    used_as:
+      - original target prior source
+    not_used_as:
+      - original row merge
+      - weighted training data
+      - pseudo label source
+    danger_col: Normalized_TyreLife
+    danger_col_used: false
+    note: >
+      001b_original_schema_check により、original は competition train と列対応が良く、
+      original_only_vs_train は Normalized_TyreLife のみだった。
+      ただし original の PitNextLap positive rate は competition train より高く、
+      prior shift の危険がある。
+      そのため本実験では粗い prior のみに限定し、original rows はtrainへ混ぜない。
+  id_col: id
+  target_col: PitNextLap
+  target_type: binary
+  target_distribution:
+    competition_train:
+      class_0_count: 351759
+      class_1_count: 87381
+      class_0_rate: 0.801018
+      class_1_rate: 0.198982
+    original:
+      class_0_rate: null
+      class_1_rate: 0.254797
+      abs_class_1_rate_diff_vs_train: 0.055815
+  schema_notes:
+    - train/test は id と target を除いて同じ特徴量構成
+    - original は train から id を除き、Normalized_TyreLife を追加した構成
+    - Normalized_TyreLife は本実験開始直後にdropする
+    - Compound列名は original でも Compound
+    - exact train/test rows found in original は0で、competition dataはoriginalの単純コピーではない
+
+baseline_references:
+  exp_20260501_001_lgb_strict_raw_baseline:
+    model: LightGBM
+    feature_set: RAW
+    cv_auc: 0.940723
+    public_lb: 0.94088
+    role: 初期LGB RAW baseline
+  exp_20260501_002_cat_strict_raw_baseline:
+    model: CatBoost
+    feature_set: RAW
+    cv_auc: 0.9485020378244504
+    public_lb: 0.94797
+    role: >
+      現時点の主軸baseline。
+      006はこの002をCatBoost主軸として上回れるかを見る。
+  exp_20260501_003_lgb_compound_tyrelife_min:
+    model: LightGBM
+    feature_set: compound_tyrelife_min
+    cv_auc: 0.9413109
+    public_lb: 0.94150
+    judgment: hold
+    role: LGB Compound/TyreLife系FEの小幅改善確認
+  exp_20260501_004_lgb_lap_race_time_norm_min:
+    model: LightGBM
+    feature_set: lap_race_time_norm_min
+    cv_auc: 0.9416811403305019
+    public_lb: 0.94166
+    judgment: hold
+    role: LGB Race/Driver相対化FEの小幅改善確認
+
+features:
+  feature_set: original_prior_min_without_normalized
+  base_features:
+    - Driver
+    - Compound
+    - Race
+    - Year
+    - PitStop
+    - LapNumber
+    - Stint
+    - TyreLife
+    - Position
+    - LapTime (s)
+    - LapTime_Delta
+    - Cumulative_Degradation
+    - RaceProgress
+    - Position_Change
+  categorical_features:
+    - Driver
+    - Compound
+    - Race
+    - Year
+    - LapNumber
+    - PitStop
+    - Position
+    - Stint
+  numerical_base_features:
+    - TyreLife
+    - LapTime (s)
+    - LapTime_Delta
+    - Cumulative_Degradation
+    - RaceProgress
+    - Position_Change
+
+  original_prior_features:
+    policy: >
+      original dataset の PitNextLap を使ってpriorを作る。
+      competition trainのtargetは使わない。
+      Normalized_TyreLife は事前にdrop済み。
+    global_prior:
+      - original_global_prior
+    categorical_priors:
+      source_columns:
+        - Driver
+        - Compound
+        - Race
+        - Year
+        - Stint
+        - PitStop
+        - Position
+      generated_per_column:
+        - ORIG_PRIOR_{col}
+        - ORIG_PRIOR_{col}_count
+        - ORIG_PRIOR_{col}_minus_global
+    numeric_bin_priors:
+      source_columns:
+        - LapNumber
+        - TyreLife
+        - RaceProgress
+        - Cumulative_Degradation
+        - LapTime_Delta
+      binning:
+        method: quantile_edges_from_train_test_original_features
+        bins: 10
+      generated_per_column:
+        - ORIG_PRIOR_{col}_bin10
+        - ORIG_PRIOR_{col}_bin10_count
+        - ORIG_PRIOR_{col}_bin10_minus_global
+    coarse_pair_priors:
+      source_pairs:
+        - [Compound, Stint]
+        - [Compound, PitStop]
+        - [Race, Stint]
+        - [Race, PitStop]
+      generated_per_pair:
+        - ORIG_PRIOR_{col1}__{col2}
+        - ORIG_PRIOR_{col1}__{col2}_count
+        - ORIG_PRIOR_{col1}__{col2}_minus_global
+  excluded_features:
+    - Normalized_TyreLife
+    - Normalized_TyreLife_proxy
+    - TyreLife_div_stint_max
+    - stint_final_TyreLife
+    - Race_Driver_Stint_end_features
+    - original_row_weight
+    - original_row_merge
+    - competition_train_target_encoding
+  preprocessing:
+    categorical:
+      - CatBoost native categorical handling
+      - categorical columns are converted to string and missing values are filled with __MISSING__
+    numerical:
+      - no scaling
+      - no log transform
+      - no digit features
+      - original prior missing values are filled with original global prior
+      - original prior count missing values are filled with 0
+  leakage_control:
+    - Normalized_TyreLife is dropped before any feature engineering
+    - no Normalized_TyreLife proxy
+    - no original row merge
+    - no pseudo label
+    - no competition train target encoding
+    - no test-wide stint endpoint estimation
+    - no Race x Driver x Stint fine-grained prior in this minimal version
+
+model:
+  family: CatBoost
+  estimator: CatBoostClassifier
+  task: binary classification
+  params:
+    loss_function: Logloss
+    eval_metric: AUC
+    iterations: 5000
+    learning_rate: 0.03
+    depth: 6
+    l2_leaf_reg: 3.0
+    random_seed: 42
+    early_stopping_rounds: 300
+    verbose: 300
+    allow_writing_files: false
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+
+hypothesis:
+  main: >
+    original dataset は competition train/test とschemaがほぼ一致しており、
+    Normalized_TyreLifeを除外しても Driver / Race / Compound / Stint / PitStop /
+    TyreLife bin などの粗いPitNextLap priorは有効な外部情報になりうる。
+    002 CatBoost RAWは強いが、original priorを加えることで
+    race/strategy/driverごとの基礎ピット傾向を補える可能性がある。
+  expected_effect:
+    - 002 CatBoost RAW baseline よりCVまたはPublic LBが改善する
+    - original prior features が feature importance 上位または中位に入る
+    - 002との相関が完全一致せず、avg_002_006が改善する
+  risk:
+    - originalのpositive rateがcompetition trainより高いため、prior shiftを持ち込む可能性がある
+    - original priorがCVでは効いてもPublic LBに変換されない可能性がある
+    - coarse priorでもRace/Driverの分布差に引っ張られる可能性がある
+  failure_pattern:
+    - CVは上がるがPublic LBが伸びない
+    - 002より弱く、avg_002_006でも002を下回る
+    - original prior features がほぼ使われない
+    - 002と高相関で、単なる近縁劣化版になる
+
+result:
+  cv_auc: null
+  fold_scores: []
+  fold_mean: null
+  fold_std: null
+  fold_best_iterations: []
+  public_lb: null
+  train_time: null
+  selected_original_path: null
+  original_target_mean: null
+  competition_target_mean: 0.198982
+  danger_col_used: false
+  comparison:
+    vs_001_lgb_raw:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+    vs_002_cat_raw:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+    vs_003_lgb_compound_tyrelife:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+    vs_004_lgb_lap_race_time_norm:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+  blend_probe:
+    avg_002_006_auc: null
+    avg_001_002_006_auc: null
+    avg_002_003_004_006_auc: null
+    avg_001_002_003_004_006_auc: null
+  feature_importance_notes: >
+    実行後にoriginal prior featuresが上位・中位に入ったかを記載する。
+    特に ORIG_PRIOR_Race, ORIG_PRIOR_Driver, ORIG_PRIOR_Stint,
+    ORIG_PRIOR_TyreLife_bin10, ORIG_PRIOR_Compound__Stint などを見る。
+  public_private_risk_notes: >
+    Public LBがCVに比べて弱い場合は、original prior shiftを疑う。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260501_006_cat_original_prior_min_without_normalized
+  expected_files:
+    - oof_exp_20260501_006_cat_original_prior_min_without_normalized.npy
+    - pred_exp_20260501_006_cat_original_prior_min_without_normalized.npy
+    - submission_exp_20260501_006_cat_original_prior_min_without_normalized.csv
+    - cv_result.json
+    - prior_info.json
+    - feature_columns.csv
+    - feature_importance.csv
+    - feature_importance_by_fold.csv
+  creates_oof: true
+  creates_prediction: true
+  creates_submission: true
+  save_for_blend: true
+
+decision:
+  judgment: pending
+  keep_condition:
+    - 002 CatBoost RAW baselineをCVまたはPublic LBで明確に上回る
+    - 002と近い性能で、相関が少しズレてavg_002_006が改善する
+    - original prior features が feature importance 上位または中位に入る
+    - Public LBがCV改善と大きく矛盾しない
+  hold_condition:
+    - 002より少し弱いが、original prior features が効いている
+    - avg_002_006は改善しないが、今後のCatBoost/XGB/LGB展開に部品価値がある
+    - 一部priorだけ有効で、次にprior pruning実験をする価値がある
+  drop_condition:
+    - 002より弱く、相関も高く、avgでも悪化
+    - original prior features がほぼ使われない
+    - Public LBがCVに比べて明確に悪い
+    - original positive rate差の影響でprior shiftが疑われる
+  next_action_after_run:
+    - Public LBを提出して記録
+    - 001/002/003/004/006のOOF相関確認
+    - avg_002_006 と avg_001_002_006 を確認
+    - 006が強ければ original prior pruning または XGB/LGB移植を検討
+    - 006が弱ければ original系は縮小し、005_cat_safe_fe_min に進む
