@@ -130,6 +130,7 @@ result:
   train_time: 2h 54m 43s
   notes_after_run: >
     実行後にCV、fold score、Public LB、001との差分を記載する。
+    -> 001との差分:CV+0.007779, LB+0.00709
 
 comparison:
   baseline_reference:
