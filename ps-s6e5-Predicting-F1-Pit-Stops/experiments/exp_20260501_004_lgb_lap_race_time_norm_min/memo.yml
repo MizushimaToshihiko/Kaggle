@@ -266,26 +266,77 @@ result:
     vs_001_lgb_raw:
       cv_diff: +0.000958 : 0.941681 - 0.940723
       lb_diff: +0.00078 : 0.94166 - 0.94088
-      pearson_corr: null
-      spearman_corr: null
+      pearson_corr: 0.992932
+      spearman_corr: 0.990040
     vs_002_cat_raw:
       cv_diff: -0.006821 002:0.948502
       lb_diff: -0.00631 002:0.94797
-      pearson_corr: null
-      spearman_corr: null
+      pearson_corr: 0.971108
+      spearman_corr: 0.964100
     vs_003_lgb_compound_tyrelife:
       cv_diff: +0.000371 003:0.941310
       lb_diff: +0.00016 003:0.94150
-      pearson_corr: null
-      spearman_corr: null
+      pearson_corr: 0.990953
+      spearman_corr: 0.988319
   blend_probe:
-    avg_001_004_auc: null
-    avg_002_004_auc: null
-    avg_003_004_auc: null
-    avg_001_002_004_auc: null
-    avg_001_002_003_004_auc: null
+    avg_001_004_auc: 0.9416890502624848
+    avg_002_004_auc: 0.9470884168847017
+    avg_003_004_auc: 0.9421090580272116
+    avg_001_002_004_auc: 0.9457310574216122
+    avg_001_002_003_004_auc: 0.9450375015730456
   feature_importance_notes: >
-    実行後にadded featuresが上位に入ったかを記載する。
+    実行後にadded featuresが上位に入ったかを記載する。下表のとおりadded featuresは最上で10位（TyreLife_div_race_mean）。
+    	index	feature	mean	std
+    11	11	Driver	17721.8	615.053006
+    12	12	LapNumber	7553.8	457.657295
+    55	55	Race	4490.8	266.843962
+    37	37	Position	2306.2	215.714395
+    56	56	RaceProgress	654.2	37.452637
+    58	58	TyreLife	633.4	28.693205
+    68	68	Year	511.6	22.941229
+    23	23	LapTime_Delta	494.6	25.667100
+    57	57	Stint	429.0	9.874209
+    60	60	TyreLife_div_race_mean	407.2	23.794957
+    13	13	LapNumber_x_RaceProgress	365.4	44.880954
+    67	67	TyreLife_z_by_race	359.8	21.913466
+    65	65	TyreLife_x_RaceProgress	295.6	20.562101
+    14	14	LapTime (s)	291.6	35.948574
+    0	0	Compound	287.2	9.884331
+    1	1	Cumulative_Degradation	281.8	25.073891
+    39	39	Position_Change_div_driver_race_mean	264.8	33.402096
+    25	25	LapTime_Delta_div_race_mean	257.0	32.779567
+    63	63	TyreLife_minus_race_mean	251.2	24.396721
+    3	3	Cumulative_Degradation_div_race_mean	244.6	18.022209
+    30	30	LapTime_Delta_x_RaceProgress	243.2	26.733874
+    59	59	TyreLife_div_driver_race_mean	221.4	11.760102
+    22	22	LapTime (s)_z_by_race	216.0	25.059928
+    40	40	Position_Change_div_race_mean	215.4	21.066561
+    7	7	Cumulative_Degradation_minus_race_median	204.6	20.574256
+    10	10	Cumulative_Degradation_z_by_race	204.4	16.425590
+    43	43	Position_Change_minus_race_mean	199.0	26.935107
+    20	20	LapTime (s)_minus_race_median	187.4	26.311594
+    24	24	LapTime_Delta_div_driver_race_mean	184.6	16.637307
+    35	35	PitStop_x_RaceProgress	182.4	18.902381
+    9	9	Cumulative_Degradation_z_by_driver_race	180.8	11.606033
+    32	32	LapTime_Delta_z_by_race	178.2	15.530615
+    6	6	Cumulative_Degradation_minus_race_mean	176.2	25.897876
+    51	51	Position_minus_race_mean	170.6	6.804410
+    21	21	LapTime (s)_z_by_driver_race	169.4	17.140595
+    46	46	Position_Change_z_by_race	164.0	21.035684
+    18	18	LapTime (s)_minus_driver_race_median	162.2	19.447365
+    29	29	LapTime_Delta_minus_race_median	161.4	5.128353
+    66	66	TyreLife_z_by_driver_race	157.0	13.982131
+    8	8	Cumulative_Degradation_x_RaceProgress	156.4	21.582400
+    19	19	LapTime (s)_minus_race_mean	153.8	20.400980
+    16	16	LapTime (s)_div_race_mean	153.0	15.443445
+    5	5	Cumulative_Degradation_minus_driver_race_median	152.6	16.801786
+    28	28	LapTime_Delta_minus_race_mean	147.4	18.022209
+    61	61	TyreLife_minus_driver_race_mean	145.8	23.763417
+    84	84	driver_race_TyreLife_mean	142.0	16.985288
+    38	38	Position_Change	141.6	8.264381
+    34	34	PitStop_x_LapTime_Delta	140.8	18.185159
+    83	83	driver_race_Position_std	137.6	20.622803
+    45	45	Position_Change_z_by_driver_race	132.6	13.974978
 
 artifacts:
   outdir: /kaggle/working/exp_20260501_004_lgb_lap_race_time_norm_min
