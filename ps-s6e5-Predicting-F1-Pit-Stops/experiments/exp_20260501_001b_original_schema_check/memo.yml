@@ -160,35 +160,58 @@ leakage_policy:
       後続でcompetition train targetを使う場合はfold内fitを徹底する。
 
 result:
-  selected_original_path: null
-  train_shape: null
-  test_shape: null
-  original_shape: null
+  selected_original_path: "/kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv"
+  train_shape: [
+    439140,
+    16
+  ]
+  test_shape: [
+    188165,
+    15
+  ]
+  original_shape: [
+    101371,
+    16
+  ]
   schema:
-    train_only_vs_original: null
-    original_only_vs_train: null
-    common_train_original_count: null
-    has_normalized_tyrelife_in_original: null
-    has_normalized_tyrelife_in_train: null
-    has_normalized_tyrelife_in_test: null
-    compound_column_name_in_original: null
+    train_only_vs_original: []
+    original_only_vs_train: [
+      "Normalized_TyreLife"
+    ]
+    common_train_original_count: 15
+    has_normalized_tyrelife_in_original: true
+    has_normalized_tyrelife_in_train: false
+    has_normalized_tyrelife_in_test: false
+    compound_column_name_in_original: "Compound"
   target_distribution:
-    competition_train_class_0_rate: null
-    competition_train_class_1_rate: null
-    original_class_0_rate: null
-    original_class_1_rate: null
-    abs_class_1_rate_diff: null
+    competition_train_class_0_rate: 0.801018
+    competition_train_class_1_rate: 0.198982
+    original_class_0_rate: 0.745203
+    original_class_1_rate: 0.254797
+    abs_class_1_rate_diff: 0.055815
   normalized_tyrelife:
-    exists: null
-    corr_with_target: null
-    corr_with_TyreLife: null
-    corr_with_naive_TyreLife_div_stint_max_by_Race_Driver_Stint: null
-    target_rate_by_bins_summary: null
+    exists: true
+    corr_with_target: 0.12539850080038023
+    corr_with_TyreLife: 0.7752929258695356
+    corr_with_naive_TyreLife_div_stint_max_by_Race_Driver_Stint: 0.769469377186573
+    target_rate_by_bins_summary: >
+      _NTL_bin  count  mean
+      (0.011800000000000001, 0.08]  10198  0.0641302216120808
+      (0.08, 0.143]  10511  0.16411378555798686
+      (0.143, 0.204]  9720  0.21975308641975308
+      (0.204, 0.267]  10133  0.2652718839435508
+      (0.267, 0.333]  10340  0.29564796905222435
+      (0.333, 0.415]  9930  0.31863041289023164
+      (0.415, 0.5]  10221  0.3198317190098816
+      (0.5, 0.625]  10128  0.32839652448657186
+      (0.625, 0.786]  10062  0.2934804213873981
+      (0.786, 1.0]  10128  0.2820892575039494
+      
   row_overlap:
-    exact_train_rows_found_in_original: null
-    exact_test_rows_found_in_original: null
-    exact_train_rows_found_in_original_rate: null
-    exact_test_rows_found_in_original_rate: null
+    exact_train_rows_found_in_original: 0
+    exact_test_rows_found_in_original: 0
+    exact_train_rows_found_in_original_rate: 0
+    exact_test_rows_found_in_original_rate: 0
   distribution_notes: >
     実行後に、originalとcompetition train/testで差が大きい列を記載する。
   prior_notes: >
