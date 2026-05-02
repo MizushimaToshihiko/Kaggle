@@ -243,27 +243,39 @@ hypothesis:
     - Race/Driver集約が粗すぎて、LapNumber単位のpit windowを拾えない
 
 result:
-  cv_auc: null
-  fold_scores: []
-  fold_mean: null
-  fold_std: null
-  fold_best_iterations: []
-  public_lb: null
-  train_time: null
+  cv_auc: 0.9416811403305019
+  fold_scores: [
+    0.9425384795547456,
+    0.9408892390541461,
+    0.942160886208126,
+    0.9407466395773914,
+    0.9420988083179332
+  ]
+  fold_mean: 0.9416868105424685
+  fold_std: 0.0007266184325749462
+  fold_best_iterations: [
+    785,
+    789,
+    769,
+    729,
+    695
+  ]
+  public_lb: 0.94166
+  train_time: 14m 42s
   comparison:
     vs_001_lgb_raw:
-      cv_diff: null
-      lb_diff: null
+      cv_diff: +0.000958 : 0.941681 - 0.940723
+      lb_diff: +0.00078 : 0.94166 - 0.94088
       pearson_corr: null
       spearman_corr: null
     vs_002_cat_raw:
-      cv_diff: null
-      lb_diff: null
+      cv_diff: -0.006821 002:0.948502
+      lb_diff: -0.00631 002:0.94797
       pearson_corr: null
       spearman_corr: null
     vs_003_lgb_compound_tyrelife:
-      cv_diff: null
-      lb_diff: null
+      cv_diff: +0.000371 003:0.941310
+      lb_diff: +0.00016 003:0.94150
       pearson_corr: null
       spearman_corr: null
   blend_probe:
