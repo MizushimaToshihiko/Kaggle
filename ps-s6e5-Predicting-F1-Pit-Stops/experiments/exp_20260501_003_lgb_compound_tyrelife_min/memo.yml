@@ -223,17 +223,29 @@ hypothesis:
     - LGBMがカテゴリ・interactionをうまく拾えず、002との差が縮まらない
 
 result:
-  cv_auc: null
-  fold_scores: []
-  fold_mean: null
-  fold_std: null
-  fold_best_iterations: []
-  public_lb: null
-  train_time: null
+  cv_auc: 0.9413109097188121
+  fold_scores: [
+    0.9422414094095911,
+    0.9404028203167403,
+    0.9416236708500922,
+    0.9405383118616476,
+    0.9417748073279537
+  ]
+  fold_mean: 0.941316203953205
+  fold_std: 0.0007211440713211312
+  fold_best_iterations: [
+    724,
+    715,
+    750,
+    715,
+    666
+  ]
+  public_lb: 0.94150
+  train_time: 8m 12s
   comparison:
     vs_001_lgb_raw:
-      cv_diff: null
-      lb_diff: null
+      cv_diff: +0.000587 (0.941310-0.940723)
+      lb_diff: +0.00062 (0.94150-0.94088)
       pearson_corr: null
       spearman_corr: null
     vs_002_cat_raw:
