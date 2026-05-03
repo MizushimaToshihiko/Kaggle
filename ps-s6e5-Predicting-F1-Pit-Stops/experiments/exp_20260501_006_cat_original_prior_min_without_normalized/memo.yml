@@ -306,6 +306,70 @@ result:
     実行後にoriginal prior featuresが上位・中位に入ったかを記載する。
     特に ORIG_PRIOR_Race, ORIG_PRIOR_Driver, ORIG_PRIOR_Stint,
     ORIG_PRIOR_TyreLife_bin10, ORIG_PRIOR_Compound__Stint などを見る。
+    -> 下表のとおり、ORIG_PRIOR_Year、ORIG_PRIOR_Year_minus_globalがそれぞれ2位と3位、
+    
+      	index	feature	mean	std
+      61	61	Year	22.113476	4.238495
+      51	51	ORIG_PRIOR_Year	8.433405	3.261223
+      53	53	ORIG_PRIOR_Year_minus_global	6.866500	2.206450
+      60	60	TyreLife	6.619832	0.141736
+      58	58	RaceProgress	4.605447	0.240608
+      1	1	Cumulative_Degradation	2.748353	0.133833
+      56	56	Position_Change	2.727073	0.158005
+      5	5	LapTime_Delta	2.718948	0.187496
+      10	10	ORIG_PRIOR_Compound__Stint	2.684419	0.557167
+      12	12	ORIG_PRIOR_Compound__Stint_minus_global	2.619536	0.599810
+      40	40	ORIG_PRIOR_Race__Stint	2.567641	0.302865
+      4	4	LapTime (s)	2.538279	0.111308
+      50	50	ORIG_PRIOR_TyreLife_bin10_minus_global	2.441518	0.356453
+      59	59	Stint	2.405511	0.286801
+      42	42	ORIG_PRIOR_Race__Stint_minus_global	2.205044	0.528550
+      57	57	Race	1.992634	0.131647
+      48	48	ORIG_PRIOR_TyreLife_bin10	1.904021	0.158125
+      26	26	ORIG_PRIOR_LapTime_Delta_bin10_minus_global	1.750971	0.254878
+      24	24	ORIG_PRIOR_LapTime_Delta_bin10	1.617321	0.121179
+      2	2	Driver	1.530662	0.108403
+      3	3	LapNumber	1.338536	0.106685
+      25	25	ORIG_PRIOR_LapTime_Delta_bin10_count	1.270191	0.045689
+      41	41	ORIG_PRIOR_Race__Stint_count	1.072501	0.095237
+      19	19	ORIG_PRIOR_Driver_count	0.924016	0.022054
+      38	38	ORIG_PRIOR_Race__PitStop_count	0.803254	0.031944
+      55	55	Position	0.774999	0.053444
+      43	43	ORIG_PRIOR_Race_count	0.680316	0.038531
+      31	31	ORIG_PRIOR_Position_count	0.641152	0.028135
+      0	0	Compound	0.614546	0.065211
+      49	49	ORIG_PRIOR_TyreLife_bin10_count	0.529152	0.040349
+      8	8	ORIG_PRIOR_Compound__PitStop_count	0.494562	0.076878
+      37	37	ORIG_PRIOR_Race__PitStop	0.494358	0.038250
+      22	22	ORIG_PRIOR_LapNumber_bin10_count	0.470837	0.070984
+      52	52	ORIG_PRIOR_Year_count	0.418329	0.050662
+      45	45	ORIG_PRIOR_Stint	0.409511	0.086793
+      11	11	ORIG_PRIOR_Compound__Stint_count	0.407299	0.029884
+      16	16	ORIG_PRIOR_Cumulative_Degradation_bin10_count	0.394785	0.033327
+      30	30	ORIG_PRIOR_Position	0.392376	0.050802
+      33	33	ORIG_PRIOR_Race	0.387443	0.067924
+      7	7	ORIG_PRIOR_Compound__PitStop	0.366672	0.096404
+      34	34	ORIG_PRIOR_RaceProgress_bin10	0.318634	0.052384
+      46	46	ORIG_PRIOR_Stint_count	0.308555	0.040929
+      21	21	ORIG_PRIOR_LapNumber_bin10	0.305327	0.066662
+      47	47	ORIG_PRIOR_Stint_minus_global	0.298878	0.157534
+      9	9	ORIG_PRIOR_Compound__PitStop_minus_global	0.286716	0.096544
+      18	18	ORIG_PRIOR_Driver	0.273076	0.032793
+      44	44	ORIG_PRIOR_Race_minus_global	0.246721	0.026149
+      35	35	ORIG_PRIOR_RaceProgress_bin10_count	0.230230	0.060600
+      15	15	ORIG_PRIOR_Cumulative_Degradation_bin10	0.227291	0.037034
+      36	36	ORIG_PRIOR_RaceProgress_bin10_minus_global	0.225101	0.085193
+      39	39	ORIG_PRIOR_Race__PitStop_minus_global	0.208240	0.015690
+      23	23	ORIG_PRIOR_LapNumber_bin10_minus_global	0.184861	0.075936
+      32	32	ORIG_PRIOR_Position_minus_global	0.155982	0.017841
+      28	28	ORIG_PRIOR_PitStop_count	0.147453	0.067163
+      20	20	ORIG_PRIOR_Driver_minus_global	0.107928	0.023369
+      27	27	ORIG_PRIOR_PitStop	0.107336	0.029725
+      54	54	PitStop	0.088448	0.032217
+      17	17	ORIG_PRIOR_Cumulative_Degradation_bin10_minus_...	0.084289	0.023514
+      29	29	ORIG_PRIOR_PitStop_minus_global	0.065624	0.035935
+      13	13	ORIG_PRIOR_Compound_count	0.060541	0.015217
+
   public_private_risk_notes: >
     Public LBがCVに比べて弱い場合は、original prior shiftを疑う。
 
