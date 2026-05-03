@@ -1,0 +1,369 @@
+experiment:
+  id: exp_20260503_006b_cat_original_prior_no_year_prior_min
+  title: CatBoost original prior without Year prior
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
+  created_at: 2026-05-03
+
+objective:
+  summary: >
+    006 CatBoost original prior min では 002 CatBoost RAW baseline を
+    CV/LBともに更新したが、feature importance 上位に
+    Year / ORIG_PRIOR_Year / ORIG_PRIOR_Year_minus_global が強く出た。
+    006bでは、original由来のYear priorだけを除外し、
+    006の改善がYear prior依存なのか、
+    それともCompound/Stint/Race/TyreLife/LapTime_Delta系の
+    より妥当なoriginal priorで維持できるのかを確認する。
+  purpose:
+    - 006のYear prior依存度を確認する
+    - ORIG_PRIOR_Year系を除外しても002超えを維持できるか確認する
+    - 006よりPrivate耐性が高そうなoriginal prior構成を探す
+    - original prior featuresのうち、本当に必要な系統を切り分ける
+    - 後続blend用のOOF/pred素材を作成する
+  success_criteria:
+    - CV AUCを取得
+    - fold別AUCを取得
+    - Public LBを記録
+    - oof/pred/submissionを保存
+    - 002 CatBoost RAW baselineとのCV/LB差分を確認
+    - 006 CatBoost original prior minとのCV/LB差分を確認
+    - 002/006とのOOF相関を確認
+    - avg_002_006b および avg_006_006b を確認
+    - ORIG_PRIOR_Year系が生成されていないことを確認
+
+data:
+  competition_data:
+    train_path: /kaggle/input/competitions/playground-series-s6e5/train.csv
+    test_path: /kaggle/input/competitions/playground-series-s6e5/test.csv
+    sample_submission_path: /kaggle/input/competitions/playground-series-s6e5/sample_submission.csv
+  original_data:
+    dataset: aadigupta1601/f1-strategy-dataset-pit-stop-prediction
+    selected_original_path: null
+    expected_file: f1_strategy_dataset_v4.csv
+    used: true
+    used_as:
+      - original target prior source
+    not_used_as:
+      - original row merge
+      - weighted training data
+      - pseudo label source
+    danger_col: Normalized_TyreLife
+    danger_col_used: false
+    note: >
+      001b_original_schema_check により、original は competition train と列対応が良く、
+      original_only_vs_train は Normalized_TyreLife のみだった。
+      ただし original の PitNextLap positive rate は competition train より高く、
+      prior shift の危険がある。
+      006bでは、006でfeature importance上位に出たYear prior系を除外する。
+  id_col: id
+  target_col: PitNextLap
+  target_type: binary
+  target_distribution:
+    competition_train:
+      class_0_count: 351759
+      class_1_count: 87381
+      class_0_rate: 0.801018
+      class_1_rate: 0.198982
+    original:
+      class_0_rate: null
+      class_1_rate: 0.254797
+      abs_class_1_rate_diff_vs_train: 0.055815
+  schema_notes:
+    - train/test は id と target を除いて同じ特徴量構成
+    - original は train から id を除き、Normalized_TyreLife を追加した構成
+    - Normalized_TyreLife は本実験開始直後にdropする
+    - Compound列名は original でも Compound
+    - exact train/test rows found in original は0で、competition dataはoriginalの単純コピーではない
+
+baseline_references:
+  exp_20260501_001_lgb_strict_raw_baseline:
+    model: LightGBM
+    feature_set: RAW
+    cv_auc: 0.940723
+    public_lb: 0.94088
+    role: 初期LGB RAW baseline
+  exp_20260501_002_cat_strict_raw_baseline:
+    model: CatBoost
+    feature_set: RAW
+    cv_auc: 0.9485020378244504
+    public_lb: 0.94797
+    role: >
+      CatBoost RAW baseline。
+      006bは最低限この002を上回るか確認する。
+  exp_20260501_003_lgb_compound_tyrelife_min:
+    model: LightGBM
+    feature_set: compound_tyrelife_min
+    cv_auc: 0.9413109
+    public_lb: 0.94150
+    judgment: hold
+    role: LGB Compound/TyreLife系FEの小幅改善確認
+  exp_20260501_004_lgb_lap_race_time_norm_min:
+    model: LightGBM
+    feature_set: lap_race_time_norm_min
+    cv_auc: 0.9416811403305019
+    public_lb: 0.94166
+    judgment: hold
+    role: LGB Race/Driver相対化FEの小幅改善確認
+  exp_20260501_006_cat_original_prior_min_without_normalized:
+    model: CatBoost
+    feature_set: original_prior_min_without_normalized
+    cv_auc: 0.948784
+    public_lb: 0.94841
+    judgment: keep
+    role: >
+      現時点のCatBoost主軸更新候補。
+      002をCV/LBともに更新したが、
+      Year / ORIG_PRIOR_Year / ORIG_PRIOR_Year_minus_global がFI上位に出たため、
+      006bでYear prior依存を検証する。
+
+features:
+  feature_set: original_prior_no_year_prior_min
+  base_features:
+    - Driver
+    - Compound
+    - Race
+    - Year
+    - PitStop
+    - LapNumber
+    - Stint
+    - TyreLife
+    - Position
+    - LapTime (s)
+    - LapTime_Delta
+    - Cumulative_Degradation
+    - RaceProgress
+    - Position_Change
+  categorical_features:
+    - Driver
+    - Compound
+    - Race
+    - Year
+    - LapNumber
+    - PitStop
+    - Position
+    - Stint
+  numerical_base_features:
+    - TyreLife
+    - LapTime (s)
+    - LapTime_Delta
+    - Cumulative_Degradation
+    - RaceProgress
+    - Position_Change
+
+  original_prior_features:
+    policy: >
+      original dataset の PitNextLap を使ってpriorを作る。
+      competition trainのtargetは使わない。
+      Normalized_TyreLife は事前にdrop済み。
+      006bでは、006で支配的だったYear prior系を除外する。
+    removed_from_006:
+      - ORIG_PRIOR_Year
+      - ORIG_PRIOR_Year_count
+      - ORIG_PRIOR_Year_minus_global
+    categorical_priors:
+      source_columns:
+        - Driver
+        - Compound
+        - Race
+        - Stint
+        - PitStop
+        - Position
+      excluded_source_columns:
+        - Year
+      generated_per_column:
+        - ORIG_PRIOR_{col}
+        - ORIG_PRIOR_{col}_count
+        - ORIG_PRIOR_{col}_minus_global
+    numeric_bin_priors:
+      source_columns:
+        - LapNumber
+        - TyreLife
+        - RaceProgress
+        - Cumulative_Degradation
+        - LapTime_Delta
+      binning:
+        method: quantile_edges_from_train_test_original_features
+        bins: 10
+      generated_per_column:
+        - ORIG_PRIOR_{col}_bin10
+        - ORIG_PRIOR_{col}_bin10_count
+        - ORIG_PRIOR_{col}_bin10_minus_global
+    coarse_pair_priors:
+      source_pairs:
+        - [Compound, Stint]
+        - [Compound, PitStop]
+        - [Race, Stint]
+        - [Race, PitStop]
+      generated_per_pair:
+        - ORIG_PRIOR_{col1}__{col2}
+        - ORIG_PRIOR_{col1}__{col2}_count
+        - ORIG_PRIOR_{col1}__{col2}_minus_global
+  excluded_features:
+    - ORIG_PRIOR_Year
+    - ORIG_PRIOR_Year_count
+    - ORIG_PRIOR_Year_minus_global
+    - Normalized_TyreLife
+    - Normalized_TyreLife_proxy
+    - TyreLife_div_stint_max
+    - stint_final_TyreLife
+    - Race_Driver_Stint_end_features
+    - original_row_weight
+    - original_row_merge
+    - competition_train_target_encoding
+  preprocessing:
+    categorical:
+      - CatBoost native categorical handling
+      - categorical columns are converted to string and missing values are filled with __MISSING__
+    numerical:
+      - no scaling
+      - no log transform
+      - no digit features
+      - original prior missing values are filled with original global prior
+      - original prior count missing values are filled with 0
+  leakage_control:
+    - Normalized_TyreLife is dropped before any feature engineering
+    - no Normalized_TyreLife proxy
+    - no original row merge
+    - no pseudo label
+    - no competition train target encoding
+    - no test-wide stint endpoint estimation
+    - no Race x Driver x Stint fine-grained prior in this minimal version
+    - no original Year target prior
+
+model:
+  family: CatBoost
+  estimator: CatBoostClassifier
+  task: binary classification
+  params:
+    loss_function: Logloss
+    eval_metric: AUC
+    iterations: 5000
+    learning_rate: 0.03
+    depth: 6
+    l2_leaf_reg: 3.0
+    random_seed: 42
+    early_stopping_rounds: 300
+    verbose: 300
+    allow_writing_files: false
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+
+hypothesis:
+  main: >
+    006の改善はoriginal priorにより得られたが、FI上ではYear prior系が強く出た。
+    Year priorは年ごとの生成分布差やprior shiftを拾っている可能性があり、
+    Private耐性の観点では疑うべきである。
+    006bではYear prior系を除外しても002超えを維持できるかを確認する。
+  expected_effect:
+    - 006より少し下がっても002を上回る
+    - ORIG_PRIOR_Compound__Stint, ORIG_PRIOR_Race__Stint, ORIG_PRIOR_TyreLife_bin10,
+      ORIG_PRIOR_LapTime_Delta_bin10 などの筋のよいpriorが残って効く
+    - 006よりわずかに弱くても、Year prior依存が減ることで安全寄り候補になる
+  risk:
+    - 006の改善の大半がYear prior由来だった場合、大きく低下する
+    - 002近辺まで落ちる場合、original priorの有効性は限定的と判断する
+    - 006よりPublic LBが明確に落ちる場合、Year priorがPublic上では効いていた可能性がある
+  failure_pattern:
+    - CV/LBが002と同等または下回る
+    - avg_002_006b が002単体を下回る
+    - 006との相関が極めて高く、かつ006より単体が弱いだけになる
+    - original prior features がFI上でほぼ使われない
+
+result:
+  cv_auc: null
+  fold_scores: []
+  fold_mean: null
+  fold_std: null
+  fold_best_iterations: []
+  public_lb: null
+  train_time: null
+  selected_original_path: null
+  original_target_mean: null
+  competition_target_mean: 0.198982
+  danger_col_used: false
+  generated_feature_check:
+    has_ORIG_PRIOR_Year: false
+    has_ORIG_PRIOR_Year_count: false
+    has_ORIG_PRIOR_Year_minus_global: false
+  comparison:
+    vs_002_cat_raw:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+    vs_006_cat_original_prior:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+    vs_001_lgb_raw:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+    vs_003_lgb_compound_tyrelife:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+    vs_004_lgb_lap_race_time_norm:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+  blend_probe:
+    avg_002_006b_auc: null
+    avg_006_006b_auc: null
+    avg_002_006_006b_auc: null
+    avg_001_002_006b_auc: null
+  feature_importance_notes: >
+    実行後に、Year prior除外後にどのoriginal prior featuresが上位・中位に入ったかを記載する。
+    特に ORIG_PRIOR_Compound__Stint, ORIG_PRIOR_Race__Stint,
+    ORIG_PRIOR_TyreLife_bin10, ORIG_PRIOR_LapTime_Delta_bin10 を確認する。
+  public_private_risk_notes: >
+    006よりPublic LBが少し下がっても、002を上回り、Year prior依存が消えているなら
+    006bは安全寄り候補として保持する価値がある。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260503_006b_cat_original_prior_no_year_prior_min
+  expected_files:
+    - oof_exp_20260503_006b_cat_original_prior_no_year_prior_min.npy
+    - pred_exp_20260503_006b_cat_original_prior_no_year_prior_min.npy
+    - submission_exp_20260503_006b_cat_original_prior_no_year_prior_min.csv
+    - cv_result.json
+    - prior_info.json
+    - feature_columns.csv
+    - feature_importance.csv
+    - feature_importance_by_fold.csv
+  creates_oof: true
+  creates_prediction: true
+  creates_submission: true
+  save_for_blend: true
+
+decision:
+  judgment: pending
+  keep_condition:
+    - 002 CatBoost RAW baselineをCVまたはPublic LBで上回る
+    - 006より少し弱くても、Year prior除外後に002超えを維持する
+    - avg_002_006b または avg_002_006_006b が改善する
+    - Year priorなしでoriginal prior featuresがFI上で使われる
+    - Public LBがCV改善と大きく矛盾しない
+  hold_condition:
+    - 002より少し上だが006より下
+    - Year priorを外した安全寄り候補として意味がある
+    - 一部priorだけ有効で、次にcount削除やpair/numeric-bin限定を試す価値がある
+  drop_condition:
+    - 002以下に落ちる
+    - avg_002_006bも002単体を下回る
+    - 006の改善がYear prior依存だったと判断される
+    - original prior featuresがほぼ使われない
+  next_action_after_run:
+    - Public LBを提出して記録
+    - 002/006/006bのOOF相関確認
+    - avg_002_006b, avg_006_006b, avg_002_006_006b を確認
+    - 006bが002超えを維持すれば 006c_no_count_min を検討
+    - 006bが大きく落ちれば006はYear prior依存として慎重扱いにする
