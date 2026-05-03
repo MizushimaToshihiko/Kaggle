@@ -303,42 +303,104 @@ result:
     has_ORIG_PRIOR_Year_minus_global: false
   comparison:
     vs_002_cat_raw:
-      cv_diff: null
-      lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
+      cv_diff: 0.000292356
+      lb_diff: 0.00043
+      pearson_corr: 0.995883
+      spearman_corr: 0.994213
     vs_006_cat_original_prior:
-      cv_diff: null
-      lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
+      cv_diff: 9.90827E-06
+      lb_diff: -1E-05
+      pearson_corr: 0.998881
+      spearman_corr: 0.998705
     vs_001_lgb_raw:
-      cv_diff: null
-      lb_diff: null
+      cv_diff: 0.008071313
+      lb_diff: 0.00752
       pearson_corr: null
       spearman_corr: null
     vs_003_lgb_compound_tyrelife:
-      cv_diff: null
-      lb_diff: null
+      cv_diff: 0.007483484
+      lb_diff: 0.0069
       pearson_corr: null
       spearman_corr: null
     vs_004_lgb_lap_race_time_norm:
-      cv_diff: null
-      lb_diff: null
+      cv_diff: 0.007113253
+      lb_diff: 0.00674
       pearson_corr: null
       spearman_corr: null
   blend_probe:
-    avg_002_006b_auc: null
-    avg_006_006b_auc: null
-    avg_002_006_006b_auc: null
+    avg_002_006b_auc: 0.9489403181606149
+    avg_006_006b_auc: 0.94886303918445
+    avg_002_006_006b_auc: 0.9489875349836314
     avg_001_002_006b_auc: null
   feature_importance_notes: >
     実行後に、Year prior除外後にどのoriginal prior featuresが上位・中位に入ったかを記載する。
     特に ORIG_PRIOR_Compound__Stint, ORIG_PRIOR_Race__Stint,
     ORIG_PRIOR_TyreLife_bin10, ORIG_PRIOR_LapTime_Delta_bin10 を確認する。
+    -> 下表のとおり、ORIG_PRIOR_Compound__Stint_minus_globalが4位、ORIG_PRIOR_TyreLife_bin1が9位となった
+    	index	feature	mean	std
+    58	58	Year	36.544590	0.465527
+    57	57	TyreLife	6.789272	0.327308
+    55	55	RaceProgress	4.536895	0.149208
+    12	12	ORIG_PRIOR_Compound__Stint_minus_global	3.231447	0.535870
+    53	53	Position_Change	2.795411	0.129318
+    1	1	Cumulative_Degradation	2.766208	0.079759
+    5	5	LapTime_Delta	2.740359	0.320854
+    4	4	LapTime (s)	2.563666	0.163115
+    48	48	ORIG_PRIOR_TyreLife_bin10	2.544007	0.387685
+    56	56	Stint	2.458660	0.177125
+    10	10	ORIG_PRIOR_Compound__Stint	2.418882	0.448235
+    42	42	ORIG_PRIOR_Race__Stint_minus_global	2.405558	0.192512
+    40	40	ORIG_PRIOR_Race__Stint	2.156089	0.215811
+    54	54	Race	2.079747	0.125347
+    24	24	ORIG_PRIOR_LapTime_Delta_bin10	2.073481	0.266303
+    50	50	ORIG_PRIOR_TyreLife_bin10_minus_global	2.058551	0.367380
+    2	2	Driver	1.522147	0.107117
+    3	3	LapNumber	1.399059	0.089984
+    25	25	ORIG_PRIOR_LapTime_Delta_bin10_count	1.343535	0.250102
+    26	26	ORIG_PRIOR_LapTime_Delta_bin10_minus_global	1.250730	0.069229
+    41	41	ORIG_PRIOR_Race__Stint_count	1.066402	0.050257
+    19	19	ORIG_PRIOR_Driver_count	0.911805	0.020957
+    38	38	ORIG_PRIOR_Race__PitStop_count	0.851202	0.034136
+    52	52	Position	0.779246	0.062131
+    45	45	ORIG_PRIOR_Stint	0.694186	0.105286
+    43	43	ORIG_PRIOR_Race_count	0.649874	0.088772
+    0	0	Compound	0.645934	0.027993
+    31	31	ORIG_PRIOR_Position_count	0.635589	0.043180
+    49	49	ORIG_PRIOR_TyreLife_bin10_count	0.532065	0.047985
+    37	37	ORIG_PRIOR_Race__PitStop	0.491712	0.064946
+    8	8	ORIG_PRIOR_Compound__PitStop_count	0.483702	0.035133
+    22	22	ORIG_PRIOR_LapNumber_bin10_count	0.463599	0.033659
+    33	33	ORIG_PRIOR_Race	0.403980	0.043639
+    30	30	ORIG_PRIOR_Position	0.403714	0.050666
+    16	16	ORIG_PRIOR_Cumulative_Degradation_bin10_count	0.402223	0.030498
+    11	11	ORIG_PRIOR_Compound__Stint_count	0.401748	0.032154
+    46	46	ORIG_PRIOR_Stint_count	0.383704	0.058676
+    34	34	ORIG_PRIOR_RaceProgress_bin10	0.373776	0.026167
+    7	7	ORIG_PRIOR_Compound__PitStop	0.353485	0.080027
+    21	21	ORIG_PRIOR_LapNumber_bin10	0.316023	0.047690
+    18	18	ORIG_PRIOR_Driver	0.308521	0.049608
+    36	36	ORIG_PRIOR_RaceProgress_bin10_minus_global	0.284386	0.101635
+    47	47	ORIG_PRIOR_Stint_minus_global	0.256646	0.159286
+    15	15	ORIG_PRIOR_Cumulative_Degradation_bin10	0.239014	0.029052
+    9	9	ORIG_PRIOR_Compound__PitStop_minus_global	0.234149	0.058794
+    39	39	ORIG_PRIOR_Race__PitStop_minus_global	0.217372	0.033963
+    35	35	ORIG_PRIOR_RaceProgress_bin10_count	0.201751	0.047315
+    44	44	ORIG_PRIOR_Race_minus_global	0.199311	0.028753
+    23	23	ORIG_PRIOR_LapNumber_bin10_minus_global	0.191636	0.071508
+    32	32	ORIG_PRIOR_Position_minus_global	0.171455	0.057322
+    28	28	ORIG_PRIOR_PitStop_count	0.143054	0.043246
+    29	29	ORIG_PRIOR_PitStop_minus_global	0.102071	0.043422
+    27	27	ORIG_PRIOR_PitStop	0.097711	0.019563
+    20	20	ORIG_PRIOR_Driver_minus_global	0.092185	0.023528
+    17	17	ORIG_PRIOR_Cumulative_Degradation_bin10_minus_...	0.077513	0.012937
+    13	13	ORIG_PRIOR_Compound_count	0.075613	0.018596
+    14	14	ORIG_PRIOR_Compound_minus_global	0.071512	0.071280
+    6	6	ORIG_PRIOR_Compound	0.059848	0.017964
+    51	51	PitStop	0.053991	0.034832
+
   public_private_risk_notes: >
     006よりPublic LBが少し下がっても、002を上回り、Year prior依存が消えているなら
-    006bは安全寄り候補として保持する価値がある。
+    006bは安全寄り候補として保持する価値がある。->その通りになった
 
 artifacts:
   outdir: /kaggle/working/exp_20260503_006b_cat_original_prior_no_year_prior_min
@@ -357,7 +419,7 @@ artifacts:
   save_for_blend: true
 
 decision:
-  judgment: pending
+  judgment: keep
   keep_condition:
     - 002 CatBoost RAW baselineをCVまたはPublic LBで上回る
     - 006より少し弱くても、Year prior除外後に002超えを維持する
