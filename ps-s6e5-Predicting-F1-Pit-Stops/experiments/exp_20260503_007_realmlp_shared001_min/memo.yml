@@ -334,32 +334,34 @@ result:
   orig_prior_features_used: false
   comparison:
     vs_002_cat_raw:
-      cv_diff: null
-      lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
+      cv_diff: 0.004768091
+      lb_diff: 0.00476
+      pearson_corr: 0.973084
+      spearman_corr: 0.964428
     vs_006b_cat_original_prior_no_year:
-      cv_diff: null
-      lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
+      cv_diff: 0.004475735
+      lb_diff: 0.00433
+      pearson_corr: 0.974165
+      spearman_corr: 0.963871
     vs_006c_cat_original_prior_no_count:
-      cv_diff: null
-      lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
+      cv_diff: 0.004695038
+      lb_diff: 0.00458
+      pearson_corr: 0.973444
+      spearman_corr: 0.963171
   blend_probe:
-    avg_006b_007_auc: null
-    avg_006c_007_auc: null
-    avg_002_006b_007_auc: null
-    avg_002_006b_006c_007_auc: null
+    avg_006b_007_auc: 0.9528554748055666
+    avg_006c_007_auc: 0.9527959525088343
+    avg_002_006b_007_auc: 0.9520215066352702
+    avg_002_006b_006c_007_auc: 0.9514334100505152
   public_private_risk_notes: >
     実行後にCVとPublic LBの乖離を記載する。
     CVがshared_001同等に高い一方でPublicが伸びない場合、
     original row mergeまたはRace_Year TEによるCV盛りを疑う。
+    -> lbは0.95273と元コードは完全再現できた。CV,LBの乖離もそれほどない。
   correlation_notes: >
     実行後に006bとのOOF Pearson/Spearmanを記載する。
     006bと相関が低く、avg/Ridge等で改善すれば補助素材として価値がある。
+    -> 006bとの相関は別人格とまではいかないが割と低め、しかしavgのCVはどの組み合わせでも007を超えることはなかった
 
 artifacts:
   outdir: /kaggle/working/exp_20260503_007_realmlp_shared001_min
@@ -376,7 +378,7 @@ artifacts:
   save_for_blend: true
 
 decision:
-  judgment: pending
+  judgment: keep
   keep_condition:
     - 006bより単体CVまたはPublic LBが明確に強い
     - または006bとの相関が十分に低く、avg_006b_007が006b単体を上回る
