@@ -1,0 +1,392 @@
+experiment:
+  id: exp_20260503_007_realmlp_shared001_min
+  title: RealMLP shared001 minimum reproduction
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
+  created_at: 2026-05-03
+
+objective:
+  summary: >
+    shared_001 の RealMLP / PyTabKit notebook を最小再現する。
+    006b/006c までで CatBoost + original prior 軸は確認できたため、
+    次に必要な別family素材として RealMLP 系のOOF/predを作成する。
+    本実験では ORIG_PRIOR_* は追加しない。
+    shared_001 as-is の素材価値、006bとの相関、blend変換率を確認する。
+  purpose:
+    - shared_001 RealMLP のCV/LBを自環境で再現する
+    - 006b CatBoost original prior no Year prior との相関を確認する
+    - 006bとのavg/Ridge/ElasticNet/LogReg等で上積みがあるか確認する
+    - RealMLP family がCatBoost主軸と別素材になるか確認する
+    - 後続の 008 shared001 + 006b型original prior graft の土台を作る
+  success_criteria:
+    - 5fold CV AUCを取得
+    - fold別AUCを取得
+    - Public LBを記録
+    - oof/pred/submissionを保存
+    - feature_columns.csvを保存
+    - cv_result.jsonを保存
+    - 002/006b/006cとのOOF相関を確認
+    - avg_006b_007 が006b単体を上回るか確認する
+    - ORIG_PRIOR_*を追加していないことを確認する
+
+source:
+  shared_code:
+    id: shared_001
+    title: PS-S6-E5 RealMLP PyTabKit
+    family: RealMLP
+    library: PyTabKit
+    note: >
+      shared_001 は pytabkit の RealMLP_TD_Classifier を使用する。
+      original dataset から Normalized_TyreLife をdropし、
+      foldごとに original rows を training side にconcatして学習する構成。
+      数値列のfloorカテゴリ化、RaceProgressの200分位bin、
+      Race_Compound / Race_Year interaction、
+      それらへのTargetEncoderが主な特徴量。
+  implementation_policy:
+    reproduction_type: minimum_reproduction
+    as_is_elements:
+      - RealMLP_TD_Classifier
+      - original rows are appended to each fold train split
+      - Normalized_TyreLife is dropped
+      - numeric floor categorical features
+      - LapNumber / RaceProgress
+      - TyreLife / LapNumber
+      - RaceProgress 200 quantile bin
+      - Race_Compound interaction
+      - Race_Year interaction
+      - TargetEncoder on interaction columns
+      - 5fold StratifiedKFold
+    changed_elements:
+      - save OOF as npy
+      - save pred as npy
+      - save submission with experiment name
+      - save cv_result.json
+      - save feature_columns.csv
+    not_included:
+      - ORIG_PRIOR_* features
+      - 006b original prior graft
+      - blending
+      - pseudo label
+      - Normalized_TyreLife
+      - Normalized_TyreLife proxy
+
+data:
+  competition_data:
+    train_path: /kaggle/input/competitions/playground-series-s6e5/train.csv
+    test_path: /kaggle/input/competitions/playground-series-s6e5/test.csv
+    sample_submission_path: /kaggle/input/competitions/playground-series-s6e5/sample_submission.csv
+  original_data:
+    dataset: aadigupta1601/f1-strategy-dataset-pit-stop-prediction
+    path: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+    used: true
+    use_method:
+      - append original rows to each fold training split
+    not_used_as:
+      - ORIG_PRIOR feature source
+      - pseudo label source
+    danger_col: Normalized_TyreLife
+    danger_col_used: false
+    note: >
+      original rowsは各foldのtrain側にのみconcatする。
+      competition validation foldにはoriginal rowsを混ぜない。
+      ただし original のpositive rateはcompetition trainより高いため、
+      CV盛りリスクは残る。
+  id_col: id
+  target_col: PitNextLap
+  target_type: binary
+  target_distribution:
+    competition_train:
+      class_0_count: 351759
+      class_1_count: 87381
+      class_0_rate: 0.801018
+      class_1_rate: 0.198982
+    original:
+      class_1_rate: 0.254797
+      abs_class_1_rate_diff_vs_train: 0.055815
+
+baseline_references:
+  exp_20260501_002_cat_strict_raw_baseline:
+    model: CatBoost
+    feature_set: RAW
+    cv_auc: 0.9485020378244504
+    public_lb: 0.94797
+    role: >
+      CatBoost RAW baseline。
+      007はこの002より単体で強いか、または相関差でblendに効くかを見る。
+  exp_20260501_006_cat_original_prior_min_without_normalized:
+    model: CatBoost
+    feature_set: original_prior_min_without_normalized
+    cv_auc: 0.948784
+    public_lb: 0.94841
+    judgment: keep
+    role: >
+      Year prior込みのoriginal prior min。
+  exp_20260503_006b_cat_original_prior_no_year_prior_min:
+    model: CatBoost
+    feature_set: original_prior_no_year_prior_min
+    cv_auc: 0.9487943937
+    public_lb: 0.94840
+    judgment: keep
+    role: >
+      現時点のCatBoost主軸。
+      007の最重要比較対象。
+  exp_20260503_006c_cat_original_prior_no_count_min:
+    model: CatBoost
+    feature_set: original_prior_no_year_no_count_min
+    cv_auc: 0.9485750913
+    public_lb: 0.94815
+    judgment: hold
+    role: >
+      count特徴なしの安全寄りhold。
+      007との相関比較対象。
+
+features:
+  feature_set: shared001_realmlp_min
+  base_features:
+    - Driver
+    - Compound
+    - Race
+    - Year
+    - PitStop
+    - LapNumber
+    - Stint
+    - TyreLife
+    - Position
+    - LapTime (s)
+    - LapTime_Delta
+    - Cumulative_Degradation
+    - RaceProgress
+    - Position_Change
+  initial_categorical_features:
+    - Driver
+    - Compound
+    - Race
+  initial_numerical_features:
+    - Year
+    - PitStop
+    - LapNumber
+    - Stint
+    - TyreLife
+    - Position
+    - LapTime (s)
+    - LapTime_Delta
+    - Cumulative_Degradation
+    - RaceProgress
+    - Position_Change
+  engineered_features:
+    numeric_as_category:
+      description: >
+        各数値列をfloorした値でfactorizeし、{col}_cat_としてカテゴリ特徴化する。
+      generated_for:
+        - Year
+        - PitStop
+        - LapNumber
+        - Stint
+        - TyreLife
+        - Position
+        - LapTime (s)
+        - LapTime_Delta
+        - Cumulative_Degradation
+        - RaceProgress
+        - Position_Change
+    arithmetic_features:
+      - _LapNumber_/_RaceProgress
+      - _TyreLife_/_LapNumber
+    binned_features:
+      - RaceProgress_200_quantile_bin_
+    interaction_categories:
+      - Race_Compound_
+      - Race_Year_
+    target_encoding:
+      enabled: true
+      columns:
+        - Race_Compound_
+        - Race_Year_
+      generated_features:
+        - _Race_Compound_TE
+        - _Race_Year_TE
+      policy: >
+        各outer fold内で、competition fold-train + original fold-train に対して
+        sklearn TargetEncoder をfitし、validation/testへtransformする。
+  excluded_features:
+    - Normalized_TyreLife
+    - Normalized_TyreLife_proxy
+    - ORIG_PRIOR_Driver
+    - ORIG_PRIOR_Compound
+    - ORIG_PRIOR_Race
+    - ORIG_PRIOR_Stint
+    - ORIG_PRIOR_TyreLife_bin10
+    - ORIG_PRIOR_Compound__Stint
+    - all_ORIG_PRIOR_features
+    - pseudo_label
+  leakage_control:
+    - Normalized_TyreLife is dropped before feature engineering
+    - no Normalized_TyreLife proxy
+    - no test-wide stint endpoint estimation
+    - no ORIG_PRIOR_* graft in this experiment
+    - original rows are appended only to fold training side, not validation side
+  risk_notes:
+    - original row merge is stronger and riskier than 006b original prior method
+    - original positive rate differs from competition train
+    - Race_Year target encoding may encode strong Year/context effects
+    - if CV is high but Public LB is weak, suspect original row merge / TE / Year-context CV inflation
+
+model:
+  family: RealMLP
+  library: pytabkit
+  estimator: RealMLP_TD_Classifier
+  task: binary classification
+  params:
+    random_state: 42
+    verbosity: 2
+    val_metric_name: 1-auc_ovr
+    n_ens: 8
+    n_epochs: 4
+    batch_size: 256
+    use_early_stopping: false
+    early_stopping_additive_patience: 10
+    early_stopping_multiplicative_patience: 1
+    lr: 0.03
+    wd: 0.018
+    sq_mom: 0.98
+    lr_sched: lin_cos_log_15
+    first_layer_lr_factor: 0.25
+    embedding_size: 6
+    max_one_hot_cat_size: 18
+    hidden_sizes:
+      - 512
+      - 256
+      - 128
+    act: silu
+    p_drop: 0.05
+    p_drop_sched: expm4t
+    plr_hidden_1: 16
+    plr_hidden_2: 8
+    plr_act_name: gelu
+    plr_lr_factor: 0.1151
+    plr_sigma: 2.33
+    ls_eps: 0.01
+    ls_eps_sched: sqrt_cos
+    add_front_scale: false
+    bias_init_mode: neg-uniform-dynamic-2
+    tfms:
+      - one_hot
+      - median_center
+      - robust_scale
+      - smooth_clip
+      - embedding
+      - l2_normalize
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+    original_split: >
+      originalも同じStratifiedKFoldでsplitし、各foldでoriginal train側だけを
+      competition train foldへconcatする。
+
+hypothesis:
+  main: >
+    shared_001 RealMLP は、CatBoost original prior系とは異なるモデルfamilyであり、
+    006bと低〜中相関の補助素材になる可能性がある。
+    shared_001自体のCVが高ければ、単体更新候補にもなり得る。
+    単体が006b未満でも、avg/Ridge/ElasticNet/LogRegで上積みが出るならkeep候補。
+  expected_effect:
+    - 006bより高いCVまたはPublic LBを出す
+    - 006bと相関がCatBoost同士より低い
+    - avg_006b_007が006b単体を上回る
+    - 後続008で006b型original priorを足す余地がある
+  risk:
+    - original row mergeによりCVだけ盛られる
+    - Public LBがCVに比べて鈍い
+    - Race_Year TEやYear文脈に依存しすぎる
+    - 006bとblendしても改善しない
+    - RealMLPの実行環境差で再現性が揺れる
+  failure_pattern:
+    - CVは高いがPublic LBが006b未満
+    - 006bとのavgが006b単体を下回る
+    - 006bとの相関が高く、単なる近縁劣化になる
+    - fold間のばらつきが大きい
+    - original row mergeなしでは性能が落ちる可能性が高い
+
+result:
+  cv_auc: null
+  fold_scores: []
+  fold_mean: null
+  fold_std: null
+  public_lb: null
+  train_time: null
+  pytorch_version: null
+  pytabkit_version: null
+  cuda_available: null
+  cuda_device: null
+  competition_target_mean: 0.198982
+  original_target_mean: 0.254797
+  danger_col_used: false
+  original_rows_used: true
+  orig_prior_features_used: false
+  comparison:
+    vs_002_cat_raw:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+    vs_006b_cat_original_prior_no_year:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+    vs_006c_cat_original_prior_no_count:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+  blend_probe:
+    avg_006b_007_auc: null
+    avg_006c_007_auc: null
+    avg_002_006b_007_auc: null
+    avg_002_006b_006c_007_auc: null
+  public_private_risk_notes: >
+    実行後にCVとPublic LBの乖離を記載する。
+    CVがshared_001同等に高い一方でPublicが伸びない場合、
+    original row mergeまたはRace_Year TEによるCV盛りを疑う。
+  correlation_notes: >
+    実行後に006bとのOOF Pearson/Spearmanを記載する。
+    006bと相関が低く、avg/Ridge等で改善すれば補助素材として価値がある。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260503_007_realmlp_shared001_min
+  expected_files:
+    - oof_exp_20260503_007_realmlp_shared001_min.npy
+    - pred_exp_20260503_007_realmlp_shared001_min.npy
+    - oof_exp_20260503_007_realmlp_shared001_min.csv
+    - submission_exp_20260503_007_realmlp_shared001_min.csv
+    - cv_result.json
+    - feature_columns.csv
+  creates_oof: true
+  creates_prediction: true
+  creates_submission: true
+  save_for_blend: true
+
+decision:
+  judgment: pending
+  keep_condition:
+    - 006bより単体CVまたはPublic LBが明確に強い
+    - または006bとの相関が十分に低く、avg_006b_007が006b単体を上回る
+    - Public LBがCV改善と大きく矛盾しない
+    - fold_scoresが安定している
+  hold_condition:
+    - 単体は006b未満だが、相関が低くblendで効く
+    - Public LBは微妙でも、Ridge/ElasticNet/LogRegで正係数として採用される
+    - 008で006b型original prior graftを試す価値がある
+  drop_condition:
+    - 単体も弱く、006bとの相関も高く、avgでも改善しない
+    - CVだけ高くPublic LBが明確に低い
+    - original row merge由来のCV盛りが疑われる
+  next_action_after_run:
+    - Public LBを提出して記録
+    - 002/006b/006c/007のOOF相関確認
+    - avg_006b_007 と avg_002_006b_007 を確認
+    - 007がkeep/holdなら 008_realmlp_shared001_plus_006b_orig_prior を検討
+    - 007がdropなら shared_003 のLGB full-FE単体切り出しを検討
