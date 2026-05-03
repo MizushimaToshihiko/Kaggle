@@ -357,19 +357,25 @@ hypothesis:
     - original prior追加によりfold間ばらつきが増える
 
 result:
-  cv_auc: null
-  fold_scores: []
-  fold_mean: null
-  fold_std: null
-  public_lb: null
-  train_time: null
-  pytorch_version: null
-  pytabkit_version: null
-  cuda_available: null
-  cuda_device: null
-  realmlp_device: null
-  realmlp_n_ens: null
-  realmlp_batch_size: null
+  cv_auc: 0.9530389769769412
+  fold_scores: [
+    0.9539405897464126,
+    0.9520531834151784,
+    0.95293943450267,
+    0.9522814383915083,
+    0.9540395396639483
+  ]
+  fold_mean: 0.9530508371439435
+  fold_std: 0.0008208398525796412
+  public_lb: 0.95249
+  train_time: 9m 32s · GPU T4 x2
+  pytorch_version: 2.10.0+cu128
+  pytabkit_version: 1.7.3
+  cuda_available: True
+  cuda_device: Tesla T4
+  realmlp_device: cuda
+  realmlp_n_ens: 8
+  realmlp_batch_size: 256
   competition_target_mean: 0.198982
   original_target_mean: 0.254797
   danger_col_used: false
@@ -383,38 +389,40 @@ result:
     count_features: []
   comparison:
     vs_007_realmlp_shared001_min:
-      cv_diff: null
-      lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
+      cv_diff: -0.000231152
+      lb_diff: -0.00024
+      pearson_corr: 0.994703
+      spearman_corr: 0.991720
     vs_006b_cat_original_prior_no_year:
-      cv_diff: null
-      lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
+      cv_diff: 0.004244583
+      lb_diff: 0.00409
+      pearson_corr: 0.976387
+      spearman_corr: 0.964499
     vs_006c_cat_original_prior_no_count:
-      cv_diff: null
-      lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
+      cv_diff: 0.004463886
+      lb_diff: 0.00434
+      pearson_corr: 0.975489
+      spearman_corr: 0.963713
     vs_002_cat_raw:
-      cv_diff: null
-      lb_diff: null
+      cv_diff: 0.004536939
+      lb_diff: 0.00452
       pearson_corr: null
       spearman_corr: null
   blend_probe:
-    avg_007_008_auc: null
-    avg_006b_008_auc: null
-    avg_006b_007_008_auc: null
-    avg_006b_006c_007_008_auc: null
+    avg_007_008_auc: 0.9535034403208038
+    avg_006b_008_auc: 0.95262257316863
+    avg_006b_007_008_auc: 0.95339881683978
+    avg_006b_006c_007_008_auc: 0.952838112601165
   public_private_risk_notes: >
     実行後にCVとPublic LBの乖離を記載する。
     008はoriginal row mergeとoriginal priorの二重使用なので、
     007よりCVが上がってPublicが鈍い場合は危険寄りと判断する。
+    -> CV,LBが共に微悪化した。過学習したと思われる。
   correlation_notes: >
     実行後に007とのOOF Pearson/Spearmanを記載する。
     007と高相関で007より弱い場合はdrop寄り。
     007と相関が少しズレてblendで効く場合はhold以上。
+    -> 006b,007,008の組み合わせavgのみ007をCVで超えた。007,008の相関は高いが0.999...までは行かなかった
 
 artifacts:
   outdir: /kaggle/working/exp_20260503_008_realmlp_shared001_plus_006b_orig_prior
@@ -432,7 +440,7 @@ artifacts:
   save_for_blend: true
 
 decision:
-  judgment: pending
+  judgment: hold
   keep_condition:
     - 008が007よりCVまたはPublic LBで上回る
     - または007と同等で、avg_007_008やRidge/ElasticNet/LogRegで上積みする
