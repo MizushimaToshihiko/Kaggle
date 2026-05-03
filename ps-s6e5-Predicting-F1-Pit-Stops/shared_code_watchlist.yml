@@ -120,10 +120,13 @@ items:
       - CatBoost
     uses_original_dataset: true
     uses_normalized_tyrelife: false
-    uses_normalized_tyrelife_proxy: suspected
+    uses_normalized_tyrelife_proxy: false
     proxy_notes: >
-      Need code inspection. Possible Normalized_TyreLife-like proxy is suspected,
-      but not confirmed.
+      No direct Normalized_TyreLife or stint-endpoint proxy was found in the quick code inspection.
+      The notebook creates race-progress-derived features such as EstimatedTotalLaps,
+      LapsRemaining, TyreAgeVsRace, and TyreLife_to_LapsRemaining.
+      These are not the same as TyreLife / final stint length, but should still be checked
+      as race-progress-derived features.
     uses_pseudo_label: false
     uses_blend: false
     fe_categories:
