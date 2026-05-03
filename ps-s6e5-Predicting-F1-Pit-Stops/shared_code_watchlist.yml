@@ -1,0 +1,56 @@
+competition:
+  name: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  purpose: >
+    Shared notebooks/discussions の候補を一時的に整理し、
+    006b/006c後に最小再現する対象を選ぶためのwatchlist。
+
+policy:
+  current_phase: shared_code_screening
+  do_now:
+    - upvote useful notebooks/discussions
+    - save URL
+    - record title / author / public_lb / family / rough FE category
+  do_not_do_yet:
+    - copy features into mainline
+    - run full shared code without screening
+    - use Normalized_TyreLife or proxy
+    - treat high Public LB as reliable without CV/OOF check
+  selection_rule: >
+    まず3〜10本をwatchlist化し、その後1〜2本だけ最小再現する。
+    最小再現後はCV / Public LB / OOF相関 / blend変換率で採否を決める。
+
+risk_flags:
+  - uses_Normalized_TyreLife
+  - uses_Normalized_TyreLife_proxy
+  - uses_test_wide_stint_endpoint
+  - uses_pseudo_label
+  - uses_original_row_merge
+  - no_oof_cv
+  - public_lb_only_claim
+  - unclear_leakage_control
+
+items:
+  - id: shared_001
+    title:
+    author:
+    url:
+    type: notebook
+    public_lb:
+    cv:
+    model_family:
+      - CatBoost
+    uses_original_dataset:
+    uses_normalized_tyrelife:
+    uses_normalized_tyrelife_proxy:
+    uses_pseudo_label:
+    uses_blend:
+    fe_categories:
+      - original_prior
+      - tyre_lap_interaction
+      - group_stats
+      - target_encoding
+    notes:
+    priority: pending
+    action: watch
+    decision: pending
