@@ -311,16 +311,22 @@ hypothesis:
     - original row mergeなしでは性能が落ちる可能性が高い
 
 result:
-  cv_auc: null
-  fold_scores: []
-  fold_mean: null
-  fold_std: null
-  public_lb: null
-  train_time: null
-  pytorch_version: null
-  pytabkit_version: null
-  cuda_available: null
-  cuda_device: null
+  cv_auc: 0.9532701289015783
+  fold_scores: [
+    0.9542559986894835,
+    0.9522620682808609,
+    0.9533620376114241,
+    0.952404215124125,
+    0.9540947402091658
+  ]
+  fold_mean: 0.9532758119830118
+  fold_std: 0.0008277924445418371
+  public_lb: 0.95273
+  train_time: 8m 52s · GPU T4 x2
+  pytorch_version: 2.10.0+cu128
+  pytabkit_version: 1.7.3
+  cuda_available: True
+  cuda_device: Tesla T4
   competition_target_mean: 0.198982
   original_target_mean: 0.254797
   danger_col_used: false
