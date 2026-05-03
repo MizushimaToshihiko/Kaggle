@@ -327,29 +327,76 @@ result:
     count_features: []
   comparison:
     vs_002_cat_raw:
-      cv_diff: null
-      lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
+      cv_diff: 7.30535E-05
+      lb_diff: 0.00018
+      pearson_corr: 0.996814
+      spearman_corr: 0.994950
     vs_006_cat_original_prior:
-      cv_diff: null
-      lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
+      cv_diff: -0.000209394
+      lb_diff: -0.00026
+      pearson_corr: 0.997725
+      spearman_corr: 0.997538
     vs_006b_cat_original_prior_no_year:
-      cv_diff: null
-      lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
+      cv_diff: -0.000219302
+      lb_diff: -0.00025
+      pearson_corr: 0.997772
+      spearman_corr: 0.997627
   blend_probe:
-    avg_002_006c_auc: null
-    avg_006b_006c_auc: null
-    avg_002_006b_006c_auc: null
-    avg_002_006_006b_006c_auc: null
+    avg_002_006c_auc: 0.9487677086404666
+    avg_006b_006c_auc: 0.9488332163841099
+    avg_002_006b_006c_auc: 0.948923066702028
+    avg_002_006_006b_006c_auc: 0.9489627979343256
   feature_importance_notes: >
     実行後に、count特徴削除後にどのoriginal prior featuresが上位・中位に残ったかを記載する。
     特に ORIG_PRIOR_Compound__Stint, ORIG_PRIOR_Race__Stint,
     ORIG_PRIOR_TyreLife_bin10, ORIG_PRIOR_LapTime_Delta_bin10 を確認する。
+    -> 下表のとおり
+    	index	feature	mean	std
+    43	43	Year	34.803893	1.317450
+    42	42	TyreLife	7.834372	0.288897
+    40	40	RaceProgress	5.194002	0.303999
+    5	5	LapTime_Delta	3.537464	0.179570
+    10	10	ORIG_PRIOR_Compound__Stint_minus_global	3.381204	0.634464
+    41	41	Stint	3.226591	0.343597
+    1	1	Cumulative_Degradation	3.143610	0.039879
+    38	38	Position_Change	3.017540	0.202472
+    9	9	ORIG_PRIOR_Compound__Stint	2.986934	0.474507
+    4	4	LapTime (s)	2.849328	0.167706
+    39	39	Race	2.775263	0.103462
+    18	18	ORIG_PRIOR_LapTime_Delta_bin10	2.559378	0.243729
+    30	30	ORIG_PRIOR_Race__Stint_minus_global	2.512987	0.636812
+    29	29	ORIG_PRIOR_Race__Stint	2.512769	0.245937
+    34	34	ORIG_PRIOR_TyreLife_bin10	2.202733	0.349166
+    2	2	Driver	2.198142	0.207623
+    35	35	ORIG_PRIOR_TyreLife_bin10_minus_global	2.157392	0.422724
+    19	19	ORIG_PRIOR_LapTime_Delta_bin10_minus_global	1.888382	0.185560
+    3	3	LapNumber	1.596942	0.106298
+    37	37	Position	1.085050	0.055819
+    0	0	Compound	0.875724	0.059033
+    27	27	ORIG_PRIOR_Race__PitStop	0.705102	0.077730
+    7	7	ORIG_PRIOR_Compound__PitStop	0.613588	0.091783
+    22	22	ORIG_PRIOR_Position	0.516866	0.029719
+    25	25	ORIG_PRIOR_RaceProgress_bin10	0.489752	0.116700
+    14	14	ORIG_PRIOR_Driver	0.485866	0.070446
+    24	24	ORIG_PRIOR_Race	0.475072	0.057088
+    8	8	ORIG_PRIOR_Compound__PitStop_minus_global	0.410429	0.068562
+    32	32	ORIG_PRIOR_Stint	0.406976	0.232777
+    16	16	ORIG_PRIOR_LapNumber_bin10	0.363018	0.061163
+    33	33	ORIG_PRIOR_Stint_minus_global	0.361535	0.111800
+    20	20	ORIG_PRIOR_PitStop	0.311451	0.056784
+    12	12	ORIG_PRIOR_Cumulative_Degradation_bin10	0.309485	0.040620
+    15	15	ORIG_PRIOR_Driver_minus_global	0.305335	0.112930
+    31	31	ORIG_PRIOR_Race_minus_global	0.300114	0.073176
+    26	26	ORIG_PRIOR_RaceProgress_bin10_minus_global	0.292101	0.021320
+    17	17	ORIG_PRIOR_LapNumber_bin10_minus_global	0.253226	0.055308
+    36	36	PitStop	0.252513	0.080088
+    28	28	ORIG_PRIOR_Race__PitStop_minus_global	0.216889	0.050016
+    21	21	ORIG_PRIOR_PitStop_minus_global	0.198448	0.038921
+    23	23	ORIG_PRIOR_Position_minus_global	0.156427	0.024392
+    13	13	ORIG_PRIOR_Cumulative_Degradation_bin10_minus_...	0.102978	0.014552
+    6	6	ORIG_PRIOR_Compound	0.072633	0.023378
+    11	11	ORIG_PRIOR_Compound_minus_global	0.060499	0.033547
+
   public_private_risk_notes: >
     006bよりPublic LBが少し下がっても、002を上回り、count特徴なしで
     original priorが効いているなら、006cは安全寄り候補として保持する価値がある。
