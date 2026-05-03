@@ -274,15 +274,27 @@ hypothesis:
     - original prior features がFI上でほぼ使われない
 
 result:
-  cv_auc: null
-  fold_scores: []
-  fold_mean: null
-  fold_std: null
-  fold_best_iterations: []
-  public_lb: null
-  train_time: null
-  selected_original_path: null
-  original_target_mean: null
+  cv_auc: 0.9487943937294769
+  fold_scores: [
+    0.9499512001155224,
+    0.947778666455879,
+    0.948989398007641,
+    0.9480064000700036,
+    0.9492451639905859
+  ]
+  fold_mean: 0.9487941657279265
+  fold_std: 0.0008039971583749898
+  fold_best_iterations: [
+    4999,
+    4997,
+    4997,
+    4989,
+    4999
+  ]
+  public_lb: 0.94840
+  train_time: 2h 35m 48s
+  selected_original_path: "/kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv"
+  original_target_mean: 0.25479673673930414
   competition_target_mean: 0.198982
   danger_col_used: false
   generated_feature_check:
