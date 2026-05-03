@@ -79,3 +79,32 @@ items:
     priority: pending
     action: watch
     decision: pending
+
+  - id: shared_003
+    title: 🏎️ Pit or Stay? F1 Strategy -1
+    author: OzanM
+    url: https://www.kaggle.com/code/analyticaobscura/pit-or-stay-f1-strategy-1
+    type: notebook
+    public_lb: 0.95281
+    cv: 0.96234
+    model_family:
+      - RealMLP
+      - XGB
+      - LGB
+      - Dirichlet raw in blend
+      - Dirichlet rank in blend
+      - LogReg in blend
+    uses_original_dataset: true
+    uses_normalized_tyrelife: false
+    uses_normalized_tyrelife_proxy: unknown
+    uses_pseudo_label: false
+    uses_blend: true
+    fe_categories:
+      - original_prior : unknown
+      - tyre_lap_interaction : unknown
+      - group_stats : unknown
+      - target_encoding : true
+    notes:
+    priority: pending
+    action: watch
+    decision: pending
