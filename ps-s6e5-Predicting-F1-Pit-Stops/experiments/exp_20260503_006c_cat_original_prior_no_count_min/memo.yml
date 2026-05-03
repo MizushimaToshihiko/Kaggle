@@ -350,7 +350,7 @@ result:
     実行後に、count特徴削除後にどのoriginal prior featuresが上位・中位に残ったかを記載する。
     特に ORIG_PRIOR_Compound__Stint, ORIG_PRIOR_Race__Stint,
     ORIG_PRIOR_TyreLife_bin10, ORIG_PRIOR_LapTime_Delta_bin10 を確認する。
-    -> 下表のとおり
+    -> 下表のとおり、ORIG_PRIOR_Compound__Stint_minus_globalが5位、ORIG_PRIOR_Compound__Stintが9位となった
     	index	feature	mean	std
     43	43	Year	34.803893	1.317450
     42	42	TyreLife	7.834372	0.288897
@@ -400,6 +400,7 @@ result:
   public_private_risk_notes: >
     006bよりPublic LBが少し下がっても、002を上回り、count特徴なしで
     original priorが効いているなら、006cは安全寄り候補として保持する価値がある。
+    -> Public LBが下がりすぎに見える
 
 artifacts:
   outdir: /kaggle/working/exp_20260503_006c_cat_original_prior_no_count_min
@@ -418,7 +419,7 @@ artifacts:
   save_for_blend: true
 
 decision:
-  judgment: pending
+  judgment: hold
   keep_condition:
     - 002 CatBoost RAW baselineをCVまたはPublic LBで上回る
     - 006bより少し弱くても、count特徴除外後に002超えを維持する
