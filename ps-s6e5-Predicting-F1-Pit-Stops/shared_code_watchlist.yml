@@ -108,3 +108,27 @@ items:
     priority: pending
     action: watch
     decision: pending
+
+  - id: shared_004
+    title: PS S6E5: CatBoost
+    author: Rohit Kumar
+    url: https://www.kaggle.com/code/rohit8527kmr7518/ps-s6e5-catboost
+    type: notebook
+    public_lb: 0.95222
+    cv: 0.953455
+    model_family:
+      - CatBoost
+    uses_original_dataset: true
+    uses_normalized_tyrelife: false
+    uses_normalized_tyrelife_proxy: true, may be
+    uses_pseudo_label: false
+    uses_blend: false
+    fe_categories:
+      - original_prior : unknown
+      - tyre_lap_interaction : unknown
+      - group_stats : unknown
+      - target_encoding : false
+    notes:
+    priority: pending
+    action: watch
+    decision: pending
