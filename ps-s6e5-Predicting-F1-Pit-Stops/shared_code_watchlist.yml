@@ -46,10 +46,10 @@ items:
     uses_pseudo_label: false
     uses_blend: false
     fe_categories:
-      - original_prior : unknown
-      - tyre_lap_interaction : unknown
-      - group_stats : unknown
-      - target_encoding : unknown
+      original_prior : unknown
+      tyre_lap_interaction : unknown
+      group_stats : unknown
+      target_encoding : unknown
     notes:
     priority: pending
     action: watch
@@ -58,7 +58,7 @@ items:
   - id: shared_002
     title: 📊 PS-S6E5 [EDA+Pred.] Step-by-Step Guidelines
     author: Pilkwang Kim
-    url: https://www.kaggle.com/code/yekenot/ps-s6-e5-realmlp-pytabkit
+    url: https://www.kaggle.com/code/pilkwang/ps-s6e5-eda-pred-step-by-step-guidelines#8.-%F0%9F%A4%96-Baseline-Prediction-Model
     type: notebook
     public_lb: 0.95337
     cv: unknown
@@ -71,9 +71,9 @@ items:
     uses_pseudo_label: false
     uses_blend: false
     fe_categories:
-      - original_prior : unknown
-      - tyre_lap_interaction : unknown
-      - group_stats : unknown
+      original_prior : unknown
+      tyre_lap_interaction : unknown
+      group_stats : unknown
       - target_encoding : unknown
     notes:
     priority: pending
@@ -100,10 +100,10 @@ items:
     uses_pseudo_label: false
     uses_blend: true
     fe_categories:
-      - original_prior : unknown
-      - tyre_lap_interaction : unknown
-      - group_stats : unknown
-      - target_encoding : true
+      original_prior : unknown
+      tyre_lap_interaction : unknown
+      group_stats : unknown
+      target_encoding : true
     notes:
     priority: pending
     action: watch
@@ -120,15 +120,18 @@ items:
       - CatBoost
     uses_original_dataset: true
     uses_normalized_tyrelife: false
-    uses_normalized_tyrelife_proxy: true, may be
+    uses_normalized_tyrelife_proxy: suspected
+    proxy_notes: >
+      Need code inspection. Possible Normalized_TyreLife-like proxy is suspected,
+      but not confirmed.
     uses_pseudo_label: false
     uses_blend: false
     fe_categories:
-      - original_prior : unknown
-      - tyre_lap_interaction : unknown
-      - group_stats : unknown
-      - target_encoding : false
+      original_prior: unknown
+      tyre_lap_interaction: unknown
+      group_stats: unknown
+      target_encoding: false
     notes:
-    priority: pending
-    action: watch
+    priority: low_until_proxy_checked
+    action: inspect_proxy
     decision: pending
