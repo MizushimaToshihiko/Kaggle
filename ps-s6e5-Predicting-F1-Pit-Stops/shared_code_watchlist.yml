@@ -32,24 +32,49 @@ risk_flags:
 
 items:
   - id: shared_001
-    title:
-    author:
-    url:
+    title: PS|S6|E5: RealMLP · PyTabKit
+    author: Vladimir Demidov
+    url: https://www.kaggle.com/code/yekenot/ps-s6-e5-realmlp-pytabkit
     type: notebook
-    public_lb:
-    cv:
+    public_lb: 0.95273
+    cv: 0.95327
     model_family:
-      - CatBoost
-    uses_original_dataset:
-    uses_normalized_tyrelife:
-    uses_normalized_tyrelife_proxy:
-    uses_pseudo_label:
-    uses_blend:
+      - RealMLP · PyTabKit
+    uses_original_dataset: true
+    uses_normalized_tyrelife: false
+    uses_normalized_tyrelife_proxy: unknown
+    uses_pseudo_label: false
+    uses_blend: false
     fe_categories:
-      - original_prior
-      - tyre_lap_interaction
-      - group_stats
-      - target_encoding
+      - original_prior : unknown
+      - tyre_lap_interaction : unknown
+      - group_stats : unknown
+      - target_encoding : unknown
+    notes:
+    priority: pending
+    action: watch
+    decision: pending
+    
+  - id: shared_002
+    title: 📊 PS-S6E5 [EDA+Pred.] Step-by-Step Guidelines
+    author: Pilkwang Kim
+    url: https://www.kaggle.com/code/yekenot/ps-s6-e5-realmlp-pytabkit
+    type: notebook
+    public_lb: 0.95337
+    cv: unknown
+    model_family:
+      - LogisticRegression
+      - HistGradientBoosting
+    uses_original_dataset: true
+    uses_normalized_tyrelife: unknown
+    uses_normalized_tyrelife_proxy: unknown
+    uses_pseudo_label: false
+    uses_blend: false
+    fe_categories:
+      - original_prior : unknown
+      - tyre_lap_interaction : unknown
+      - group_stats : unknown
+      - target_encoding : unknown
     notes:
     priority: pending
     action: watch
