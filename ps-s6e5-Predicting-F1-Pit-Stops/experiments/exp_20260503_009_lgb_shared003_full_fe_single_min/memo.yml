@@ -1,0 +1,436 @@
+experiment:
+  id: exp_20260503_009_lgb_shared003_full_fe_single_min
+  title: LightGBM shared003 full-FE single model minimum extraction
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
+  created_at: 2026-05-03
+
+objective:
+  summary: >
+    shared_003 の全体stackを丸ごと再現するのではなく、
+    その中の LightGBM full-FE single member だけを切り出して再現する。
+    007 RealMLP shared001 min が現時点の単体主軸となったため、
+    次に必要なのは RealMLP とは異なるGBDT系素材である。
+    009では shared_003-style full feature engineering + LightGBM を用いて、
+    OOF/pred/submissionを作成し、007/008/006bとの相関・blend効果を確認する。
+  purpose:
+    - shared_003由来のLightGBM full-FE単体素材を作る
+    - 007 RealMLPとは異なるGBDT familyのOOF/predを得る
+    - 007/008/006bとのOOF相関を確認する
+    - avg/Ridge/ElasticNet/LogReg/HC/NM blendで効くか確認する
+    - shared_003全体stackを丸ごと再現する前に、LGB単体の素材価値を測る
+  success_criteria:
+    - 5fold CV AUCを取得
+    - fold別AUCを取得
+    - seed別fold AUCを取得
+    - Public LBを記録
+    - oof/pred/submissionを保存
+    - feature_columns.csvを保存
+    - feature_importance.csvを保存
+    - cv_result.jsonを保存
+    - 006b/007/008とのOOF相関を確認
+    - avg_007_009 が007単体を上回るか確認する
+
+source:
+  shared_code:
+    id: shared_003
+    title: RealMLP + XGB + LGB + blend style notebook
+    extraction_target: LightGBM full-FE member only
+    note: >
+      shared_003はRealMLP、XGBoost、LightGBM、XGBoost RealMLP-view、
+      OOF search、LR stack、committee blendまで含む大きなnotebookである。
+      本実験では全体を再現せず、LightGBM full-FE単体だけを切り出す。
+  extracted_component:
+    model_family: LightGBM
+    component_name: LGB full-FE conservative
+    expected_shared003_oof_reference: 0.95925
+    caveat: >
+      shared_003上のLGB OOFはoriginal append後の全体設計に依存している。
+      009ではcompetition trainに対するOOFを作るため、
+      validationはcompetition rowsのみに限定する。
+      そのためshared_003表示CVより低く出ても不自然ではない。
+
+data:
+  competition_data:
+    train_path: /kaggle/input/competitions/playground-series-s6e5/train.csv
+    test_path: /kaggle/input/competitions/playground-series-s6e5/test.csv
+    sample_submission_path: /kaggle/input/competitions/playground-series-s6e5/sample_submission.csv
+  original_data:
+    dataset: aadigupta1601/f1-strategy-dataset-pit-stop-prediction
+    path: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+    used: true
+    use_method:
+      - append original rows to each fold training split
+      - use original rows in train/test/original combined feature engineering
+    not_used_as:
+      - validation rows
+      - pseudo label source
+      - ORIG_PRIOR feature source
+    danger_col: Normalized_TyreLife
+    danger_col_used: false
+    note: >
+      originalからNormalized_TyreLifeをdropしてから使用する。
+      original rowsは各foldのtrain側に追加するが、validationはcompetition rowsのみとする。
+      これにより、competition train長のOOFを作り、後続blendへ使えるようにする。
+  id_col: id
+  target_col: PitNextLap
+  target_type: binary
+  target_distribution:
+    competition_train:
+      class_0_count: 351759
+      class_1_count: 87381
+      class_0_rate: 0.801018
+      class_1_rate: 0.198982
+    original:
+      class_1_rate: 0.254797
+      abs_class_1_rate_diff_vs_train: 0.055815
+
+baseline_references:
+  exp_20260503_006b_cat_original_prior_no_year_prior_min:
+    model: CatBoost
+    feature_set: original_prior_no_year_prior_min
+    cv_auc: 0.9487943937
+    public_lb: 0.94840
+    judgment: keep
+    role: CatBoost original prior主軸の比較対象
+  exp_20260503_006c_cat_original_prior_no_count_min:
+    model: CatBoost
+    feature_set: original_prior_no_year_no_count_min
+    cv_auc: 0.9485750913
+    public_lb: 0.94815
+    judgment: hold
+    role: countなしCatBoost original prior比較対象
+  exp_20260503_007_realmlp_shared001_min:
+    model: RealMLP
+    feature_set: shared001_realmlp_min
+    cv_auc: 0.953270
+    public_lb: 0.95273
+    judgment: keep
+    role: >
+      現時点の単体主軸。
+      009の最重要比較対象。
+  exp_20260503_008_realmlp_shared001_plus_006b_orig_prior:
+    model: RealMLP
+    feature_set: shared001_realmlp_min_plus_safe_orig_prior
+    cv_auc: 0.953039
+    public_lb: 0.95249
+    judgment: hold
+    role: >
+      RealMLP + safe orig prior。
+      単体では007より劣化したが、avg_007_008はOOF上で007を上回ったためblend候補。
+
+features:
+  feature_set: shared003_lgb_full_fe_single_min
+  base_features:
+    - Driver
+    - Compound
+    - Race
+    - Year
+    - PitStop
+    - LapNumber
+    - Stint
+    - TyreLife
+    - Position
+    - LapTime (s)
+    - LapTime_Delta
+    - Cumulative_Degradation
+    - RaceProgress
+    - Position_Change
+
+  dropped_features:
+    - id
+    - PitNextLap
+    - _dataset
+    - PitStop
+  drop_notes:
+    - PitStop is dropped following shared_003 because it may behave as post-fact local-state leakage.
+
+  engineered_features:
+    race_progress_features:
+      - EstimatedTotalLaps
+      - LapsRemaining
+      - LapProgress_x_LapNumber
+      - Early_Race
+      - Mid_Race
+      - Late_Race
+      - RaceProgressBin
+    tyre_life_features:
+      - TyreAgeRatio
+      - LapPerTyreLife
+      - LapMinusTyreLife
+      - TyreLifeMinusLap
+      - TyreAgeVsRace
+      - PitWindowPressure
+      - TyreLife_x_RaceProgress
+      - TyreLifeBin
+    degradation_features:
+      - DegPerTyreLap
+      - DegPerRaceLap
+      - Abs_Cumulative_Degradation
+      - Positive_Degradation
+    lap_delta_features:
+      - DeltaPerTyreLap
+      - DeltaAbs
+      - LapTimeDeltaPositive
+      - LapTimeDeltaNegative
+    position_features:
+      - PositionPressure
+      - Abs_Position_Change
+      - Gained_Position
+      - Lost_Position
+    stint_features:
+      - StintPressure
+      - TyreLife_x_Stint
+      - Stint_x_LapNumber
+      - Is_First_Stint
+      - Is_Late_Stint
+    year_features:
+      - Year_str
+      - is_2023
+      - Year_minus_2022
+    interaction_categories:
+      - Driver_Compound
+      - Race_Compound
+      - Race_Year
+      - Driver_Race
+      - Driver_Year
+      - Stint_Compound
+      - Compound_TyreLifeBin
+      - Compound_RaceProgressBin
+    frequency_features:
+      - Driver_freq
+      - Race_freq
+      - Compound_freq
+      - Driver_Race_freq
+      - Race_Year_freq
+      - Year_str_freq
+    lag_sequential_features:
+      - Delta_lag1
+      - Delta_roll3_mean
+      - Deg_diff
+      - TyreLife_growth
+      - LapTime_lag1
+      - LapTime_diff
+    target_encoding:
+      enabled: true
+      columns:
+        - Driver
+        - Race_Year
+        - Driver_Race
+        - Driver_Year
+        - Race
+        - Stint_Compound
+      generated_features:
+        - TE_Driver
+        - TE_Race_Year
+        - TE_Driver_Race
+        - TE_Driver_Year
+        - TE_Race
+        - TE_Stint_Compound
+      policy: >
+        各outer fold内で、competition fold-train + original rows を使って
+        TargetEncoderをfitし、competition validation/testへtransformする。
+
+  lag_feature_implementation_note: >
+    初回実装では Delta_roll3_mean 作成時に
+    groupby(...).shift(1).rolling(...).mean().reset_index(level=[0,1,2])
+    を使ったため、Pandas環境で IndexError: Too many levels が発生した。
+    修正版では groupby(["Driver","Race","Stint"]).transform(
+    lambda s: s.shift(1).rolling(3, min_periods=1).mean()
+    ) を使用し、グループ境界をまたがない直近3件平均に変更した。
+    これはshared_003の Lag / Sequential Features の意図に近い。
+
+  encoding:
+    categorical_encoder: OrdinalEncoder
+    target_encoder: sklearn TargetEncoder
+    cat_cols_final:
+      - Driver
+      - Compound
+      - Race
+      - Year_str
+      - Driver_Compound
+      - Race_Compound
+      - Race_Year
+      - Driver_Race
+      - Driver_Year
+      - Compound_TyreLifeBin
+      - Compound_RaceProgressBin
+      - Stint_Compound
+
+  excluded_features:
+    - Normalized_TyreLife
+    - Normalized_TyreLife_proxy
+    - ORIG_PRIOR_Driver
+    - ORIG_PRIOR_Compound
+    - ORIG_PRIOR_Race
+    - ORIG_PRIOR_Stint
+    - all_ORIG_PRIOR_features
+    - pseudo_label
+    - full_shared003_stack
+    - RealMLP_member
+    - XGB_member
+    - LR_stacker
+    - Hill_Climb
+    - NM_blend
+
+  leakage_control:
+    - Normalized_TyreLife is dropped before feature engineering
+    - no Normalized_TyreLife proxy based on final stint length
+    - no pseudo label
+    - no ORIG_PRIOR_* graft in this experiment
+    - competition validation rows are never mixed with original rows
+    - target encoding is fitted inside each fold
+    - OOF is created only for competition train rows
+  risk_notes:
+    - original row merge may inflate CV
+    - target x Year stratification may make CV optimistic if Public/Private year composition differs
+    - lag features are computed on train+orig+test combined rows, using only previous rows within sorted Driver/Race/Stint sequence
+    - frequency features use train/original/test combined distribution and may encode test distribution
+
+model:
+  family: LightGBM
+  estimator: LGBMClassifier
+  task: binary classification
+  seeds:
+    - 3407
+    - 42
+  params:
+    n_estimators: 9000
+    learning_rate: 0.022
+    num_leaves: 31
+    min_child_samples: 120
+    subsample: 0.88
+    subsample_freq: 1
+    colsample_bytree: 0.82
+    reg_alpha: 0.25
+    reg_lambda: 10.0
+    max_bin: 255
+    class_weight: balanced
+    early_stopping_rounds: 450
+    device_requested: gpu
+    gpu_use_dp: false
+    n_jobs: -1
+    verbose: -1
+  runtime_policy:
+    preferred_accelerator: GPU
+    fallback: CPU
+    note: >
+      Kaggle環境でLightGBM GPU学習が失敗する場合はCPUへfallbackする。
+      GPU/CPUのどちらで実行されたかはcv_result.jsonに記録する。
+  cv:
+    scheme: StratifiedKFold
+    stratification: target x Year
+    n_splits: 5
+    shuffle: true
+    random_state: 3407
+    validation_rows: competition train rows only
+    original_rows: appended to each fold training side
+
+hypothesis:
+  main: >
+    007 RealMLPが現時点の単体主軸だが、同じfamily周辺を掘り続けるよりも、
+    shared_003由来のLGB full-FE単体を作ることで、別familyの素材を増やす方が期待値が高い。
+    009単体が007を超える必要はない。
+    007と相関が十分にズレ、blendで上積みするなら価値がある。
+  expected_effect:
+    - 007単体には届かなくても、007と違うGBDT viewとしてblendに効く
+    - RealMLPでは拾いにくいtree-friendlyなinteraction/lag/frequency特徴を拾う
+    - avg_007_009 または Ridge/ElasticNet/LogReg で007単体を上回る
+  risk:
+    - shared_003表示CVほどは出ない
+    - original append / target x Year stratificationによりCVが楽観的になる
+    - lag/frequency/TEが強すぎてPublic LBに変換されない
+    - 007と比べて単体Public LBがかなり低い
+    - CPU実行の場合、学習時間が長い
+  failure_pattern:
+    - 009単体CV/LBが007より大幅に低い
+    - 007との相関が高く、avgでも改善しない
+    - CVは高いがPublic LBが明確に低い
+    - fold間ばらつきが大きい
+    - LightGBMがlag/frequency/TEに過剰適合する
+
+result:
+  cv_auc: null
+  fold_scores: []
+  fold_mean: null
+  fold_std: null
+  public_lb: null
+  train_time: null
+  used_devices: []
+  best_iterations: []
+  fold_seed_scores: []
+  competition_target_mean: 0.198982
+  original_target_mean: 0.254797
+  danger_col_used: false
+  original_rows_used: true
+  orig_prior_features_used: false
+  comparison:
+    vs_007_realmlp_shared001_min:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+    vs_008_realmlp_plus_orig_prior:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+    vs_006b_cat_original_prior_no_year:
+      cv_diff: null
+      lb_diff: null
+      pearson_corr: null
+      spearman_corr: null
+  blend_probe:
+    avg_007_009_auc: null
+    avg_007_008_009_auc: null
+    avg_006b_007_009_auc: null
+    avg_006b_007_008_009_auc: null
+  feature_importance_notes: >
+    実行後にfeature_importance上位を記載する。
+    特に RaceProgress/LapNumber/TyreLife/Year/TE/frequency/lag 系がどの程度効くか確認する。
+  public_private_risk_notes: >
+    CVが高くPublic LBが鈍い場合は、original row merge、target x Year stratification、
+    train/original/test combined frequency、lag/TEによるCV盛りを疑う。
+    009は単体主軸ではなく、まずblend素材として評価する。
+
+artifacts:
+  outdir: /kaggle/working/exp_20260503_009_lgb_shared003_full_fe_single_min
+  expected_files:
+    - oof_exp_20260503_009_lgb_shared003_full_fe_single_min.npy
+    - pred_exp_20260503_009_lgb_shared003_full_fe_single_min.npy
+    - oof_exp_20260503_009_lgb_shared003_full_fe_single_min.csv
+    - submission_exp_20260503_009_lgb_shared003_full_fe_single_min.csv
+    - cv_result.json
+    - feature_columns.csv
+    - feature_importance.csv
+    - feature_importance_by_fold_seed.csv
+    - fold_seed_scores.csv
+  creates_oof: true
+  creates_prediction: true
+  creates_submission: true
+  save_for_blend: true
+
+decision:
+  judgment: pending
+  keep_condition:
+    - 009が007に近いCV/LBを出す
+    - または007より単体は低くても、avg_007_009が007単体を上回る
+    - Ridge/ElasticNet/LogReg/HC/NMで正の重みが付く
+    - 007との相関がRealMLP派生同士より低い
+    - Public LBがCVと大きく矛盾しない
+  hold_condition:
+    - 単体は007未満だが、blendで改善する
+    - LGB full-FEという別family素材として意味がある
+    - 007/008/006bとは異なるOOF方向を持つ
+  drop_condition:
+    - 009単体が弱く、007との相関も高く、avgでも改善しない
+    - CVだけ高くPublic LBが低い
+    - feature importanceが危険な分布依存特徴に偏る
+    - 学習コストに対して素材価値が低い
+  next_action_after_run:
+    - Public LBを提出して記録
+    - 006b/007/008/009のOOF相関確認
+    - avg_007_009, avg_007_008_009, avg_006b_007_009 を確認
+    - 009がkeep/holdならblend台作成へ進む
+    - 009がdropならshared_003のXGB full-FEまたはshared_004 CatBoost確認へ進む
