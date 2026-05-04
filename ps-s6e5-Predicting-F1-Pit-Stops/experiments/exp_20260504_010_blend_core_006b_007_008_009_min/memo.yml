@@ -8,79 +8,76 @@ experiment:
 
 objective:
   summary: >
-    006b / 007 / 008 / 009 の4本を使い、Avg / Ridge / ElasticNet /
-    LogisticRegression / Hill Climb / Nelder-Mead を横比較する。
-    007 RealMLP shared001 min が現時点の単体主軸だが、
-    008と009は単体では007未満でもOOF平均では007を上回った。
-    010では、009 LGB shared003 full-FE single がblend内で有効な重みを持つかを確認し、
-    次に 009 + safe original prior を試す価値があるかを判断する。
+    006b / 007 / 008 / 009 の4本を使って、最小blend台を作成する。
+    目的は、単にCV最高のblendを作ることではなく、
+    009 LGB shared003 full-FE single がblend内で有効な重みを持つかを確認し、
+    次に 009 + safe original prior を試す価値があるか判断することである。
+    同時に、S6E4の反省を踏まえ、Avg / Ridge / ElasticNet / LogReg / HC / NM を横並びで比較する。
   purpose:
-    - 007単体を上回るblend候補を作る
-    - 009に有効な重みが付くか確認する
-    - 008がRealMLP近縁派生としてblendに効くか確認する
+    - 007単体主軸に対してblendで上積みできるか確認する
+    - 009にRidge/ElasticNet/LogReg/HC/NMで有効な重みが付くか確認する
+    - 008がRealMLP近縁派生としてblendで有効か確認する
     - 006b CatBoost軸がblendに残るか確認する
-    - Avg / Ridge / ElasticNet / LogReg / HC / NM を横比較する
-    - 011で 009 + safe orig prior を作るべきか判断する
-    - 後続の本格blend台の最小構成を決める
+    - 複数blend方式を横比較し、Public提出候補を作る
+    - 次の 011_lgb_shared003_full_fe_plus_orig_prior_min の実行価値を判断する
   success_criteria:
-    - 4本のOOF/predを正しく読み込む
-    - 個別CV AUCを再計算する
-    - OOF Pearson/Spearman相関を保存する
-    - Avg系候補を作成する
-    - Ridge / ElasticNet / LogisticRegression のmeta-CV候補を作成する
-    - HC / NM のweight探索候補を作成する
-    - 各blend候補のOOF AUCを比較する
-    - 009の重みを確認する
-    - blend_summary.csv / blend_weights.csv / blend_result.json を保存する
-    - 各候補のsubmissionを保存する
+    - 各単体OOF AUCを再計算する
+    - 4本のPearson/Spearman相関を保存する
+    - Avg候補を複数作成する
+    - Ridge / ElasticNet / LogReg を二段階探索で比較する
+    - HC / NM の非負重みblendを比較する
+    - blend_summary.csv を保存する
+    - blend_weights.csv を保存する
+    - 各candidateのOOF/pred/submissionを保存する
+    - 009に有効な重みが付くか判断できる状態にする
 
 inputs:
-  model_pool:
+  models:
     - key: 006b
       name: 006b_cat_orig_prior_no_year
-      experiment_id: exp_20260503_006b_cat_original_prior_no_year_prior_min
       family: CatBoost
-      cv_auc: 0.9487943937
-      public_lb: 0.94840
+      experiment_id: exp_20260503_006b_cat_original_prior_no_year_prior_min
       oof_file: oof_exp_20260503_006b_cat_original_prior_no_year_prior_min.npy
       pred_file: pred_exp_20260503_006b_cat_original_prior_no_year_prior_min.npy
+      cv_auc: 0.9487943937
+      public_lb: 0.94840
       role: >
         CatBoost original prior no Year。
-        単体は007より弱いが、別family軸としてblendに残るか確認する。
+        単体では007より弱いが、CatBoost系の別family素材としてblend候補に入れる。
     - key: 007
       name: 007_realmlp_shared001_min
-      experiment_id: exp_20260503_007_realmlp_shared001_min
       family: RealMLP
-      cv_auc: 0.953270
-      public_lb: 0.95273
+      experiment_id: exp_20260503_007_realmlp_shared001_min
       oof_file: oof_exp_20260503_007_realmlp_shared001_min.npy
       pred_file: pred_exp_20260503_007_realmlp_shared001_min.npy
+      cv_auc: 0.953270
+      public_lb: 0.95273
       role: >
         現時点の単体主軸。
-        010ではこの007単体を上回るblend候補を探す。
+        全blend候補の基準線。
     - key: 008
       name: 008_realmlp_plus_orig_prior
-      experiment_id: exp_20260503_008_realmlp_shared001_plus_006b_orig_prior
       family: RealMLP
-      cv_auc: 0.953039
-      public_lb: 0.95249
+      experiment_id: exp_20260503_008_realmlp_shared001_plus_006b_orig_prior
       oof_file: oof_exp_20260503_008_realmlp_shared001_plus_006b_orig_prior.npy
       pred_file: pred_exp_20260503_008_realmlp_shared001_plus_006b_orig_prior.npy
+      cv_auc: 0.953039
+      public_lb: 0.95249
       role: >
-        007にsafe orig priorを追加したRealMLP近縁派生。
-        単体では007より劣化したが、avg_007_008はOOF上で007を上回ったためblend候補。
+        007にsafe original priorを追加したRealMLP近縁派生。
+        単体では007より劣化したが、avg_007_008ではOOF上で007を上回ったためblend hold。
     - key: 009
       name: 009_lgb_shared003_full_fe_single
-      experiment_id: exp_20260503_009_lgb_shared003_full_fe_single_min
       family: LightGBM
-      cv_auc: 0.951013
-      public_lb: 0.95076
+      experiment_id: exp_20260503_009_lgb_shared003_full_fe_single_min
       oof_file: oof_exp_20260503_009_lgb_shared003_full_fe_single_min.npy
       pred_file: pred_exp_20260503_009_lgb_shared003_full_fe_single_min.npy
+      cv_auc: 0.951013
+      public_lb: 0.95076
       role: >
-        shared003由来のLGB full-FE single。
-        単体は007より弱いが、007との相関が低めでavg_007_009が改善したため、
-        別family blend素材として重みが付くか確認する。
+        shared003由来のLightGBM full-FE単体。
+        単体では007に負けるが、avg_007_009 / avg_007_008_009でOOF改善したため、
+        別family blend素材として評価する。
 
 data:
   competition_data:
@@ -88,273 +85,290 @@ data:
     sample_submission_path: /kaggle/input/competitions/playground-series-s6e5/sample_submission.csv
   npy_data:
     base_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files
-    required_oof_pred_pairs:
-      - 006b
-      - 007
-      - 008
-      - 009
+    required_files:
+      - oof_exp_20260503_006b_cat_original_prior_no_year_prior_min.npy
+      - pred_exp_20260503_006b_cat_original_prior_no_year_prior_min.npy
+      - oof_exp_20260503_007_realmlp_shared001_min.npy
+      - pred_exp_20260503_007_realmlp_shared001_min.npy
+      - oof_exp_20260503_008_realmlp_shared001_plus_006b_orig_prior.npy
+      - pred_exp_20260503_008_realmlp_shared001_plus_006b_orig_prior.npy
+      - oof_exp_20260503_009_lgb_shared003_full_fe_single_min.npy
+      - pred_exp_20260503_009_lgb_shared003_full_fe_single_min.npy
   id_col: id
   target_col: PitNextLap
   target_type: binary
   target_distribution:
-    class_0_count: 351759
-    class_1_count: 87381
-    class_0_rate: 0.801018
-    class_1_rate: 0.198982
+    competition_train:
+      class_0_count: 351759
+      class_1_count: 87381
+      class_0_rate: 0.801018
+      class_1_rate: 0.198982
 
-blend_methods:
-  simple_average:
-    enabled: true
-    candidates:
-      - avg_007_008
-      - avg_007_009
-      - avg_008_009
-      - avg_006b_007
-      - avg_007_008_009
-      - avg_006b_007_009
-      - avg_006b_007_008_009
-    note: >
-      まず単純平均で、007に他モデルを足した時にOOF AUCが伸びるか確認する。
-  ridge:
-    enabled: true
-    meta_features:
-      - raw predictions
-      - rank-normalized predictions
-      - logit predictions
-    cv:
-      scheme: StratifiedKFold
-      n_splits: 5
-      shuffle: true
-      random_state: 42
-    alpha_grid:
-      - 0.01
-      - 0.03
-      - 0.1
-      - 0.3
-      - 1.0
-      - 3.0
-      - 10.0
-      - 30.0
-      - 100.0
-    note: >
-      Ridgeは高相関OOF群を安定的に扱うための基準メタモデル。
-  elasticnet:
-    enabled: true
-    meta_features:
-      - raw predictions
-      - rank-normalized predictions
-      - logit predictions
-    cv:
-      scheme: StratifiedKFold
-      n_splits: 5
-      shuffle: true
-      random_state: 42
-    alpha_grid:
-      - 0.0001
-      - 0.0003
-      - 0.001
-      - 0.003
-      - 0.01
-      - 0.03
-      - 0.1
-    l1_ratio_grid:
-      - 0.05
-      - 0.15
-      - 0.3
-      - 0.5
-      - 0.7
-    note: >
-      ElasticNetは不要モデルの係数を小さくする目的。
-      009や006bが自然に残るかを確認する。
-  logistic_regression:
-    enabled: true
-    meta_features:
-      - raw predictions
-      - rank-normalized predictions
-      - logit predictions
-    cv:
-      scheme: StratifiedKFold
-      n_splits: 5
-      shuffle: true
-      random_state: 42
-    c_grid:
-      - 0.01
-      - 0.03
-      - 0.1
-      - 0.3
-      - 1.0
-      - 3.0
-      - 10.0
-      - 30.0
-      - 100.0
-    note: >
-      LogRegは確率空間での非線形気味な境界調整候補。
-      S6E4でLR stackが取り逃がしの本命になった反省から、必ず横比較する。
-  hill_climb:
-    enabled: true
-    input_features:
-      - raw predictions only
-    constraint:
-      - nonnegative weights
-      - sum to 1
-    note: >
-      HCはOOF全体へ直接最適化するため過学習しやすい。
-      CV最高でも単独で盲信しない。
-  nelder_mead:
-    enabled: true
-    input_features:
-      - raw predictions only
-    constraint:
-      - softmax weights
-      - sum to 1
-    note: >
-      NMもOOF全体への直接最適化であり、Public/Private耐性は別途確認が必要。
-      HCと同じく攻め寄り候補として扱う。
-
-preprocessing:
-  probability_transforms:
+blend_design:
+  core_models:
+    - 006b
+    - 007
+    - 008
+    - 009
+  meta_features:
     raw:
-      description: original OOF/pred probability
+      description: original OOF/pred probabilities
+      columns:
+        - raw_006b
+        - raw_007
+        - raw_008
+        - raw_009
     rank:
-      description: rankdata(x) / (n + 1)
+      description: rank-normalized OOF/pred values
+      columns:
+        - rank_006b
+        - rank_007
+        - rank_008
+        - rank_009
     logit:
-      description: log(p / (1-p)) after clipping
-      clip_eps: 0.000001
-  validation:
-    - assert all OOF length equals train length
-    - assert all pred length equals sample_submission length
-    - assert all values are finite
-    - compute individual CV AUC from loaded OOF
-    - compute OOF Pearson/Spearman correlations
+      description: clipped logit-transformed OOF/pred values
+      columns:
+        - logit_006b
+        - logit_007
+        - logit_008
+        - logit_009
+  methods:
+    simple_average:
+      candidates:
+        - avg_007_008
+        - avg_007_009
+        - avg_008_009
+        - avg_006b_007
+        - avg_007_008_009
+        - avg_006b_007_009
+        - avg_006b_007_008_009
+    ridge:
+      model: Ridge
+      input_features: raw + rank + logit
+      cv: StratifiedKFold 5fold
+      search: two_stage
+      coarse_grid:
+        alpha: geomspace(1e-3, 1e3, 19)
+      refined_grid:
+        alpha: best_alpha * [0.2, 5.0] with geomspace 21 points
+    elasticnet:
+      model: ElasticNet
+      input_features: raw + rank + logit
+      cv: StratifiedKFold 5fold
+      search: two_stage
+      coarse_grid:
+        alpha: geomspace(1e-5, 1e-1, 13)
+        l1_ratio:
+          - 0.02
+          - 0.05
+          - 0.10
+          - 0.20
+          - 0.35
+          - 0.50
+          - 0.70
+          - 0.90
+      refined_grid:
+        alpha: best_alpha * [0.25, 4.0] with geomspace 17 points
+        l1_ratio: best_l1_ratio ± 0.20 plus anchor values
+    logistic_regression:
+      model: LogisticRegression
+      input_features: raw + rank + logit
+      cv: StratifiedKFold 5fold
+      search: two_stage
+      coarse_grid:
+        C: geomspace(1e-3, 1e3, 19)
+      refined_grid:
+        C: best_C * [0.2, 5.0] with geomspace 21 points
+    hill_climb:
+      input_features: raw probabilities only
+      constraint: nonnegative weights, sum to 1
+      optimizer: greedy coordinate hill climb
+      note: >
+        Full OOFに直接最適化するため過学習しやすい。
+        安定枠ではなく攻め枠として扱う。
+    nelder_mead:
+      input_features: raw probabilities only
+      constraint: softmax weights, sum to 1
+      optimizer: scipy.optimize.minimize(method=Nelder-Mead)
+      note: >
+        Full OOFに直接最適化するため過学習しやすい。
+        HC同様、攻め枠として扱う。
+
+baseline_references:
+  best_single:
+    key: 007
+    cv_auc: 0.953270
+    public_lb: 0.95273
+    role: >
+      blend候補の基準線。
+      010では、各blendが007単体をどれだけ上回るかを最重要指標にする。
+  previous_oof_blend_probes:
+    from_009_corr_notebook:
+      avg_007_009_auc: 0.953576
+      avg_007_008_009_auc: 0.953870
+      avg_006b_007_009_auc: 0.953294
+      avg_006b_007_008_009_auc: 0.953678
+    interpretation: >
+      009単体は007より弱いが、007/008との平均でOOF改善した。
+      したがって009は単体ではなくblend素材として評価する価値がある。
 
 hypothesis:
   main: >
-    007は単体で最強だが、008と009は単体で007未満でもOOF平均で007を上回った。
-    010では、009がRidge/ElasticNet/LogReg/HC/NMで有効な重みを持つかを確認する。
-    009に重みが付くなら、次に 009 + safe orig prior を試す価値がある。
-    009が使われないなら、009改造より別shared/XGB切り出しを優先する。
+    007は単体主軸だが、008と009はそれぞれ007から少しズレたOOF方向を持つ。
+    009は単体では弱いが、LGB別familyとしてavg_007_009やavg_007_008_009で効いた。
+    010では複数blend方式を横比較し、009がRidge/ElasticNet/LogReg/HC/NMで
+    有効な重みを持つかを確認する。
   expected_effect:
-    - avg_007_008_009 が007単体を上回る
-    - Ridge/ElasticNet/LogRegのいずれかが007単体を上回る
+    - Avg/Ridge/ElasticNet/LogRegのいずれかが007単体CVを上回る
     - 009に正の重みが付く
-    - 008にも一定の重みが付く
-    - 006bが小さくても残る可能性がある
+    - 008も007近縁派生として一部重みを持つ
+    - 006bは小さい重みでもCatBoost別familyとして残る可能性がある
+    - HC/NMはRidge/ElasticNet/LogRegより高い可能性があるが、過信しない
   risk:
-    - 007が強すぎて他モデルを足すとPublic LBが落ちる
-    - HC/NMがOOFに過剰適合する
-    - Ridge/ElasticNet/LogRegでは009がほぼ使われない
-    - 008と007の相関が高く、実質的には近縁モデルの平均に留まる
-    - CV改善がPublic LBに変換されない
+    - HC/NMがFull OOFに過剰最適化する
+    - Ridge/ElasticNet/LogRegが007単体にほぼ寄る
+    - 009が重みを持たず、009+orig prior実験の価値が下がる
+    - 008が高相関近縁としてノイズ扱いになる
+    - Public LBではCV改善が変換されない
   failure_pattern:
-    - どのblendも007単体CVを上回らない
-    - 009の重みがほぼ0
-    - 009を入れた候補がPublic LBで悪化する
-    - HC/NMだけ高く、正則化系metaが伸びない
-    - 006b/009など別familyが重みを持たず、RealMLP近縁だけのblendになる
+    - 全blendが007単体以下
+    - 009に重みがほぼ付かない
+    - Ridge/ElasticNet/LogRegでは改善せず、HC/NMだけが改善する
+    - 重みが極端で、実質007単体と変わらない
+    - CV最高候補がPublicで大きく落ちる
 
 result:
   status: pending
   individual:
     006b:
-      cv_auc: 0.9487943937
+      cv_auc: null
       public_lb: 0.94840
     007:
-      cv_auc: 0.953270
+      cv_auc: null
       public_lb: 0.95273
     008:
-      cv_auc: 0.953039
+      cv_auc: null
       public_lb: 0.95249
     009:
-      cv_auc: 0.951013
+      cv_auc: null
       public_lb: 0.95076
-  correlations:
-    pearson: {}
-    spearman: {}
-  blend_summary: []
-  best_candidate:
-    name: null
-    method: null
-    cv_auc: null
-    public_lb: null
-  key_weight_checks:
+  correlation:
+    pearson: null
+    spearman: null
+    notes: >
+      実行後、特に007-008、007-009、008-009、006b-007の相関を記録する。
+  best_candidates:
+    best_cv_candidate: null
+    best_stable_candidate: null
+    best_attack_candidate: null
+  method_results:
+    avg:
+      best_candidate: null
+      best_cv_auc: null
+      weights: null
     ridge:
-      w_006b: null
-      w_007: null
-      w_008: null
-      w_009: null
+      best_candidate: null
+      best_cv_auc: null
+      best_params: null
+      notes: null
     elasticnet:
-      w_006b: null
-      w_007: null
-      w_008: null
-      w_009: null
+      best_candidate: null
+      best_cv_auc: null
+      best_params: null
+      notes: null
     logreg:
-      w_006b: null
-      w_007: null
-      w_008: null
-      w_009: null
+      best_candidate: null
+      best_cv_auc: null
+      best_params: null
+      notes: null
     hc:
-      w_006b: null
-      w_007: null
-      w_008: null
-      w_009: null
+      best_candidate: null
+      best_cv_auc: null
+      weights: null
+      notes: >
+        Full OOF直接最適化のため、安定枠ではなく攻め枠扱い。
     nm:
-      w_006b: null
-      w_007: null
-      w_008: null
-      w_009: null
-  decision_notes: >
-    実行後に、009へ有効な重みが付いたか、007単体を上回るblendが出たか、
-    正則化系metaとHC/NMの結果が一致しているかを記載する。
-  public_private_risk_notes: >
-    HC/NMはOOF直接最適化のため過信しない。
-    正則化系metaでも007を上回り、Public LBでも悪化しない候補を重視する。
-    S6E4の反省に基づき、Public最高単体だけでなく、
-    構造的にPrivate耐性が高そうなblend候補を最低1枠残す。
+      best_candidate: null
+      best_cv_auc: null
+      weights: null
+      notes: >
+        Full OOF直接最適化のため、安定枠ではなく攻め枠扱い。
+  model_weight_interpretation:
+    does_009_receive_weight: null
+    does_008_receive_weight: null
+    does_006b_receive_weight: null
+    conclusion_for_next_011: null
+  public_lb:
+    submitted_candidates: []
+    results: []
+  notes_after_run: null
 
 artifacts:
   outdir: /kaggle/working/exp_20260504_010_blend_core_006b_007_008_009_min
   expected_files:
     - blend_summary.csv
     - blend_weights.csv
+    - blend_result.json
     - corr_pearson.csv
     - corr_spearman.csv
-    - blend_result.json
-    - submissions/submission_exp_20260504_010_blend_core_006b_007_008_009_min_avg_007_008.csv
-    - submissions/submission_exp_20260504_010_blend_core_006b_007_008_009_min_avg_007_009.csv
-    - submissions/submission_exp_20260504_010_blend_core_006b_007_008_009_min_avg_007_008_009.csv
-    - submissions/submission_exp_20260504_010_blend_core_006b_007_008_009_min_ridge_meta_all.csv
-    - submissions/submission_exp_20260504_010_blend_core_006b_007_008_009_min_elasticnet_meta_all.csv
-    - submissions/submission_exp_20260504_010_blend_core_006b_007_008_009_min_logreg_meta_all.csv
-    - submissions/submission_exp_20260504_010_blend_core_006b_007_008_009_min_hc_nonnegative_raw.csv
-    - submissions/submission_exp_20260504_010_blend_core_006b_007_008_009_min_nm_softmax_raw.csv
+    - ridge_meta_all_search_history.csv
+    - elasticnet_meta_all_search_history.csv
+    - logreg_meta_all_search_history.csv
+  expected_submissions_dir: /kaggle/working/exp_20260504_010_blend_core_006b_007_008_009_min/submissions
+  expected_submission_files:
+    - submission_exp_20260504_010_blend_core_006b_007_008_009_min_avg_007_008.csv
+    - submission_exp_20260504_010_blend_core_006b_007_008_009_min_avg_007_009.csv
+    - submission_exp_20260504_010_blend_core_006b_007_008_009_min_avg_007_008_009.csv
+    - submission_exp_20260504_010_blend_core_006b_007_008_009_min_ridge_meta_all.csv
+    - submission_exp_20260504_010_blend_core_006b_007_008_009_min_elasticnet_meta_all.csv
+    - submission_exp_20260504_010_blend_core_006b_007_008_009_min_logreg_meta_all.csv
+    - submission_exp_20260504_010_blend_core_006b_007_008_009_min_hc_nonnegative_raw.csv
+    - submission_exp_20260504_010_blend_core_006b_007_008_009_min_nm_softmax_raw.csv
   creates_oof: true
   creates_prediction: true
-  creates_submissions: true
+  creates_submission: true
   save_for_final_blend: true
-  note: >
-    各candidateごとに oof_*.npy / pred_*.npy も保存する。
-    後続でさらに011等を足して再blendする場合に使用する。
 
 decision:
   judgment: pending
   keep_condition:
-    - 007単体CVを明確に上回るblend候補がある
-    - Ridge/ElasticNet/LogRegの少なくとも1つが007単体を上回る
-    - 009に正の重みが付く
-    - 007/008/009の3本構成が安定して強い
-    - Public LBが007単体を上回る、または大きく悪化しない
+    - Ridge/ElasticNet/LogReg/Avgの少なくとも1つが007単体CVを明確に上回る
+    - 009に自然な正の重みが付く
+    - 008に一定の重みが付く、またはavg_007_008_009が強い
+    - Public LBで007単体を上回る候補がある
+    - 重みが極端すぎず、複数素材を使う合理性がある
   hold_condition:
-    - HC/NMでは強いが、Ridge/ElasticNet/LogRegでは小幅改善に留まる
-    - 009の重みは小さいが、avg_007_008_009では改善する
-    - 006bは重みが小さいが、別family保険として保持する価値がある
+    - CVでは007を上回るがPublic LB未確認
+    - HC/NMのみが高く、安定系metaは改善が小さい
+    - 009は平均では効くが、Ridge/ElasticNet/LogRegでは重みが小さい
+    - Public次第で攻め枠/安定枠に分ける必要がある
   drop_condition:
-    - どのblendも007単体を上回らない
-    - 009の重みがほぼ0で、009改造の価値が低い
-    - 正則化系metaが007単体未満
-    - HC/NMだけが高く、過学習疑いが強い
+    - すべての安定系blendが007単体以下
+    - 009に重みがほぼ付かない
+    - Public LBで007より明確に悪い
+    - CV改善がHC/NMだけで、過学習疑いが強い
   next_action_after_run:
-    - blend_summary.csvとblend_weights.csvを確認
-    - 009に有効重みが付けば、011_lgb_shared003_full_fe_plus_orig_prior_min を作る
-    - 009が使われなければ、009+orig priorは後回し
-    - 010の有望candidateをPublic提出してLBを記録
-    - 010候補と007単体を最終候補群に保持
+    - blend_summary.csvとblend_weights.csvを確認する
+    - 009に正の重みが付くか確認する
+    - 009に重みが付く場合は exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min を検討する
+    - 009に重みが付かない場合は011を後回しにし、shared003 XGB切り出しまたは別shared確認へ進む
+    - Public LB提出候補は安定枠と攻め枠に分ける
+    - S6E4の反省として、Public最高単体だけでなく安定系stack候補を残す
+
+final_submission_policy:
+  principle: >
+    S6E4ではPublic最高単体を優先しすぎ、未選択stackがPrivateで大きく勝った。
+    S6E5では、最終2枠を攻め枠と安定枠に分ける。
+  attack_slot_candidates:
+    - HC
+    - NM
+    - CV最高blend
+  stable_slot_candidates:
+    - Avg
+    - Ridge
+    - ElasticNet
+    - LogReg
+  notes: >
+    010段階ではまだ最終提出を決めない。
+    目的は、blend方式ごとの挙動と009の重みを確認し、
+    次のモデル追加方針を決めることである。
