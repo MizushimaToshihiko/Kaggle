@@ -7,16 +7,17 @@ experiment:
 
 objective:
   summary: >
-    009 LGB shared003 full-FE single をベースに、
-    006b/008 系で使った safe original prior を追加する。
+    009 LGB shared003 full-FE single を完全ベースにし、
+    009のFE / CV split / OrdinalEncoder / TargetEncoder / original全件concat /
+    LGB params / seed構成は変えず、safe original prior のみを追加する。
     目的は、009単体を更新できるか、および010 blendにおいて
     009の置換または追加素材として機能するかを確認すること。
   success_criteria:
     - raw CV AUC を取得
     - Public LB を取得
     - oof / pred を保存
-    - 007 / 008 / 009 / 010 core との相関を確認
-    - 010 blend に追加または009置換して LogReg / ElasticNet / HC / NM を比較する
+    - 007 / 008 / 009 との相関を確認
+    - 010 blend に追加または009置換して Avg / Ridge / ElasticNet / LogReg / HC / NM を比較する
 
 positioning:
   experiment_type: update_candidate
@@ -24,39 +25,44 @@ positioning:
   base_family: lightgbm
   base_reference: exp_20260503_009_lgb_shared003_full_fe_single_min
   why_now: >
-    010 blendで009はHC/NM重み約0.21を持ち、単体は弱いが明確にblend素材として有効だった。
+    010 blendで009はHC/NM重み約0.21を持ち、単体は007より弱いが
+    明確にblend素材として有効だった。
     008ではRealMLPにsafe original priorを足すと単体劣化したが、
     blendでは約0.257の重みを持った。
     したがって、009にもsafe original priorを足し、単体更新ではなく
     blend変換率を主眼に確認する価値がある。
 
 data:
-  train_path: /kaggle/input/playground-series-s6e5/train.csv
-  test_path: /kaggle/input/playground-series-s6e5/test.csv
-  original_path: /kaggle/input/f1-strategy-dataset-pit-stop-prediction/data
+  train_path: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  original_path: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
   target: PitNextLap
   id_col: id
+  danger_col: Normalized_TyreLife
+  danger_col_used: false
   original_usage:
     competition_train: used for CV validation and OOF
-    original_rows: fold train side concat only
-    original_prior_source: original fold train side only
+    original_rows: all original rows are appended to each fold train side, same as 009
+    original_prior_source: X_tr after competition fold train + original all rows concat
   forbidden_columns:
     - Normalized_TyreLife
+    - Normalized_TyreLife proxy
+    - stint endpoint proxy
+    - pseudo label
 
 cv:
   scheme: StratifiedKFold
+  stratification: target x Year
   n_splits: 5
   shuffle: true
-  seeds:
+  random_state: 3407
+  seeds_base:
     - 3407
     - 42
-  original_split:
-    scheme: StratifiedKFold
-    n_splits: 5
-    note: >
-      original rows are split by the same fold index.
-      For each fold, only original train side is used for concat and prior creation.
-      original validation side is not used.
+  note: >
+    CV split is intentionally kept identical to 009.
+    The stratification key is target + Year.
+    This is important because 2023 has an extreme PitNextLap rate artifact.
 
 model:
   family: LightGBM
@@ -79,6 +85,10 @@ model:
     early_stopping_rounds: 450
     device_requested: gpu
     cpu_fallback: true
+    gpu_use_dp: false
+  note: >
+    LGB params are unchanged from 009.
+    The only intended model-side difference from 009 is the added original prior features.
 
 features:
   base_features:
@@ -86,13 +96,38 @@ features:
     summary: >
       shared003-style full-FE.
       RaceProgress, TyreLife, degradation, lap delta, position, stint, year,
-      interaction categories, frequency, lag/sequential, and fold TE are used.
+      interaction categories, frequency, lag/sequential, and fold-safe TargetEncoder are used.
+  expected_feature_count:
+    code_009: 74
+    code_011_expected: 100
+    note: >
+      009 final features 74 + safe original prior features up to 26.
+      If final feature count is around 94, TE is probably missing.
+      If final feature count differs substantially from 100, inspect added/dropped columns.
   dropped_features:
     - id
     - target
     - _dataset
     - PitStop
     - Normalized_TyreLife
+  categorical_encoding:
+    method: OrdinalEncoder
+    fit_scope: train_fe + orig_fe + test_fe
+    columns:
+      - Driver
+      - Compound
+      - Race
+      - Year_str
+      - Driver_Compound
+      - Race_Compound
+      - Race_Year
+      - Driver_Race
+      - Driver_Year
+      - Compound_TyreLifeBin
+      - Compound_RaceProgressBin
+      - Stint_Compound
+    note: >
+      Same as 009. Do not change to LightGBM categorical dtype in this experiment.
   race_progress_features:
     - EstimatedTotalLaps
     - LapsRemaining
@@ -159,6 +194,12 @@ features:
     - LapTime_lag1
     - LapTime_diff
   fold_target_encoding:
+    enabled: true
+    method: sklearn.preprocessing.TargetEncoder
+    cv: 5
+    smooth: auto
+    shuffle: true
+    random_state: 3407
     columns:
       - Driver
       - Race_Year
@@ -166,12 +207,25 @@ features:
       - Driver_Year
       - Race
       - Stint_Compound
-    method: inner StratifiedKFold OOF TE inside each outer fold
+    output_features:
+      - TE_Driver
+      - TE_Race_Year
+      - TE_Driver_Race
+      - TE_Driver_Year
+      - TE_Race
+      - TE_Stint_Compound
+    implementation_note: >
+      This must be called inside the training loop before make_orig_prior_features.
+      If TE features are missing, the experiment is not 009 + orig prior.
   added_original_prior:
+    enabled: true
+    implementation: make_orig_prior_features
+    source: X_tr after fold train + original all rows concat
     summary: >
-      original fold train side only から target mean を作り、
-      competition train / valid / test / original train concat rows にmergeする。
-      mean と minus_global のみ使用する。
+      For each fold, original prior features are created from X_tr and y_tr.
+      Since 009 appends all original rows to each fold train side,
+      this keeps 009's design unchanged.
+      The added features are mean and minus_global only.
     include:
       - ORIG_PRIOR_* mean
       - ORIG_PRIOR_*_minus_global
@@ -189,15 +243,16 @@ features:
       - Stint_Compound
       - Compound_TyreLifeBin
       - Compound_RaceProgressBin
-    exclude:
+    excluded_by_design:
       - ORIG_PRIOR_Year
-      - Year-based original prior
+      - any Year-based original prior
       - *_count
       - Race_x_Driver_x_Stint
       - Normalized_TyreLife
       - Normalized_TyreLife proxy
       - stint endpoint proxy
       - pseudo label
+    expected_added_feature_count: 26
 
 hypothesis:
   main: >
@@ -210,7 +265,10 @@ hypothesis:
   failure_pattern: >
     CVだけ上がってPublic LBが鈍い。
     009との相関が高まり、blendで重みが小さくなる。
-    original row concatとoriginal priorの二重使用によりCVが過大評価される。
+    original全件concatとoriginal priorの二重使用によりCVが過大評価される。
+  critical_check: >
+    final feature count should be around 100 and TE_* features must exist.
+    If final feature count is around 94, the notebook likely forgot to call add_fold_target_encoding.
 
 comparison_plan:
   single_compare_against:
@@ -222,7 +280,7 @@ comparison_plan:
     modes:
       - add_011_to_006b_007_008_009
       - replace_009_with_011
-      - compare_009_and_011_together
+      - keep_009_and_011_together
     strategies:
       - avg
       - Ridge
@@ -248,14 +306,14 @@ artifacts:
   files_expected:
     - oof_exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min.npy
     - pred_exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min.npy
+    - oof_exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min.csv
     - submission_exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min.csv
     - cv_result.json
-    - fold_scores.csv
+    - fold_seed_scores.csv
     - feature_columns.csv
-    - categorical_features.csv
     - orig_prior_features.csv
-    - feature_importance_all.csv
-    - feature_importance_summary.csv
+    - feature_importance_by_fold_seed.csv
+    - feature_importance.csv
   save_for_blend:
     - oof_exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min.npy
     - pred_exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min.npy
@@ -263,19 +321,19 @@ artifacts:
 results:
   cv_auc: null
   public_lb: null
-  fold_auc:
-    seed_3407:
-      fold0: null
-      fold1: null
-      fold2: null
-      fold3: null
-      fold4: null
-    seed_42:
-      fold0: null
-      fold1: null
-      fold2: null
-      fold3: null
-      fold4: null
+  fold_scores:
+    fold1: null
+    fold2: null
+    fold3: null
+    fold4: null
+    fold5: null
+  fold_mean: null
+  fold_std: null
+  final_feature_count: null
+  orig_prior_feature_count: null
+  te_feature_count: null
+  best_iterations: null
+  used_devices: null
   correlation:
     vs_007:
       pearson: null
@@ -320,8 +378,8 @@ decision_rule:
       009より単体が悪化し、相関も高く、blendでも更新しない。
   after_blend:
     keep: >
-      010のLogReg / ElasticNet / HC / NM のいずれかをCVとLBの両方または
-      少なくともLBで更新する。
+      010のLogReg / ElasticNet / HC / NM のいずれかをCVとLBの両方、
+      または少なくともPublic LBで更新する。
     hold: >
       CVだけ微増、またはLB同等で重みが自然に残る。
     drop: >
@@ -329,8 +387,20 @@ decision_rule:
 
 notes:
   - >
-    011は009にsafe original priorを足す実験だが、009はすでにoriginal rowsをfold trainへconcatしている。
-    したがってoriginal情報の二重使用リスクがある。
+    011は009の厳密差分実験である。
+    変更してよいのはsafe original prior追加だけ。
+  - >
+    009のCV split、FE、OrdinalEncoder、TargetEncoder、original全件concat、
+    LGB params、seed構成は変えない。
+  - >
+    make_orig_prior_featuresはadd_fold_target_encodingの後に呼ぶ。
+    そうしないとTE 6本が消え、009 + orig priorではなくなる。
+  - >
+    final feature countが約100であることを確認する。
+    約94ならTE呼び出し漏れの可能性が高い。
+  - >
+    009はすでにoriginal rowsをfold trainへconcatしている。
+    したがって011はoriginal情報の二重使用リスクがある。
   - >
     CVだけ上がってPublic LBが伸びない場合は危険。
     その場合、単体更新ではなくblend変換率のみで判断する。
@@ -338,6 +408,4 @@ notes:
     ORIG_PRIOR_Year、count、Race×Driver×Stint、Normalized_TyreLife proxy は入れない。
   - >
     PitStop は009方針に合わせてdropする。
-    ただし将来、PitStopを安全に使う別実験は別IDで切る。
-  - >
-    011の採否は単体CV/LBではなく、010 blend更新可否を主判定にする。
+    PitStopを安全に使う別実験は別IDで切る。
