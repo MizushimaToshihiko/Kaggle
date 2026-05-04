@@ -241,67 +241,132 @@ result:
   status: pending
   individual:
     006b:
-      cv_auc: null
+      cv_auc: 0.9487943937294769
       public_lb: 0.94840
     007:
-      cv_auc: null
+      cv_auc: 0.9532701289015783
       public_lb: 0.95273
     008:
-      cv_auc: null
+      cv_auc: 0.9530389769769412
       public_lb: 0.95249
     009:
-      cv_auc: null
+      cv_auc: 0.9510132993481392
       public_lb: 0.95076
   correlation:
-    pearson: null
-    spearman: null
+    pearson: >
+      {
+        "006b": {
+          "006b": 1,
+          "007": 0.9741650037529609,
+          "008": 0.9763870704310715,
+          "009": 0.9554612172179896
+        },
+        "007": {
+          "006b": 0.9741650037529609,
+          "007": 1,
+          "008": 0.9947025497030336,
+          "009": 0.9566936891158422
+        },
+        "008": {
+          "006b": 0.9763870704310716,
+          "007": 0.9947025497030337,
+          "008": 1,
+          "009": 0.9578627446089374
+        },
+        "009": {
+          "006b": 0.9554612172179895,
+          "007": 0.9566936891158422,
+          "008": 0.9578627446089374,
+          "009": 1
+        }
+      }
+    spearman: >
+      {
+        "006b": {
+          "006b": 1,
+          "007": 0.9638710382867035,
+          "008": 0.9644990462347163,
+          "009": 0.9630776102745323
+        },
+        "007": {
+          "006b": 0.9638710382867036,
+          "007": 1,
+          "008": 0.991720256275207,
+          "009": 0.9682945413115085
+        },
+        "008": {
+          "006b": 0.9644990462347162,
+          "007": 0.991720256275207,
+          "008": 1,
+          "009": 0.9689775461316281
+        },
+        "009": {
+          "006b": 0.9630776102745323,
+          "007": 0.9682945413115085,
+          "008": 0.968977546131628,
+          "009": 1
+        }
+      }
     notes: >
       実行後、特に007-008、007-009、008-009、006b-007の相関を記録する。
   best_candidates:
-    best_cv_candidate: null
+    best_cv_candidate: "nm_softmax_raw","hc_nonnegative_raw"
     best_stable_candidate: null
     best_attack_candidate: null
   method_results:
     avg:
-      best_candidate: null
-      best_cv_auc: null
-      weights: null
+      best_candidate: avg_007_008_009
+      best_cv_auc: 0.953870
+      public_lb: 0.95304
+      weights: [0.0, 0.33333333, 0.33333333, 0.33333333]
     ridge:
-      best_candidate: null
-      best_cv_auc: null
-      best_params: null
-      notes: null
+      best_candidate: ridge_meta_all
+      best_cv_auc: 0.953466
+      public_lb: 0.95252
+      best_params: {"alpha": 0.0002}
+      notes: >
+        lbでは前回と同様に伸びなかった
     elasticnet:
-      best_candidate: null
-      best_cv_auc: null
-      best_params: null
+      best_candidate: elasticnet_meta_all
+      best_cv_auc: 0.953866
+      public_lb: 0.95302
+      best_params: {"alpha": 0.01681792830507429, "l1_ratio": 0.05}
       notes: null
     logreg:
-      best_candidate: null
-      best_cv_auc: null
-      best_params: null
+      best_candidate: logreg_meta_all
+      best_cv_auc: 0.953914
+      public_lb: 0.95313
+      best_params: {"C": 0.1}
       notes: null
     hc:
-      best_candidate: null
-      best_cv_auc: null
-      weights: null
+      best_candidate: hc_nonnegative_raw
+      best_cv_auc: 0.953955
+      public_lb: 0.95316
+      weights: [0.06460071, 0.46877059, 0.25684416, 0.20978453]
       notes: >
         Full OOF直接最適化のため、安定枠ではなく攻め枠扱い。
     nm:
-      best_candidate: null
-      best_cv_auc: null
-      weights: null
+      best_candidate: nm_softmax_raw
+      best_cv_auc: 0.953955
+      public_lb: 0.95316
+      weights: [0.06463795, 0.46890432, 0.25671788, 0.20973986]
       notes: >
         Full OOF直接最適化のため、安定枠ではなく攻め枠扱い。
   model_weight_interpretation:
-    does_009_receive_weight: null
-    does_008_receive_weight: null
-    does_006b_receive_weight: null
-    conclusion_for_next_011: null
+    does_009_receive_weight: true
+    does_008_receive_weight: true
+    does_006b_receive_weight: true
+    conclusion_for_next_011: >
+      009 receives meaningful positive weight in stable blend methods.
+      Therefore, trying 011_lgb_shared003_full_fe_plus_orig_prior_min is justified.
+      The purpose of 011 is to check whether adding safe original prior to the LGB
+      shared003 family improves its standalone score or blend contribution.
   public_lb:
-    submitted_candidates: []
-    results: []
-  notes_after_run: null
+    submitted_candidates: as described the above
+    results: as described the above
+  notes_after_run: >
+    初回のためnm,hc,le,elasticnet,ridge,avgの全種類提出
+    Public lbではnm,hcが最高スコアだった
 
 artifacts:
   outdir: /kaggle/working/exp_20260504_010_blend_core_006b_007_008_009_min
