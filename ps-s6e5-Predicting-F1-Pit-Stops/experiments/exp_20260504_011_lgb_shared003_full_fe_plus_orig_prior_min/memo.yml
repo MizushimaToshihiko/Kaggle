@@ -1,0 +1,343 @@
+experiment:
+  id: exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min
+  title: LGB shared003 full-FE + safe original prior
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
+
+objective:
+  summary: >
+    009 LGB shared003 full-FE single をベースに、
+    006b/008 系で使った safe original prior を追加する。
+    目的は、009単体を更新できるか、および010 blendにおいて
+    009の置換または追加素材として機能するかを確認すること。
+  success_criteria:
+    - raw CV AUC を取得
+    - Public LB を取得
+    - oof / pred を保存
+    - 007 / 008 / 009 / 010 core との相関を確認
+    - 010 blend に追加または009置換して LogReg / ElasticNet / HC / NM を比較する
+
+positioning:
+  experiment_type: update_candidate
+  intended_role: lgb_aux_material_or_009_replacement
+  base_family: lightgbm
+  base_reference: exp_20260503_009_lgb_shared003_full_fe_single_min
+  why_now: >
+    010 blendで009はHC/NM重み約0.21を持ち、単体は弱いが明確にblend素材として有効だった。
+    008ではRealMLPにsafe original priorを足すと単体劣化したが、
+    blendでは約0.257の重みを持った。
+    したがって、009にもsafe original priorを足し、単体更新ではなく
+    blend変換率を主眼に確認する価値がある。
+
+data:
+  train_path: /kaggle/input/playground-series-s6e5/train.csv
+  test_path: /kaggle/input/playground-series-s6e5/test.csv
+  original_path: /kaggle/input/f1-strategy-dataset-pit-stop-prediction/data
+  target: PitNextLap
+  id_col: id
+  original_usage:
+    competition_train: used for CV validation and OOF
+    original_rows: fold train side concat only
+    original_prior_source: original fold train side only
+  forbidden_columns:
+    - Normalized_TyreLife
+
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  seeds:
+    - 3407
+    - 42
+  original_split:
+    scheme: StratifiedKFold
+    n_splits: 5
+    note: >
+      original rows are split by the same fold index.
+      For each fold, only original train side is used for concat and prior creation.
+      original validation side is not used.
+
+model:
+  family: LightGBM
+  estimator: LGBMClassifier
+  params:
+    objective: binary
+    metric: auc
+    boosting_type: gbdt
+    n_estimators: 9000
+    learning_rate: 0.022
+    num_leaves: 31
+    min_child_samples: 120
+    subsample: 0.88
+    subsample_freq: 1
+    colsample_bytree: 0.82
+    reg_alpha: 0.25
+    reg_lambda: 10.0
+    max_bin: 255
+    class_weight: balanced
+    early_stopping_rounds: 450
+    device_requested: gpu
+    cpu_fallback: true
+
+features:
+  base_features:
+    source: exp_20260503_009_lgb_shared003_full_fe_single_min
+    summary: >
+      shared003-style full-FE.
+      RaceProgress, TyreLife, degradation, lap delta, position, stint, year,
+      interaction categories, frequency, lag/sequential, and fold TE are used.
+  dropped_features:
+    - id
+    - target
+    - _dataset
+    - PitStop
+    - Normalized_TyreLife
+  race_progress_features:
+    - EstimatedTotalLaps
+    - LapsRemaining
+    - LapProgress_x_LapNumber
+    - Early_Race
+    - Mid_Race
+    - Late_Race
+    - RaceProgressBin
+  tyre_life_features:
+    - TyreAgeRatio
+    - LapPerTyreLife
+    - LapMinusTyreLife
+    - TyreLifeMinusLap
+    - TyreAgeVsRace
+    - PitWindowPressure
+    - TyreLife_x_RaceProgress
+    - TyreLifeBin
+  degradation_features:
+    - DegPerTyreLap
+    - DegPerRaceLap
+    - Abs_Cumulative_Degradation
+    - Positive_Degradation
+  lap_delta_features:
+    - DeltaPerTyreLap
+    - DeltaAbs
+    - LapTimeDeltaPositive
+    - LapTimeDeltaNegative
+  position_features:
+    - PositionPressure
+    - Abs_Position_Change
+    - Gained_Position
+    - Lost_Position
+  stint_features:
+    - StintPressure
+    - TyreLife_x_Stint
+    - Stint_x_LapNumber
+    - Is_First_Stint
+    - Is_Late_Stint
+  year_features:
+    - Year_str
+    - is_2023
+    - Year_minus_2022
+  interaction_categories:
+    - Driver_Compound
+    - Race_Compound
+    - Race_Year
+    - Driver_Race
+    - Driver_Year
+    - Stint_Compound
+    - Compound_TyreLifeBin
+    - Compound_RaceProgressBin
+  frequency_features:
+    - Driver_freq
+    - Race_freq
+    - Compound_freq
+    - Driver_Race_freq
+    - Race_Year_freq
+    - Year_str_freq
+  lag_sequential_features:
+    - Delta_lag1
+    - Delta_roll3_mean
+    - Deg_diff
+    - TyreLife_growth
+    - LapTime_lag1
+    - LapTime_diff
+  fold_target_encoding:
+    columns:
+      - Driver
+      - Race_Year
+      - Driver_Race
+      - Driver_Year
+      - Race
+      - Stint_Compound
+    method: inner StratifiedKFold OOF TE inside each outer fold
+  added_original_prior:
+    summary: >
+      original fold train side only から target mean を作り、
+      competition train / valid / test / original train concat rows にmergeする。
+      mean と minus_global のみ使用する。
+    include:
+      - ORIG_PRIOR_* mean
+      - ORIG_PRIOR_*_minus_global
+    source_columns:
+      - Driver
+      - Compound
+      - Race
+      - Stint
+      - Position
+      - TyreLifeBin
+      - RaceProgressBin
+      - Driver_Compound
+      - Race_Compound
+      - Driver_Race
+      - Stint_Compound
+      - Compound_TyreLifeBin
+      - Compound_RaceProgressBin
+    exclude:
+      - ORIG_PRIOR_Year
+      - Year-based original prior
+      - *_count
+      - Race_x_Driver_x_Stint
+      - Normalized_TyreLife
+      - Normalized_TyreLife proxy
+      - stint endpoint proxy
+      - pseudo label
+
+hypothesis:
+  main: >
+    009は007/008と相関が相対的に低く、010 blendで約21%の重みを持った。
+    009にsafe original priorを足すことで、単体AUCまたはblend内での残差補完力が改善する可能性がある。
+  positive_pattern: >
+    009単体CV/LBを小幅以上更新する。
+    もしくは単体更新が弱くても、010 coreに追加したときに
+    LogReg / ElasticNet / HC / NM のいずれかで010を更新する。
+  failure_pattern: >
+    CVだけ上がってPublic LBが鈍い。
+    009との相関が高まり、blendで重みが小さくなる。
+    original row concatとoriginal priorの二重使用によりCVが過大評価される。
+
+comparison_plan:
+  single_compare_against:
+    - exp_20260503_007_realmlp_shared001_min
+    - exp_20260503_008_realmlp_shared001_plus_006b_orig_prior
+    - exp_20260503_009_lgb_shared003_full_fe_single_min
+  blend_compare:
+    base_blend: exp_20260504_010_blend_core_006b_007_008_009_min
+    modes:
+      - add_011_to_006b_007_008_009
+      - replace_009_with_011
+      - compare_009_and_011_together
+    strategies:
+      - avg
+      - Ridge
+      - ElasticNet
+      - LogisticRegression
+      - Hill Climb
+      - Nelder-Mead
+  metrics:
+    - cv_auc
+    - public_lb
+    - pearson_corr_with_007
+    - pearson_corr_with_008
+    - pearson_corr_with_009
+    - spearman_corr_with_007
+    - spearman_corr_with_008
+    - spearman_corr_with_009
+    - blend_cv
+    - blend_public_lb
+    - blend_weight
+
+artifacts:
+  outdir: /kaggle/working/exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min
+  files_expected:
+    - oof_exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min.npy
+    - pred_exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min.npy
+    - submission_exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min.csv
+    - cv_result.json
+    - fold_scores.csv
+    - feature_columns.csv
+    - categorical_features.csv
+    - orig_prior_features.csv
+    - feature_importance_all.csv
+    - feature_importance_summary.csv
+  save_for_blend:
+    - oof_exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min.npy
+    - pred_exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min.npy
+
+results:
+  cv_auc: null
+  public_lb: null
+  fold_auc:
+    seed_3407:
+      fold0: null
+      fold1: null
+      fold2: null
+      fold3: null
+      fold4: null
+    seed_42:
+      fold0: null
+      fold1: null
+      fold2: null
+      fold3: null
+      fold4: null
+  correlation:
+    vs_007:
+      pearson: null
+      spearman: null
+    vs_008:
+      pearson: null
+      spearman: null
+    vs_009:
+      pearson: null
+      spearman: null
+  blend_results:
+    add_011:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+    replace_009_with_011:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+    keep_009_and_011:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+
+decision_rule:
+  single_model:
+    keep: >
+      009よりCV/LBが明確に改善し、かつCVだけの不自然な上振れではない。
+    hold: >
+      単体は009以下でも、007/008/009との相関が少しズレており、
+      blendで改善余地がある。
+    drop: >
+      009より単体が悪化し、相関も高く、blendでも更新しない。
+  after_blend:
+    keep: >
+      010のLogReg / ElasticNet / HC / NM のいずれかをCVとLBの両方または
+      少なくともLBで更新する。
+    hold: >
+      CVだけ微増、またはLB同等で重みが自然に残る。
+    drop: >
+      CVだけ上がってLBが鈍い、または重みが消える、または010を悪化させる。
+
+notes:
+  - >
+    011は009にsafe original priorを足す実験だが、009はすでにoriginal rowsをfold trainへconcatしている。
+    したがってoriginal情報の二重使用リスクがある。
+  - >
+    CVだけ上がってPublic LBが伸びない場合は危険。
+    その場合、単体更新ではなくblend変換率のみで判断する。
+  - >
+    ORIG_PRIOR_Year、count、Race×Driver×Stint、Normalized_TyreLife proxy は入れない。
+  - >
+    PitStop は009方針に合わせてdropする。
+    ただし将来、PitStopを安全に使う別実験は別IDで切る。
+  - >
+    011の採否は単体CV/LBではなく、010 blend更新可否を主判定にする。
