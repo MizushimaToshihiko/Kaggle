@@ -578,11 +578,12 @@ artifacts:
   save_for_blend: true
 
 decision:
-  judgment: pending
+  judgment: blend hold
   note: >
     完全再現ができなかった。下記RealMLPのログを参考にFEをやり直してみてはどうだろうか
     Columns classified as continuous: ['Year', 'PitStop', 'LapNumber', 'Stint', 'TyreLife', 'Position', 'LapTime_s', 'LapTime_Delta', 'Cumulative_Degradation', 'RaceProgress', 'Position_Change', '_LapNumber_/_RaceProgress', '_TyreLife_/_LapNumber']
     Columns classified as categorical: ['Driver', 'Compound', 'Race', 'Year_cat_', 'PitStop_cat_', 'LapNumber_cat_', 'Stint_cat_', 'TyreLife_cat_', 'Position_cat_', 'LapTime_s_cat_', 'LapTime_Delta_cat_', 'Cumulative_Degradation_cat_', 'RaceProgress_cat_', 'Position_Change_cat_', 'RaceProgress_200_quantile_bin_']
+    -> これはやらない
   keep_condition:
     - 009が007に近いCV/LBを出す
     - または007より単体は低くても、avg_007_009が007単体を上回る
