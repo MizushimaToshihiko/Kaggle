@@ -454,33 +454,111 @@ result:
   original_rows_used: true
   orig_prior_features_used: false
   comparison:
-    vs_007_realmlp_shared001_min:
-      cv_diff: null
-      lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
-    vs_008_realmlp_plus_orig_prior:
-      cv_diff: null
-      lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
     vs_006b_cat_original_prior_no_year:
-      cv_diff: null
-      lb_diff: null
-      pearson_corr: null
-      spearman_corr: null
+      cv_diff: 0.002218906
+      lb_diff: 0.00236
+      pearson_corr: 0.955461
+      spearman_corr: 0.963078
+    vs_007_realmlp_shared001_min:
+      cv_diff: -0.00225683
+      lb_diff: -0.00197
+      pearson_corr: 0.956694
+      spearman_corr: 0.968295
+    vs_008_realmlp_plus_orig_prior:
+      cv_diff: -0.002025678
+      lb_diff: -0.00173
+      pearson_corr: 0.957863
+      spearman_corr: 0.968978
   blend_probe:
-    avg_007_009_auc: null
-    avg_007_008_009_auc: null
-    avg_006b_007_009_auc: null
-    avg_006b_007_008_009_auc: null
+    avg_007_009_auc: 0.9535764080996907
+    avg_007_008_009_auc: 0.9538695925161512
+    avg_006b_007_009_auc: 0.9532941742775516
+    avg_006b_007_008_009_auc: 0.9536776164355024
   feature_importance_notes: >
     実行後にfeature_importance上位を記載する。
     特に RaceProgress/LapNumber/TyreLife/Year/TE/frequency/lag 系がどの程度効くか確認する。
+    -> 下表のとおり、TE_Driver_Raceが1位、TE_Driver_Yearが４位、TE_Race_Yearが５位、Driver_Race_freqが６位となり合成特徴が上位に入った
+    index	feature	mean	std
+    56	TE_Driver_Race	9987.4	100.1867146
+    21	EstimatedTotalLaps	9317.5	96.13561024
+    29	LapTime (s)	9086.8	144.9143809
+    57	TE_Driver_Year	8502.9	123.2219768
+    59	TE_Race_Year	8469.9	87.93741461
+    17	Driver_Race_freq	8293.2	119.8079945
+    0	Abs_Cumulative_Degradation	7947.6	94.95636425
+    41	PositionPressure	7922.3	78.54375992
+    10	DeltaAbs	7739.2	108.7962418
+    55	TE_Driver	7663.6	116.7982116
+    9	Deg_diff	7213.8	101.02013
+    19	Driver_freq	7054.8	70.54675361
+    33	LapTime_diff	6689.4	118.3893764
+    13	Delta_roll3_mean	6490.5	135.695124
+    58	TE_Race	6456.9	119.2815996
+    6	Cumulative_Degradation	6320.5	116.9988129
+    12	Delta_lag1	6290	142.8853464
+    49	Race_Year_freq	6239.4	97.74138212
+    34	LapTime_lag1	6162.7	86.28125843
+    40	Position	5874.3	106.7593868
+    7	DegPerRaceLap	5861.4	83.63571805
+    32	LapTime_Delta	5669.7	87.49609515
+    60	TE_Stint_Compound	5474.7	115.82175
+    8	DegPerTyreLap	5210.8	63.75961801
+    11	DeltaPerTyreLap	5162.4	75.02917951
+    54	Stint_x_LapNumber	4865.9	53.74311325
+    61	TyreAgeRatio	4684.9	53.00408789
+    42	Position_Change	4681	94.75817174
+    27	LapPerTyreLife	4545.2	90.05775924
+    66	TyreLife_growth	4503.9	111.072999
+    35	LapsRemaining	4177.1	57.71279465
+    48	Race_Year	4135.6	83.87583416
+    62	TyreAgeVsRace	3931	100.9895484
+    47	Race_Compound	3887.9	66.63907762
+    50	Race_freq	3663.1	79.59822723
+    1	Abs_Position_Change	3455.1	55.88370862
+    16	Driver_Race	3301.4	79.50150243
+    15	Driver_Compound	3205.2	93.83413262
+    18	Driver_Year	3037.6	69.55445509
+    25	LapMinusTyreLife	2743.9	95.17405109
+    65	TyreLifeMinusLap	2725.4	86.37283524
+    4	Compound_TyreLifeBin	2350.1	46.5986409
+    45	RaceProgress	2272.6	76.44053608
+    53	Stint_Compound	2267.6	34.25460229
+    28	LapProgress_x_LapNumber	2096.8	56.69959827
+    14	Driver	2075.9	46.97150436
+    39	PitWindowPressure	2064.7	60.04637097
+    67	TyreLife_x_RaceProgress	2020.2	46.12495107
+    52	StintPressure	1880.2	56.1818476
+    68	TyreLife_x_Stint	1873.1	50.82529991
+    3	Compound_RaceProgressBin	1871.5	47.47923523
+    26	LapNumber	1575.3	45.02110616
+    63	TyreLife	1535	40.78670807
+    64	TyreLifeBin	1409.8	33.10857559
+    46	RaceProgressBin	1345.3	22.05573747
+    5	Compound_freq	825.8	12.25470431
+    44	Race	662.8	25.93067681
+    72	Year_str_freq	586.5	26.62183732
+    69	Year	445.1	25.22542809
+    70	Year_minus_2022	380	25.1925915
+    71	Year_str	372.8	16.83778819
+    51	Stint	359.2	17.71251911
+    37	Lost_Position	320	18.87973634
+    22	Gained_Position	239.5	21.08316864
+    38	Mid_Race	127.6	18.19157314
+    24	Is_Late_Stint	121.9	6.367451959
+    2	Compound	106.7	9.333928552
+    23	Is_First_Stint	59.2	7.130529044
+    73	is_2023	33.1	6.935416354
+    30	LapTimeDeltaNegative	23.5	4.478342948
+    31	LapTimeDeltaPositive	16.9	3.212821536
+    43	Positive_Degradation	11.5	4.275251779
+    20	Early_Race	4.5	1.900292375
+    36	Late_Race	4.4	2.319003617
+
   public_private_risk_notes: >
     CVが高くPublic LBが鈍い場合は、original row merge、target x Year stratification、
     train/original/test combined frequency、lag/TEによるCV盛りを疑う。
     009は単体主軸ではなく、まずblend素材として評価する。
+    -> 完全再現はできなかったが、blend_probeにある４つの組み合わせすべてで007のCVを上回ったのでblend素材としての価値があると考える
 
 artifacts:
   outdir: /kaggle/working/exp_20260503_009_lgb_shared003_full_fe_single_min
