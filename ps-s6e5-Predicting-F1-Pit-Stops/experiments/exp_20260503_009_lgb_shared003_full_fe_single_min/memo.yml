@@ -351,15 +351,103 @@ hypothesis:
     - LightGBMがlag/frequency/TEに過剰適合する
 
 result:
-  cv_auc: null
-  fold_scores: []
-  fold_mean: null
-  fold_std: null
-  public_lb: null
-  train_time: null
-  used_devices: []
-  best_iterations: []
-  fold_seed_scores: []
+  cv_auc: 0.9510132993481392
+  fold_scores: [
+    0.9500126714440623,
+    0.9514375276417341,
+    0.9507435996122314,
+    0.9509936783740494,
+    0.9519076923552652
+  ]
+  fold_mean: 0.9510190338854685
+  fold_std: 0.0006409560366016696
+  public_lb: 0.95076
+  train_time: 40m 15s · GPU P100
+  used_devices: ['gpu']
+  best_iterations: [
+    9000,
+    8999,
+    9000,
+    9000,
+    8996,
+    9000,
+    9000,
+    9000,
+    9000,
+    9000
+  ]
+  fold_seed_scores: [
+    {
+      "fold": 1,
+      "seed": 3407,
+      "auc": 0.9498964948176667,
+      "best_iteration": 9000,
+      "used_device": "gpu"
+    },
+    {
+      "fold": 1,
+      "seed": 42,
+      "auc": 0.949851904406288,
+      "best_iteration": 8999,
+      "used_device": "gpu"
+    },
+    {
+      "fold": 2,
+      "seed": 3407,
+      "auc": 0.9513369672158617,
+      "best_iteration": 9000,
+      "used_device": "gpu"
+    },
+    {
+      "fold": 2,
+      "seed": 42,
+      "auc": 0.9512719493941377,
+      "best_iteration": 9000,
+      "used_device": "gpu"
+    },
+    {
+      "fold": 3,
+      "seed": 3407,
+      "auc": 0.950571696822484,
+      "best_iteration": 8996,
+      "used_device": "gpu"
+    },
+    {
+      "fold": 3,
+      "seed": 42,
+      "auc": 0.9506444783751151,
+      "best_iteration": 9000,
+      "used_device": "gpu"
+    },
+    {
+      "fold": 4,
+      "seed": 3407,
+      "auc": 0.9508436676382844,
+      "best_iteration": 9000,
+      "used_device": "gpu"
+    },
+    {
+      "fold": 4,
+      "seed": 42,
+      "auc": 0.9508429396519457,
+      "best_iteration": 9000,
+      "used_device": "gpu"
+    },
+    {
+      "fold": 5,
+      "seed": 3407,
+      "auc": 0.9517208587349197,
+      "best_iteration": 9000,
+      "used_device": "gpu"
+    },
+    {
+      "fold": 5,
+      "seed": 42,
+      "auc": 0.951812181442736,
+      "best_iteration": 9000,
+      "used_device": "gpu"
+    }
+  ]
   competition_target_mean: 0.198982
   original_target_mean: 0.254797
   danger_col_used: false
