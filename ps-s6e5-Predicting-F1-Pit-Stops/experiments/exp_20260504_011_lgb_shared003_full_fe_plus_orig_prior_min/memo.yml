@@ -348,35 +348,55 @@ results:
   correlation:
     vs_007:
       pearson: 0.9352193126537179
-      spearman: null
+      spearman: 0.9261164102202725
     vs_008:
       pearson: 0.936632761347719
-      spearman: null
+      spearman: 0.9267874229543942
     vs_009:
       pearson: 0.9685399441926292
-      spearman: null
+      spearman: 0.9505148329878358
   blend_results:
     add_011_to_006b_007_008_009:
       description: "006b + 007 + 008 + 009 + 011"
       avg:
-        highest: 
-        cv: 
-        lb: 
+        highest: "avg_007_008_009"
+        cv: 0.953870
+        lb: null
       ridge: 
-        cv: 
-        lb: 
+        cv: 0.953454
+        lb: null
       elasticnet: 
-        cv: 
-        lb: 
+        cv: 0.953864
+        lb: null
       logreg: 
-        cv: 
-        lb: 
+        cv: 0.953917
+        lb: 0.95315
       hc: 
-        cv: 
-        lb: 
+        cv: 0.953955
+        lb: null
+        weights: {
+          "candidate": "hc_nonnegative_raw",
+          "method": "hc",
+          "cv_auc": 0.9539553116963424,
+          "w_006b": 0.06460071499721022,
+          "w_007": 0.4687705905490486,
+          "w_008": 0.2568441595948263,
+          "w_009": 0.2097845348589149,
+          "w_011": 0
+        }
       nm: 
-        cv: 
-        lb: 
+        cv: 0.953955
+        lb: null
+        weights: {
+          "candidate": "nm_softmax_raw",
+          "method": "nm",
+          "cv_auc": 0.9539553269222653,
+          "w_006b": 0.06469746530139485,
+          "w_007": 0.4687602032981366,
+          "w_008": 0.2571622854628175,
+          "w_009": 0.20938003812104292,
+          "w_011": 7.816608038219603e-9
+        }
 
     replace_009_with_011:
       description: "006b + 007 + 008 + 011"
@@ -442,3 +462,8 @@ notes:
   - >
     PitStop は009方針に合わせてdropする。
     PitStopを安全に使う別実験は別IDで切る。
+
+decision_note:
+  decision: drop
+  note: >
+    006bで効いたorig priorが011では毒になり、cv,lbが共に悪化した
