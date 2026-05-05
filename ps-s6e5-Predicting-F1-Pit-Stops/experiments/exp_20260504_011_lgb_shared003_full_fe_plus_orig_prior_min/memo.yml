@@ -319,21 +319,32 @@ artifacts:
     - pred_exp_20260504_011_lgb_shared003_full_fe_plus_orig_prior_min.npy
 
 results:
-  cv_auc: null
-  public_lb: null
+  cv_auc: 0.936855910155173
+  public_lb: 0.93877
   fold_scores:
-    fold1: null
-    fold2: null
-    fold3: null
-    fold4: null
-    fold5: null
-  fold_mean: null
-  fold_std: null
-  final_feature_count: null
-  orig_prior_feature_count: null
-  te_feature_count: null
-  best_iterations: null
-  used_devices: null
+    fold1: 0.935779638642348
+    fold2: 0.9363544393412854
+    fold3: 0.9385704515998181
+    fold4: 0.9356668833747787
+    fold5: 0.9379282840388823
+  fold_mean: 0.9368599393994224
+  fold_std: 0.0011758550054165673
+  final_feature_count: 100
+  orig_prior_feature_count: 26
+  te_feature_count: 6
+  best_iterations: [
+    9000,
+    8998,
+    8979,
+    8980,
+    8988,
+    8997,
+    8998,
+    8974,
+    8986,
+    8999
+  ]
+  used_devices: "gpu"
   correlation:
     vs_007:
       pearson: null
