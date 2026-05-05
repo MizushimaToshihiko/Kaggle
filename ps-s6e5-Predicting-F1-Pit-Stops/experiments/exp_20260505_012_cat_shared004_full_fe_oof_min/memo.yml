@@ -358,31 +358,54 @@ artifacts:
     - pred_exp_20260505_012_cat_shared004_full_fe_oof_min.npy
 
 results:
-  cv_auc: null
-  cv_logloss: null
-  public_lb: null
+  cv_auc: 0.9527484864752003
+  cv_logloss: 0.263058630
+  public_lb: 0.95231
   fold_auc:
-    fold1: null
-    fold2: null
-    fold3: null
-    fold4: null
-    fold5: null
+    fold1: 0.9538189898849403
+    fold2: 0.9516138507611441
+    fold3: 0.952970013087379
+    fold4: 0.9519589417063634
+    fold5: 0.9534372443129127
   fold_logloss:
-    fold1: null
-    fold2: null
-    fold3: null
-    fold4: null
-    fold5: null
+    fold1: 0.2614662017527002
+    fold2: 0.26676543793215657
+    fold3: 0.2645692483912399
+    fold4: 0.2636505392403179
+    fold5: 0.25884172303322606
   fold_best_iteration:
-    fold1: null
-    fold2: null
-    fold3: null
-    fold4: null
-    fold5: null
+    fold1: 3877
+    fold2: 3046
+    fold3: 3398
+    fold4: 4034
+    fold5: 3833
   feature_summary:
-    actual_feature_count: null
-    actual_cat_feature_count: null
-    top_features: []
+    actual_feature_count: 301
+    actual_cat_feature_count: 77
+    top_features: >
+      feature_importance.head(20): >
+      index	feature	mean	std
+      244	Race_Year	9.233076886050318	0.9328996387925605
+      94	IsOriginalData	4.875614276421419	0.2136316223826532
+      270	TyreAgeRatio_str	4.3035055618223925	0.13900217388548952
+      206	Position_Change_std_by_Race_Year	4.185323931945368	1.069615312908353
+      239	Race_Compound_Stint	3.6053555686690557	0.263601345
+      49	DeltaAbs	2.0971535100882206	0.1296445233832479
+      89	EstimatedTotalLaps_sig_3	1.4774530007685622	0.1058323065211585
+      260	TyreAgeRatio	1.4267592807524776	0.21644214295457997
+      296	TyreLife_x_Stint	1.3983066878978945	0.15977424298688178
+      72	Driver_Compound	1.255271725373587	0.1450914840116964
+      114	LapTime (s)	1.1240529798181567	0.10018905552621712
+      127	LapTime_Delta	1.1073437968414537	0.078609747
+      133	LapTime_Delta_diff_mean_by_Race_Year	1.1031333594548536	0.11232966703919299
+      219	RaceProgress_diff_mean_by_Compound_Stint	1.0845018178018926	0.082680889
+      81	EstimatedTotalLaps	1.0088792696896622	0.043163833
+      281	TyreLife_diff_mean_by_Race_Compound_Stint	0.9970872776946912	0.080255293
+      250	StintPressure	0.9785756244684226	0.070659622
+      3	Abs_Position_Change	0.9262321145136045	0.16153449447184887
+      213	RacePhase_TyreLifeBin	0.9024062977747753	0.077753561
+      271	TyreAgeVsRace	0.897440205	0.077109932
+      
   correlation:
     vs_006b:
       pearson: null
