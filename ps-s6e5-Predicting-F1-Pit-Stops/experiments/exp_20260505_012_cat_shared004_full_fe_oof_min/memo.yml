@@ -490,3 +490,7 @@ notes:
   - >
     011の失敗により、009へのoriginal prior追加は閉じる。
     012は009近傍ではなく、CatBoost large-FE別family候補として評価する。
+Conclusion: >
+  006b is pruned by HC/NM.
+  avg_007_008_009_012 already evaluated.
+  No separate 013 needed for pruning 006b.
