@@ -356,21 +356,17 @@ results:
       pearson: null
       spearman: null
   blend_results:
-    add_011:
+    add_011_to_006b_007_008_009:
+      description: "006b + 007 + 008 + 009 + 011"
       avg: null
       ridge: null
       elasticnet: null
       logreg: null
       hc: null
       nm: null
+
     replace_009_with_011:
-      avg: null
-      ridge: null
-      elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
-    keep_009_and_011:
+      description: "006b + 007 + 008 + 011"
       avg: null
       ridge: null
       elasticnet: null
