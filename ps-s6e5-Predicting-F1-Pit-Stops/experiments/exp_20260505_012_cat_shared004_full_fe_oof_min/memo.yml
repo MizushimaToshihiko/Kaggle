@@ -1,0 +1,464 @@
+experiment:
+  id: exp_20260505_012_cat_shared004_full_fe_oof_min
+  title: CatBoost shared004 full-FE OOF minimum reproduction
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
+
+objective:
+  summary: >
+    shared_004 の CatBoost large-FE 実装を、単一 holdout + full-data submission 形式から、
+    5fold OOF / fold平均pred 保存型へ変換する。
+    目的は、010 core に追加できる新しい CatBoost large-FE family のblend素材を作ること。
+  success_criteria:
+    - 5fold OOF CV AUC を取得
+    - Public LB を取得
+    - oof / pred / submission を保存
+    - 006b / 007 / 008 / 009 との相関を確認
+    - 010 core に追加して avg / Ridge / ElasticNet / LogReg / HC / NM を比較する
+
+positioning:
+  experiment_type: low_corr_candidate
+  intended_role: catboost_large_fe_aux_material
+  base_family: catboost
+  base_reference: shared_004
+  why_now: >
+    011 では 009 LGB full-FE に safe original prior を追加したが、
+    単体でもblendでも大幅に悪化し drop 判定となった。
+    したがって、009近傍の追加実験よりも、010 core に足せる別family候補を作る方が優先度が高い。
+    shared_004 は CatBoost ではあるが、006b の小型original-prior補正材とは異なり、
+    domain features / digit / float signature / string precision / frequency / group stats /
+    original rows append を含む large-FE 構成であるため、別素材として確認する価値がある。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e5/sample_submission.csv
+  original_path_candidates:
+    - /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+    - /kaggle/input/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  id_col: id
+  original_usage:
+    use_original: true
+    method: append original rows to each fold train side only
+    validation_rows: competition train rows only
+    note: >
+      shared_004 の方針に合わせて original rows を学習側へ追加する。
+      ただし OOF は competition train の validation fold のみに対して作成する。
+  forbidden_columns:
+    - Normalized_TyreLife
+  normalized_tyrelife_policy:
+    - Normalized_TyreLife は original からdropする
+    - direct useは禁止
+    - intentional proxy reconstructionは禁止寄り
+    - TyreAgeRatio_str等が強く出た場合は危険特徴として後続アブレーション候補にする
+
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  validation_policy: >
+    validation fold は competition train のみ。
+    original rows は各foldのtrain側へconcatし、validationには使わない。
+  oof_policy: >
+    competition train 全体に対して OOF 予測を1回ずつ作る。
+    test pred は5fold平均とする。
+
+model:
+  family: CatBoost
+  estimator: CatBoostClassifier
+  params:
+    iterations: 9000
+    learning_rate: 0.033
+    depth: 8
+    l2_leaf_reg: 7.0
+    random_strength: 0.8
+    loss_function: Logloss
+    eval_metric: AUC
+    auto_class_weights: Balanced
+    early_stopping_rounds: 350
+    random_seed_base: 42
+    task_type_requested: GPU
+    devices_requested: "0:1"
+    allow_writing_files: false
+    verbose: 200
+  gpu_parameter_guard:
+    reason: >
+      CatBoost は CPU/GPU で暗黙のデフォルト値が変わることがあり、
+      GPU実行時に task_type だけを変えると別条件比較になりうる。
+      そのため GPU実行時も bootstrap_type / subsample / border_count を明示固定する。
+    fixed_params:
+      bootstrap_type: Bernoulli
+      subsample: 0.8
+      border_count: 254
+    note: >
+      20230923LT "Secret of CatBoost on GPU" の内容を踏まえ、
+      GPU default 任せにしない。
+      CPU fallback 時も同じ bootstrap_type / subsample / border_count を維持する。
+  cpu_fallback: true
+
+features:
+  source: shared_004
+  base_columns:
+    categorical:
+      - Driver
+      - Compound
+      - Race
+    numeric:
+      - Year
+      - PitStop
+      - LapNumber
+      - Stint
+      - TyreLife
+      - Position
+      - LapTime (s)
+      - LapTime_Delta
+      - Cumulative_Degradation
+      - RaceProgress
+      - Position_Change
+  feature_blocks:
+    domain_features:
+      - EstimatedTotalLaps
+      - LapsRemaining
+      - LapProgress_x_LapNumber
+      - TyreAgeRatio
+      - LapPerTyreLife
+      - LapMinusTyreLife
+      - TyreLifeMinusLap
+      - TyreAgeVsRace
+      - PitWindowPressure
+      - TyreLife_x_RaceProgress
+      - TyreLife_to_LapsRemaining
+      - LapsRemaining_to_TyreLife
+      - DegPerTyreLap
+      - AbsDegPerTyreLap
+      - DegPerRaceLap
+      - DeltaPerTyreLap
+      - AbsDeltaPerTyreLap
+      - DeltaAbs
+      - LapTimeDeltaPositive
+      - LapTimeDeltaNegative
+      - Abs_Cumulative_Degradation
+      - Positive_Degradation
+      - Abs_Position_Change
+      - Gained_Position
+      - Lost_Position
+      - PositionPressure
+      - StintPressure
+      - TyreLife_x_Stint
+      - Stint_x_LapNumber
+      - Is_First_Stint
+      - Is_Late_Stint
+      - Early_Race
+      - Mid_Race
+      - Late_Race
+    bin_features:
+      - RacePhase
+      - LapBin
+      - TyreLifeBin
+      - PositionBin
+    cross_features:
+      - Race_Year
+      - Compound_Stint
+      - Driver_Race
+      - Driver_Compound
+      - Race_Compound
+      - Race_Compound_Stint
+      - Compound_RacePhase
+      - Compound_TyreLifeBin
+      - RacePhase_TyreLifeBin
+    digit_features:
+      summary: >
+        selected numeric columns に対して int_digit_1-3 と、
+        float列には dec_digit_1-2 を作成する。
+      source_columns:
+        - Year
+        - PitStop
+        - LapNumber
+        - Stint
+        - TyreLife
+        - Position
+        - LapTime (s)
+        - LapTime_Delta
+        - Cumulative_Degradation
+        - RaceProgress
+        - Position_Change
+        - EstimatedTotalLaps
+        - LapsRemaining
+        - TyreAgeRatio
+        - DegPerTyreLap
+        - DegPerRaceLap
+        - DeltaPerTyreLap
+        - DeltaAbs
+        - PositionPressure
+        - StintPressure
+        - PitWindowPressure
+        - LapMinusTyreLife
+    float_signature_features:
+      summary: >
+        selected float columns を100倍丸めし、下位5桁のsignature digitをカテゴリ特徴として作成する。
+      source_columns:
+        - RaceProgress
+        - LapTime (s)
+        - LapTime_Delta
+        - Cumulative_Degradation
+        - TyreAgeRatio
+        - DegPerTyreLap
+        - DegPerRaceLap
+        - DeltaPerTyreLap
+        - DeltaAbs
+        - PitWindowPressure
+        - EstimatedTotalLaps
+        - LapsRemaining
+        - LapMinusTyreLife
+    string_precision_features:
+      - RaceProgress_str
+      - EstimatedTotalLaps_str
+      - TyreAgeRatio_str
+    frequency_features:
+      summary: >
+        train/test/original を結合した母集団で count / freq を作成する。
+      columns:
+        - Driver
+        - Race
+        - Compound
+        - Race_Year
+        - Compound_Stint
+        - Driver_Race
+        - Driver_Compound
+        - Race_Compound
+        - Race_Compound_Stint
+        - Compound_RacePhase
+        - Compound_TyreLifeBin
+        - RacePhase_TyreLifeBin
+        - LapBin
+        - TyreLifeBin
+        - PositionBin
+    light_group_stats:
+      group_columns:
+        - Race_Year
+        - Race_Compound_Stint
+        - Driver_Race
+        - Compound_Stint
+      value_columns:
+        - LapTime_Delta
+        - Position_Change
+        - RaceProgress
+        - TyreLife
+      statistics:
+        - mean
+        - std
+        - diff_from_mean
+  special_flags:
+    - IsOriginalData
+  dropped_features:
+    - id
+    - target
+    - Normalized_TyreLife
+  expected_feature_count: 301
+  expected_cat_feature_count: 77
+  actual_feature_count: null
+  actual_cat_feature_count: null
+  risk_features_to_watch:
+    - Race_Year
+    - IsOriginalData
+    - TyreAgeRatio_str
+    - Race_Compound_Stint
+    - Position_Change_std_by_Race_Year
+    - LapTime_Delta_diff_mean_by_Race_Year
+    - RaceProgress_mean_by_Race_Year
+    - RaceProgress_std_by_Race_Year
+  risk_note: >
+    shared_004 の holdout実行では Race_Year / IsOriginalData / TyreAgeRatio_str /
+    Race_Compound_Stint / Race_Year系group stats が feature importance 上位に来ていた。
+    これらはCVを押し上げる可能性がある一方で、Year artifactやoriginal分布差への依存が強くなる危険もある。
+
+hypothesis:
+  main: >
+    shared_004 は 006b とは異なる CatBoost large-FE family であり、
+    007 RealMLP / 009 LGB full-FE と違う誤差を持つ可能性がある。
+    単体CVが007に届かなくても、010 coreへ追加したときにHC/NM/LogRegで自然な重みが残れば有効素材と判断できる。
+  positive_pattern: >
+    単体CV/LBが009以上、または単体ではやや弱くても
+    006b/007/008/009との相関がズレ、
+    010 core + 012 のblendでCV/LBが更新される。
+  failure_pattern: >
+    CVは高いがPublic LBに変換されない。
+    あるいは Race_Year / IsOriginalData / TyreAgeRatio_str に強く依存し、
+    add blendで重みが消える。
+    その場合は shared_004 as-is はhold/dropとし、危険要素を削る013系へ進む。
+
+comparison_plan:
+  single_compare_against:
+    - exp_20260503_006b_cat_original_prior_no_year_prior_min
+    - exp_20260503_007_realmlp_shared001_min
+    - exp_20260503_008_realmlp_shared001_plus_006b_orig_prior
+    - exp_20260503_009_lgb_shared003_full_fe_single_min
+    - exp_20260504_010_blend_core_006b_007_008_009_min
+  metrics:
+    - cv_auc
+    - public_lb
+    - fold_auc_mean
+    - fold_auc_std
+    - pearson_corr_with_006b
+    - pearson_corr_with_007
+    - pearson_corr_with_008
+    - pearson_corr_with_009
+    - spearman_corr_with_006b
+    - spearman_corr_with_007
+    - spearman_corr_with_008
+    - spearman_corr_with_009
+  blend_compare:
+    base_blend: exp_20260504_010_blend_core_006b_007_008_009_min
+    mode: add_012_to_010_core
+    members:
+      - 006b
+      - 007
+      - 008
+      - 009
+      - 012
+    strategies:
+      - avg
+      - Ridge
+      - ElasticNet
+      - LogisticRegression
+      - Hill Climb
+      - Nelder-Mead
+    target: >
+      010のHC/NM CV 0.953955 / Public LB 0.95316、
+      LogReg CV 0.953914 / Public LB 0.95313 を更新できるか確認する。
+  optional_followup_if_strong:
+    - replace_006b_with_012
+    - add_012_and_drop_006b
+    - add_012_to_007_008_009_only
+  optional_followup_if_risky:
+    - no_IsOriginalData
+    - no_Race_Year_group_stats
+    - no_TyreAgeRatio_str
+    - no_Race_Year_cross
+    - no_original_rows
+
+artifacts:
+  outdir: /kaggle/working/exp_20260505_012_cat_shared004_full_fe_oof_min
+  files_expected:
+    - oof_exp_20260505_012_cat_shared004_full_fe_oof_min.npy
+    - pred_exp_20260505_012_cat_shared004_full_fe_oof_min.npy
+    - oof_exp_20260505_012_cat_shared004_full_fe_oof_min.csv
+    - submission_exp_20260505_012_cat_shared004_full_fe_oof_min.csv
+    - cv_result.json
+    - fold_scores.csv
+    - feature_columns.csv
+    - categorical_features.csv
+    - feature_importance_by_fold.csv
+    - feature_importance.csv
+  save_for_blend:
+    - oof_exp_20260505_012_cat_shared004_full_fe_oof_min.npy
+    - pred_exp_20260505_012_cat_shared004_full_fe_oof_min.npy
+
+results:
+  cv_auc: null
+  cv_logloss: null
+  public_lb: null
+  fold_auc:
+    fold1: null
+    fold2: null
+    fold3: null
+    fold4: null
+    fold5: null
+  fold_logloss:
+    fold1: null
+    fold2: null
+    fold3: null
+    fold4: null
+    fold5: null
+  fold_best_iteration:
+    fold1: null
+    fold2: null
+    fold3: null
+    fold4: null
+    fold5: null
+  feature_summary:
+    actual_feature_count: null
+    actual_cat_feature_count: null
+    top_features: []
+  correlation:
+    vs_006b:
+      pearson: null
+      spearman: null
+    vs_007:
+      pearson: null
+      spearman: null
+    vs_008:
+      pearson: null
+      spearman: null
+    vs_009:
+      pearson: null
+      spearman: null
+  blend_results:
+    add_012_to_010_core:
+      avg:
+        cv: null
+        public_lb: null
+      ridge:
+        cv: null
+        public_lb: null
+        weight_012: null
+      elasticnet:
+        cv: null
+        public_lb: null
+        weight_012: null
+      logreg:
+        cv: null
+        public_lb: null
+        weight_012: null
+      hc:
+        cv: null
+        public_lb: null
+        weight_012: null
+      nm:
+        cv: null
+        public_lb: null
+        weight_012: null
+
+decision_rule:
+  single_model:
+    keep: >
+      009または007に近いCV/LBを出し、かつ相関が既存coreと少しでもズレている。
+    hold: >
+      単体は009未満でも、foldが安定し、blendで重みが残る可能性がある。
+    drop: >
+      009より大幅に弱く、Public LBにも変換されず、blendで重みが消える。
+  after_blend:
+    keep: >
+      010 core + 012 で LogReg / HC / NM / ElasticNet のいずれかが
+      CVとPublic LBの両方、または少なくともPublic LBで010を更新する。
+      さらに012に自然な正重みが残る。
+    hold: >
+      blend更新は小さいが、012に一定の重みが残り、既存coreと異なる誤差を持つ。
+    drop: >
+      add blendで012の重みがゼロ、またはCVだけ上がってPublic LBが鈍い。
+  followup_rule:
+    if_keep: >
+      013で010 coreへの正式追加blendを整理し、最終候補候補に入れる。
+    if_hold_but_risky: >
+      no_IsOriginalData / no_Race_Year_group_stats / no_TyreAgeRatio_str の危険要素アブレーションを切る。
+    if_drop: >
+      shared_004系はいったん閉じ、009b less-year-race または shared_002内の外部artifact設計確認へ進む。
+
+notes:
+  - >
+    shared_004は単一holdout + full-data final model形式だったため、そのままではOOF資産にならない。
+    本実験では5fold OOF / pred保存型に変換する。
+  - >
+    CatBoost GPUではCPU/GPUの暗黙デフォルト差が問題になりうるため、
+    bootstrap_type=Bernoulli, subsample=0.8, border_count=254 を明示固定する。
+  - >
+    original rowsはfold train側へconcatするが、validation foldにはcompetition trainのみを使う。
+  - >
+    IsOriginalDataはshared_004由来で残す。
+    ただしimportance上位かつLB変換が鈍い場合は、危険特徴として後続で削る。
+  - >
+    011の失敗により、009へのoriginal prior追加は閉じる。
+    012は009近傍ではなく、CatBoost large-FE別family候補として評価する。
