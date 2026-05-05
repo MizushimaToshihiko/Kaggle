@@ -408,42 +408,43 @@ results:
       
   correlation:
     vs_006b:
-      pearson: null
-      spearman: null
+      pearson: 0.959740012367844
+      spearman: 0.9727093063642553
     vs_007:
-      pearson: null
-      spearman: null
+      pearson: 0.962090821699426
+      spearman: 0.9776371372459863
     vs_008:
-      pearson: null
-      spearman: null
+      pearson: 0.9628863261105832
+      spearman: 0.9762941485370363
     vs_009:
-      pearson: null
-      spearman: null
+      pearson: 0.9854034327676476
+      spearman: 0.9747370679548318
   blend_results:
     add_012_to_010_core:
       avg:
-        cv: null
-        public_lb: null
+        highest: "avg_007_008_009_012"
+        cv: 0.954105
+        public_lb: 0.95331
       ridge:
-        cv: null
+        cv: 0.953157
         public_lb: null
         weight_012: null
       elasticnet:
-        cv: null
-        public_lb: null
+        cv: 0.953959
+        public_lb: 0.95307
         weight_012: null
       logreg:
-        cv: null
-        public_lb: null
+        cv: 0.954146
+        public_lb: 0.95336
         weight_012: null
       hc:
-        cv: null
+        cv: 0.9541664510649152
         public_lb: null
-        weight_012: null
+        weight_012: 0.27973896279517296
       nm:
-        cv: null
-        public_lb: null
-        weight_012: null
+        cv: 0.9541664510649152
+        public_lb: 0.95338
+        weight_012: 0.2797718009732709
 
 decision_rule:
   single_model:
@@ -469,6 +470,10 @@ decision_rule:
       no_IsOriginalData / no_Race_Year_group_stats / no_TyreAgeRatio_str の危険要素アブレーションを切る。
     if_drop: >
       shared_004系はいったん閉じ、009b less-year-race または shared_002内の外部artifact設計確認へ進む。
+decision_note:
+  decision: keep
+  note: >
+    単体最強とはならなかったが、Blendでは効いた。
 
 notes:
   - >
