@@ -347,32 +347,58 @@ results:
   used_devices: "gpu"
   correlation:
     vs_007:
-      pearson: null
+      pearson: 0.9352193126537179
       spearman: null
     vs_008:
-      pearson: null
+      pearson: 0.936632761347719
       spearman: null
     vs_009:
-      pearson: null
+      pearson: 0.9685399441926292
       spearman: null
   blend_results:
     add_011_to_006b_007_008_009:
       description: "006b + 007 + 008 + 009 + 011"
-      avg: null
-      ridge: null
-      elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      avg:
+        highest: 
+        cv: 
+        lb: 
+      ridge: 
+        cv: 
+        lb: 
+      elasticnet: 
+        cv: 
+        lb: 
+      logreg: 
+        cv: 
+        lb: 
+      hc: 
+        cv: 
+        lb: 
+      nm: 
+        cv: 
+        lb: 
 
     replace_009_with_011:
       description: "006b + 007 + 008 + 011"
-      avg: null
-      ridge: null
-      elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      avg:
+        highest: "avg_006b_007_008_011"
+        cv: 0.952903
+        lb: null
+      ridge:
+        cv: 0.953591
+        lb: null
+      elasticnet:
+        cv: 0.953713
+        lb: 0.95295
+      logreg:
+        cv: 0.953631
+        lb: 0.95294
+      hc:
+        cv: 0.953737
+        lb: null
+      nm:
+        cv: 0.953737
+        lb: 0.95298
 
 decision_rule:
   single_model:
