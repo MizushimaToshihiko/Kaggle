@@ -14,3 +14,10 @@ Best private solutions were LR stacks using 061b inside broader S5/S8 style stac
 Future rule:
 When a late high-public single model appears, do not select it alone without also considering its LR-stack version.
 Reserve one final slot for stable LR blend even if its Public LB is lower.
+classify final candidates into attack and stability slots, and always reserve one final slot for the meta method that has shown the best CV-to-LB reliability in that specific competition.
+
+S6E4 postmortem:
+The main mistake was not simply failing to pick the best private submission.
+During the final stage, I had already observed that HC/NM CV was less reliable and LR converted better to LB in this competition.
+However, I did not promote that observation into the final submission selection rule.
+As a result, I selected high-public / high-CV attack candidates and missed the stable LR stack, which achieved the best private score.
