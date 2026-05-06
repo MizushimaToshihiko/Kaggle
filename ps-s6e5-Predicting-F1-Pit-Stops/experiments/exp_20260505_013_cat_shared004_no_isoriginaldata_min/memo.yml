@@ -1,0 +1,408 @@
+experiment:
+  id: exp_20260505_013_cat_shared004_no_isoriginaldata_min
+  title: CatBoost shared004 full-FE without IsOriginalData
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
+
+objective:
+  summary: >
+    012 CatBoost shared004 full-FE OOF を完全ベースにし、
+    危険特徴候補である IsOriginalData だけを除外する。
+    目的は、012の強さが original row / competition row の識別フラグに依存しているかを確認すること。
+    新規モデル探索ではなく、012のPrivate耐性を見極めるための単一特徴アブレーションである。
+  success_criteria:
+    - raw CV AUC を取得
+    - Public LB を取得
+    - oof / pred を保存
+    - 012との相関を確認
+    - 007 / 008 / 009 / 012 / 013 のblend比較を行う
+    - 013が012の置換候補または安全寄り補助素材になるか判断する
+
+positioning:
+  experiment_type: risk_feature_ablation
+  intended_role: safe_catboost_aux_material_or_012_replacement
+  base_family: catboost
+  base_reference: exp_20260505_012_cat_shared004_full_fe_oof_min
+  why_now: >
+    012は単体では007を超えないが、010 coreに追加したblendで
+    HC/NMのCVとPublic LBを更新し、約0.28の自然な重みを持った。
+    一方で、feature importance上位に IsOriginalData や Race_Year 系などの危険特徴が見えている。
+    まず最小アブレーションとして IsOriginalData だけを落とし、
+    012の強さが直接的なoriginal識別フラグ依存かを切り分ける。
+
+data:
+  train_path_candidates:
+    - /kaggle/input/competitions/playground-series-s6e5/train.csv
+    - /kaggle/input/playground-series-s6e5/train.csv
+  test_path_candidates:
+    - /kaggle/input/competitions/playground-series-s6e5/test.csv
+    - /kaggle/input/playground-series-s6e5/test.csv
+  original_path_candidates:
+    - /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+    - /kaggle/input/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  target_candidates:
+    - PitNextLap
+    - PitNextLab
+  id_col: id
+  danger_col: Normalized_TyreLife
+  danger_col_used: false
+  original_usage:
+    use_original_rows: true
+    policy: >
+      Same as 012.
+      Original rows are appended to each fold train side only.
+      Competition validation rows only are used for OOF.
+    note: >
+      IsOriginalData is still created during FE for comparability,
+      but it is removed from model features before training.
+  forbidden_columns:
+    - Normalized_TyreLife
+    - Normalized_TyreLife proxy
+    - stint endpoint proxy
+    - pseudo label
+
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  note: >
+    CV split is unchanged from 012.
+    This experiment must isolate only the effect of dropping IsOriginalData.
+
+model:
+  family: CatBoost
+  estimator: CatBoostClassifier
+  params:
+    iterations: 9000
+    learning_rate: 0.033
+    depth: 8
+    l2_leaf_reg: 7.0
+    random_strength: 0.8
+    bootstrap_type: Bernoulli
+    subsample: 0.8
+    border_count: 254
+    loss_function: Logloss
+    eval_metric: AUC
+    auto_class_weights: Balanced
+    early_stopping_rounds: 350
+    task_type_requested: GPU
+    devices_requested: "0:1"
+    cpu_fallback: true
+    verbose: 200
+  note: >
+    CatBoost parameters are unchanged from 012.
+    GPU hidden-default guard parameters are explicitly fixed:
+    bootstrap_type, subsample, and border_count.
+
+features:
+  base_features:
+    source: exp_20260505_012_cat_shared004_full_fe_oof_min
+    summary: >
+      shared004 large-FE design converted to 5fold OOF/pred artifact generator.
+      Domain features, digit features, float signature features,
+      string precision features, frequency features, and light group stats are used.
+  changed_from_012:
+    - Drop IsOriginalData from model features only.
+  unchanged_from_012:
+    - CV split
+    - CatBoost params
+    - original rows concat policy
+    - shared004 full-FE blocks
+    - OOF/pred save format
+    - blend evaluation policy
+  dropped_features:
+    - IsOriginalData
+  dropped_features_policy:
+    implementation: >
+      In this codebase, the final model feature list is common_features.
+      IsOriginalData is removed immediately after common_features is created
+      and before X_comp / X_test_final / X_orig are subset.
+    expected_code_location: >
+      Prepare Matrices section:
+      after common_features = [c for c in X_comp.columns if c in X_test_final.columns]
+      before X_comp = X_comp[common_features].reset_index(drop=True)
+    guardrails:
+      - assert_013_feature_policy(common_features)
+      - IsOriginalData must not be in common_features
+      - IsOriginalData must not be in cat_cols
+      - IsOriginalData must not be in feature_columns.csv
+  not_dropped_in_013:
+    - Race_Year
+    - TyreAgeRatio_str
+    - Race_Compound_Stint
+    - Race_Year group stats
+  feature_blocks:
+    domain_features:
+      examples:
+        - EstimatedTotalLaps
+        - LapsRemaining
+        - LapProgress_x_LapNumber
+        - TyreAgeRatio
+        - LapPerTyreLife
+        - LapMinusTyreLife
+        - TyreLifeMinusLap
+        - TyreAgeVsRace
+        - PitWindowPressure
+        - TyreLife_x_RaceProgress
+        - TyreLife_to_LapsRemaining
+        - LapsRemaining_to_TyreLife
+        - DegPerTyreLap
+        - AbsDegPerTyreLap
+        - DegPerRaceLap
+        - DeltaPerTyreLap
+        - AbsDeltaPerTyreLap
+        - DeltaAbs
+        - PositionPressure
+        - StintPressure
+    bins_and_phases:
+      - RacePhase
+      - LapBin
+      - TyreLifeBin
+      - PositionBin
+    interaction_categories:
+      - Race_Year
+      - Compound_Stint
+      - Driver_Race
+      - Driver_Compound
+      - Race_Compound
+      - Race_Compound_Stint
+      - Compound_RacePhase
+      - Compound_TyreLifeBin
+      - RacePhase_TyreLifeBin
+    digit_features:
+      summary: >
+        Integer digit and decimal digit features are added for selected numeric/domain columns.
+    float_signature_features:
+      summary: >
+        Signature digits are added for selected floating/domain columns.
+    string_precision_features:
+      - RaceProgress_str
+      - EstimatedTotalLaps_str
+      - TyreAgeRatio_str
+    frequency_features:
+      summary: >
+        Count and frequency features are created from train/test/original combined frames.
+    light_group_stats:
+      group_cols:
+        - Race_Year
+        - Race_Compound_Stint
+        - Driver_Race
+        - Compound_Stint
+      value_cols:
+        - LapTime_Delta
+        - Position_Change
+        - RaceProgress
+        - TyreLife
+      stats:
+        - mean
+        - std
+        - diff_mean
+  categorical_features:
+    source: fill_missing_and_types
+    note: >
+      cat_cols must be filtered after common_features is pruned.
+      IsOriginalData must not remain in cat_cols or cat_features.
+  risk_features_to_watch:
+    - Race_Year
+    - TyreAgeRatio_str
+    - Race_Compound_Stint
+    - Race_Year group stats
+  normalized_tyrelife_policy:
+    - Normalized_TyreLife is dropped.
+    - Direct use is forbidden.
+    - Intentional proxy reconstruction is not added.
+
+hypothesis:
+  main: >
+    If 013 remains close to 012 in CV/LB and blend performance,
+    then 012's value is not mainly from the direct original-vs-competition indicator.
+    In that case, 013 may be a safer CatBoost auxiliary material.
+  positive_pattern: >
+    CV/LB drop from 012 is small, and 013 naturally receives positive weight in
+    HC/NM/LogReg/ElasticNet when compared with 007/008/009/012.
+  failure_pattern: >
+    CV/LB and blend conversion clearly deteriorate after removing IsOriginalData.
+    This would imply 012's strength depends meaningfully on the original-source indicator,
+    and 012 should be treated as a more aggressive / risky blend material.
+  important_caution: >
+    Do not remove Race_Year, TyreAgeRatio_str, Race_Compound_Stint, or group stats in this experiment.
+    Removing multiple risk features at once would destroy attribution.
+
+comparison_plan:
+  single_compare_against:
+    - exp_20260503_007_realmlp_shared001_min
+    - exp_20260503_008_realmlp_shared001_plus_006b_orig_prior
+    - exp_20260503_009_lgb_shared003_full_fe_single_min
+    - exp_20260505_012_cat_shared004_full_fe_oof_min
+  blend_compare:
+    base_blend: exp_20260504_010_blend_core_006b_007_008_009_min
+    current_best_with_012: exp_20260505_012_cat_shared004_full_fe_oof_min blend notebook
+    modes:
+      - replace_012_with_013:
+          members:
+            - 007
+            - 008
+            - 009
+            - 013
+      - keep_012_and_013:
+          members:
+            - 007
+            - 008
+            - 009
+            - 012
+            - 013
+      - full_with_old_cat:
+          members:
+            - 006b
+            - 007
+            - 008
+            - 009
+            - 012
+            - 013
+          note: >
+            Optional. 006b already had near-zero weight after 012 was added,
+            so this is lower priority.
+    strategies:
+      - avg
+      - Ridge
+      - ElasticNet
+      - LogisticRegression
+      - Hill Climb
+      - Nelder-Mead
+  metrics:
+    - cv_auc
+    - public_lb
+    - fold_auc_mean
+    - fold_auc_std
+    - pearson_corr_with_012
+    - spearman_corr_with_012
+    - pearson_corr_with_007
+    - pearson_corr_with_008
+    - pearson_corr_with_009
+    - blend_cv
+    - blend_public_lb
+    - blend_weight
+    - feature_importance_rank_shift
+
+artifacts:
+  outdir: /kaggle/working/exp_20260505_013_cat_shared004_no_isoriginaldata_min
+  files_expected:
+    - oof_exp_20260505_013_cat_shared004_no_isoriginaldata_min.npy
+    - pred_exp_20260505_013_cat_shared004_no_isoriginaldata_min.npy
+    - oof_exp_20260505_013_cat_shared004_no_isoriginaldata_min.csv
+    - submission_exp_20260505_013_cat_shared004_no_isoriginaldata_min.csv
+    - cv_result.json
+    - fold_scores.csv
+    - feature_columns.csv
+    - categorical_features.csv
+    - feature_importance_by_fold.csv
+    - feature_importance.csv
+  optional_files:
+    - dropped_features_013.csv
+  save_for_blend:
+    - oof_exp_20260505_013_cat_shared004_no_isoriginaldata_min.npy
+    - pred_exp_20260505_013_cat_shared004_no_isoriginaldata_min.npy
+
+results:
+  cv_auc: null
+  public_lb: null
+  cv_logloss: null
+  fold_auc:
+    fold1: null
+    fold2: null
+    fold3: null
+    fold4: null
+    fold5: null
+  fold_auc_mean: null
+  fold_auc_std: null
+  used_devices: null
+  best_iterations: null
+  n_features: null
+  n_cat_features: null
+  isoriginaldata_used: false
+  dropped_risk_features:
+    - IsOriginalData
+  correlation:
+    vs_012:
+      pearson: null
+      spearman: null
+    vs_007:
+      pearson: null
+      spearman: null
+    vs_008:
+      pearson: null
+      spearman: null
+    vs_009:
+      pearson: null
+      spearman: null
+  blend_results:
+    replace_012_with_013:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+    keep_012_and_013:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+    full_with_old_cat:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+
+decision_rule:
+  single_model:
+    keep: >
+      012からのCV/LB低下が小さく、かつPublic LBが同等以上。
+      IsOriginalDataなしでもCatBoost shared004素材が成立していると判断する。
+    hold: >
+      単体は012より少し落ちるが、012との相関がややズレており、
+      blendで自然に残る。
+    drop: >
+      単体CV/LBが明確に落ち、blendでも012の代替にも追加素材にもならない。
+  after_blend:
+    keep: >
+      007/008/009/013 または 007/008/009/012/013 で、
+      HC/NM/LogReg/ElasticNetのいずれかが012入り既存bestを更新する。
+    hold: >
+      既存best更新はしないが、013が正の重みで残り、012とは違う安全寄り素材として使える。
+    drop: >
+      重みが消える、または012の代替で明確に悪化する。
+  risk_interpretation:
+    if_013_close_to_012: >
+      IsOriginalData依存は限定的。
+      012/013はCatBoost full-FE素材として比較的信頼できる。
+    if_013_much_worse_than_012: >
+      012の強さはIsOriginalData依存が大きい。
+      012は攻め枠として扱い、安定枠には入れすぎない。
+
+notes:
+  - >
+    013は012の単一特徴アブレーションであり、新規学習方針の実験ではない。
+  - >
+    このコードではfeature_colsという名前ではなく common_features が最終特徴量リストである。
+  - >
+    IsOriginalDataの除外は common_features 作成直後、
+    X_comp / X_test_final / X_orig をcommon_featuresでsubsetする前に行う。
+  - >
+    cat_colsも common_features prune 後に再フィルタする。
+    IsOriginalDataがcat_colsまたはcat_featuresに残ると、CatBoostの列indexがずれる危険がある。
+  - >
+    Race_Year、TyreAgeRatio_str、Race_Compound_Stint、Race_Year group statsは今回落とさない。
+    これらは014以降の別アブレーション候補。
+  - >
+    012入りblendでは006bの重みがほぼ0だったため、
+    006b pruneだけの別実験は不要。
+  - >
+    013の主目的はスコア更新ではなく、012を安定補助として扱えるかどうかの危険度判定である。
