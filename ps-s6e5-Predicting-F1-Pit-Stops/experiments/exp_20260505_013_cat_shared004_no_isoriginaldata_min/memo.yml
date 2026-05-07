@@ -327,25 +327,56 @@ results:
     - IsOriginalData
   correlation:
     vs_012:
-      pearson: null
-      spearman: null
+      pearson: 0.9960261699396666
+      spearman: 0.9942375264783749
     vs_007:
-      pearson: null
-      spearman: null
+      pearson: 0.9631456385147866
+      spearman: 0.975752602295007
     vs_008:
-      pearson: null
-      spearman: null
+      pearson: 0.9643526982241386
+      spearman: 0.9755559585404083
     vs_009:
-      pearson: null
-      spearman: null
+      pearson: 0.9842363213344291
+      spearman: 0.9733016747314924
   blend_results:
     replace_012_with_013:
-      avg: null
-      ridge: null
-      elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      avg:
+        highest: "avg_007_008_009_012_013"
+        cv: 0.954093
+      ridge:
+        cv: 0.953265
+      elasticnet:
+        cv: 0.954157
+        lb: 0.95319
+      logreg:
+        cv: 0.954149
+        lb: 0.95336
+      hc:
+        cv: 0.954180
+        lb: null
+        weights: {
+          "candidate": "nm_softmax_raw",
+          "method": "nm",
+          "cv_auc": 0.9541798916832334,
+          "w_007": 0.38083958219966163,
+          "w_008": 0.18235616373854222,
+          "w_009": 0.13758269218554425,
+          "w_012": 0.19565484717652604,
+          "w_013": 0.10356671469972605
+        }
+      nm:
+        cv: 0.954180
+        lb: 0.95338
+        weights: {
+          "candidate": "hc_nonnegative_raw",
+          "method": "hc",
+          "cv_auc": 0.9541798694299614,
+          "w_007": 0.38102967313749664,
+          "w_008": 0.18225258018484752,
+          "w_009": 0.13756458984582792,
+          "w_012": 0.19568716003900094,
+          "w_013": 0.10346599679282692
+        }
     keep_012_and_013:
       avg: null
       ridge: null
