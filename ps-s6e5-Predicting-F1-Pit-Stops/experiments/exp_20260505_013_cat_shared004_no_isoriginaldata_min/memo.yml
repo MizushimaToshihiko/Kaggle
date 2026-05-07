@@ -341,6 +341,25 @@ results:
   blend_results:
     replace_012_with_013:
       avg:
+        highest: "avg_007_008_009_013"
+        cv: 0.954070
+      ridge:
+        cv: 0.953351
+      elasticnet: 
+        cv: 0.954107
+      logreg:
+        cv: 0.954102
+        lb: 0.95328
+      hc:
+        cv: 0.954133339497776
+        lb: null
+        weights: "[0.40974046, 0.19252141, 0.15537489, 0.24236323]"
+      nm:
+        cv: 0.9541333686482606
+        lb: 0.95333
+        weights: "[0.40876305, 0.19356877, 0.15536492, 0.24230326]"
+    keep_012_and_013:
+      avg:
         highest: "avg_007_008_009_012_013"
         cv: 0.954093
       ridge:
@@ -377,14 +396,6 @@ results:
           "w_012": 0.19568716003900094,
           "w_013": 0.10346599679282692
         }
-    keep_012_and_013:
-      avg: null
-      ridge: null
-      elasticnet: null
-      logreg: null
-      hc: null
-      nm:
-        cv: 0.9541333686482606
     full_with_old_cat:
       avg: null
       ridge: null
@@ -418,6 +429,12 @@ decision_rule:
     if_013_much_worse_than_012: >
       012の強さはIsOriginalData依存が大きい。
       012は攻め枠として扱い、安定枠には入れすぎない。
+
+decision_note:
+  decision: keep
+  note: >
+    keep_012_and_013については、cvは上昇したがlbは変わらなかった。
+    しかしadd012よりもこちらの方が多様性がありCVが高いのでこちらを提出候補に入れ替える。
 
 notes:
   - >
