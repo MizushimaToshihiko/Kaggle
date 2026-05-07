@@ -383,7 +383,8 @@ results:
       elasticnet: null
       logreg: null
       hc: null
-      nm: null
+      nm:
+        cv: 0.9541333686482606
     full_with_old_cat:
       avg: null
       ridge: null
