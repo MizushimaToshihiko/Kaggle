@@ -425,35 +425,51 @@ results:
   blend_results:
     replace_012_with_015:
       avg:
-        highest:
-        cv:
+        highest: "avg_007_008_009_015"
+        cv: 0.954108263
       ridge:
-        cv:
+        cv: 0.9531840171658637
       elasticnet:
-        cv:
+        cv: 0.9541330234622749
       logreg:
-        cv:
+        cv: 0.954144
       hc:
-        cv:
-        weights:
+        cv: 0.954171
+        weights: {
+          "candidate": "hc_nonnegative_raw",
+          "method": "hc",
+          "cv_auc": 0.9541706114181949,
+          "w_007": 0.3816250737875071,
+          "w_008": 0.19583463651955516,
+          "w_009": 0.14275009786923581,
+          "w_015": 0.27979019182370213
+        }
       nm:
-        cv:
-        weights:
+        cv: 0.954171
+        weights: {
+          "candidate": "nm_softmax_raw",
+          "method": "nm",
+          "cv_auc": 0.9541706305482005,
+          "w_007": 0.3817158953231619,
+          "w_008": 0.19540501210805478,
+          "w_009": 0.1429679919035352,
+          "w_015": 0.27991110066524805
+        }
     keep_012_and_015:
       avg: 
         highest:
         cv:
       ridge: 
-        cv:
+        cv: 
       elasticnet:
-        cv:
+        cv: 
       logreg:
-        cv:
+        cv: 
       hc: 
-        cv:
+        cv: 
         weights:
       nm: 
-        cv:
+        cv: 
         weights:
     keep_012_013_014_015:
       avg:
