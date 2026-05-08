@@ -540,6 +540,39 @@ decision_note:
   note: >
     015単体ではCVが下がったがLBは上昇した。
     Blendに015を加えることでCV,LB共に最高スコアにすることができた。
+    012:
+    CV 0.952748 / LB 0.95231
+    Race_Year group statsあり
+    攻め寄りCat素材
+    
+    014:
+    CV 0.952726 / LB 0.95233
+    TyreAgeRatio_strなし
+    012とほぼ同等
+    
+    015:
+    CV 0.952714 / LB 0.95244
+    Race_Year group statsなし
+    CVは微減だがLBは上昇
+    
+    best blend:
+    007/008/009/012/013/014/015
+    NM CV 0.95420471
+    LogReg LB 0.95340
+
+    015単体:
+    keep。012の完全上位互換ではないが、LBは012/014より良い。
+    
+    Race_Year group stats:
+    必須ではない。
+    CV上では少し効くが、Public LBではむしろ危険寄りの可能性がある。
+    
+    blend:
+    015は追加価値あり。
+    012/013/014/015全部入りを現時点の暫定best stackとして管理。
+    
+    次の優先:
+    016でさらに別のgroup statsを落とすより、まず現best stackの提出候補整理をする方がよい。
 
 decision_rule:
   single_model:
