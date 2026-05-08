@@ -349,42 +349,93 @@ results:
     - TyreAgeRatio_str
   correlation:
     vs_012:
-      pearson: null
-      spearman: null
+      pearson: 0.9972661581562019
+      spearman: 0.9955038532921825
     vs_013:
-      pearson: null
-      spearman: null
+      pearson: 0.9957163117786392
+      spearman: 0.9937584522443136
     vs_007:
-      pearson: null
-      spearman: null
+      pearson: 0.9627179561933646
+      spearman: 0.9769236141255513
     vs_008:
-      pearson: null
-      spearman: null
+      pearson: 0.9634504619847756
+      spearman: 0.9757239985407725
     vs_009:
-      pearson: null
-      spearman: null
+      pearson: 0.9849073770817177
+      spearman: 0.9746741731077001
   blend_results:
     replace_012_with_014:
-      avg: null
-      ridge: null
-      elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      avg: 
+        cv: null
+        lb: null
+      ridge: 
+        cv: null
+        lb: null
+      elasticnet: 
+        cv: null
+        lb: null
+      logreg: 
+        cv: null
+        lb: null
+      hc: 
+        cv: null
+        lb: null
+      nm: 
+        cv: null
+        lb: null
     keep_012_and_014:
-      avg: null
-      ridge: null
-      elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      avg: 
+        cv: null
+        lb: null
+      ridge: 
+        cv: null
+        lb: null
+      elasticnet: 
+        cv: null
+        lb: null
+      logreg: 
+        cv: null
+        lb: null
+      hc: 
+        cv: null
+        lb: null
+      nm: 
+        cv: null
+        lb: null
     keep_012_013_014:
-      avg: null
-      ridge: null
-      elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      avg:
+        highest: "avg_007_008_009_012_014"
+        cv: 0.954120
+        lb: null
+      ridge: 
+        cv: 0.953262
+        lb: null
+      elasticnet: 
+        cv: 0.954173
+        lb: null
+      logreg: 
+        cv: 0.954169
+        lb: 0.95337
+      hc: 
+        cv: 0.954198
+        lb: null
+        weights: >
+          007: 0.3690920079003578
+          008: 0.18191835920696595
+          009: 0.13270234515902074
+          012: 0.10286277147975945
+          013: 0.06630425951096496
+          014: 0.14712025674293122
+      nm: 
+        cv: 0.954198
+        lb: 0.95340
+        weights: >
+          007: 0.3690122920496388
+          008: 0.18254779626614145
+          009: 0.1325360046621253
+          012: 0.1035004614891842
+          013: 0.06555426699059023
+          014: 0.1468491785423201
     full_with_old_cat:
       avg: null
       ridge: null
