@@ -369,68 +369,131 @@ artifacts:
     - pred_exp_20260508_015_cat_shared004_no_race_year_groupstats_min.npy
 
 results:
-  cv_auc: null
-  public_lb: null
-  cv_logloss: null
+  cv_auc: 0.9527138459391088
+  public_lb: 0.95244
+  cv_logloss: 0.2632139665104773
   fold_auc:
-    fold1: null
-    fold2: null
-    fold3: null
-    fold4: null
-    fold5: null
-  fold_auc_mean: null
-  fold_auc_std: null
-  used_devices: null
-  best_iterations: null
-  n_features: null
-  n_cat_features: null
+    fold1: 0.9538116102023568
+    fold2: 0.9516086102982885
+    fold3: 0.9529801629765566
+    fold4: 0.9518716188237595
+    fold5: 0.9533473947350022
+  fold_auc_mean: 0.9527238794071927
+  fold_auc_std: 0.0009497084028844911
+  used_devices: "GPU"
+  best_iterations: [4119, 3375, 3176, 3880, 3815]
+  n_features: 289
+  n_cat_features: 77
   race_year_used: true
   isoriginaldata_used: true
   tyreageratio_str_used: true
   race_year_groupstats_used: false
-  dropped_groupstat_feature_count_015: null
-  dropped_groupstat_features_015: null
+  dropped_groupstat_feature_count_015: 12
+  dropped_groupstat_features_015: [
+    "LapTime_Delta_mean_by_Race_Year",
+    "LapTime_Delta_std_by_Race_Year",
+    "LapTime_Delta_diff_mean_by_Race_Year",
+    "Position_Change_mean_by_Race_Year",
+    "Position_Change_std_by_Race_Year",
+    "Position_Change_diff_mean_by_Race_Year",
+    "RaceProgress_mean_by_Race_Year",
+    "RaceProgress_std_by_Race_Year",
+    "RaceProgress_diff_mean_by_Race_Year",
+    "TyreLife_mean_by_Race_Year",
+    "TyreLife_std_by_Race_Year",
+    "TyreLife_diff_mean_by_Race_Year"
+  ]
   correlation:
     vs_012:
-      pearson: null
-      spearman: null
+      pearson: 0.9975181731410607
+      spearman: 0.9955533815766556
     vs_013:
-      pearson: null
-      spearman: null
+      pearson: 0.9957072363880476
+      spearman: 0.9935071273527163
     vs_014:
-      pearson: null
-      spearman: null
+      pearson: 0.996916904357832
+      spearman: 0.9946757568909328
     vs_007:
-      pearson: null
-      spearman: null
+      pearson: 0.9617114016373108
+      spearman: 0.976732528866343
     vs_008:
-      pearson: null
-      spearman: null
+      pearson: 0.9625278169303422
+      spearman: 0.9753772145147694
     vs_009:
-      pearson: null
-      spearman: null
+      pearson: 0.9852603290372267
+      spearman: 0.9742027722035637
   blend_results:
     replace_012_with_015:
-      avg: null
-      ridge: null
-      elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      avg:
+        highest:
+        cv:
+      ridge:
+        cv:
+      elasticnet:
+        cv:
+      logreg:
+        cv:
+      hc:
+        cv:
+        weights:
+      nm:
+        cv:
+        weights:
     keep_012_and_015:
-      avg: null
-      ridge: null
-      elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      avg: 
+        highest:
+        cv:
+      ridge: 
+        cv:
+      elasticnet:
+        cv:
+      logreg:
+        cv:
+      hc: 
+        cv:
+        weights:
+      nm: 
+        cv:
+        weights:
     keep_012_013_014_015:
-      avg: null
-      ridge: null
-      elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      avg:
+        highest: "avg_007_008_009_012_013_014_015"
+        cv: 0.954017
+      ridge:
+        cv: 0.953241
+      elasticnet:
+        cv: 0.954176
+      logreg:
+        cv: 0.954172
+        lb: 0.95340
+      hc:
+        cv: 0.954205
+        weights: {
+          "candidate": "hc_nonnegative_raw",
+          "method": "hc",
+          "cv_auc": 0.9542046907423869,
+          "w_007": 0.3664263315850661,
+          "w_008": 0.18300339112139252,
+          "w_009": 0.12841226137145403,
+          "w_012": 0.05960165650013413,
+          "w_013": 0.0424752727729331,
+          "w_014": 0.1213820758922057,
+          "w_015": 0.09869901075681432
+        }
+      nm: 
+        cv: 0.954205
+        weights: {
+          "candidate": "nm_softmax_raw",
+          "method": "nm",
+          "cv_auc": 0.9542047140692815,
+          "w_007": 0.36649943260440715,
+          "w_008": 0.18293811497796403,
+          "w_009": 0.1282214787378679,
+          "w_012": 0.059557561764052164,
+          "w_013": 0.042397889041191725,
+          "w_014": 0.12156278474535877,
+          "w_015": 0.09882273812915837
+        }
     full_with_old_cat:
       avg: null
       ridge: null
