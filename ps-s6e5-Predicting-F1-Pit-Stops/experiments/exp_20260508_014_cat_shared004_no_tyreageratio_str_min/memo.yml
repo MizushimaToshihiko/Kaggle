@@ -328,21 +328,21 @@ artifacts:
     - pred_exp_20260508_014_cat_shared004_no_tyreageratio_str_min.npy
 
 results:
-  cv_auc: null
-  public_lb: null
-  cv_logloss: null
+  cv_auc: 0.9527262386202738
+  public_lb: 0.95233
+  cv_logloss: 0.2618332162760735
   fold_auc:
-    fold1: null
-    fold2: null
-    fold3: null
-    fold4: null
-    fold5: null
-  fold_auc_mean: null
-  fold_auc_std: null
-  used_devices: null
-  best_iterations: null
-  n_features: null
-  n_cat_features: null
+    fold1: 0.9538612415871914
+    fold2: 0.9516225256263597
+    fold3: 0.9529248180603694
+    fold4: 0.9520184766340979
+    fold5: 0.9533900378526204
+  fold_auc_mean: 0.9527634199521279
+  fold_auc_std: 0.0009328038505793634
+  used_devices: "GPU"
+  best_iterations: [3718, 3676, 3583, 5625, 3812]
+  n_features: 300
+  n_cat_features: 76
   tyreageratio_str_used: false
   isoriginaldata_used: true
   dropped_risk_features:
