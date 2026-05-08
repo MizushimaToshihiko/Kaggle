@@ -365,43 +365,85 @@ results:
       spearman: 0.9746741731077001
   blend_results:
     replace_012_with_014:
-      avg: 
-        cv: null
+      avg:
+        highest: "avg_007_008_009_012_014"
+        cv: 0.954120
         lb: null
       ridge: 
-        cv: null
+        cv: 0.953246
         lb: null
       elasticnet: 
-        cv: null
+        cv: 0.954175
         lb: null
       logreg: 
-        cv: null
+        cv: 0.954165
         lb: null
       hc: 
-        cv: null
+        cv: 0.954193
         lb: null
+        weights: {
+          "candidate": "hc_nonnegative_raw",
+          "method": "hc",
+          "cv_auc": 0.9541933501301959,
+          "w_007": 0.3673671556343706,
+          "w_008": 0.18756226867567635,
+          "w_009": 0.13332433896928775,
+          "w_012": 0.14140175488437542,
+          "w_014": 0.17034448183628995
+        }
       nm: 
-        cv: null
+        cv: 0.954193
         lb: null
+        weights: {
+          "candidate": "nm_softmax_raw",
+          "method": "nm",
+          "cv_auc": 0.9541933897891701,
+          "w_007": 0.36681289680862084,
+          "w_008": 0.18862108434774533,
+          "w_009": 0.1334853953873833,
+          "w_012": 0.13892895602306526,
+          "w_014": 0.17215166743318533
+        }
     keep_012_and_014:
-      avg: 
-        cv: null
+      avg:
+        highest: "avg_007_008_009_013_014"
+        cv: 0.954103
         lb: null
       ridge: 
-        cv: null
+        cv: 0.953289
         lb: null
       elasticnet: 
-        cv: null
+        cv: 0.954164
         lb: null
       logreg: 
-        cv: null
+        cv: 0.954162
         lb: null
       hc: 
-        cv: null
+        cv: 0.954190
         lb: null
+        weights: {
+          "candidate": "hc_nonnegative_raw",
+          "method": "hc",
+          "cv_auc": 0.9541898047675561,
+          "w_007": 0.37562952766236934,
+          "w_008": 0.1888496324468008,
+          "w_009": 0.1342121568541904,
+          "w_013": 0.09715122574672622,
+          "w_014": 0.20415745728991305
+        }
       nm: 
-        cv: null
+        cv: 0.954190
         lb: null
+        weights: {
+          "candidate": "nm_softmax_raw",
+          "method": "nm",
+          "cv_auc": 0.9541898141373548,
+          "w_007": 0.3754929095940076,
+          "w_008": 0.18908015623072283,
+          "w_009": 0.13427839296645996,
+          "w_013": 0.09690562887415252,
+          "w_014": 0.2042429123346571
+        }
     keep_012_013_014:
       avg:
         highest: "avg_007_008_009_012_014"
