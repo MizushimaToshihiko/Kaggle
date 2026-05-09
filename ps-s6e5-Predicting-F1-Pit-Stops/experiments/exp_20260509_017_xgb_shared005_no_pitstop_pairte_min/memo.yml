@@ -491,44 +491,91 @@ results:
   total_models: 25
   correlation:
     vs_016:
-      pearson: null
-      spearman: null
+      pearson: 0.9984854805725036
+      spearman: 0.9982032306883406
     vs_007:
-      pearson: null
-      spearman: null
+      pearson: 0.9810323942174173
+      spearman: 0.9737197622828414
     vs_008:
-      pearson: null
-      spearman: null
+      pearson: 0.9823218544657949
+      spearman: 0.9741587347341074
     vs_009:
-      pearson: null
-      spearman: null
+      pearson: 0.9604785677488821
+      spearman: 0.9719418028348694
     vs_012:
-      pearson: null
-      spearman: null
+      pearson: 0.962383880490167
+      spearman: 0.9754093540396166
     vs_013:
-      pearson: null
-      spearman: null
+      pearson: 0.9638339327445219
+      spearman: 0.9740373904074646
     vs_014:
-      pearson: null
-      spearman: null
+      pearson: 0.9627390827243885
+      spearman: 0.9751457181420431
     vs_015:
-      pearson: null
-      spearman: null
+      pearson: 0.9622371568616235
+      spearman: 0.9749428661318175
   blend_results:
     replace_016_with_017:
-      avg: null
-      ridge: null
-      elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      avg: 
+        cv: 
+        highest: 
+      ridge: 
+        cv: 
+      elasticnet: 
+        cv: 
+      logreg: 
+        cv: 
+        lb: 
+      hc: 
+        cv: 
+        weights: 
+      nm: 
+        cv: 
+        lb: 
+        weights: 
     keep_016_and_017:
-      avg: null
-      ridge: null
-      elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      avg:
+        cv: 0.954088
+        highest: "avg_007_008_009_012_013_014_015_016_017"
+      ridge: 
+        cv: 0.953666
+      elasticnet: 0.954195
+      logreg: 
+        cv: 0.954266
+        lb: 0.95351
+      hc: 
+        cv: 0.954294
+        weights: {
+          "candidate": "hc_nonnegative_raw",
+          "method": "hc",
+          "cv_auc": 0.9542939597098452,
+          "w_007": 0.3517305707690582,
+          "w_008": 0.13909412561480186,
+          "w_009": 0.08873627797851072,
+          "w_012": 0.04401607231747298,
+          "w_013": 0.023669974597674743,
+          "w_014": 0.11079880448054322,
+          "w_015": 0.07439187386750544,
+          "w_016": 0.1090237793722164,
+          "w_017": 0.058538521002216314,
+        }
+      nm: 
+        cv: 0.954294
+        lb: 0.95353
+        weights: {
+          "candidate": "nm_softmax_raw",
+          "method": "nm",
+          "cv_auc": 0.9542940876336243,
+          "w_007": 0.35368059905573773,
+          "w_008": 0.13928860318843286,
+          "w_009": 0.08828395759090685,
+          "w_012": 0.04329992499221095,
+          "w_013": 0.02688730359995934,
+          "w_014": 0.10985831875858497,
+          "w_015": 0.06979288103494631,
+          "w_016": 0.11510313244669121,
+          "w_017": 0.05380527933252969,
+        }
     full_with_old_cat:
       avg: null
       ridge: null
