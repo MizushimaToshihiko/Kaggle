@@ -466,25 +466,25 @@ artifacts:
     - pred_exp_20260509_017_xgb_shared005_no_pitstop_pairte_min.npy
 
 results:
-  cv_auc: null
-  public_lb: null
-  cv_logloss: null
+  cv_auc: 0.951939368263537
+  public_lb: 0.95164
+  cv_logloss: 0.21973272943177471
   fold_auc:
-    fold1: null
-    fold2: null
-    fold3: null
-    fold4: null
-    fold5: null
-  fold_auc_mean: null
-  fold_auc_std: null
-  seed_auc_mean: null
-  seed_auc_std: null
-  seed_best_iteration_mean: null
-  n_base_features_before_fe_te: null
-  n_features_after_fe_te: null
-  n_num_as_cat_features: null
-  n_digit_features: null
-  n_bigram_specs: null
+    fold1: 0.9531075046303249
+    fold2: 0.9509606672867531
+    fold3: 0.9515811749339281
+    fold4: 0.9514595096544373
+    fold5: 0.9526194803733042
+  fold_auc_mean: 0.9519456673757496
+  fold_auc_std: 0.0008864703896989905
+  seed_auc_mean: 0.9514596318294589
+  seed_auc_std: 0.0007936276356946823
+  seed_best_iteration_mean: [2683.4, 2211.6, 2079.6, 2930, 2863]
+  n_base_features_before_fe_te: 104
+  n_features_after_fe_te: 219
+  n_num_as_cat_features: 23
+  n_digit_features: 67
+  n_bigram_specs: 45
   pitstop_in_base_features: true
   pitstop_in_pairwise_source: false
   pitstop_pairwise_feature_count: 0
