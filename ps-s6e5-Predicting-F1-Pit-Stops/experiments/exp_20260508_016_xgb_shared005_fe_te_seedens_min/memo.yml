@@ -391,7 +391,7 @@ results:
   fold_auc_std: 0.0007960286863578359
   seed_auc_mean: 0.951524123790016
   seed_auc_std: 0.0007960286863578359
-  seed_best_iteration_mean: [2573.4, 2093.2, 1993.4, 2949.4, 
+  seed_best_iteration_mean: [2573.4, 2093.2, 1993.4, 2949.4, 2201.4]
   n_base_features_before_fe_te: 104
   n_features_after_fe_te: 239
   n_num_as_cat_features: 23
