@@ -138,3 +138,29 @@ items:
     priority: low_until_proxy_checked
     action: inspect_proxy
     decision: pending
+    
+  - id: shared_005
+    title: S6E5 | XGB with FE
+    author: Masaya Kawamata
+    url: https://www.kaggle.com/code/masayakawamata/s6e5-xgb-with-fe
+    type: notebook
+    public_lb: 0.95172
+    cv: 0.952030
+    model_family:
+      - XGBoost
+    uses_original_dataset: true
+    uses_normalized_tyrelife: suspected
+    uses_normalized_tyrelife_proxy: suspected
+    proxy_notes: >
+      unknown
+    uses_pseudo_label: false
+    uses_blend: false
+    fe_categories:
+      original_prior: unknown
+      tyre_lap_interaction: unknown
+      group_stats: unknown
+      target_encoding: true
+    notes:
+    priority: low_until_proxy_checked
+    action: inspect_proxy
+    decision: pending
