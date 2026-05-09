@@ -378,25 +378,25 @@ artifacts:
     - pred_exp_20260508_016_xgb_shared005_fe_te_seedens_min.npy
 
 results:
-  cv_auc: null
-  public_lb: null
-  cv_logloss: null
+  cv_auc: 0.9519855866173828
+  public_lb: 0.95164
+  cv_logloss: 0.21957651027615172
   fold_auc:
-    fold1: null
-    fold2: null
-    fold3: null
-    fold4: null
-    fold5: null
-  fold_auc_mean: null
-  fold_auc_std: null
-  seed_auc_mean: null
-  seed_auc_std: null
-  seed_best_iteration_mean: null
-  n_base_features_before_fe_te: null
-  n_features_after_fe_te: null
-  n_num_as_cat_features: null
-  n_digit_features: null
-  n_bigram_specs: null
+    fold1: 0.9531752519626844
+    fold2: 0.9509362608660017
+    fold3: 0.9516888716104266
+    fold4: 0.9516000338493396
+    fold5: 0.9525813656239849
+  fold_auc_mean: 0.9519963567824874
+  fold_auc_std: 0.0007960286863578359
+  seed_auc_mean: 0.951524123790016
+  seed_auc_std: 0.0007960286863578359
+  seed_best_iteration_mean: [2573.4, 2093.2, 1993.4, 2949.4, 
+  n_base_features_before_fe_te: 104
+  n_features_after_fe_te: 239
+  n_num_as_cat_features: 23
+  n_digit_features: 67
+  n_bigram_specs: 55
   total_models: 25
   correlation:
     vs_007:
