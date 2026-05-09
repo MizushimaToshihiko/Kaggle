@@ -1,0 +1,591 @@
+experiment:
+  id: exp_20260509_017_xgb_shared005_no_pitstop_pairte_min
+  title: XGBoost shared005 without PitStop pairwise FE/TE
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
+
+objective:
+  summary: >
+    016 XGBoost shared005 FE/TE seed ensemble を完全ベースにし、
+    PitStop は base feature として残したまま、
+    PitStop を含む pairwise frequency encoding / pairwise target encoding だけを除外する。
+    目的は、016のblend貢献が PitStop × 他列 のpairwise FE/TE増幅に依存しているか、
+    またはそれがoriginal dataset不整合由来の危険要素になっているかを確認すること。
+  success_criteria:
+    - raw CV AUC を取得
+    - Public LB を取得
+    - oof / pred を npy で保存
+    - fold_scores.csv / seed_scores.csv を保存
+    - feature_columns.csv / bigram_specs.csv を保存
+    - cv_result.json を保存
+    - 016との相関を確認
+    - current best stack に 017 を追加・016置換・016併用して、LogReg / HC / NM / ElasticNet で重みが残るか確認する
+
+positioning:
+  experiment_type: risk_pairwise_ablation
+  intended_role: safer_xgb_aux_material_or_016_replacement
+  base_family: xgboost
+  base_reference: exp_20260508_016_xgb_shared005_fe_te_seedens_min
+  why_now: >
+    016は単体CV/LBでは主力に届かなかったが、007/008/009/012/013/014/015 stack に追加すると
+    NMでCV 0.9542936 / Public LB 0.95353 まで更新し、約0.168の自然な重みを持った。
+    一方、original dataset不整合のディスカッションでは PitStop / PitNextLap の整合性に疑いがあり、
+    016では PitStop を含むpairwise FE/TEが多数作られている。
+    そこで、PitStop本体は残しつつ、PitStop pairwise FE/TEだけを止めて、
+    016の強さと危険度を切り分ける。
+
+data:
+  train_path_candidates:
+    - /kaggle/input/competitions/playground-series-s6e5/train.csv
+    - /kaggle/input/playground-series-s6e5/train.csv
+  test_path_candidates:
+    - /kaggle/input/competitions/playground-series-s6e5/test.csv
+    - /kaggle/input/playground-series-s6e5/test.csv
+  original_path_candidates:
+    - /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+    - /kaggle/input/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  target_candidates:
+    - PitNextLap
+    - PitNextLab
+  id_col: id
+  danger_col: Normalized_TyreLife
+  danger_col_used: false
+  original_usage:
+    use_original_rows: true
+    policy: >
+      Same as 016.
+      For each outer fold, competition train split is concatenated with original rows.
+      Validation fold is always competition train only.
+    note: >
+      Normalized_TyreLife is explicitly dropped from original before feature construction.
+      PitStop is kept as a raw/base feature.
+      PitStop is removed only from pairwise FE/TE source columns.
+  forbidden_columns:
+    - Normalized_TyreLife
+    - Normalized_TyreLife proxy
+    - stint endpoint proxy
+    - pseudo label
+
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  target_encoding:
+    library: cuML TargetEncoder
+    inner_folds: 5
+    smooth: 20
+    split_method: random
+    stat: mean
+    multi_feature_mode: combination
+  seed_ensemble:
+    seeds:
+      - 42
+      - 43
+      - 44
+      - 45
+      - 46
+    seeds_per_fold: 5
+    total_models: 25
+  note: >
+    Outer validation rows are competition train only.
+    Target encoding is fit inside each outer fold after appending original rows.
+    Final fold prediction is the average of 5 XGB seed models.
+    This is intentionally kept identical to 016 except for pairwise source columns.
+
+model:
+  family: XGBoost
+  estimator: XGBClassifier
+  params:
+    n_estimators: 10000
+    learning_rate: 0.03
+    grow_policy: lossguide
+    max_depth: 0
+    max_leaves: 64
+    min_child_weight: 5
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.0
+    reg_lambda: 2.0
+    objective: binary:logistic
+    eval_metric: auc
+    tree_method: hist
+    device: cuda
+    n_jobs: -1
+    enable_categorical: true
+    early_stopping_rounds: 200
+  note: >
+    Parameters are unchanged from 016.
+    No Optuna or model hyperparameter tuning is performed.
+    The only intended change is removal of PitStop-containing pairwise FE/TE.
+
+features:
+  base_features:
+    source: exp_20260508_016_xgb_shared005_fe_te_seedens_min
+    baseline_features:
+      - Driver
+      - Compound
+      - Race
+      - Year
+      - PitStop
+      - LapNumber
+      - Stint
+      - TyreLife
+      - Position
+      - LapTime (s)
+      - LapTime_Delta
+      - Cumulative_Degradation
+      - RaceProgress
+      - Position_Change
+    summary: >
+      Same as 016.
+      The model starts from the original competition columns, then adds numeric-as-categorical features,
+      digit features, single-column frequency encoding, pairwise frequency encoding,
+      single-column target encoding, and pairwise target encoding.
+  changed_from_016:
+    - Remove PitStop from pairwise FE/TE source columns.
+    - Do not create PitStop-containing pairwise frequency encoding.
+    - Do not create PitStop-containing pairwise target encoding.
+  unchanged_from_016:
+    - PitStop remains in base FEATURES
+    - PitStop remains available as raw input
+    - numeric-as-categorical features
+    - digit features
+    - single-column frequency encoding
+    - single-column target encoding
+    - XGB params
+    - 5fold CV
+    - 5seed ensemble
+    - original rows concat policy
+    - OOF/pred artifact format
+  categorical_mapping:
+    columns:
+      - Driver
+      - Compound
+      - Race
+    fit_scope: train + test + original
+    note: >
+      Category vocabulary is mapped using train/test/original combined values.
+      This follows 016/shared005 and is not changed in 017.
+  numeric_as_categorical:
+    exact_features:
+      - LapTime (s)_cat
+      - LapTime_Delta_cat
+      - Cumulative_Degradation_cat
+    rounded_features:
+      LapTime (s):
+        round_digits:
+          - 1
+          - 0
+        round_steps:
+          - 0.5
+          - 1.0
+          - 2.0
+          - 5.0
+      LapTime_Delta:
+        round_digits:
+          - 1
+          - 0
+        round_steps:
+          - 0.5
+          - 1.0
+          - 2.0
+          - 5.0
+          - 10.0
+      Cumulative_Degradation:
+        round_digits:
+          - 1
+          - 0
+        round_steps:
+          - 1.0
+          - 2.0
+          - 5.0
+          - 10.0
+          - 20.0
+    expected_count: 23
+  digit_features:
+    source_columns:
+      - Year
+      - PitStop
+      - LapNumber
+      - Stint
+      - TyreLife
+      - Position
+      - LapTime (s)
+      - LapTime_Delta
+      - Cumulative_Degradation
+      - RaceProgress
+      - Position_Change
+    integer_positions:
+      - 1
+      - 10
+      - 100
+      - 1000
+    decimal_source_columns:
+      - LapTime (s)
+      - LapTime_Delta
+      - Cumulative_Degradation
+      - RaceProgress
+    decimal_positions:
+      - 1
+      - 2
+      - 3
+    expected_count: 67
+  frequency_encoding:
+    single_columns:
+      - Driver
+      - NUM_as_CAT features
+    pairwise_columns:
+      original_source_columns_016:
+        - Driver
+        - Compound
+        - Race
+        - Year
+        - PitStop
+        - LapNumber
+        - Stint
+        - TyreLife
+        - Position
+        - RaceProgress
+        - Position_Change
+      pairwise_source_columns_017:
+        - Driver
+        - Compound
+        - Race
+        - Year
+        - LapNumber
+        - Stint
+        - TyreLife
+        - Position
+        - RaceProgress
+        - Position_Change
+      removed_from_pairwise_source:
+        - PitStop
+      expected_pair_count_016: 55
+      expected_pair_count_017: 45
+    method: >
+      Frequency maps are created from X_tr only within each outer fold.
+      Validation and test are mapped using the fold train map.
+      In 017, no fe2__ feature should contain PitStop.
+  target_encoding:
+    single_columns:
+      - Driver
+      - NUM_as_CAT features
+    pairwise_columns:
+      original_source_columns_016:
+        - Driver
+        - Compound
+        - Race
+        - Year
+        - PitStop
+        - LapNumber
+        - Stint
+        - TyreLife
+        - Position
+        - RaceProgress
+        - Position_Change
+      pairwise_source_columns_017:
+        - Driver
+        - Compound
+        - Race
+        - Year
+        - LapNumber
+        - Stint
+        - TyreLife
+        - Position
+        - RaceProgress
+        - Position_Change
+      removed_from_pairwise_source:
+        - PitStop
+      expected_pair_count_016: 55
+      expected_pair_count_017: 45
+    method: >
+      cuML TargetEncoder with inner fold ids.
+      Target encoding is performed inside each outer fold using fold train data
+      after appending original rows.
+      In 017, no te2__ feature should contain PitStop.
+  expected_feature_counts:
+    base_features_before_fe_te: 104
+    after_frequency_encoding: 173
+    after_target_encoding: 219
+    comparison_to_016:
+      base_features_before_fe_te_016: 104
+      after_frequency_encoding_016: 183
+      after_target_encoding_016: 239
+      removed_pairwise_frequency_features: 10
+      removed_pairwise_target_encoding_features: 10
+      total_removed_features_vs_016: 20
+    note: >
+      016 used 11 pairwise source columns, so C(11,2)=55 pairwise specs.
+      017 removes PitStop from the pairwise source, leaving 10 columns and C(10,2)=45 specs.
+      Therefore 10 pairwise frequency features and 10 pairwise TE features are removed.
+  guardrails:
+    - PitStop must be present in base FEATURES.
+    - PitStop must not be present in PAIRWISE_TE_BASE.
+    - BIGRAM_SPECS must not contain PitStop.
+    - feature_columns.csv must not contain fe2__ or te2__ columns with PitStop.
+    - bigram_specs.csv must have contains_pitstop = false for all rows.
+  risk_features_to_watch:
+    - Year
+    - Race
+    - Race-Year interactions via pairwise FE/TE
+    - PitStop as base feature
+    - LapNumber/TyreLife/RaceProgress pairwise FE/TE
+    - exact numeric-as-categorical features for continuous columns
+  normalized_tyrelife_policy:
+    - Normalized_TyreLife is dropped.
+    - Direct use is forbidden.
+    - Intentional proxy reconstruction is not added.
+
+hypothesis:
+  main: >
+    If 017 remains close to 016 in CV/LB and blend performance,
+    then PitStop-containing pairwise FE/TE is not essential and may be safely removed.
+    If 017 improves over 016, then PitStop pairwise FE/TE may be adding overfit or original-dataset noise.
+    If 017 drops clearly, then PitStop pairwise FE/TE is an important strength feature in shared005.
+  positive_pattern: >
+    017 receives natural positive weight in LogReg / HC / NM / ElasticNet
+    when added to the current best stack.
+    Ideally, it matches or improves 016's blend contribution while reducing reliance on PitStop pair interactions.
+  failure_pattern: >
+    017 loses single CV/LB and receives zero or near-zero weight when compared with 016.
+    This would imply that PitStop pairwise FE/TE was useful for the shared005 family.
+  important_caution: >
+    Do not remove PitStop from base FEATURES in this experiment.
+    That would be a different experiment: no_pitstop_all.
+    017 tests only the pairwise FE/TE amplification of PitStop.
+
+comparison_plan:
+  single_compare_against:
+    - exp_20260508_016_xgb_shared005_fe_te_seedens_min
+    - exp_20260503_007_realmlp_shared001_min
+    - exp_20260503_008_realmlp_shared001_plus_006b_orig_prior
+    - exp_20260503_009_lgb_shared003_full_fe_single_min
+    - exp_20260505_012_cat_shared004_full_fe_oof_min
+    - exp_20260505_013_cat_shared004_no_isoriginaldata_min
+    - exp_20260508_014_cat_shared004_no_tyreageratio_str_min
+    - exp_20260508_015_cat_shared004_no_race_year_groupstats_min
+  blend_compare:
+    current_best_stack:
+      - 007
+      - 008
+      - 009
+      - 012
+      - 013
+      - 014
+      - 015
+    add_016_stack:
+      - 007
+      - 008
+      - 009
+      - 012
+      - 013
+      - 014
+      - 015
+      - 016
+    replace_016_with_017:
+      - 007
+      - 008
+      - 009
+      - 012
+      - 013
+      - 014
+      - 015
+      - 017
+    keep_016_and_017:
+      - 007
+      - 008
+      - 009
+      - 012
+      - 013
+      - 014
+      - 015
+      - 016
+      - 017
+    optional_full_with_old_cat:
+      - 006b
+      - 007
+      - 008
+      - 009
+      - 012
+      - 013
+      - 014
+      - 015
+      - 016
+      - 017
+    strategies:
+      - avg
+      - Ridge
+      - ElasticNet
+      - LogisticRegression
+      - Hill Climb
+      - Nelder-Mead
+  metrics:
+    - cv_auc
+    - public_lb
+    - fold_auc_mean
+    - fold_auc_std
+    - seed_auc_mean
+    - seed_auc_std
+    - pearson_corr_with_016
+    - spearman_corr_with_016
+    - pearson_corr_with_007
+    - spearman_corr_with_007
+    - pearson_corr_with_008
+    - spearman_corr_with_008
+    - pearson_corr_with_009
+    - spearman_corr_with_009
+    - pearson_corr_with_012
+    - spearman_corr_with_012
+    - pearson_corr_with_015
+    - spearman_corr_with_015
+    - blend_cv
+    - blend_public_lb
+    - blend_weight
+
+artifacts:
+  outdir: /kaggle/working/exp_20260509_017_xgb_shared005_no_pitstop_pairte_min
+  files_expected:
+    - oof_exp_20260509_017_xgb_shared005_no_pitstop_pairte_min.npy
+    - pred_exp_20260509_017_xgb_shared005_no_pitstop_pairte_min.npy
+    - oof_exp_20260509_017_xgb_shared005_no_pitstop_pairte_min.csv
+    - submission_exp_20260509_017_xgb_shared005_no_pitstop_pairte_min.csv
+    - cv_result.json
+    - fold_scores.csv
+    - seed_scores.csv
+    - feature_columns.csv
+    - base_features.csv
+    - num_as_cat_features.csv
+    - digit_features.csv
+    - bigram_specs.csv
+    - removed_pairwise_sources_017.csv
+  save_for_blend:
+    - oof_exp_20260509_017_xgb_shared005_no_pitstop_pairte_min.npy
+    - pred_exp_20260509_017_xgb_shared005_no_pitstop_pairte_min.npy
+
+results:
+  cv_auc: null
+  public_lb: null
+  cv_logloss: null
+  fold_auc:
+    fold1: null
+    fold2: null
+    fold3: null
+    fold4: null
+    fold5: null
+  fold_auc_mean: null
+  fold_auc_std: null
+  seed_auc_mean: null
+  seed_auc_std: null
+  seed_best_iteration_mean: null
+  n_base_features_before_fe_te: null
+  n_features_after_fe_te: null
+  n_num_as_cat_features: null
+  n_digit_features: null
+  n_bigram_specs: null
+  pitstop_in_base_features: true
+  pitstop_in_pairwise_source: false
+  pitstop_pairwise_feature_count: 0
+  total_models: 25
+  correlation:
+    vs_016:
+      pearson: null
+      spearman: null
+    vs_007:
+      pearson: null
+      spearman: null
+    vs_008:
+      pearson: null
+      spearman: null
+    vs_009:
+      pearson: null
+      spearman: null
+    vs_012:
+      pearson: null
+      spearman: null
+    vs_013:
+      pearson: null
+      spearman: null
+    vs_014:
+      pearson: null
+      spearman: null
+    vs_015:
+      pearson: null
+      spearman: null
+  blend_results:
+    replace_016_with_017:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+    keep_016_and_017:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+    full_with_old_cat:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+
+decision_rule:
+  single_model:
+    keep: >
+      017 single CV/LB is close to or better than 016.
+      This means PitStop pairwise FE/TE is not essential, and 017 may be a safer XGB auxiliary.
+    hold: >
+      017 single CV/LB is slightly worse than 016 but correlation differs and blend weight remains positive.
+    drop: >
+      017 single CV/LB drops clearly and blend weight disappears.
+  after_blend:
+    keep: >
+      017 replaces 016 or coexists with 016 while improving current best stack CV/Public LB.
+      Meaningful positive weight in HC/NM/LogReg/ElasticNet is required.
+    hold: >
+      017 does not update best stack but receives small nonzero weight and offers risk-reduced diversity.
+    drop: >
+      017 receives zero or near-zero weight and 016 remains clearly better.
+  risk_interpretation:
+    if_017_close_to_016: >
+      PitStop pairwise FE/TE amplification is not necessary.
+      PitStop can remain as a base feature without pair interactions.
+    if_017_better_than_016: >
+      PitStop pairwise FE/TE may be overfitting or amplifying original-dataset inconsistency.
+      Prefer 017 over 016 for safer stack candidate.
+    if_017_much_worse_than_016: >
+      PitStop pairwise FE/TE is an important strength feature in shared005.
+      Keep 016 and do not pursue this ablation further.
+
+notes:
+  - >
+    017 is a strict ablation from 016.
+    It is not a new model family and not a full no-PitStop experiment.
+  - >
+    The experiment date is 2026-05-09, so the ID is
+    exp_20260509_017_xgb_shared005_no_pitstop_pairte_min.
+  - >
+    5seed ensemble is retained: SEEDS = [42, 43, 44, 45, 46].
+  - >
+    PitStop remains in base FEATURES.
+    Only PitStop-containing pairwise FE/TE features are removed.
+  - >
+    In 016, pairwise source columns were 11 columns, C(11,2)=55 pairs.
+    In 017, PitStop is removed from pairwise source, leaving 10 columns, C(10,2)=45 pairs.
+  - >
+    Expected final features are approximately 219:
+    104 base features + single/pairwise frequency features + single/pairwise TE after removing 20 PitStop pairwise features.
+  - >
+    The original dataset inconsistency discussion raises concern about PitStop/PitNextLap consistency.
+    017 does not remove PitStop itself, but prevents PitStop from being amplified through pairwise FE/TE.
+  - >
+    If 017 is weak and zero-weight, do not continue this branch immediately.
+    The next no-PitStop-all experiment should only be considered if 017 shows some signal or if final stack risk control becomes necessary.
