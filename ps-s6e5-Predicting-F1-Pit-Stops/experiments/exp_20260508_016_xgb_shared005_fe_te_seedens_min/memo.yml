@@ -1,0 +1,486 @@
+experiment:
+  id: exp_20260508_016_xgb_shared005_fe_te_seedens_min
+  title: XGBoost shared005 FE/TE seed ensemble artifact generator
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
+
+objective:
+  summary: >
+    shared_005 の XGBoost + Frequency Encoding + Target Encoding + Seed Ensemble 構成を、
+    現在の実験管理・blend運用に合わせて OOF/pred artifact generator 化する。
+    目的は、012〜015 CatBoost shared004 family とは異なる XGB family の補助素材を作り、
+    007/008/009/012/013/014/015 stack に追加したときに自然な重みが残るかを確認すること。
+    単体主軸更新ではなく、低相関・別family候補の確認実験である。
+  success_criteria:
+    - raw CV AUC を取得
+    - Public LB を取得
+    - oof / pred を npy で保存
+    - fold_scores.csv / seed_scores.csv を保存
+    - feature_columns.csv / bigram_specs.csv を保存
+    - cv_result.json を保存
+    - 007 / 008 / 009 / 012 / 013 / 014 / 015 との相関を確認
+    - current best stack に追加して、LogReg / HC / NM / ElasticNet で重みが残るか確認する
+
+positioning:
+  experiment_type: low_corr_candidate
+  intended_role: xgb_aux_material
+  base_family: xgboost
+  base_reference: shared_005
+  why_now: >
+    012〜015では CatBoost shared004 family の危険特徴アブレーションを進め、
+    012/013/014/015 を併用した stack が現時点のbestになっている。
+    ただし同一family派生の追加による上積みは小さくなっている。
+    ここからは別family素材の探索が必要であり、shared_005 は
+    XGB + FE/TE + seed ensemble という構成のため、
+    CatBoost shared004 family とは異なる誤差構造を持つ可能性がある。
+
+data:
+  train_path_candidates:
+    - /kaggle/input/competitions/playground-series-s6e5/train.csv
+    - /kaggle/input/playground-series-s6e5/train.csv
+  test_path_candidates:
+    - /kaggle/input/competitions/playground-series-s6e5/test.csv
+    - /kaggle/input/playground-series-s6e5/test.csv
+  original_path_candidates:
+    - /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+    - /kaggle/input/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  target_candidates:
+    - PitNextLap
+    - PitNextLab
+  id_col: id
+  danger_col: Normalized_TyreLife
+  danger_col_used: false
+  original_usage:
+    use_original_rows: true
+    policy: >
+      Same as shared_005.
+      For each outer fold, competition train split is concatenated with original rows.
+      Validation fold is always competition train only.
+    note: >
+      Normalized_TyreLife is explicitly dropped from original before feature construction.
+      No intentional proxy reconstruction is added.
+  forbidden_columns:
+    - Normalized_TyreLife
+    - Normalized_TyreLife proxy
+    - stint endpoint proxy
+    - pseudo label
+
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  target_encoding:
+    library: cuML TargetEncoder
+    inner_folds: 5
+    smooth: 20
+    split_method: random
+    stat: mean
+    multi_feature_mode: combination
+  seed_ensemble:
+    seeds:
+      - 42
+      - 43
+      - 44
+      - 45
+      - 46
+    seeds_per_fold: 5
+    total_models: 25
+  note: >
+    Outer validation rows are competition train only.
+    Target encoding is fit inside each outer fold after original rows are appended to the fold train side.
+    Final fold prediction is the average of 5 XGB seed models.
+
+model:
+  family: XGBoost
+  estimator: XGBClassifier
+  params:
+    n_estimators: 10000
+    learning_rate: 0.03
+    grow_policy: lossguide
+    max_depth: 0
+    max_leaves: 64
+    min_child_weight: 5
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.0
+    reg_lambda: 2.0
+    objective: binary:logistic
+    eval_metric: auc
+    tree_method: hist
+    device: cuda
+    n_jobs: -1
+    enable_categorical: true
+    early_stopping_rounds: 200
+  note: >
+    Parameters are kept close to shared_005.
+    This experiment does not perform Optuna or hyperparameter tuning.
+    Its value is judged by blend conversion, not single-model CV alone.
+
+features:
+  base_features:
+    source: shared_005
+    baseline_features:
+      - Driver
+      - Compound
+      - Race
+      - Year
+      - PitStop
+      - LapNumber
+      - Stint
+      - TyreLife
+      - Position
+      - LapTime (s)
+      - LapTime_Delta
+      - Cumulative_Degradation
+      - RaceProgress
+      - Position_Change
+    summary: >
+      The feature set starts from the original competition columns, then adds
+      numeric-as-categorical features, digit features, frequency encodings, and target encodings.
+  categorical_mapping:
+    columns:
+      - Driver
+      - Compound
+      - Race
+    fit_scope: train + test + original
+    note: >
+      Category vocabulary is mapped using train/test/original combined values.
+      This is not target leakage, but it does use test/original category vocabulary.
+  numeric_as_categorical:
+    exact_features:
+      - LapTime (s)_cat
+      - LapTime_Delta_cat
+      - Cumulative_Degradation_cat
+    rounded_features:
+      LapTime (s):
+        round_digits:
+          - 1
+          - 0
+        round_steps:
+          - 0.5
+          - 1.0
+          - 2.0
+          - 5.0
+      LapTime_Delta:
+        round_digits:
+          - 1
+          - 0
+        round_steps:
+          - 0.5
+          - 1.0
+          - 2.0
+          - 5.0
+          - 10.0
+      Cumulative_Degradation:
+        round_digits:
+          - 1
+          - 0
+        round_steps:
+          - 1.0
+          - 2.0
+          - 5.0
+          - 10.0
+          - 20.0
+    expected_count: 23
+  digit_features:
+    source_columns:
+      - Year
+      - PitStop
+      - LapNumber
+      - Stint
+      - TyreLife
+      - Position
+      - LapTime (s)
+      - LapTime_Delta
+      - Cumulative_Degradation
+      - RaceProgress
+      - Position_Change
+    integer_positions:
+      - 1
+      - 10
+      - 100
+      - 1000
+    decimal_source_columns:
+      - LapTime (s)
+      - LapTime_Delta
+      - Cumulative_Degradation
+      - RaceProgress
+    decimal_positions:
+      - 1
+      - 2
+      - 3
+    expected_count: 67
+  frequency_encoding:
+    single_columns:
+      - Driver
+      - NUM_as_CAT features
+    pairwise_columns:
+      source_columns:
+        - Driver
+        - Compound
+        - Race
+        - Year
+        - PitStop
+        - LapNumber
+        - Stint
+        - TyreLife
+        - Position
+        - RaceProgress
+        - Position_Change
+      expected_pair_count: 55
+    method: >
+      Frequency maps are created from X_tr only within each outer fold.
+      Validation and test are mapped using the fold train map.
+  target_encoding:
+    single_columns:
+      - Driver
+      - NUM_as_CAT features
+    pairwise_columns:
+      source_columns:
+        - Driver
+        - Compound
+        - Race
+        - Year
+        - PitStop
+        - LapNumber
+        - Stint
+        - TyreLife
+        - Position
+        - RaceProgress
+        - Position_Change
+      expected_pair_count: 55
+    method: >
+      cuML TargetEncoder with inner fold ids.
+      Target encoding is performed inside each outer fold using fold train data
+      after appending original rows.
+  expected_feature_counts:
+    base_features_before_fe_te: 104
+    after_frequency_encoding: 183
+    after_target_encoding: 239
+    note: >
+      These are expected from shared_005.
+      If counts differ materially, inspect missing columns or feature construction changes.
+  risk_features_to_watch:
+    - Year
+    - Race
+    - Race-Year interactions via pairwise FE/TE
+    - PitStop
+    - LapNumber/TyreLife/RaceProgress pairwise FE/TE
+    - exact numeric-as-categorical features for continuous columns
+  normalized_tyrelife_policy:
+    - Normalized_TyreLife is dropped.
+    - Direct use is forbidden.
+    - Intentional proxy reconstruction is not added.
+
+hypothesis:
+  main: >
+    shared_005 is unlikely to update the best single model because its original OOF AUC is around 0.95203,
+    below 012/014/015 CatBoost shared004 family.
+    However, because it is XGB with FE/TE and seed ensemble,
+    it may have a different error profile and contribute as an auxiliary blend material.
+  positive_pattern: >
+    016 receives natural positive weight in LogReg / HC / NM / ElasticNet
+    when added to 007/008/009/012/013/014/015.
+    Even if single CV is weaker, blend CV/LB improves or remains stable with a meaningful positive weight.
+  failure_pattern: >
+    016 has high correlation with existing 009/012 family and receives zero or near-zero weight
+    in HC/NM/LogReg, or worsens avg without compensating blend gain.
+  important_caution: >
+    Do not perform Optuna or add further FE before checking blend conversion.
+    If 016 is zero-weight, close shared_005 branch.
+    If 016 receives meaningful weight, then and only then consider 017 as a lightweight ablation or refinement.
+
+comparison_plan:
+  single_compare_against:
+    - exp_20260503_007_realmlp_shared001_min
+    - exp_20260503_008_realmlp_shared001_plus_006b_orig_prior
+    - exp_20260503_009_lgb_shared003_full_fe_single_min
+    - exp_20260505_012_cat_shared004_full_fe_oof_min
+    - exp_20260505_013_cat_shared004_no_isoriginaldata_min
+    - exp_20260508_014_cat_shared004_no_tyreageratio_str_min
+    - exp_20260508_015_cat_shared004_no_race_year_groupstats_min
+  blend_compare:
+    current_best_stack:
+      - 007
+      - 008
+      - 009
+      - 012
+      - 013
+      - 014
+      - 015
+    add_016_stack:
+      - 007
+      - 008
+      - 009
+      - 012
+      - 013
+      - 014
+      - 015
+      - 016
+    optional_full_with_old_cat:
+      - 006b
+      - 007
+      - 008
+      - 009
+      - 012
+      - 013
+      - 014
+      - 015
+      - 016
+    strategies:
+      - avg
+      - Ridge
+      - ElasticNet
+      - LogisticRegression
+      - Hill Climb
+      - Nelder-Mead
+  metrics:
+    - cv_auc
+    - public_lb
+    - fold_auc_mean
+    - fold_auc_std
+    - seed_auc_mean
+    - seed_auc_std
+    - pearson_corr_with_007
+    - spearman_corr_with_007
+    - pearson_corr_with_008
+    - spearman_corr_with_008
+    - pearson_corr_with_009
+    - spearman_corr_with_009
+    - pearson_corr_with_012
+    - spearman_corr_with_012
+    - pearson_corr_with_015
+    - spearman_corr_with_015
+    - blend_cv
+    - blend_public_lb
+    - blend_weight
+
+artifacts:
+  outdir: /kaggle/working/exp_20260508_016_xgb_shared005_fe_te_seedens_min
+  files_expected:
+    - oof_exp_20260508_016_xgb_shared005_fe_te_seedens_min.npy
+    - pred_exp_20260508_016_xgb_shared005_fe_te_seedens_min.npy
+    - oof_exp_20260508_016_xgb_shared005_fe_te_seedens_min.csv
+    - submission_exp_20260508_016_xgb_shared005_fe_te_seedens_min.csv
+    - cv_result.json
+    - fold_scores.csv
+    - seed_scores.csv
+    - feature_columns.csv
+    - base_features.csv
+    - num_as_cat_features.csv
+    - digit_features.csv
+    - bigram_specs.csv
+  save_for_blend:
+    - oof_exp_20260508_016_xgb_shared005_fe_te_seedens_min.npy
+    - pred_exp_20260508_016_xgb_shared005_fe_te_seedens_min.npy
+
+results:
+  cv_auc: null
+  public_lb: null
+  cv_logloss: null
+  fold_auc:
+    fold1: null
+    fold2: null
+    fold3: null
+    fold4: null
+    fold5: null
+  fold_auc_mean: null
+  fold_auc_std: null
+  seed_auc_mean: null
+  seed_auc_std: null
+  seed_best_iteration_mean: null
+  n_base_features_before_fe_te: null
+  n_features_after_fe_te: null
+  n_num_as_cat_features: null
+  n_digit_features: null
+  n_bigram_specs: null
+  total_models: 25
+  correlation:
+    vs_007:
+      pearson: null
+      spearman: null
+    vs_008:
+      pearson: null
+      spearman: null
+    vs_009:
+      pearson: null
+      spearman: null
+    vs_012:
+      pearson: null
+      spearman: null
+    vs_013:
+      pearson: null
+      spearman: null
+    vs_014:
+      pearson: null
+      spearman: null
+    vs_015:
+      pearson: null
+      spearman: null
+  blend_results:
+    add_016_to_current_best:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+    full_with_old_cat:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+
+decision_rule:
+  single_model:
+    keep: >
+      Single CV/LB unexpectedly approaches or exceeds 012/014/015,
+      or single performance is slightly weaker but correlations are meaningfully different.
+    hold: >
+      Single CV is weaker but not disastrous, and OOF correlation suggests possible auxiliary value.
+    drop: >
+      Single CV is weak and correlations are high with existing 009/012/015 family.
+  after_blend:
+    keep: >
+      016 receives meaningful positive weight in HC/NM/LogReg/ElasticNet
+      and improves current best stack CV or Public LB.
+      A rough practical threshold is at least 0.03 to 0.05 positive weight
+      or clear improvement in LB/CV.
+    hold: >
+      016 receives small but nonzero weight and does not harm Public LB.
+      Keep as optional diversity material.
+    drop: >
+      016 receives zero or near-zero weight across HC/NM/LogReg,
+      or worsens avg and does not improve any optimized blend.
+  next_action_if_keep: >
+    Consider 017 as lightweight shared_005 refinement or ablation,
+    such as reducing risky pairwise TE, testing no PitStop pairwise TE,
+    or testing single-seed/smaller seed ensemble for faster iteration.
+  next_action_if_drop: >
+    Close shared_005 branch.
+    Do not spend time on Optuna or additional FE for this family.
+
+notes:
+  - >
+    016 is a conversion of shared_005 into the current reproducible experiment workflow.
+    It is not meant to be judged only by single CV.
+  - >
+    The original shared_005 code saved only CSV files named by cv_auc.
+    016 fixes artifact names using EXP_ID and saves npy files for blend.
+  - >
+    Normalized_TyreLife is explicitly dropped from original.
+    No direct use or intentional proxy reconstruction is allowed.
+  - >
+    The model count is heavy: 5 folds × 5 seeds = 25 XGB models.
+    Runtime cost should be justified only if blend conversion is promising.
+  - >
+    Because 012〜015 are all CatBoost shared004 derivatives,
+    adding a weaker but different XGB model can still be useful if its errors differ.
+  - >
+    If 016 is zero-weight in the current best stack,
+    continuing this branch would likely be opportunity-cost negative.
