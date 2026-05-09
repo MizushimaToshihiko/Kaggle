@@ -400,34 +400,69 @@ results:
   total_models: 25
   correlation:
     vs_007:
-      pearson: null
-      spearman: null
+      pearson: 0.9813047386312719
+      spearman: 0.9741702335846731
     vs_008:
-      pearson: null
-      spearman: null
+      pearson: 0.9827050389159473
+      spearman: 0.9745430940816403
     vs_009:
-      pearson: null
-      spearman: null
+      pearson: 0.9599353624874997
+      spearman: 0.9714506433725306
     vs_012:
-      pearson: null
-      spearman: null
+      pearson: 0.9625541013279812
+      spearman: 0.9757387625534215
     vs_013:
-      pearson: null
-      spearman: null
+      pearson: 0.9639503578024877
+      spearman: 0.9744313137808578
     vs_014:
-      pearson: null
-      spearman: null
+      pearson: 0.9628984666329024
+      spearman: 0.9756115115467004
     vs_015:
-      pearson: null
-      spearman: null
+      pearson: 0.96239834965667
+      spearman: 0.9752491301207613
   blend_results:
     add_016_to_current_best:
-      avg: null
-      ridge: null
-      elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      avg:
+        hightest: "avg_007_008_009_012_013_014_015_016"
+        cv: 0.954101
+      ridge:
+        cv: 0.953661
+      elasticnet:
+        cv: 0.954260
+      logreg:
+        cv: 0.954262
+        lb: 0.95350
+      hc:
+        cv: 0.954294
+        weights: {
+          "candidate": "hc_nonnegative_raw",
+          "method": "hc",
+          "cv_auc": 0.9542935535551003,
+          "w_007": 0.34919101738185027,
+          "w_008": 0.14283118415981305,
+          "w_009": 0.09094494673953209,
+          "w_012": 0.040378570923681203,
+          "w_013": 0.027116265507067805,
+          "w_014": 0.10957117466059653,
+          "w_015": 0.0712492137931066,
+          "w_016": 0.1687176268343523,
+        }
+      nm:
+        cv: 0.954294
+        lb: 0.95353
+        weights: {
+          "candidate": "nm_softmax_raw",
+          "method": "nm",
+          "cv_auc": 0.9542936043732443,
+          "w_007": 0.35119655760625923,
+          "w_008": 0.14194512291729772,
+          "w_009": 0.09000816321044422,
+          "w_012": 0.03962288762236557,
+          "w_013": 0.02735226914602392,
+          "w_014": 0.11011248878629323,
+          "w_015": 0.07147096269317615,
+          "w_016": 0.16829154801814,
+        }
     full_with_old_cat:
       avg: null
       ridge: null
