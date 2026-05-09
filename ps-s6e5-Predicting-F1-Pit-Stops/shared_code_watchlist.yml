@@ -164,3 +164,47 @@ items:
     priority: low_until_proxy_checked
     action: inspect_proxy
     decision: pending
+
+  - id: shared_006
+    title: 3-Model Ensemble: RealMLP + CatBoost + XGBoost
+    author: Aman Atar
+    url: https://www.kaggle.com/code/amanatar/3-model-ensemble-realmlp-catboost-xgboost
+    type: notebook
+    public_lb: 0.95351
+    cv: 0.95413
+    model_family:
+      - RealMLP
+      - CatBoost
+      - XGBoost
+    uses_original_dataset: true
+    uses_normalized_tyrelife: suspected
+    uses_normalized_tyrelife_proxy: suspected
+    proxy_notes: >
+      unknown
+    uses_pseudo_label: false
+    uses_blend: true
+    fe_categories:
+      original_prior: unknown
+      tyre_lap_interaction: unknown
+      group_stats: unknown
+      target_encoding: true
+    notes: >
+      下表のとおりRealMLP,CatBoost,XGBoostのそれぞれで学習する特徴量を変えている。
+      最後に3モデルをNelder-MeadでBlendしている。
+      Pipeline	Model	Features	Expected OOF AUC
+      A	RealMLP	37 (categorized nums + combos)	~0.953
+      B	CatBoost	250+ (digits, sigs, group stats)	~0.953
+      C	XGBoost	41 (tyre cliff + strategy)	~0.949
+      Blend	Nelder-Mead	Optimal weights	~0.955+
+
+      CV実測値は
+      RealMLP:  0.95348
+      CatBoost: 0.95268
+      XGBoost:  0.94856
+      3Models ensemble by Nelder-Mead: 0.95413
+
+      -> RealMLPの部分は自分のOOFとして利用できるかも
+      
+    priority: low_until_proxy_checked
+    action: inspect_proxy
+    decision: pending
