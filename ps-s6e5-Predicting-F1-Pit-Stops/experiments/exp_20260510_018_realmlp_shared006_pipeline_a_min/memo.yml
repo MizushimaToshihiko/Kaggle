@@ -376,20 +376,20 @@ artifacts:
     - pred_exp_20260510_018_realmlp_shared006_pipeline_a_min.npy
 
 results:
-  cv_auc: null
-  public_lb: null
-  cv_logloss: null
+  cv_auc: 0.953475993350039
+  public_lb: 0.95316
+  cv_logloss: 0.2161526452499902
   fold_auc:
-    fold1: null
-    fold2: null
-    fold3: null
-    fold4: null
-    fold5: null
-  fold_auc_mean: null
-  fold_auc_std: null
-  elapsed_sec: null
-  n_features_before_te: null
-  n_features_after_te: null
+    fold1: 0.9546291571968908
+    fold2: 0.9525034703690322
+    fold3: 0.9534100000875823
+    fold4: 0.9525634253959542
+    fold5: 0.954334851092187
+  fold_auc_mean: 0.9534881808283293
+  fold_auc_std: 0.0009810220609008766
+  elapsed_sec: 486.54335498809814
+  n_features_before_te: 37
+  n_features_after_te: 39
   original_split_enabled: true
   correlation:
     vs_007:
