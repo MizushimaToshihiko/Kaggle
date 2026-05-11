@@ -1,0 +1,305 @@
+experiment:
+  id: exp_20260511_019_blend_prune_008_012_013_after018_min
+  title: Blend pruning after adding 018 - remove 008, 012, and 013
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
+
+objective:
+  summary: >
+    018 RealMLP shared006 Pipeline A を追加した後の current best stack から、
+    既に削除候補となっている 008 と、018追加後に重みが小さくなった 012 / 013 を削除し、
+    圧縮版stackとして性能が維持できるかを確認する。
+    これは新規モデル実験ではなく、最終提出候補整理のためのblend pruning実験である。
+
+  success_criteria:
+    - 007 / 009 / 014 / 015 / 016 / 017 / 018 のstackでblend結果を取得
+    - Avg / Ridge / ElasticNet / LogReg / HC / NM を比較
+    - add018全員入りbestと比較
+    - CV / Public LB / 重みの自然さを確認
+    - 圧縮版を最終提出候補として残すか判断する
+
+positioning:
+  experiment_type: blend_pruning
+  intended_role: compressed_final_stack_candidate
+  base_reference:
+    - exp_20260510_018_realmlp_shared006_pipeline_a_min
+    - add018 blend notebook
+    - reduce008 blend notebook
+  why_now: >
+    018追加後、current best stack は NM CV 0.9543826 / Public LB 0.95367 まで更新した。
+    その一方で、008はreduce実験で削除してもほぼ性能維持できることが確認済みであり、
+    012 / 013 は018追加後の最適化重みが小さくなっている。
+    したがって、008 / 012 / 013 を削除した圧縮版stackを確認する価値がある。
+
+base_context:
+  current_best_full_stack:
+    members:
+      - 007
+      - 008
+      - 009
+      - 012
+      - 013
+      - 014
+      - 015
+      - 016
+      - 017
+      - 018
+    known_best:
+      method: NM
+      cv_auc: 0.9543826
+      public_lb: 0.95367
+    note: >
+      018 is now a core RealMLP material.
+      In the full add018 stack, 018 receives a large natural weight around 0.32.
+
+  already_checked:
+    reduce_008:
+      result_summary: >
+        Removing or reducing 008 nearly preserved performance.
+        008 is now a valid pruning candidate.
+    reduce_007:
+      result_summary: >
+        Removing or reducing 007 caused a small degradation.
+        007 should remain in the compressed stack.
+
+pruned_stack:
+  id: remove_008_012_013_after018
+  members:
+    - 007
+    - 009
+    - 014
+    - 015
+    - 016
+    - 017
+    - 018
+  removed_members:
+    - 008
+    - 012
+    - 013
+
+removed_member_rationale:
+  "008":
+    model: RealMLP shared001 + safe original prior
+    reason: >
+      After adding 018, 008's role is largely absorbed by 018.
+      reduce_008 experiment already showed near-maintenance of performance.
+  "012":
+    model: CatBoost shared004 full-FE
+    reason: >
+      012 is an original CatBoost shared004 full-FE material,
+      but after 014/015 and 018 are added, its optimized weight becomes small.
+      014/015 are safer or more useful derivatives.
+  "013":
+    model: CatBoost shared004 no_IsOriginalData
+    reason: >
+      013 is a safer derivative of 012, but after 018 is added,
+      its incremental contribution appears small.
+      It is a valid pruning target in a compressed final stack.
+
+kept_member_rationale:
+  "007":
+    model: RealMLP shared001
+    reason: >
+      reduce_007 showed a small degradation, so 007 still retains independent value even after 018.
+  "009":
+    model: LGB shared003 full-FE
+    reason: >
+      009 remains a different GBDT family material and has historically contributed to blend diversity.
+  "014":
+    model: CatBoost shared004 no_TyreAgeRatio_str
+    reason: >
+      014 is close to 012 but removes a string precision risk feature while preserving performance.
+  "015":
+    model: CatBoost shared004 no_Race_Year_groupstats
+    reason: >
+      015 improved Public LB over 012/014 and removes a potentially risky Race_Year group-stat block.
+  "016":
+    model: XGB shared005 FE/TE seed ensemble
+    reason: >
+      016 has lower single CV but strong blend contribution and distinct correlation structure.
+  "017":
+    model: XGB shared005 no_PitStop_pairTE
+    reason: >
+      017 is a safer derivative of 016 and retains small but positive blend value.
+  "018":
+    model: RealMLP shared006 Pipeline A
+    reason: >
+      018 is now core. It has strong single CV/LB and large optimized blend weight.
+
+comparison_plan:
+  baseline_full_stack:
+    members:
+      - 007
+      - 008
+      - 009
+      - 012
+      - 013
+      - 014
+      - 015
+      - 016
+      - 017
+      - 018
+    known_reference:
+      nm_cv_auc: 0.9543826
+      nm_public_lb: 0.95367
+
+  compressed_stack:
+    members:
+      - 007
+      - 009
+      - 014
+      - 015
+      - 016
+      - 017
+      - 018
+
+  strategies:
+    - avg
+    - Ridge
+    - ElasticNet
+    - LogisticRegression
+    - Hill Climb
+    - Nelder-Mead
+
+  metrics:
+    - cv_auc
+    - delta_vs_full_stack
+    - delta_vs_best_single
+    - public_lb
+    - weights
+    - oof_min
+    - oof_max
+    - pred_min
+    - pred_max
+    - weight_stability
+    - whether_018_remains_core
+    - whether_016_017_remain_positive
+    - whether_014_015_remain_positive
+
+expected_behavior:
+  likely_outcome: >
+    Compressed stack may be slightly below full add018 stack on CV,
+    but should remain close if 008/012/013 were genuinely redundant.
+  acceptable_range: >
+    If CV drop is tiny and Public LB remains near 0.95367,
+    compressed stack is useful as an easier-to-manage final candidate.
+  warning_pattern: >
+    If CV or LB drops clearly, then either 012 or 013 still contributes small but real diversity,
+    and full stack should remain the attack candidate.
+
+decision_rule:
+  keep_as_final_candidate:
+    condition: >
+      Compressed stack achieves CV and Public LB close to full add018 stack,
+      especially if LogReg / NM / HC remain stable and prediction range is not abnormal.
+    interpretation: >
+      008/012/013 can be removed from the final compressed candidate.
+
+  hold_as_safe_candidate:
+    condition: >
+      Compressed stack is slightly below full stack but still competitive,
+      with simpler model composition and reasonable Public LB.
+    interpretation: >
+      Keep compressed stack as a stable or backup submission candidate,
+      while full add018 remains the attack candidate.
+
+  reject_pruning:
+    condition: >
+      Removing 008/012/013 causes clear CV/LB deterioration or unstable weights.
+    interpretation: >
+      Full add018 stack should remain primary.
+      If necessary, test remove_012 and remove_013 individually, but only if final submission choice requires it.
+
+artifacts:
+  outdir: /kaggle/working/exp_20260511_019_blend_prune_008_012_013_after018_min
+  expected_files:
+    - summary_df.csv
+    - blend_predictions.csv
+    - submission_best_nm.csv
+    - submission_best_hc.csv
+    - submission_best_logreg.csv
+    - weights_summary.csv
+    - cv_result.json
+  input_oof_pred_members:
+    "007":
+      role: RealMLP baseline/core
+    "009":
+      role: LGB diversity material
+    "014":
+      role: CatBoost shared004 no_TyreAgeRatio_str
+    "015":
+      role: CatBoost shared004 no_Race_Year_groupstats
+    "016":
+      role: XGB shared005 FE/TE seed ensemble
+    "017":
+      role: XGB shared005 no_PitStop_pairTE
+    "018":
+      role: RealMLP shared006 Pipeline A core
+
+results:
+  compressed_stack:
+    avg:
+      cv_auc: null
+      public_lb: null
+      weights: null
+    ridge:
+      cv_auc: null
+      public_lb: null
+      weights: null
+      params: null
+    elasticnet:
+      cv_auc: null
+      public_lb: null
+      weights: null
+      params: null
+    logreg:
+      cv_auc: null
+      public_lb: null
+      weights: null
+      params: null
+    hc:
+      cv_auc: null
+      public_lb: null
+      weights: null
+      params: null
+    nm:
+      cv_auc: null
+      public_lb: null
+      weights: null
+      params: null
+
+  comparison_to_full_add018:
+    full_add018_nm_cv_auc: 0.9543826
+    full_add018_public_lb: 0.95367
+    compressed_best_cv_auc: null
+    compressed_best_public_lb: null
+    delta_cv_auc: null
+    delta_public_lb: null
+
+notes:
+  - >
+    019 is a blend pruning experiment, not a new model training experiment.
+  - >
+    The experiment date is 2026-05-11, so the ID is
+    exp_20260511_019_blend_prune_008_012_013_after018_min.
+  - >
+    The code should be based on the existing add018 / reduce008 blend notebook.
+  - >
+    Remove 012 and 013 from the member list.
+    Since reduce008 is already completed, this experiment also excludes 008.
+  - >
+    Do not remove 007.
+    reduce007 already showed that 007 still has value.
+  - >
+    Do not remove 014 or 015 yet.
+    They are the stronger/saner CatBoost shared004 derivatives after 012/013.
+  - >
+    Do not remove 016 or 017.
+    They represent the shared005 XGB branch and both have demonstrated blend value.
+  - >
+    018 must remain in the stack and should be expected to receive a large positive weight.
+  - >
+    If compressed stack is nearly equal to full add018, it becomes a cleaner final candidate.
+  - >
+    If compressed stack drops, keep full add018 as the attack candidate and treat compressed stack as secondary only.
