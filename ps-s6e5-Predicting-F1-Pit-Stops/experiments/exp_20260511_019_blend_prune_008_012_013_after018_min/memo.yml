@@ -268,7 +268,37 @@ results:
       public_lb: 0.95368
       weights: "[0.1863473, 0.08594639, 0.12679759, 0.09102717, 0.15561761, 0.01956491, 0.33469903]"
       params: "{\"constraint\": \"softmax_sum1\", \"success\": true, \"message\": \"Optimization terminated successfully.\", \"nit\": 149, \"fun\": -0.9543781879858912}"
-
+  compressed_stack_reduce_017:
+    avg:
+      cv_auc: 0.9542746525890051
+      public_lb: null
+      weights: "[0.2, 0.0, 0.2, 0.2, 0.2, 0.2]"
+    ridge:
+      cv_auc: 0.9538171132172866
+      public_lb: null
+      weights: null
+      params: "{\"alpha\": 0.0029725374455179896}"
+    elasticnet:
+      cv_auc: null
+      public_lb: null
+      weights: null
+      params: null
+    logreg:
+      cv_auc: 0.9543544346678439
+      public_lb: 0.95364
+      weights: null
+      params: "{\"C\": 0.003951569877981243}"
+    hc:
+      cv_auc: 0.9543777931855202
+      public_lb: null
+      weights: "[0.18920058, 0.08473853, 0.12903305, 0.09460016, 0.16962194, 0.33280575]"
+      params: "{\"constraint\": \"nonnegative_sum1\"}"
+    nm:
+      cv_auc: 0.9543778319986098
+      public_lb: 0.95368
+      weights: "[0.18860827, 0.08499056, 0.12784854, 0.09475499, 0.16995642, 0.33384122]"
+      params: "{\"constraint\": \"softmax_sum1\", \"success\": true, \"message\": \"Optimization terminated successfully.\", \"nit\": 120, \"fun\": -0.9543778319986098}"
+  
   comparison_to_full_add018:
     full_add018_nm_cv_auc: 0.9543826
     full_add018_public_lb: 0.95367
@@ -303,3 +333,7 @@ notes:
     If compressed stack is nearly equal to full add018, it becomes a cleaner final candidate.
   - >
     If compressed stack drops, keep full add018 as the attack candidate and treat compressed stack as secondary only.
+
+decision_note:
+  decision: >
+    reduce_008_012_013をkeep、reduce_008_012_013_017はnm,hcはCV,LBを維持できたもののlogregでCV,LBが悪化したのでこれは使わない
