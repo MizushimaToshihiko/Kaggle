@@ -1,1 +1,485 @@
+experiment:
+  id: exp_20260511_021_tabm_shared007_comp_oof_no_pitstop_no_isoriginaldata_min
+  title: TabM shared007 competition-only OOF without PitStop and IsOriginalData
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
 
+objective:
+  summary: >
+    shared_007 の TabM_D_Classifier 部分を、現在の実験管理・blend運用に合わせて
+    competition-only OOF artifact generator 化する。
+    元の shared_007 は train + original を結合した全体に対してCVを切っており、
+    validation fold に original rows が混ざるため、報告CV 0.96343 は比較不能である。
+    021では competition train だけでfoldを切り、original rows は各foldのtrain側にのみconcatする。
+    また、危険特徴である PitStop と IsOriginalData は学習特徴から除外する。
+    目的は、TabM という新model familyが current best stack に対してblend価値を持つか確認すること。
+
+  success_criteria:
+    - valid competition-only CV AUC を取得
+    - Public LB を取得
+    - oof / pred を npy で保存
+    - oof csv / submission csv を保存
+    - fold_scores.csv を保存
+    - feature_columns.csv / categorical_features.csv / features.txt を保存
+    - cv_result.json を保存
+    - current best stack に追加して Avg / Ridge / ElasticNet / LogReg / HC / NM で比較する
+
+positioning:
+  experiment_type: new_model_family_validation
+  intended_role: tabm_aux_material
+  base_family: tabm
+  base_reference: shared_007
+  why_now: >
+    019+020時点で、主力stackは RealMLP / LGB / CatBoost / XGB の構成になっている。
+    shared_007はTabM_D_Classifierを使っており、既存stackにないmodel familyであるため、
+    単体CVが主力級に届かなくても、相関がズレればblend素材として価値がある。
+    ただし元コードのCVはoriginal rowsをvalidationに含むため信用できない。
+    そのため、021では正しいcompetition-only OOFへ変換して評価する。
+
+shared_007_original_issue:
+  reported_cv_auc: 0.96343
+  why_not_comparable:
+    - train_fe と orig_fe を先に結合した X_concat 全体でStratifiedKFoldしている
+    - validation fold に original rows が混ざる
+    - OOF対象が competition train だけではない
+    - IsOriginalData が特徴量に入っている
+    - PitStop が特徴量に入っている
+  interpretation: >
+    元コードのCVはモデル性能の参考値ではなく、壊れた評価設計による過大値として扱う。
+    021のCVが0.963から大きく下がるのは正常である。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e5/sample_submission.csv
+  original_path: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  id_col: id
+  danger_col: Normalized_TyreLife
+  danger_col_used: false
+  original_usage:
+    use_original_rows: true
+    policy: >
+      Competition trainだけでStratifiedKFoldを切る。
+      各foldでは、competition fold train rows に original全行をconcatして学習する。
+      validationはcompetition train rowsのみ。
+      OOFはcompetition trainの439,140行のみ作成する。
+    note: >
+      元shared_007のように train+original 全体に対してCVを切らない。
+      original rows は学習データ拡張としてのみ使用する。
+  forbidden_columns:
+    - Normalized_TyreLife
+    - Normalized_TyreLife proxy
+    - stint endpoint proxy
+    - pseudo label
+
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  stratification: target x Year
+  validation_scope: competition train only
+  note: >
+    y_comp = competition train target。
+    strat_key = PitNextLap + Year。
+    original rowsはvalidationには一切含めない。
+
+model:
+  family: TabM
+  estimator: pytabkit.TabM_D_Classifier
+  device: cuda if available else cpu
+  params:
+    arch_type: tabm-normal
+    tabm_k: 32
+    num_emb_type: pwl
+    d_embedding: 32
+    batch_size: 512
+    lr: 0.0007
+    n_epochs: 200
+    dropout: 0.15
+    d_block: 256
+    n_blocks: 6
+    weight_decay: 0.01
+    verbosity: 0
+    patience: 5
+  preprocessing:
+    - OrdinalEncoder for categorical features
+    - StandardScaler per fold
+    - clip scaled values to [-5, 5]
+  note: >
+    Parameters follow shared_007 as closely as possible.
+    No Optuna or parameter tuning is performed in 021.
+
+features:
+  base_source: shared_007
+  raw_columns:
+    categorical:
+      - Driver
+      - Compound
+      - Race
+    numeric:
+      - Year
+      - PitStop
+      - LapNumber
+      - Stint
+      - TyreLife
+      - Position
+      - LapTime (s)
+      - LapTime_Delta
+      - Cumulative_Degradation
+      - RaceProgress
+      - Position_Change
+
+  drop_policy:
+    drop_raw_columns:
+      - id
+      - PitNextLap
+      - PitStop
+      - IsOriginalData
+    pitstop_policy: >
+      Raw PitStop is dropped in 021.
+      元shared_007ではPitStopが特徴に残っていたが、PitStop/PitNextLap整合性リスクと
+      post-fact leakage懸念を避けるため、021では除外する。
+    isoriginaldata_policy: >
+      IsOriginalData is not created and not used.
+      元shared_007ではtrain/test=0, original=1として使用していたが、
+      original source indicator によるCV歪みを避けるため除外する。
+    normalized_tyrelife_policy:
+      - Normalized_TyreLife is dropped from original.
+      - Direct use is forbidden.
+      - Intentional proxy reconstruction is not added.
+
+  feature_blocks:
+    domain_features:
+      examples:
+        - EstimatedTotalLaps
+        - LapsRemaining
+        - LapProgress_x_LapNumber
+        - TyreAgeRatio
+        - LapPerTyreLife
+        - LapMinusTyreLife
+        - TyreLifeMinusLap
+        - TyreAgeVsRace
+        - PitWindowPressure
+        - TyreLife_x_RaceProgress
+        - TyreLife_to_LapsRemaining
+        - LapsRemaining_to_TyreLife
+        - DegPerTyreLap
+        - AbsDegPerTyreLap
+        - DegPerRaceLap
+        - DeltaPerTyreLap
+        - AbsDeltaPerTyreLap
+        - DeltaAbs
+        - LapTimeDeltaPositive
+        - LapTimeDeltaNegative
+        - Abs_Cumulative_Degradation
+        - Positive_Degradation
+        - Abs_Position_Change
+        - Gained_Position
+        - Lost_Position
+        - PositionPressure
+        - StintPressure
+        - TyreLife_x_Stint
+        - Stint_x_LapNumber
+        - Is_First_Stint
+        - Is_Late_Stint
+        - Early_Race
+        - Mid_Race
+        - Late_Race
+    bin_features:
+      - RacePhase
+      - LapBin
+      - TyreLifeBin
+      - PositionBin
+    interaction_categories:
+      - Race_Year
+      - Compound_Stint
+      - Driver_Race
+      - Driver_Compound
+      - Race_Compound
+      - Race_Compound_Stint
+      - Compound_RacePhase
+      - Compound_TyreLifeBin
+      - RacePhase_TyreLifeBin
+    digit_features:
+      summary: >
+        Integer digit and decimal digit features are generated from selected numeric/domain columns.
+    string_precision_features:
+      - RaceProgress_str
+      - EstimatedTotalLaps_str
+      - TyreAgeRatio_str
+    frequency_features:
+      source_columns:
+        - Driver
+        - Race
+        - Compound
+        - Race_Year
+        - Compound_Stint
+        - Driver_Race
+        - Driver_Compound
+        - Race_Compound
+        - Race_Compound_Stint
+        - Compound_RacePhase
+        - Compound_TyreLifeBin
+        - RacePhase_TyreLifeBin
+        - LapBin
+        - TyreLifeBin
+        - PositionBin
+      method: >
+        Frequency/count features are fitted using train/test/original combined feature tables,
+        following shared_007.
+    light_group_stats:
+      group_cols:
+        - Race_Year
+        - Race_Compound_Stint
+        - Driver_Race
+        - Compound_Stint
+      value_cols:
+        - LapTime_Delta
+        - Position_Change
+        - RaceProgress
+        - TyreLife
+      stats:
+        - mean
+        - std
+        - diff_mean
+
+  expected_shapes:
+    shared007_reference:
+      train_fe_shape: [439140, 245]
+      test_fe_shape: [188165, 244]
+      original_fe_shape: [101371, 245]
+      categorical_feature_count: 19
+    note: >
+      021ではPitStopとIsOriginalDataを最終FEATURESからdropするため、
+      最終学習特徴数は元shared_007と一致しない可能性がある。
+
+  risk_features_to_watch:
+    - Race_Year
+    - TyreAgeRatio_str
+    - Race_Year group stats
+    - LapTime_Delta group stats
+    - Position_Change group stats
+    - Race_Compound_Stint
+    - Compound_RacePhase
+    - RacePhase_TyreLifeBin
+
+implementation_notes:
+  order:
+    - Load train/test/original.
+    - Drop Normalized_TyreLife from original.
+    - Add synthetic negative id to original if missing.
+    - Apply shared007-style domain features to train/test/original separately.
+    - Apply digit features.
+    - Apply string precision features.
+    - Apply frequency features.
+    - Apply light group stats.
+    - Clean columns and fill missing values.
+    - Build FEATURES excluding id, target, PitStop, IsOriginalData.
+    - OrdinalEncode categorical features using train/original/test combined vocabulary.
+    - Build competition-only folds using target x Year.
+    - For each fold, concat original rows only to fold train.
+    - StandardScale per fold.
+    - Clip scaled values to [-5, 5].
+    - Train TabM_D_Classifier.
+    - Save competition-only OOF and test pred.
+
+  critical_guardrails:
+    - OOF length must equal competition train rows only.
+    - original rows must not appear in validation.
+    - PitStop must not be in FEATURES.
+    - IsOriginalData must not be in FEATURES.
+    - Normalized_TyreLife must not be in FEATURES.
+    - Reported shared_007 CV 0.96343 must not be used as a valid reference.
+
+hypothesis:
+  main: >
+    TabM may provide a useful new error profile relative to existing RealMLP, LGB, CatBoost, and XGB models.
+    Because 021 removes unsafe evaluation artifacts and risky columns, single CV may be much lower than shared_007's reported 0.96343.
+    The key question is whether TabM receives positive weight in optimized blends.
+  positive_pattern: >
+    021 valid competition-only CV lands around 0.951〜0.953 or higher,
+    and 021 receives positive weight when added to the current best stack.
+    Even if single CV is weaker than 018, positive blend weight would justify keeping the TabM branch.
+  failure_pattern: >
+    021 valid CV is weak and receives zero or near-zero weight in HC/NM/LogReg/ElasticNet.
+    In that case, shared_007 branch should be closed.
+  important_caution: >
+    Do not restore PitStop or IsOriginalData merely to chase CV.
+    That would reintroduce the exact issues that made shared_007's original CV unreliable.
+
+comparison_plan:
+  single_compare_against:
+    - exp_20260510_018_realmlp_shared006_pipeline_a_min
+    - exp_20260511_020_lgb_progress_window_te_min
+    - exp_20260511_019_blend_prune_008_012_013_after018_min
+    - exp_20260503_007_realmlp_shared001_min
+    - exp_20260508_016_xgb_shared005_fe_te_seedens_min
+    - exp_20260509_017_xgb_shared005_no_pitstop_pairte_min
+
+  blend_compare:
+    current_best_stack_after020:
+      - 007
+      - 009
+      - 014
+      - 015
+      - 016
+      - 017
+      - 018
+      - 020
+    add_021_stack:
+      - 007
+      - 009
+      - 014
+      - 015
+      - 016
+      - 017
+      - 018
+      - 020
+      - 021
+    optional_replace_020_or_009:
+      - 007
+      - 014
+      - 015
+      - 016
+      - 017
+      - 018
+      - 020
+      - 021
+    strategies:
+      - avg
+      - Ridge
+      - ElasticNet
+      - LogisticRegression
+      - Hill Climb
+      - Nelder-Mead
+
+  metrics:
+    - cv_auc
+    - public_lb
+    - fold_auc_mean
+    - fold_auc_std
+    - pearson_corr_with_018
+    - spearman_corr_with_018
+    - pearson_corr_with_020
+    - spearman_corr_with_020
+    - pearson_corr_with_016
+    - spearman_corr_with_016
+    - blend_cv
+    - blend_public_lb
+    - blend_weight
+
+artifacts:
+  outdir: /kaggle/working/exp_20260511_021_tabm_shared007_comp_oof_no_pitstop_no_isoriginaldata_min
+  files_expected:
+    - oof_exp_20260511_021_tabm_shared007_comp_oof_no_pitstop_no_isoriginaldata_min.npy
+    - pred_exp_20260511_021_tabm_shared007_comp_oof_no_pitstop_no_isoriginaldata_min.npy
+    - oof_exp_20260511_021_tabm_shared007_comp_oof_no_pitstop_no_isoriginaldata_min.csv
+    - submission_exp_20260511_021_tabm_shared007_comp_oof_no_pitstop_no_isoriginaldata_min.csv
+    - cv_result.json
+    - fold_scores.csv
+    - feature_columns.csv
+    - categorical_features.csv
+    - features.txt
+  save_for_blend:
+    - oof_exp_20260511_021_tabm_shared007_comp_oof_no_pitstop_no_isoriginaldata_min.npy
+    - pred_exp_20260511_021_tabm_shared007_comp_oof_no_pitstop_no_isoriginaldata_min.npy
+
+results:
+  cv_auc: null
+  public_lb: null
+  cv_logloss: null
+  fold_auc:
+    fold1: null
+    fold2: null
+    fold3: null
+    fold4: null
+    fold5: null
+  fold_auc_mean: null
+  fold_auc_std: null
+  elapsed_sec: null
+  device: null
+  n_features: null
+  n_categorical_features: null
+  pitstop_used: false
+  isoriginaldata_used: false
+  normalized_tyrelife_used: false
+  correlation:
+    vs_007:
+      pearson: null
+      spearman: null
+    vs_009:
+      pearson: null
+      spearman: null
+    vs_014:
+      pearson: null
+      spearman: null
+    vs_015:
+      pearson: null
+      spearman: null
+    vs_016:
+      pearson: null
+      spearman: null
+    vs_017:
+      pearson: null
+      spearman: null
+    vs_018:
+      pearson: null
+      spearman: null
+    vs_020:
+      pearson: null
+      spearman: null
+  blend_results:
+    add_021_to_current_best:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+
+decision_rule:
+  single_model:
+    keep: >
+      Valid competition-only CV is around 0.951〜0.953 or better,
+      and correlation with existing models suggests usable diversity.
+    hold: >
+      CV is somewhat weak but not disastrous, and blend weight remains positive.
+    drop: >
+      CV is weak and blend weight is zero or near-zero.
+  after_blend:
+    keep: >
+      021 receives meaningful positive weight in HC/NM/LogReg/ElasticNet
+      and improves or maintains current best stack CV/Public LB.
+      A practical threshold is 0.03以上の自然な重み、または明確なCV/LB改善。
+    hold: >
+      021 receives small positive weight without damaging LB.
+      Keep as optional TabM diversity material.
+    drop: >
+      021 is zero-weight across optimized blends.
+      Close shared_007 branch.
+  next_action_if_keep: >
+    Consider one follow-up only if 021 shows clear blend value:
+    a more aggressive version with PitStop still dropped but IsOriginalData tested separately,
+    or a lighter TabM parameter variant for runtime reduction.
+  next_action_if_drop: >
+    Do not tune TabM or add shared_007 variants.
+    The corrected safe version failed to add value.
+
+notes:
+  - >
+    021 is not a reproduction of the reported shared_007 CV.
+    It is a corrected evaluation version.
+  - >
+    The original shared_007 CV 0.96343 is invalid for comparison because validation includes original rows.
+  - >
+    021 deliberately drops PitStop and IsOriginalData.
+    This is necessary to avoid repeating known evaluation/feature-risk problems.
+  - >
+    Normalized_TyreLife is dropped from original.
+  - >
+    If the score falls far below 0.96343, that is expected and not a failure by itself.
+  - >
+    The real test is whether TabM contributes to the 019+020 best stack.
