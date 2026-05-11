@@ -602,3 +602,9 @@ notes:
   - >
     The main question is not whether 018 is RealMLP,
     but whether its compact feature set adds diversity beyond 007/008.
+
+decision_note:
+  decision: keep
+  note: >
+    018が単体最高を更新した
+    Blendでも効果を発揮した
