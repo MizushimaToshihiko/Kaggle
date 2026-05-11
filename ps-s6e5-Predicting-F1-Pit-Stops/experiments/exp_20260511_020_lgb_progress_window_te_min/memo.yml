@@ -411,29 +411,73 @@ results:
   progress_window_features_added: 8
   correlation:
     vs_009:
-      pearson: null
-      spearman: null
+      pearson: 0.9974653740594377
+      spearman: 0.9953107709796366
     vs_018:
-      pearson: null
-      spearman: null
+      pearson: 0.9567364421221092
+      spearman: 0.9664006326251043
     vs_019_best_nm:
       pearson: null
       spearman: null
   blend_results:
     add_020_to_019_compressed:
-      avg: null
-      ridge: null
+      avg:
+        highest: "avg_007_014_015_016_018_020"
+        cv: 0.9542765221403791
+      ridge: 
+        cv: 0.9538156323010862
       elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      logreg: 
+        cv: 0.9543649313149403
+        lb: 0.95363
+      hc: 
+        cv: 0.9543817081997312
+        weights: {
+          "candidate": "hc_nonnegative_raw",
+          "method": "hc",
+          "cv_auc": 0.9543817081997312,
+          "w_007": 0.18460816862622587,
+          "w_009": 0.02488139083879529,
+          "w_014": 0.13147549099590647,
+          "w_015": 0.08546318201105697,
+          "w_016": 0.10807507338803934,
+          "w_017": 0.06145850954482086,
+          "w_018": 0.33446515313952213,
+          "w_020": 0.06957303145563298,
+        }
+      nm: 
+        cv: 0.9543819808023114
+        lb: 0.95369
+        weights: {
+          "candidate": "nm_softmax_raw",
+          "method": "nm",
+          "cv_auc": 0.9543819808023114,
+          "w_007": 0.18944735363178003,
+          "w_009": 0.025654707048066428,
+          "w_014": 0.12492404609034954,
+          "w_015": 0.0888761174394228,
+          "w_016": 0.12053065314031815,
+          "w_017": 0.052850621938625615,
+          "w_018": 0.3326981652716467,
+          "w_020": 0.06501833543979067,
+        }
     replace_009_with_020:
-      avg: null
-      ridge: null
+      avg: 
+        highest: "
+        cv: 
+      ridge: 
+        cv: 
       elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      logreg: 
+        cv: 
+        lb: 
+      hc: 
+        cv: 
+        weights:
+      nm: 
+        cv: 
+        lb: 
+        weights: 
 
 decision_rule:
   single_model:
