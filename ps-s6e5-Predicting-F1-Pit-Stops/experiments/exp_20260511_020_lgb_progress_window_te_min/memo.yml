@@ -1,0 +1,475 @@
+experiment:
+  id: exp_20260511_020_lgb_progress_window_te_min
+  title: LGB shared003 with RaceProgress window TE
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
+
+objective:
+  summary: >
+    009 LGB shared003 full-FE single をベースにし、
+    RaceProgress上のpit windowを直接表す progress-window 特徴を追加する。
+    EDAディスカッションで示された「RaceごとにRaceProgress上のPitNextLap率が異なる」
+    という構造を、Race × RaceProgressBin および
+    Race × Compound × RaceProgressBin のfold-safe count/frequency/TEとしてLGBに与える。
+    目的は、009 LGB familyを少しズラした追加blend素材になるか確認すること。
+  success_criteria:
+    - raw CV AUC を取得
+    - Public LB を取得
+    - oof / pred を npy で保存
+    - feature_columns.csv / feature_importance.csv を保存
+    - progress_window_features_020.csv を保存
+    - cv_result.json を保存
+    - 009単体と比較する
+    - 019 compressed stack に追加または009置換して、Avg / Ridge / ElasticNet / LogReg / HC / NM で比較する
+
+positioning:
+  experiment_type: feature_engineering_ablation
+  intended_role: lgb_progress_window_aux_material_or_009_replacement
+  base_family: lightgbm
+  base_reference: exp_20260503_009_lgb_shared003_full_fe_single_min
+  why_now: >
+    019 compressed stack は 007/009/014/015/016/017/018 で
+    NM Public LB 0.95368 まで到達している。
+    一方、EDAではRaceごとにRaceProgress上のpit windowが明確に異なることが示された。
+    既存モデルにもRaceProgressやRace_Compound等は入っているが、
+    Race × RaceProgressBin を直接fold-safe TEとして入れたLGB素材は未確認である。
+    そのため、009 LGBをベースに progress-window TE を追加し、
+    009の更新または併用価値を確認する。
+
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e5/sample_submission.csv
+  original_path: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  id_col: id
+  danger_col: Normalized_TyreLife
+  danger_col_used: false
+  original_usage:
+    use_original_rows: true
+    policy: >
+      Same as 009.
+      Original rows are appended to each fold train side.
+      Competition validation rows only are used for OOF.
+    note: >
+      Normalized_TyreLife is explicitly dropped from original.
+      No original prior, pseudo label, or intentional proxy reconstruction is added.
+  forbidden_columns:
+    - Normalized_TyreLife
+    - Normalized_TyreLife proxy
+    - stint endpoint proxy
+    - pseudo label
+    - original prior
+
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 3407
+  stratification: target x Year
+  seeds:
+    - 3407
+    - 42
+  note: >
+    CV setup follows 009.
+    For each fold and each seed, LightGBM is trained and predictions are averaged.
+
+model:
+  family: LightGBM
+  estimator: LGBMClassifier
+  params:
+    n_estimators: 9000
+    learning_rate: 0.022
+    num_leaves: 31
+    min_child_samples: 120
+    subsample: 0.88
+    subsample_freq: 1
+    colsample_bytree: 0.82
+    reg_alpha: 0.25
+    reg_lambda: 10.0
+    max_bin: 255
+    class_weight: balanced
+    early_stopping_rounds: 450
+    device_requested: gpu
+    gpu_use_dp: false
+    cpu_fallback: true
+  note: >
+    Parameters are unchanged from the 009-style LGB full-FE implementation.
+    This experiment changes features only.
+
+features:
+  base_features:
+    source: exp_20260503_009_lgb_shared003_full_fe_single_min
+    summary: >
+      shared003-style LGB full-FE single.
+      Includes base F1 columns, compact domain features, bin features,
+      interaction categories, frequency features, lag features,
+      and fold-safe target encoding.
+  dropped_columns:
+    - id
+    - PitNextLap
+    - _dataset
+    - PitStop
+  pitstop_policy: >
+    PitStop is dropped following shared003-style leakage control.
+    020 does not reintroduce PitStop.
+  existing_feature_blocks:
+    base_categorical:
+      - Driver
+      - Compound
+      - Race
+    base_numeric:
+      - Year
+      - LapNumber
+      - Stint
+      - TyreLife
+      - Position
+      - LapTime (s)
+      - LapTime_Delta
+      - Cumulative_Degradation
+      - RaceProgress
+      - Position_Change
+    domain_features:
+      examples:
+        - EstimatedTotalLaps
+        - LapsRemaining
+        - TyreAgeRatio
+        - DegPerTyreLap
+        - PositionPressure
+        - LapProgress_x_LapNumber
+        - LapPerTyreLife
+        - LapMinusTyreLife
+        - TyreLifeMinusLap
+        - TyreAgeVsRace
+        - PitWindowPressure
+        - TyreLife_x_RaceProgress
+        - DegPerRaceLap
+        - DeltaPerTyreLap
+        - DeltaAbs
+        - LapTimeDeltaPositive
+        - LapTimeDeltaNegative
+        - Abs_Cumulative_Degradation
+        - Positive_Degradation
+        - Abs_Position_Change
+        - Gained_Position
+        - Lost_Position
+        - StintPressure
+        - TyreLife_x_Stint
+        - Stint_x_LapNumber
+        - Is_First_Stint
+        - Is_Late_Stint
+        - Early_Race
+        - Mid_Race
+        - Late_Race
+    bins:
+      - RaceProgressBin
+      - TyreLifeBin
+    interaction_categories:
+      - Driver_Compound
+      - Race_Compound
+      - Race_Year
+      - Driver_Race
+      - Driver_Year
+      - Stint_Compound
+      - Compound_TyreLifeBin
+      - Compound_RaceProgressBin
+    frequency_features:
+      source_columns:
+        - Driver
+        - Race
+        - Compound
+        - Driver_Race
+        - Race_Year
+        - Year_str
+    lag_features:
+      examples:
+        - Delta_lag1
+        - Delta_roll3_mean
+        - Deg_diff
+        - TyreLife_growth
+        - LapTime_lag1
+        - LapTime_diff
+    existing_target_encoding:
+      columns:
+        - Driver
+        - Race_Year
+        - Driver_Race
+        - Driver_Year
+        - Race
+        - Stint_Compound
+      output_features:
+        - TE_Driver
+        - TE_Race_Year
+        - TE_Driver_Race
+        - TE_Driver_Year
+        - TE_Race
+        - TE_Stint_Compound
+
+  progress_window_020:
+    enabled: true
+    rationale: >
+      EDA shows that PitNextLap risk varies strongly by Race and RaceProgress.
+      Race × RaceProgressBin directly represents race-specific pit windows.
+      Race × Compound × RaceProgressBin adds tyre strategy context.
+      Year is intentionally excluded to avoid amplifying Year artifact.
+    bins: 20
+    base_features:
+      - RaceProgressBin_20
+      - Race_RaceProgressBin_20
+      - Race_Compound_RaceProgressBin_20
+    base_feature_definitions:
+      RaceProgressBin_20: >
+        floor(clip(RaceProgress, 0, 1) * 20), clipped to 0..19, stored as string.
+      Race_RaceProgressBin_20: >
+        Race + "_" + RaceProgressBin_20.
+      Race_Compound_RaceProgressBin_20: >
+        Race + "_" + Compound + "_" + RaceProgressBin_20.
+    fold_count_frequency_features:
+      fit_scope: outer fold train only after original rows are appended
+      features:
+        - RaceProgressBin_20_fold_count
+        - RaceProgressBin_20_fold_freq
+        - Race_RaceProgressBin_20_fold_count
+        - Race_RaceProgressBin_20_fold_freq
+        - Race_Compound_RaceProgressBin_20_fold_count
+        - Race_Compound_RaceProgressBin_20_fold_freq
+    fold_target_encoding:
+      library: sklearn.preprocessing.TargetEncoder
+      fit_scope: outer fold train only after original rows are appended
+      cv: 5
+      smooth: auto
+      shuffle: true
+      random_state: 3407
+      source_columns:
+        - Race_RaceProgressBin_20
+        - Race_Compound_RaceProgressBin_20
+      output_features:
+        - TE_Race_RaceProgressBin_20
+        - TE_Race_Compound_RaceProgressBin_20
+    expected_added_feature_count: 11
+    not_added:
+      - Race_Year_RaceProgressBin_20
+      - TE_Race_Year_RaceProgressBin_20
+      - 72bin progress features
+      - Race_Driver_RaceProgressBin_20
+      - pseudo label
+      - original prior
+      - Normalized_TyreLife proxy
+    guardrails:
+      - RaceProgressBin_20 must exist in train/orig/test feature tables before FEATURE_COLS_BASE is created.
+      - Race_RaceProgressBin_20 must exist in final_features.
+      - Race_Compound_RaceProgressBin_20 must exist in final_features.
+      - TE_Race_RaceProgressBin_20 must exist in final_features.
+      - TE_Race_Compound_RaceProgressBin_20 must exist in final_features.
+      - Race_Year_RaceProgressBin_20 must not exist in final_features.
+      - TE_Race_Year_RaceProgressBin_20 must not exist in final_features.
+
+implementation_notes:
+  order:
+    - Load train/test/original.
+    - Drop Normalized_TyreLife from original.
+    - Build shared003-style all_df features.
+    - Split all_df into train_fe / orig_fe / test_fe.
+    - Apply add_progress_window_base_features to train_fe / orig_fe / test_fe.
+    - Restore target dtype.
+    - Add progress-window columns to CAT_COLS_FINAL.
+    - Build FEATURE_COLS_BASE.
+    - OrdinalEncode categorical columns.
+    - In each fold, append original rows to fold train.
+    - Apply existing fold-safe TE.
+    - Apply 020 fold-safe count/frequency for progress-window columns.
+    - Apply 020 fold-safe TE for progress-window interaction columns.
+    - Train LightGBM.
+  critical_point: >
+    add_progress_window_base_features must be called before FEATURE_COLS_BASE is created.
+    If called later, the new columns will not enter the model.
+
+hypothesis:
+  main: >
+    If Race-specific pit windows are not fully captured by existing 009 features,
+    then Race_RaceProgressBin_20 and Race_Compound_RaceProgressBin_20 fold-safe TE/count features
+    should improve 009 or provide a slightly different LGB material for blending.
+  positive_pattern: >
+    020 single CV/LB improves over 009, or 020 receives positive weight when added to the 019 compressed stack.
+  failure_pattern: >
+    020 single CV/LB does not improve over 009 and receives zero or near-zero blend weight.
+    This would imply that the progress-window signal is already absorbed by 009/014/015/018.
+  important_caution: >
+    Do not add Year to progress-window features in this experiment.
+    Race_Year_RaceProgressBin may overfit Year artifact and should be a separate high-risk experiment only if needed.
+
+comparison_plan:
+  single_compare_against:
+    - exp_20260503_009_lgb_shared003_full_fe_single_min
+    - exp_20260510_018_realmlp_shared006_pipeline_a_min
+    - exp_20260511_019_blend_prune_008_012_013_after018_min
+  reference_009:
+    cv_auc: 0.951013
+    public_lb: 0.95076
+  blend_compare:
+    current_compressed_stack_019:
+      - 007
+      - 009
+      - 014
+      - 015
+      - 016
+      - 017
+      - 018
+    add_020_stack:
+      - 007
+      - 009
+      - 014
+      - 015
+      - 016
+      - 017
+      - 018
+      - 020
+    replace_009_with_020:
+      - 007
+      - 014
+      - 015
+      - 016
+      - 017
+      - 018
+      - 020
+    optional_full_with_009_and_020:
+      - 007
+      - 009
+      - 014
+      - 015
+      - 016
+      - 017
+      - 018
+      - 020
+  strategies:
+    - avg
+    - Ridge
+    - ElasticNet
+    - LogisticRegression
+    - Hill Climb
+    - Nelder-Mead
+  metrics:
+    - cv_auc
+    - public_lb
+    - fold_auc_mean
+    - fold_auc_std
+    - seed_auc_mean
+    - seed_auc_std
+    - pearson_corr_with_009
+    - spearman_corr_with_009
+    - pearson_corr_with_018
+    - spearman_corr_with_018
+    - blend_cv
+    - blend_public_lb
+    - blend_weight
+
+artifacts:
+  outdir: /kaggle/working/exp_20260511_020_lgb_progress_window_te_min
+  files_expected:
+    - oof_exp_20260511_020_lgb_progress_window_te_min.npy
+    - pred_exp_20260511_020_lgb_progress_window_te_min.npy
+    - oof_exp_20260511_020_lgb_progress_window_te_min.csv
+    - submission_exp_20260511_020_lgb_progress_window_te_min.csv
+    - cv_result.json
+    - feature_columns.csv
+    - feature_importance.csv
+    - feature_importance_by_fold_seed.csv
+    - fold_seed_scores.csv
+    - progress_window_features_020.csv
+    - progress_window_base_features_020.csv
+  save_for_blend:
+    - oof_exp_20260511_020_lgb_progress_window_te_min.npy
+    - pred_exp_20260511_020_lgb_progress_window_te_min.npy
+
+results:
+  cv_auc: null
+  public_lb: null
+  fold_scores:
+    fold1: null
+    fold2: null
+    fold3: null
+    fold4: null
+    fold5: null
+  fold_mean: null
+  fold_std: null
+  best_iterations: null
+  used_devices: null
+  base_feature_count_before_te: null
+  final_feature_count: null
+  progress_window_features_added: null
+  correlation:
+    vs_009:
+      pearson: null
+      spearman: null
+    vs_018:
+      pearson: null
+      spearman: null
+    vs_019_best_nm:
+      pearson: null
+      spearman: null
+  blend_results:
+    add_020_to_019_compressed:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+    replace_009_with_020:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+
+decision_rule:
+  single_model:
+    keep: >
+      020 improves materially over 009 single CV/LB.
+      This means progress-window TE improves the LGB family directly.
+    hold: >
+      020 is close to 009 and has meaningfully different correlation,
+      or improves blend despite small single-model difference.
+    drop: >
+      020 does not improve 009 and does not receive positive blend weight.
+  after_blend:
+    keep: >
+      020 receives meaningful positive weight in HC/NM/LogReg/ElasticNet
+      and improves or maintains the 019 compressed stack Public LB/CV.
+    hold: >
+      020 receives small positive weight without hurting Public LB.
+      Keep as optional LGB diversity material.
+    drop: >
+      020 is zero-weight or worsens optimized blends.
+      In that case, progress-window signal is already absorbed elsewhere.
+  next_action_if_keep: >
+    If 020 is useful, consider one cautious follow-up only:
+    RaceProgressBin_40 or remove 009 and keep 020.
+    Do not jump to Race_Year_RaceProgressBin unless final risk-taking is justified.
+  next_action_if_drop: >
+    Close this EDA-derived FE branch.
+    Do not spend more time on track-avatar-inspired features.
+
+notes:
+  - >
+    020 is based on 009 LGB shared003 full-FE single.
+    It is not a new model family.
+  - >
+    The motivating EDA uses stylized track avatars, not real circuit geometry.
+    The useful signal is not the drawn track shape, but the empirical
+    Race × RaceProgress pit-window pattern.
+  - >
+    RaceProgressBin_20 is intentionally coarse.
+    72-bin features are suitable for visualization but too fine for a first model feature test.
+  - >
+    Year is intentionally excluded from progress-window interaction features
+    to avoid amplifying the known Year artifact.
+  - >
+    PitStop remains dropped from the LGB feature matrix following 009/shared003 policy.
+  - >
+    020 should be judged by both 009 replacement value and 019 compressed stack blend value.
+  - >
+    Expected improvement is modest.
+    This experiment is a low-cost check of an EDA-derived interaction, not a high-confidence breakthrough.
