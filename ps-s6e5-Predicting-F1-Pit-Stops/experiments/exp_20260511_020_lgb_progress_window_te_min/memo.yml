@@ -383,21 +383,32 @@ artifacts:
     - pred_exp_20260511_020_lgb_progress_window_te_min.npy
 
 results:
-  cv_auc: null
-  public_lb: null
+  cv_auc: 0.9510267120359983
+  public_lb: 0.95075
   fold_scores:
-    fold1: null
-    fold2: null
-    fold3: null
-    fold4: null
-    fold5: null
-  fold_mean: null
-  fold_std: null
-  best_iterations: null
-  used_devices: null
-  base_feature_count_before_te: null
-  final_feature_count: null
-  progress_window_features_added: null
+    fold1: 0.9501239803347152
+    fold2: 0.9512868201845006
+    fold3: 0.950774260037981
+    fold4: 0.9511425023700734
+    fold5: 0.9518255463663107
+  fold_mean: 0.9510306218587162
+  fold_std: 0.0005652928515210546
+  best_iterations: [
+    9000,
+    9000,
+    9000,
+    8998,
+    9000,
+    8997,
+    9000,
+    9000,
+    8994,
+    9000
+  ]
+  used_devices: "gpu"
+  base_feature_count_before_te: 71
+  final_feature_count: 85
+  progress_window_features_added: 8
   correlation:
     vs_009:
       pearson: null
