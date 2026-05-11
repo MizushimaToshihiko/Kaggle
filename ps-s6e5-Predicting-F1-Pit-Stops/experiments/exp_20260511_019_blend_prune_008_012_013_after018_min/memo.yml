@@ -240,42 +240,42 @@ artifacts:
 results:
   compressed_stack:
     avg:
-      cv_auc: null
+      cv_auc: 0.9542065570891597
       public_lb: null
-      weights: null
+      weights: "[0.14285714, 0.14285714, 0.14285714, 0.14285714, 0.14285714, 0.14285714, 0.14285714]"
     ridge:
-      cv_auc: null
+      cv_auc: 0.9538225690103005
       public_lb: null
       weights: null
-      params: null
+      params: "{\"alpha\": 8.513399225207845}"
     elasticnet:
       cv_auc: null
       public_lb: null
       weights: null
       params: null
     logreg:
-      cv_auc: null
-      public_lb: null
+      cv_auc: 0.9543587034244886
+      public_lb: 0.95366
       weights: null
-      params: null
+      params: "{\"C\": 0.00752242156233001}"
     hc:
-      cv_auc: null
+      cv_auc: 0.9543781610802542
       public_lb: null
-      weights: null
-      params: null
+      weights: "[0.1866975, 0.08639862, 0.12697225, 0.09111231, 0.15573018, 0.01923948, 0.33384966]"
+      params: "{\"constraint\": \"nonnegative_sum1\"}"
     nm:
-      cv_auc: null
-      public_lb: null
-      weights: null
-      params: null
+      cv_auc: 0.9543781879858912
+      public_lb: 0.95368
+      weights: "[0.1863473, 0.08594639, 0.12679759, 0.09102717, 0.15561761, 0.01956491, 0.33469903]"
+      params: "{\"constraint\": \"softmax_sum1\", \"success\": true, \"message\": \"Optimization terminated successfully.\", \"nit\": 149, \"fun\": -0.9543781879858912}"
 
   comparison_to_full_add018:
     full_add018_nm_cv_auc: 0.9543826
     full_add018_public_lb: 0.95367
-    compressed_best_cv_auc: null
-    compressed_best_public_lb: null
-    delta_cv_auc: null
-    delta_public_lb: null
+    compressed_best_cv_auc: 0.9543781
+    compressed_best_public_lb: 0.95368
+    delta_cv_auc: -0.0000045
+    delta_public_lb: 0.00001
 
 notes:
   - >
