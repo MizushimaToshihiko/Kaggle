@@ -388,21 +388,21 @@ artifacts:
     - pred_exp_20260511_021_tabm_shared007_comp_oof_no_pitstop_no_isoriginaldata_min.npy
 
 results:
-  cv_auc: null
+  cv_auc: 0.9514915466418662
   public_lb: null
-  cv_logloss: null
+  cv_logloss: 0.22114888779775163
   fold_auc:
-    fold1: null
-    fold2: null
-    fold3: null
-    fold4: null
-    fold5: null
-  fold_auc_mean: null
-  fold_auc_std: null
-  elapsed_sec: null
-  device: null
-  n_features: null
-  n_categorical_features: null
+    fold1: 0.9521808809090053
+    fold2: 0.9513561506492949
+    fold3: 0.9515027230247662
+    fold4: 0.950752702695036
+    fold5: 0.95217902206021
+  fold_auc_mean: 0.9515942958676625
+  fold_auc_std: 0.0006040208046452686
+  elapsed_sec: 19632.509905338287
+  device: "cuda"
+  n_features: 241
+  n_categorical_features: 19
   pitstop_used: false
   isoriginaldata_used: false
   normalized_tyrelife_used: false
