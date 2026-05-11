@@ -235,4 +235,14 @@ items:
     priority: low_until_proxy_checked
     action: inspect_proxy
     decision: pending
-
+    status: watch
+    value: >
+      Potentially valuable as a new TabM family material.
+      Do not trust the reported CV 0.96343 because the code performs CV on train+original combined rows.
+      Needs conversion to competition-only OOF with original rows appended only to fold train.
+    caution:
+      - reported CV is not comparable
+      - validation includes original rows
+      - IsOriginalData is used as a feature
+      - PitStop is used as a feature
+      - must be converted before blend evaluation
