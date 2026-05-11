@@ -208,3 +208,31 @@ items:
     priority: low_until_proxy_checked
     action: inspect_proxy
     decision: pending
+
+  - id: shared_007
+    title: S65E TabM ver2.0
+    author: raccoonForest
+    url: https://www.kaggle.com/code/gkanamoto/s65e-tabm-ver2-0
+    type: notebook
+    public_lb: 0.95205
+    cv: 0.96343
+    model_family:
+      - TabM
+    uses_original_dataset: true
+    uses_normalized_tyrelife: false
+    uses_normalized_tyrelife_proxy: unknown
+    proxy_notes: >
+      unknown
+    uses_pseudo_label: false
+    uses_blend: false
+    fe_categories:
+      original_prior: unknown
+      tyre_lap_interaction: unknown
+      group_stats: unknown
+      target_encoding: false
+    notes: >
+      CVが0.96台と異常に高い
+    priority: low_until_proxy_checked
+    action: inspect_proxy
+    decision: pending
+
