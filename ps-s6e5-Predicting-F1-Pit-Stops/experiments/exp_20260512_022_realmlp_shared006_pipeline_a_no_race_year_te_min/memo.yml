@@ -406,52 +406,98 @@ artifacts:
     - pred_exp_20260512_022_realmlp_shared006_pipeline_a_no_race_year_te_min.npy
 
 results:
-  cv_auc: null
-  public_lb: null
-  cv_logloss: null
+  cv_auc: 0.9534314709948207
+  public_lb: 0.95301
+  cv_logloss: 0.21623216048052654
   fold_auc:
-    fold1: null
-    fold2: null
-    fold3: null
-    fold4: null
-    fold5: null
-  fold_auc_mean: null
-  fold_auc_std: null
-  elapsed_sec: null
-  n_features_before_te: null
-  n_features_after_te: null
+    fold1: 0.9545306475639462
+    fold2: 0.9524517396072292
+    fold3: 0.9532983167389301
+    fold4: 0.9526006336582565
+    fold5: 0.9543197470420203
+  fold_auc_mean: 0.9534402169220764
+  fold_auc_std: 0.0009571749235965308
+  elapsed_sec: 552.7240133285522
+  n_features_before_te: 37
+  n_features_after_te: 38
   race_year_combo_kept: true
   race_year_te_used: false
   race_compound_te_used: true
   original_split_enabled: true
   correlation:
     vs_018:
-      pearson: null
-      spearman: null
+      pearson: 0.996976070300082
+      spearman: 0.9958309449771257
     vs_007:
-      pearson: null
-      spearman: null
+      pearson: 0.9957562516601375
+      spearman: 0.9936014260102335
     vs_020:
-      pearson: null
-      spearman: null
+      pearson: 0.9567282775695543
+      spearman: 0.9664897024851379
     vs_021:
-      pearson: null
-      spearman: null
+      pearson: 0.982297165163897
+      spearman: 0.9706314873622256
   blend_results:
     add_022_to_current_best:
-      avg: null
-      ridge: null
+      avg:
+        highest: "avg_007_014_015_016_018_020_021_022"
+        cv: 0.9543683406690963
+      ridge: 
+        cv: 0.9538772710336274
       elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      logreg: 
+        cv: 0.9543931571827535
+        lb: 0.95365
+      hc: 
+        cv: 0.954420730190324
+        weights: {
+          "candidate": "hc_nonnegative_raw",
+          "method": "hc",
+          "cv_auc": 0.954420730190324,
+          "w_007": 0.12005630845120653,
+          "w_014": 0.10968524149453499,
+          "w_015": 0.08181207136473981,
+          "w_016": 0.11192469901438791,
+          "w_017": 0.0439812493623916,
+          "w_018": 0.22127702877937624,
+          "w_020": 0.07342681714517307,
+          "w_021": 0.07777877046172686,
+          "w_022": 0.16005781392646304,
+        }
+      nm: 
+        cv: 0.9544208004638141
+        lb: 0.95369
+        weights: {
+          "candidate": "nm_softmax_raw",
+          "method": "nm",
+          "cv_auc": 0.9544208004638141,
+          "w_007": 0.11816269252183939,
+          "w_014": 0.11037569022231304,
+          "w_015": 0.08000110029888675,
+          "w_016": 0.11334718998513649,
+          "w_017": 0.04164676586871825,
+          "w_018": 0.22150778024764092,
+          "w_020": 0.07309403400827903,
+          "w_021": 0.07924259016073597,
+          "w_022": 0.16262215668645014,
+        }
     optional_with_009:
-      avg: null
-      ridge: null
+      avg:
+        highest: 
+        cv: 
+      ridge: 
+        cv: 
       elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      logreg: 
+        cv: 
+        lb: 
+      hc: 
+        cv: 
+        weights: 
+      nm: 
+        cv: 
+        lb: 
+        weights: 
 
 decision_rule:
   single_model:
