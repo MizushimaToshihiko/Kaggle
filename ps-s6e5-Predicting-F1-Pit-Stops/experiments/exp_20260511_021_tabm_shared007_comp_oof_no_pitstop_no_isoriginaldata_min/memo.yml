@@ -433,12 +433,37 @@ results:
       spearman: null
   blend_results:
     add_021_to_current_best:
-      avg: null
-      ridge: null
+      avg: 
+        highest: null
+        cv: null
+      ridge:
+        cv: 
       elasticnet: null
-      logreg: null
-      hc: null
-      nm: null
+      logreg:
+        cv: null
+      hc: 
+       cv: null
+       weights: 
+      nm: 
+        cv: null
+        lb: null
+        weights: 
+    add_021_to_replace_009_with_020:
+      avg: 
+        highest: null
+        cv: null
+      ridge:
+        cv: 
+      elasticnet: null
+      logreg:
+        cv: null
+      hc: 
+       cv: null
+       weights: 
+      nm: 
+        cv: null
+        lb: null
+        weights: 
 
 decision_rule:
   single_model:
