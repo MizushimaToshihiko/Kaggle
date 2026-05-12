@@ -1,0 +1,529 @@
+experiment:
+  id: exp_20260512_023_realmlp_shared006_pipeline_a_no_pitstop_cat_count_min
+  title: RealMLP shared006 Pipeline A without PitStop categorical count
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: done
+
+objective:
+  summary: >
+    018 RealMLP shared006 Pipeline A をベースにし、
+    PitStop および PitStop_cat_ は残したまま、_PitStop_cat_count だけを削除する。
+    目的は、018の強さを大きく壊さずに、PitStop由来のcount encoding依存を少し弱め、
+    018/022とは異なる誤差を持つRealMLP派生を作ること。
+    023は018の置換候補ではなく、018/022と併用できる追加blend素材として評価する。
+
+  success_criteria:
+    - raw CV AUC を取得
+    - Public LB を取得
+    - oof / pred を npy で保存
+    - oof csv / submission csv を保存
+    - fold_scores.csv を保存
+    - feature_columns.csv / combo_features.csv / target_encoding_features.csv を保存
+    - removed_features_023.csv を保存
+    - cv_result.json を保存
+    - 018および022との相関を確認
+    - current best stack に追加して Avg / Ridge / ElasticNet / LogReg / HC / NM で比較する
+
+positioning:
+  experiment_type: core_model_derivative
+  intended_role: realmlp_pitstop_count_ablation_aux_material
+  base_family: realmlp
+  base_reference: exp_20260510_018_realmlp_shared006_pipeline_a_min
+  why_now: >
+    022では _Race_Year_TE を削除した派生がblendで大きな重みを持ち、
+    018派生の追加が有効であることが確認された。
+    次に、PitStop周辺の依存を弱めた派生として、
+    PitStop本体やPitStop_cat_は残しつつ、_PitStop_cat_count のみを削除する。
+    PitStopを丸ごと削除すると攻撃力を落としすぎる可能性があるため、
+    023では小さいアブレーションに限定する。
+
+data:
+  train_path_candidates:
+    - /kaggle/input/competitions/playground-series-s6e5/train.csv
+    - /kaggle/input/playground-series-s6e5/train.csv
+  test_path_candidates:
+    - /kaggle/input/competitions/playground-series-s6e5/test.csv
+    - /kaggle/input/playground-series-s6e5/test.csv
+  original_path_candidates:
+    - /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+    - /kaggle/input/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  target_candidates:
+    - PitNextLap
+    - PitNextLab
+  id_col: id
+  danger_col: Normalized_TyreLife
+  danger_col_used: false
+  original_usage:
+    use_original_rows: true
+    original_split: true
+    policy: >
+      Same as 018.
+      Competition train is split by StratifiedKFold.
+      Original rows are also split by StratifiedKFold, and only original fold-train side is appended to each fold train.
+      Original fold-holdout side is not used for competition validation.
+    note: >
+      Normalized_TyreLife is explicitly dropped from original before feature construction.
+      023 does not change original handling from 018.
+  forbidden_columns:
+    - Normalized_TyreLife
+    - Normalized_TyreLife proxy
+    - stint endpoint proxy
+    - pseudo label
+
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  original_split:
+    enabled: true
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+    usage: >
+      For each fold, original train-side rows are appended to competition fold train.
+      Original validation-side rows are held out and not used.
+  target_encoding:
+    library: sklearn.preprocessing.TargetEncoder
+    cv: 5
+    smooth: auto
+    shuffle: true
+    random_state: 42
+    source_columns_used:
+      - Race_Compound_
+      - Race_Year_
+    output_features_used:
+      - _Race_Compound_TE
+      - _Race_Year_TE
+  note: >
+    Fold-safe TargetEncoder is unchanged from 018.
+    023 removes only _PitStop_cat_count and keeps both Race_Compound_TE and Race_Year_TE.
+
+model:
+  family: RealMLP
+  estimator: pytabkit.RealMLP_TD_Classifier
+  params:
+    random_state: 42
+    verbosity: 2
+    val_metric_name: 1-auc_ovr
+    n_ens: 8
+    n_epochs: 4
+    batch_size: 256
+    use_early_stopping: false
+    lr: 0.03
+    wd: 0.018
+    sq_mom: 0.98
+    lr_sched: lin_cos_log_15
+    first_layer_lr_factor: 0.25
+    embedding_size: 6
+    max_one_hot_cat_size: 18
+    hidden_sizes:
+      - 512
+      - 256
+      - 128
+    act: silu
+    p_drop: 0.05
+    p_drop_sched: expm4t
+    plr_hidden_1: 16
+    plr_hidden_2: 8
+    plr_act_name: gelu
+    plr_lr_factor: 0.1151
+    plr_sigma: 2.33
+    ls_eps: 0.01
+    ls_eps_sched: sqrt_cos
+    add_front_scale: false
+    bias_init_mode: neg-uniform-dynamic-2
+    tfms:
+      - one_hot
+      - median_center
+      - robust_scale
+      - smooth_clip
+      - embedding
+      - l2_normalize
+  note: >
+    Model parameters are unchanged from 018.
+    023 is a feature ablation only.
+    No Optuna or parameter tuning is performed.
+
+features:
+  base_features:
+    source: exp_20260510_018_realmlp_shared006_pipeline_a_min
+    expected_feature_count_before_te: 36
+    expected_feature_count_after_te: 38
+    comparison_to_018:
+      expected_feature_count_before_te_018: 37
+      expected_feature_count_after_te_018: 39
+      removed_features_vs_018:
+        - _PitStop_cat_count
+      total_removed_features_vs_018: 1
+    comparison_to_022:
+      expected_feature_count_after_te_022: 38
+      difference_from_022: >
+        022 removes _Race_Year_TE and keeps _PitStop_cat_count.
+        023 removes _PitStop_cat_count and keeps _Race_Year_TE.
+    summary: >
+      Same as 018 except that _PitStop_cat_count is removed.
+      PitStop and PitStop_cat_ remain.
+      Race_Year_TE and Race_Compound_TE remain.
+
+  raw_columns_used:
+    categorical:
+      - Driver
+      - Compound
+      - Race
+    numeric:
+      - Year
+      - PitStop
+      - LapNumber
+      - Stint
+      - TyreLife
+      - Position
+      - LapTime (s)
+      - LapTime_Delta
+      - Cumulative_Degradation
+      - RaceProgress
+      - Position_Change
+
+  domain_ratio_features:
+    - _LP_RP
+    - _TL_LP
+  domain_ratio_definitions:
+    _LP_RP: LapNumber / RaceProgress
+    _TL_LP: TyreLife / LapNumber
+
+  numeric_floor_categorical_features:
+    method: >
+      For each numeric base column and the two ratio columns,
+      floor(value) is factorized using train-fitted categories and stored as string categorical feature.
+    expected_examples:
+      - Year_cat_
+      - PitStop_cat_
+      - LapNumber_cat_
+      - Stint_cat_
+      - TyreLife_cat_
+      - Position_cat_
+      - LapTime (s)_cat_
+      - LapTime_Delta_cat_
+      - Cumulative_Degradation_cat_
+      - RaceProgress_cat_
+      - Position_Change_cat_
+      - LP_RP_cat_
+      - TL_LP_cat_
+
+  count_encoding:
+    columns_kept:
+      - Driver
+      - Compound
+      - Race
+      - Year_cat_
+    columns_removed:
+      - PitStop_cat_
+    output_features_kept:
+      - _Driver_count
+      - _Compound_count
+      - _Race_count
+      - _Year_cat_count
+    output_features_removed:
+      - _PitStop_cat_count
+    fit_scope: competition train feature table
+    note: >
+      Count maps are fitted during pipeline_a_fe(fit=True) on competition train,
+      then applied to test and original.
+      023 drops only the generated _PitStop_cat_count feature after pipeline_a_fe.
+
+  quantile_bin_features:
+    - RaceProgress_200_qbin_
+  quantile_bin_method:
+    column: RaceProgress
+    n_bins: 200
+    strategy: quantile
+    encoder: KBinsDiscretizer
+    fit_scope: competition train feature table
+
+  combo_features:
+    kept:
+      - Race_Compound_
+      - Race_Year_
+    removed:
+      - none
+    note: >
+      Combo features are unchanged from 018.
+
+  fold_target_encoding:
+    enabled: true
+    input_columns_used:
+      - Race_Compound_
+      - Race_Year_
+    output_features_used:
+      - _Race_Compound_TE
+      - _Race_Year_TE
+    output_features_removed:
+      - none
+    method: >
+      sklearn TargetEncoder is fit inside each outer fold on Xtr/ytr after original fold-train rows are appended.
+      Validation and test are transformed using that fold encoder.
+      023 keeps the same TE setup as 018.
+
+  changed_from_018:
+    - Remove _PitStop_cat_count.
+    - Keep raw PitStop.
+    - Keep PitStop_cat_.
+    - Keep Race_Year_.
+    - Keep _Race_Year_TE.
+    - Keep Race_Compound_.
+    - Keep _Race_Compound_TE.
+  unchanged_from_018:
+    - Pipeline A feature construction except post-FE removal of _PitStop_cat_count
+    - original split concat policy
+    - RealMLP parameters
+    - RaceProgress_200_qbin_
+    - Race_Compound_
+    - Race_Year_
+    - _Race_Compound_TE
+    - _Race_Year_TE
+    - Normalized_TyreLife drop policy
+
+  guardrails:
+    - PitStop must exist in final_feature_columns.
+    - PitStop_cat_ must exist in final_feature_columns.
+    - _PitStop_cat_count must not exist in final_feature_columns.
+    - Race_Year_ must exist in final_feature_columns.
+    - _Race_Year_TE must exist in final_feature_columns.
+    - Race_Compound_ must exist in final_feature_columns.
+    - _Race_Compound_TE must exist in final_feature_columns.
+    - target_encoding_features.csv should contain _Race_Compound_TE and _Race_Year_TE.
+    - Normalized_TyreLife must not exist in any feature list.
+
+  risk_features_to_watch:
+    - PitStop
+    - PitStop_cat_
+    - Race_Year_
+    - _Race_Year_TE
+    - LapTime_Delta_cat_
+    - Cumulative_Degradation_cat_
+  normalized_tyrelife_policy:
+    - Normalized_TyreLife is dropped.
+    - Direct use is forbidden.
+    - Intentional proxy reconstruction is not added.
+
+implementation_notes:
+  order:
+    - Copy 018 notebook.
+    - Change EXP_ID to exp_20260512_023_realmlp_shared006_pipeline_a_no_pitstop_cat_count_min.
+    - Keep pipeline_a_fe mostly unchanged.
+    - After pipeline_a_fe is applied to X_a / Xt_a / orig_a, drop _PitStop_cat_count from all three.
+    - Keep combo_names creation unchanged.
+    - Keep fold-safe TE for Race_Compound_ and Race_Year_ unchanged.
+    - Save OOF/pred artifacts using 023 EXP_ID.
+    - Add guardrails to confirm PitStop and PitStop_cat_ exist, but _PitStop_cat_count does not.
+  critical_point: >
+    Do not remove PitStop or PitStop_cat_.
+    This experiment removes only the count encoding feature _PitStop_cat_count.
+    Removing PitStop itself or PitStop_cat_ would be a different and more destructive ablation.
+
+hypothesis:
+  main: >
+    018's strong contribution may partially rely on PitStop-derived count encoding.
+    Removing only _PitStop_cat_count may slightly reduce single-model strength,
+    but could produce a different RealMLP prediction that remains useful in blend.
+    Since PitStop and PitStop_cat_ remain, the ablation should not be as destructive as full PitStop removal.
+  positive_pattern: >
+    023 keeps CV above roughly 0.9530 and receives positive weight when added to the current best stack with 018 and 022.
+    Ideally, 023 has lower correlation with 018/022 and 3%以上の自然なblend weight.
+  failure_pattern: >
+    023 single CV drops too much or receives zero/near-zero weight.
+    In that case, removing _PitStop_cat_count does not create useful diversity.
+  important_caution: >
+    023 is not expected to replace 018.
+    If useful, it should be kept as a thin additional RealMLP derivative alongside 018 and possibly 022.
+
+comparison_plan:
+  single_compare_against:
+    - exp_20260510_018_realmlp_shared006_pipeline_a_min
+    - exp_20260512_022_realmlp_shared006_pipeline_a_no_race_year_te_min
+    - exp_20260503_007_realmlp_shared001_min
+    - exp_20260511_021_tabm_shared007_comp_oof_no_pitstop_no_isoriginaldata_min
+    - exp_20260511_020_lgb_progress_window_te_min
+
+  blend_compare:
+    current_best_stack_after022:
+      - 007
+      - 014
+      - 015
+      - 016
+      - 017
+      - 018
+      - 020
+      - 021
+      - 022
+    add_023_stack:
+      - 007
+      - 014
+      - 015
+      - 016
+      - 017
+      - 018
+      - 020
+      - 021
+      - 022
+      - 023
+    optional_with_009:
+      - 007
+      - 009
+      - 014
+      - 015
+      - 016
+      - 017
+      - 018
+      - 020
+      - 021
+      - 022
+      - 023
+    strategies:
+      - avg
+      - Ridge
+      - ElasticNet
+      - LogisticRegression
+      - Hill Climb
+      - Nelder-Mead
+
+  metrics:
+    - cv_auc
+    - public_lb
+    - fold_auc_mean
+    - fold_auc_std
+    - pearson_corr_with_018
+    - spearman_corr_with_018
+    - pearson_corr_with_022
+    - spearman_corr_with_022
+    - pearson_corr_with_007
+    - spearman_corr_with_007
+    - pearson_corr_with_021
+    - spearman_corr_with_021
+    - blend_cv
+    - blend_public_lb
+    - blend_weight
+
+artifacts:
+  outdir: /kaggle/working/exp_20260512_023_realmlp_shared006_pipeline_a_no_pitstop_cat_count_min
+  files_expected:
+    - oof_exp_20260512_023_realmlp_shared006_pipeline_a_no_pitstop_cat_count_min.npy
+    - pred_exp_20260512_023_realmlp_shared006_pipeline_a_no_pitstop_cat_count_min.npy
+    - oof_exp_20260512_023_realmlp_shared006_pipeline_a_no_pitstop_cat_count_min.csv
+    - submission_exp_20260512_023_realmlp_shared006_pipeline_a_no_pitstop_cat_count_min.csv
+    - cv_result.json
+    - fold_scores.csv
+    - feature_columns.csv
+    - combo_features.csv
+    - target_encoding_features.csv
+    - features_before_te.csv
+    - removed_features_023.csv
+  save_for_blend:
+    - oof_exp_20260512_023_realmlp_shared006_pipeline_a_no_pitstop_cat_count_min.npy
+    - pred_exp_20260512_023_realmlp_shared006_pipeline_a_no_pitstop_cat_count_min.npy
+
+results:
+  cv_auc: null
+  public_lb: null
+  cv_logloss: null
+  fold_auc:
+    fold1: null
+    fold2: null
+    fold3: null
+    fold4: null
+    fold5: null
+  fold_auc_mean: null
+  fold_auc_std: null
+  elapsed_sec: null
+  n_features_before_te: null
+  n_features_after_te: null
+  pitstop_raw_kept: true
+  pitstop_cat_kept: true
+  pitstop_cat_count_used: false
+  race_year_te_used: true
+  race_compound_te_used: true
+  original_split_enabled: true
+  correlation:
+    vs_018:
+      pearson: null
+      spearman: null
+    vs_022:
+      pearson: null
+      spearman: null
+    vs_007:
+      pearson: null
+      spearman: null
+    vs_020:
+      pearson: null
+      spearman: null
+    vs_021:
+      pearson: null
+      spearman: null
+  blend_results:
+    add_023_to_current_best:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+    optional_with_009:
+      avg: null
+      ridge: null
+      elasticnet: null
+      logreg: null
+      hc: null
+      nm: null
+
+decision_rule:
+  single_model:
+    keep: >
+      CV remains above roughly 0.9530 and correlation with 018/022 decreases enough to suggest useful diversity.
+    hold: >
+      CV is 0.9525〜0.9530 but blend weight is positive.
+    drop: >
+      CV is below 0.9525 or blend weight is zero/near-zero.
+  after_blend:
+    keep: >
+      023 receives meaningful positive weight while 018 and/or 022 remain core,
+      and the stack improves or maintains CV/Public LB.
+      Practical threshold: 023 weight >= 0.03 in HC/NM/LogReg/ElasticNet,
+      or clear improvement in Public LB/CV.
+    hold: >
+      023 receives 0.01〜0.03 weight and does not harm Public LB.
+      Keep as optional safety/diversity material.
+    drop: >
+      023 receives zero or near-zero weight.
+      Stop this PitStop-count ablation branch.
+  next_action_if_keep: >
+    If 023 is useful, consider final stack pruning among 018/022/023.
+    Do not automatically add more 018 derivatives.
+  next_action_if_drop: >
+    Do not continue PitStop-count derivative exploration immediately.
+    Return to final candidate selection or external shared-code search.
+
+notes:
+  - >
+    023 uses the date 2026-05-12 in the experiment ID:
+    exp_20260512_023_realmlp_shared006_pipeline_a_no_pitstop_cat_count_min.
+  - >
+    023 is a strict derivative of 018.
+    It is not a new model family.
+  - >
+    The only intended feature change is removing _PitStop_cat_count.
+  - >
+    PitStop and PitStop_cat_ remain.
+    Full PitStop removal is not part of this experiment.
+  - >
+    Race_Year_TE remains.
+    Therefore 023 is different from 022.
+  - >
+    018 remains the core RealMLP model.
+    023 should be judged as an additive diversity/safety candidate, not as an 018 replacement.
+  - >
+    Since the expected effect is small, blend weight matters more than single CV.
+  - >
+    If 023 does not receive positive blend weight, do not waste further time on minor PitStop-count ablations.
