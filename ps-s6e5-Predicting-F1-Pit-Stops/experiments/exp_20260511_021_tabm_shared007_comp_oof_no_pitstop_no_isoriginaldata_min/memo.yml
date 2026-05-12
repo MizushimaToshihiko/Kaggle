@@ -408,29 +408,29 @@ results:
   normalized_tyrelife_used: false
   correlation:
     vs_007:
-      pearson: null
-      spearman: null
+      pearson: 0.9821984374139802
+      spearman: 0.9705932366038623
     vs_009:
-      pearson: null
-      spearman: null
+      pearson: 0.965417819902436
+      spearman: 0.9648912184244383
     vs_014:
-      pearson: null
-      spearman: null
+      pearson: 0.9687648377085046
+      spearman: 0.9700406269099687
     vs_015:
-      pearson: null
-      spearman: null
+      pearson: 0.9679142300101025
+      spearman: 0.9696301232494955
     vs_016:
-      pearson: null
-      spearman: null
+      pearson: 0.9782841941737063
+      spearman: 0.9659831114780827
     vs_017:
-      pearson: null
-      spearman: null
+      pearson: 0.9781504293544803
+      spearman: 0.9659005044951903
     vs_018:
-      pearson: null
-      spearman: null
+      pearson: 0.9822747374464383
+      spearman: 0.9704605943301983
     vs_020:
-      pearson: null
-      spearman: null
+      pearson: 0.9654273421806729
+      spearman: 0.9633740452851585
   blend_results:
     add_021_to_current_best:
       avg: 
