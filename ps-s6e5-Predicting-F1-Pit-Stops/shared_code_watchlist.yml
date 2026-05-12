@@ -260,6 +260,33 @@ items:
     proxy_notes: >
       unknown
     uses_pseudo_label: false
+    uses_blend: true
+    fe_categories:
+      original_prior: unknown
+      tyre_lap_interaction: unknown
+      group_stats: unknown
+      target_encoding: false
+    notes: >
+      他の提出データのブレンドだった
+    priority: low_until_proxy_checked
+    action: inspect_proxy
+    decision: Rejected
+
+  - id: shared_009
+    title: RealMLP | Encoding + FE
+    author: Simarbir Singh Sandhu
+    url: https://www.kaggle.com/code/simarbirsinghsandhu/realmlp-encoding-fe
+    type: notebook
+    public_lb: 0.95261
+    cv: 0.953149
+    model_family:
+      - RealMLP
+    uses_original_dataset: true
+    uses_normalized_tyrelife: false
+    uses_normalized_tyrelife_proxy: unknown
+    proxy_notes: >
+      unknown
+    uses_pseudo_label: false
     uses_blend: false
     fe_categories:
       original_prior: unknown
@@ -271,4 +298,3 @@ items:
     priority: low_until_proxy_checked
     action: inspect_proxy
     decision: pending
-    status: watch
