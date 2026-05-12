@@ -389,7 +389,7 @@ artifacts:
 
 results:
   cv_auc: 0.9514915466418662
-  public_lb: null
+  public_lb: 0.95171
   cv_logloss: 0.22114888779775163
   fold_auc:
     fold1: 0.9521808809090053
