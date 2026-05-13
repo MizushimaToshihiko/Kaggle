@@ -427,7 +427,7 @@ artifacts:
 
 results:
   cv_auc: 0.9534462611732204
-  public_lb: null
+  public_lb: 0.95304
   cv_logloss: 0.21621065093320208
   fold_auc:
     fold1: 0.9545779780591542
@@ -472,7 +472,7 @@ results:
       elasticnet: null
       logreg: 
         cv: 0.9543964359616075
-        lb: null
+        lb: 0.95366
       hc: 
         cv: 0.9544240993812284
         weights: {
@@ -492,7 +492,7 @@ results:
         }
       nm: 
         cv: 0.9544241683208234
-        lb: null
+        lb: 0.95369
         weights: {
           "candidate": "nm_softmax_raw",
           "method": "nm",
