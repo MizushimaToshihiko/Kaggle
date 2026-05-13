@@ -1,1 +1,259 @@
+experiment:
+  id: exp_20260513_025_lgb_year_stint_flags_min
+  title: LGB progress-window TE + Year/Stint explicit flags
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
 
+objective:
+  summary: >
+    020 LGB progress-window TE を完全なbaseとして維持し、
+    discussion由来の Is_2023 / Stint flags / tyre-wear signal を明示特徴として追加する。
+    Year artifact と Stint 周辺の明示化が020 LGB branchの単体CV/LBまたはblend寄与を改善するか確認する。
+  base_experiment: exp_20260511_020_lgb_progress_window_te_min
+  intended_role: 020_replacement_candidate
+
+implementation_check:
+  base_code: code_020.txt
+  preserved_from_020:
+    - shared_003_style_full_FE
+    - original_rows_appended_to_each_fold_train
+    - target_x_year_stratification
+    - seed_ensemble_3407_42
+    - lgb_params_from_020
+    - gpu_with_cpu_fallback
+    - progress_window_base_features
+    - progress_window_count_frequency
+    - progress_window_target_encoding
+  changed_from_020:
+    - add_year_stint_flags_025
+    - add_minimal_year_stint_crosses_025
+    - add_frequency_for_year_stint_crosses
+  not_added:
+    - weather_features
+    - Race_Year_RaceProgressBin
+    - 72_bins
+    - original_prior
+    - pseudo_label
+    - Normalized_TyreLife_or_proxy
+    - Stint_x_Normalized
+    - Norm_x_Hardness
+    - TyreLife_div_inferred_stint_length
+    - future_or_endpoint_proxy
+    - TE_Year_Stint_025
+    - TE_Year_Compound_025
+
+data:
+  competition_train: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  competition_test: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  original: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  danger_col:
+    name: Normalized_TyreLife
+    used: false
+
+features:
+  inherited_from_020:
+    - shared_003_full_FE
+    - RaceProgressBin_20
+    - Race_RaceProgressBin_20
+    - Race_Compound_RaceProgressBin_20
+    - fold_safe_count_frequency_for_progress_window
+    - fold_safe_TE_for_progress_window
+  added_025:
+    year_flags:
+      - Is_2022_025
+      - Is_2023_025
+      - Is_2024_025
+      - Is_2025_025
+    stint_flags:
+      - Is_Stint1_025
+      - Is_Stint2_025
+      - Is_Stint3_025
+      - Is_Stint4Plus_025
+      - Is_Second_Stint_025
+      - Is_Third_StintPlus_025
+    tyre_wear:
+      - TyreLife_sq_025
+      - TyreLife_sqrt_025
+      - TyreLife_log1p_025
+      - LapTime_Delta_abs_025
+      - Cumulative_Degradation_abs_025
+    interactions:
+      - Stint_x_RaceProgress_025
+      - Stint_x_TyreLife_sq_025
+      - TyreLife_sq_x_RaceProgress_025
+    categorical_cross:
+      - Year_Stint_025
+      - Year_Compound_025
+    frequency:
+      - Year_Stint_025_freq
+      - Year_Compound_025_freq
+  te_policy:
+    added_year_stint_te: false
+    reason: >
+      初手からYear/Stint系にTEをかけるとYear artifactを過剰増幅しやすいため、
+      025ではraw/ordinal/frequencyまでに留める。
+
+model:
+  family: LightGBM
+  seeds:
+    - 3407
+    - 42
+  cv:
+    scheme: StratifiedKFold
+    stratification: target_x_Year
+    n_splits: 5
+    shuffle: true
+    random_state: 3407
+  params:
+    n_estimators: 9000
+    learning_rate: 0.022
+    num_leaves: 31
+    min_child_samples: 120
+    subsample: 0.88
+    subsample_freq: 1
+    colsample_bytree: 0.82
+    reg_alpha: 0.25
+    reg_lambda: 10.0
+    max_bin: 255
+    class_weight: balanced
+    early_stopping_rounds: 450
+
+result:
+  cv_auc: 0.9511230993013209
+  public_lb: null
+  fold_scores: [0.9503691373184895, 0.9513260690997236, 0.9508125236506595, 0.9512721689378926, 0.9518647025627576]
+  compared_to_020:
+    cv_020: 0.9510267120359983
+    public_lb_020: 0.95075
+    delta_cv: 9.63872653225728e-05
+    delta_lb: null
+  compared_to_024:
+    cv_024: 0.9511783121413456
+    public_lb_024: 0.95086
+    delta_cv: -5.521284002474314e-05
+    delta_lb: null
+
+artifacts:
+  notebook: exp_20260513_025_lgb_year_stint_flags_min.ipynb
+  oof: oof_exp_20260513_025_lgb_year_stint_flags_min.npy
+  pred: pred_exp_20260513_025_lgb_year_stint_flags_min.npy
+  submission: submission_exp_20260513_025_lgb_year_stint_flags_min.csv
+  feature_importance: feature_importance.csv
+  feature_columns: feature_columns.csv
+  year_stint_features: year_stint_features_025.csv
+
+blend_policy:
+  benchmark_code: code_010_add_slsqp.txt
+  compare_methods:
+    - avg
+    - ridge_meta_all
+    - logreg_meta_all
+    - hc_nonnegative_raw
+    - nm_softmax_raw
+    - slsqp_signed_raw_neg005
+  add_or_replace: >
+    020/024置換候補として評価する。
+    020/024よりCV/LBが改善する、またはCV同等でも既存stackとの相関が下がる場合のみ
+    blend benchmarkに投入する。
+
+blend_with_025:
+  source_notebook: ps-s6e5-010-blend-core-nm-neg-weight.ipynb
+  source_json: blend_result.json
+  benchmark_code: code_010_add_slsqp.txt
+  stack:
+    - "007"
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "020"
+    - "021"
+    - "022"
+    - "023"
+    - "025"
+  results:
+    avg:
+      cv_auc: null
+      public_lb: null
+      weights:
+        "007": null
+        "014": null
+        "015": null
+        "016": null
+        "017": null
+        "018": null
+        "020": null
+        "021": null
+        "022": null
+        "023": null
+        "025": null
+    ridge_meta_all:
+      cv_auc: null
+      public_lb: null
+      params:
+        alpha: null
+    logreg_meta_all:
+      cv_auc: null
+      public_lb: null
+      params:
+        C: null
+    hc_nonnegative_raw:
+      cv_auc: null
+      public_lb: null
+      weights:
+        "007": null
+        "014": null
+        "015": null
+        "016": null
+        "017": null
+        "018": null
+        "020": null
+        "021": null
+        "022": null
+        "023": null
+        "025": null
+    nm_softmax_raw:
+      cv_auc: null
+      public_lb: null
+      weights:
+        "007": null
+        "014": null
+        "015": null
+        "016": null
+        "017": null
+        "018": null
+        "020": null
+        "021": null
+        "022": null
+        "023": null
+        "025": null
+    slsqp_signed_raw_neg005:
+      cv_auc: null
+      public_lb: null
+      weights:
+        "007": null
+        "014": null
+        "015": null
+        "016": null
+        "017": null
+        "018": null
+        "020": null
+        "021": null
+        "022": null
+        "023": null
+        "025": null
+      params:
+        neg_bound: -0.05
+        pos_bound: 0.5
+      diagnostics:
+        min_weight: null
+        max_weight: null
+        negative_weight_models: null
+
+judgement:
+  status: pending
+  summary: >
+    CV/LB/相関確認後に keep / hold / drop を判断する。
