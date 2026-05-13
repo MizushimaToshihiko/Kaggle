@@ -99,14 +99,14 @@ model:
     early_stopping_rounds: 450
 
 result:
-  cv_auc: null
-  public_lb: null
-  fold_scores: null
+  cv_auc: 0.9511783121413456
+  public_lb: 0.95086
+  fold_scores: [0.9503176820577309, 0.9513950648822692, 0.9509613000632188, 0.9512469090320268, 0.9519908383243532]
   compared_to_020:
     cv_020: 0.9510267120359983
     public_lb_020: 0.95075
-    delta_cv: null
-    delta_lb: null
+    delta_cv: 0.0001516
+    delta_lb: 0.00011
 
 artifacts:
   notebook: exp_20260513_024_lgb_progress_window_weather_agg_min.ipynb
