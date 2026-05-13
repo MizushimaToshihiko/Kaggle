@@ -1,0 +1,105 @@
+experiment:
+  id: exp_20260513_024_lgb_progress_window_weather_agg_min
+  title: LGB progress-window TE + Race-Year weather aggregate
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
+
+objective:
+  summary: >
+    020 LGB progress-window TE をbaseに、Woods Hole FastF1 weather dataset由来の
+    Race-Year単位 weather aggregate を追加し、weatherが既存stackに対して
+    低相関補助素材になるか確認する。
+  base_experiment: exp_20260511_020_lgb_progress_window_te_min
+  intended_role: aux_material
+
+data:
+  competition_train: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  competition_test: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  weather_dataset: /kaggle/input/playground-series-s6-e5-weather-conditions/F1_Weather_2022_2025.csv
+  original_append: {str(CFG.USE_ORIGINAL_APPEND).lower()}
+  target: PitNextLap
+
+features:
+  inherited_from_020:
+    - RaceProgressBin_20
+    - Race_RaceProgressBin_20
+    - Race_Compound_RaceProgressBin_20
+    - fold_safe_count_frequency
+    - fold_safe_TE
+  added_weather_aggregate:
+    - AirTemp_mean_min_max_std
+    - TrackTemp_mean_min_max_std
+    - Humidity_mean_min_max_std
+    - Pressure_mean_std
+    - WindSpeed_mean_max_std
+    - Rainfall_mean_max_sum_any_rate
+    - TrackTemp_minus_AirTemp_mean_max
+    - TrackTemp_range
+    - AirTemp_range
+    - WetRace
+  join_policy: >
+    competition側の Year + Race を Race->Track mapping で Year + Track に変換し、
+    weather側の Year + Track aggregate をmergeする。
+  not_used:
+    - Normalized_TyreLife
+    - Normalized_TyreLife_proxy
+    - Weather_x_target_TE
+    - Time_RaceProgress_interpolation
+    - Race_Year_RaceProgressBin
+    - pseudo_label
+
+model:
+  family: LightGBM
+  seed: 42
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  params:
+    objective: binary
+    metric: auc
+    learning_rate: 0.02
+    n_estimators: 8000
+    num_leaves: 64
+    min_child_samples: 80
+    subsample: 0.85
+    colsample_bytree: 0.80
+    reg_alpha: 0.15
+    reg_lambda: 2.0
+
+result:
+  cv_auc: null
+  public_lb: null
+  fold_scores: null
+  compared_to_020:
+    cv_020: 0.9510267
+    public_lb_020: 0.95075
+    delta_cv: null
+    delta_lb: null
+
+artifacts:
+  notebook: exp_20260513_024_lgb_progress_window_weather_agg_min.ipynb
+  oof: oof_exp_20260513_024_lgb_progress_window_weather_agg_min.npy
+  pred: pred_exp_20260513_024_lgb_progress_window_weather_agg_min.npy
+  submission: submission_exp_20260513_024_lgb_progress_window_weather_agg_min.csv
+  feature_importance: feature_importance.csv
+  race_to_track_mapping: race_to_track_mapping.csv
+
+blend_policy:
+  benchmark_code: code_010_add_slsqp.txt
+  compare_methods:
+    - nm_softmax_raw
+    - hc_nonnegative_raw
+    - logreg_meta_all
+    - slsqp_signed_raw_neg005
+  add_or_replace: >
+    020置換候補として評価する。
+    単体CVが020を明確に上回る、またはCV同等でも既存stackとの相関が下がる場合のみ
+    blend benchmarkに投入する。
+
+judgement:
+  status: pending
+  summary: >
+    CV/LB/相関確認後に keep / hold / drop を判断する。
