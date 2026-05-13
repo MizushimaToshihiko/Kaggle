@@ -135,6 +135,186 @@ result:
     delta_cv: 0.000156249
     delta_lb: null
 
+correlation_026:
+  source: blend_result.json
+  summary: >
+    026 is a merged LGB variant of 024 weather aggregate and 025 Year/Stint flags.
+    It improves single CV over both 024 and 025, but remains extremely close to the LGB branch.
+    In particular, Pearson correlation is 0.998953 vs 024 and 0.998245 vs 025,
+    so 026 is not a new low-correlation branch.
+
+  single_result:
+    model: 026_lgb_weather_year_stint_flags_min
+    cv_auc: 0.9512793484860437
+    public_lb: null
+    compared_to_024:
+      cv_024: 0.9511783121413456
+      public_lb_024: 0.95086
+      delta_cv: 0.0001010363446981
+      delta_lb: null
+    compared_to_025:
+      cv_025: 0.9511230993013209
+      public_lb_025: 0.95092
+      delta_cv: 0.0001562491847228
+      delta_lb: null
+
+  pearson_vs_core:
+    "007": 0.9584571823690851
+    "014": 0.9849631072575427
+    "015": 0.9849507126871964
+    "016": 0.9603264966171664
+    "017": 0.9609368252220499
+    "018": 0.9583408079250525
+    "021": 0.9663702109220628
+    "022": 0.9582990614243018
+    "023": 0.9583899114645250
+    "024": 0.9989534269603723
+    "025": 0.9982445237908250
+
+  spearman_vs_core:
+    "007": 0.9668055503847662
+    "014": 0.9731145556969847
+    "015": 0.9727346547589749
+    "016": 0.9692315078963066
+    "017": 0.9698076009504749
+    "018": 0.9663261460240588
+    "021": 0.9627854955482252
+    "022": 0.9664036354786824
+    "023": 0.9666740638790025
+    "024": 0.9982082816585535
+    "025": 0.9972530879266905
+
+blend_with_026:
+  source_notebook: ps-s6e5-010-blend-core-add-signed-slsqp-add026.ipynb
+  source_json: blend_result.json
+  benchmark_code: code_010_add_slsqp_drop020.txt
+
+  note: >
+    The JSON has a model_keys overwrite issue after pruning.
+    inputs.model_keys and blend_weights omit 024/025, but blend_summary weights are in the
+    12-model order shown in avg notes.
+    Therefore, weights below use the 12-model order:
+    007, 014, 015, 016, 017, 018, 021, 022, 023, 024, 025, 026.
+
+  stack:
+    - "007"
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "021"
+    - "022"
+    - "023"
+    - "024"
+    - "025"
+    - "026"
+
+  results:
+    avg:
+      cv_auc: 0.9542835957527624
+      public_lb: null
+      weights:
+        "007": 0.0833333333
+        "014": 0.0833333333
+        "015": 0.0833333333
+        "016": 0.0833333333
+        "017": 0.0833333333
+        "018": 0.0833333333
+        "021": 0.0833333333
+        "022": 0.0833333333
+        "023": 0.0833333333
+        "024": 0.0833333333
+        "025": 0.0833333333
+        "026": 0.0833333333
+
+    ridge_meta_pruned:
+      cv_auc: 0.9538724912000125
+      public_lb: null
+      params:
+        alpha: 25.306397985574122
+      notes: >
+        Ridge uses raw + rank + logit meta features after pruning.
+        CV is far below NM/HC/SLSQP/LogReg and is not a submission priority.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9544117953390094
+      public_lb: null
+      params:
+        C: 1.0904196339974783
+      notes: >
+        LogisticRegression uses raw + rank + logit meta features after pruning.
+        It is the stable comparison candidate, but CV remains below NM/HC/SLSQP.
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9544336239117127
+      public_lb: null
+      weights:
+        "007": 0.1040640800
+        "014": 0.1057913000
+        "015": 0.0787526300
+        "016": 0.1231256500
+        "017": 0.0334852200
+        "018": 0.1948010200
+        "021": 0.0757463900
+        "022": 0.0972904200
+        "023": 0.1006320000
+        "024": 0.0000000000
+        "025": 0.0105338600
+        "026": 0.0757774200
+      notes: >
+        HC assigns substantial weight to 026, but 024 is zeroed and 025 remains only lightly.
+        This suggests 026 absorbs most of the 024/025 LGB branch under HC.
+
+    nm_softmax_raw:
+      cv_auc: 0.9544336573892226
+      public_lb: null
+      weights:
+        "007": 0.1042339800
+        "014": 0.1062567000
+        "015": 0.0788937400
+        "016": 0.1236373200
+        "017": 0.0329163600
+        "018": 0.1966684300
+        "021": 0.0754983100
+        "022": 0.0945257400
+        "023": 0.1007381400
+        "024": 0.0000000100
+        "025": 0.0104841100
+        "026": 0.0761471400
+      notes: >
+        Best CV in this run.
+        NM gives almost zero weight to 024, small weight to 025, and meaningful weight to 026.
+        This is the strongest evidence that 026 can replace most of the 024/025 branch.
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9544335984050386
+      public_lb: null
+      weights:
+        "007": 0.1040278400
+        "014": 0.1061118200
+        "015": 0.0785620200
+        "016": 0.1231091800
+        "017": 0.0327838100
+        "018": 0.1966821600
+        "021": 0.0755521800
+        "022": 0.0949510400
+        "023": 0.1010234100
+        "024": 0.0003403200
+        "025": 0.0103998500
+        "026": 0.0764563700
+      params:
+        neg_bound: -0.05
+        pos_bound: 0.5
+      diagnostics:
+        min_weight: 0.00034031844839146327
+        max_weight: 0.19668215881795262
+        negative_weight_models: Nan
+      notes: >
+        Signed SLSQP does not materially use negative weights here.
+        It gives almost the same LGB-branch conclusion as NM:
+        026 receives meaningful weight, 024 is nearly zero, and 025 is small.
+
 artifacts:
   notebook: exp_20260514_026_lgb_weather_year_stint_flags_min.ipynb
   oof: oof_exp_20260514_026_lgb_weather_year_stint_flags_min.npy
