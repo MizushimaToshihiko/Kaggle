@@ -565,3 +565,11 @@ notes:
     Since the expected effect is small, blend weight matters more than single CV.
   - >
     If 023 does not receive positive blend weight, do not waste further time on minor PitStop-count ablations.
+
+final_judgement:
+  status: keep_hold
+  summary: >
+    023 is useful as a thin additive RealMLP derivative.
+    It receives meaningful positive NM/HC weight around 0.10,
+    but Public LB does not clearly improve over the add022 best level.
+    Keep 023 in the blend candidate pool, but stop further minor 018-derivative ablations for now.
