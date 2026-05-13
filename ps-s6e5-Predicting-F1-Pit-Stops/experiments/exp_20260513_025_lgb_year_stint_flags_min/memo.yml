@@ -122,18 +122,18 @@ model:
 
 result:
   cv_auc: 0.9511230993013209
-  public_lb: null
+  public_lb: 0.95092
   fold_scores: [0.9503691373184895, 0.9513260690997236, 0.9508125236506595, 0.9512721689378926, 0.9518647025627576]
   compared_to_020:
     cv_020: 0.9510267120359983
     public_lb_020: 0.95075
     delta_cv: 9.63872653225728e-05
-    delta_lb: null
+    delta_lb: 0.00017
   compared_to_024:
     cv_024: 0.9511783121413456
     public_lb_024: 0.95086
     delta_cv: -5.521284002474314e-05
-    delta_lb: null
+    delta_lb: 6E-05
 
 artifacts:
   notebook: exp_20260513_025_lgb_year_stint_flags_min.ipynb
