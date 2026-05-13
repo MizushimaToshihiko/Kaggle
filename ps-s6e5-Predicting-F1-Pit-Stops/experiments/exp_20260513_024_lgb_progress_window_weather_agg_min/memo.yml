@@ -98,15 +98,44 @@ model:
     class_weight: balanced
     early_stopping_rounds: 450
 
-result:
-  cv_auc: 0.9511783121413456
-  public_lb: 0.95086
-  fold_scores: [0.9503176820577309, 0.9513950648822692, 0.9509613000632188, 0.9512469090320268, 0.9519908383243532]
-  compared_to_020:
-    cv_020: 0.9510267120359983
-    public_lb_020: 0.95075
-    delta_cv: 0.0001516
-    delta_lb: 0.00011
+correlation_024:
+  source: blend_result.json
+  summary: >
+    024 is almost a direct 020 replacement rather than a low-correlation new branch.
+    It slightly improves 020 single CV/LB, but Pearson/Spearman correlation with 020 is extremely high.
+  single_result:
+    model: 024_lgb_progress_window_weather_agg_min
+    cv_auc: 0.9511783121413456
+    public_lb: 0.95086
+    compared_to_020:
+      cv_020: 0.9510267120359983
+      public_lb_020: 0.95075
+      delta_cv: 0.0001516001053473
+      delta_lb: 0.00011
+
+  pearson_vs_core:
+    "007": 0.9580666426280317
+    "014": 0.9849806022378310
+    "015": 0.9849738146981563
+    "016": 0.9600924606208605
+    "017": 0.9606792465001697
+    "018": 0.9579490629372545
+    "020": 0.9981162257519460
+    "021": 0.9661880185925895
+    "022": 0.9578871301408795
+    "023": 0.9580003660929473
+
+  spearman_vs_core:
+    "007": 0.9667107002367120
+    "014": 0.9731299768583441
+    "015": 0.9727370340014080
+    "016": 0.9691822808627893
+    "017": 0.9697294014010002
+    "018": 0.9662218731728702
+    "020": 0.9971243802490302
+    "021": 0.9628009115572335
+    "022": 0.9662769269712447
+    "023": 0.9665932768951668
 
 artifacts:
   notebook: exp_20260513_024_lgb_progress_window_weather_agg_min.ipynb
@@ -129,6 +158,115 @@ blend_policy:
     まず020置換候補として評価する。
     020よりCV/LBが改善する、またはCV同等でも既存stackとの相関が下がる場合のみ
     blend benchmarkに投入する。
+
+blend_with_024:
+  source_notebook: ps-s6e5-010-blend-core-nm-neg-weight.ipynb
+  source_json: blend_result.json
+  stack:
+    - "007"
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "020"
+    - "021"
+    - "022"
+    - "023"
+    - "024"
+
+  results:
+    avg:
+      cv_auc: 0.9543454396773876
+      public_lb: null
+      weights:
+        "007": 0.0909090909
+        "014": 0.0909090909
+        "015": 0.0909090909
+        "016": 0.0909090909
+        "017": 0.0909090909
+        "018": 0.0909090909
+        "020": 0.0909090909
+        "021": 0.0909090909
+        "022": 0.0909090909
+        "023": 0.0909090909
+        "024": 0.0909090909
+
+    ridge_meta_all:
+      cv_auc: 0.9538761354010149
+      public_lb: null
+      params:
+        alpha: 39.51569877981238
+      notes: >
+        Ridge uses raw + rank + logit meta features.
+        CV is far below NM/HC/SLSQP/LogReg in this run.
+
+    logreg_meta_all:
+      cv_auc: 0.954403760996922
+      public_lb: null
+      params:
+        C: 0.00752242156233001
+      notes: >
+        LogisticRegression uses raw + rank + logit meta features.
+        Stable candidate, but CV is below NM/HC/SLSQP.
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9544275077756307
+      public_lb: null
+      weights:
+        "007": 0.1064682545
+        "014": 0.1054935147
+        "015": 0.0781277502
+        "016": 0.1434496126
+        "017": 0.0144724085
+        "018": 0.1981070922
+        "020": 0.0251523533
+        "021": 0.0742409280
+        "022": 0.0950788658
+        "023": 0.1025871703
+        "024": 0.0568220500
+
+    nm_softmax_raw:
+      cv_auc: 0.9544276027099103
+      public_lb: null
+      weights:
+        "007": 0.1052435226
+        "014": 0.1044800290
+        "015": 0.0801612735
+        "016": 0.1415159357
+        "017": 0.0152010776
+        "018": 0.1968434536
+        "020": 0.0228030548
+        "021": 0.0741782139
+        "022": 0.0948417296
+        "023": 0.1063332215
+        "024": 0.0583984882
+      notes: >
+        Best CV in this blend run.
+        024 receives positive weight around 0.0584, while 020 still remains with weight around 0.0228.
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9544275637992187
+      public_lb: null
+      weights:
+        "007": 0.1052380099
+        "014": 0.1044299463
+        "015": 0.0801655024
+        "016": 0.1415039038
+        "017": 0.0152268569
+        "018": 0.1969895961
+        "020": 0.0229650604
+        "021": 0.0742489921
+        "022": 0.0946654580
+        "023": 0.1065575589
+        "024": 0.0580091152
+      params:
+        neg_bound: -0.05
+        pos_bound: 0.5
+      notes: >
+        Signed SLSQP did not assign negative weights in practice.
+        CV is slightly below NM but slightly above HC.
+        Treat as attack-only comparison unless Public LB is clearly better.
 
 judgement:
   status: pending
