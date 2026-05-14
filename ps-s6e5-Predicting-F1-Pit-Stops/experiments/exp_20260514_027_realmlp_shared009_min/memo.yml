@@ -1,1 +1,158 @@
+experiment:
+  id: exp_20260514_027_realmlp_shared009_min
+  title: RealMLP shared009 safe adaptation
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
 
+objective:
+  summary: >
+    shared_009 RealMLP_TD notebookを参照し、既存018/022/023 RealMLP branchとは異なるNN素材になるか確認する。
+    OOF/predをnpy保存し、026-only compressed stackへ追加してblend寄与を見る。
+  intended_role: new_realmlp_branch_candidate
+
+source:
+  reference_code: code_shared_009.txt
+  original_shared009_reported:
+    cv_auc: 0.953149
+    public_lb: 0.95253
+  notes:
+    - RealMLP_TD via pytabkit
+    - 6-fold CV
+    - original rows appended to each fold train
+    - combo target encoding inside fold
+    - floored numericals treated as categorical variables
+
+project_adaptation:
+  normalized_tyre_life:
+    original_column_dropped: true
+    proxy_features_enabled: false
+    disabled_features:
+      - TyreLife_Normalized
+      - Norm_x_Hardness
+      - Stint_x_Normalized
+    reason: >
+      These features are close to Normalized_TyreLife proxy construction,
+      so they are disabled by default in this project.
+  pitstop:
+    used: true
+    note: >
+      PitStop is kept by default to match shared_009.
+      If this branch is useful but suspicious, create a no-PitStop ablation later.
+
+data:
+  competition_train: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  competition_test: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  original: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+
+features:
+  base:
+    - TyreLife_sq
+    - TyreLife_sqrt
+    - TyreLife_log1p
+    - Compound_Hardness
+    - TyreLife_x_Hardness
+    - Is_Fresh
+    - Is_Old
+    - Is_VeryOld
+    - Is_FirstStint
+    - DegRate
+    - Early_Race
+    - Late_Race
+    - VeryLate_Race
+    - Is_2023
+    - Is_2025
+    - TyreLife_per_Lap
+    - Lap_x_RaceProgress
+    - Stint_x_TyreLife
+    - LapDelta_sq
+    - LapDelta_abs
+  nn_view:
+    - floored_numeric_categories
+    - count_encoding_for_Driver_Compound_Race_Year
+    - RaceProgress_200_quantile_bin
+    - Race_Compound_combo
+    - Race_Year_combo
+    - Driver_Compound_combo
+    - fold_safe_TE_for_combo_features
+
+model:
+  family: RealMLP
+  library: pytabkit
+  estimator: RealMLP_TD_Classifier
+  folds: 6
+  seed: 42
+  params:
+    n_ens: 32
+    hidden_sizes:
+      - 512
+      - 256
+      - 128
+    n_epochs: 10
+    batch_size: 256
+    lr: 0.03
+    wd: 0.018
+    ls_eps: 0.01
+    val_metric_name: 1-auc_ovr
+
+result:
+  cv_auc: 0.9531400778528742
+  public_lb: null
+  fold_scores: [0.9547407477335534, 0.9519910222920218, 0.9523272927612594, 0.953439464908098, 0.9524007520014982, 0.9541333222601319]
+  fold_mean: 0.9531721003260939
+  fold_std: 0.001013221717850325  
+  per_year_auc: {'2022': 0.9181797611120248, '2023': 0.9442708835475394, '2024': 0.9331191191776498, '2025': 0.9324853799673106}
+  compared_to_existing_realmlp:
+    "007":
+      cv_auc: 0.9532701289015783
+      public_lb: 0.95273
+    "018":
+      cv_auc: 0.953475993350039
+      public_lb: 0.95316
+    "022":
+      cv_auc: 0.9534314709948207
+      public_lb: 0.95301
+    "023":
+      cv_auc: 0.9534462611732204
+      public_lb: 0.95304
+
+artifacts:
+  notebook: exp_20260514_027_realmlp_shared009_min.ipynb
+  oof: oof_exp_20260514_027_realmlp_shared009_min.npy
+  pred: pred_exp_20260514_027_realmlp_shared009_min.npy
+  submission: submission_exp_20260514_027_realmlp_shared009_min.csv
+  cv_result: cv_result.json
+  feature_columns: feature_columns.csv
+  feature_columns_detail: feature_columns_detail.csv
+
+blend_policy:
+  benchmark_code: code_010_add_slsqp_drop020.txt
+  add_to_stack:
+    - "007"
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "021"
+    - "022"
+    - "023"
+    - "026"
+    - "027"
+  decision_focus:
+    - single_cv_vs_018_022_023
+    - corr_vs_018_022_023
+    - nm_hc_slsqp_weight
+    - public_lb_if_submitted
+  keep_rule: >
+    Keep if CV is near existing RealMLP branch and correlation is meaningfully lower,
+    or if blend weight remains at least around 0.02.
+  drop_rule: >
+    Drop if CV is weak, correlation with 018/022/023 is very high,
+    and blend weight is near zero.
+
+judgement:
+  status: pending
+  summary: >
+    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
