@@ -1,1 +1,130 @@
+experiment:
+  id: exp_20260514_029_realmlp_shared001v2_min
+  title: RealMLP shared001v2 updated
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
 
+objective:
+  summary: >
+    updated shared001 RealMLPを再現し、既存RealMLP branchの強化または置換候補になるか確認する。
+    報告CV 0.95404級の強いRealMLP branchとして、007/018/022/023/027との相関とblend weightを見る。
+  intended_role: strong_realmlp_replacement_candidate
+
+source:
+  reference_code: code_shared_001v2.txt
+  model_family: RealMLP
+  reported_cv_auc: 0.95404
+  reported_runtime: 15m16s
+  notes:
+    - RealMLP_TD_Classifier
+    - updated shared001
+    - likely high correlation with existing RealMLP cluster
+    - treat as replacement candidate, not new family
+
+data:
+  competition_train: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  competition_test: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  original: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  caution:
+    - PitStop appears to be used in source code
+    - Normalized_TyreLife is dropped if present
+
+features:
+  combo_features:
+    - Race_Compound_
+    - Race_Year_
+  target_encoding:
+    - _Race_Compound_TE
+    - _Race_Year_TE
+  notable_features:
+    - PitStop
+    - PitStop_cat_
+    - RaceProgress_200_quantile_bin_
+    - LapTime (s)_7_quantile_bin_
+    - floored_numerical_categories
+    - count_encoding
+
+model:
+  family: RealMLP
+  estimator: RealMLP_TD_Classifier
+  folds: 5
+  seed: 42
+  params:
+    n_ens: 24
+    n_epochs: 6
+    batch_size: 256
+    lr: 0.01
+    wd: 0.016
+    hidden_sizes:
+      - 512
+      - 256
+      - 128
+    ls_eps: 0.01
+
+result:
+  cv_auc: 0.9540420784720796
+  public_lb: null
+  fold_scores: [0.9551736656957039, 0.9530326111197406, 0.9540064827787086, 0.9532919758032758, 0.955020609944133]
+  fold_mean: 0.9541050690683124
+  fold_std: 0.000871908230603586
+  per_year_auc: {'2022': 0.9193634429581963, '2023': 0.9497804783745608, '2024': 0.9342504333696316, '2025': 0.9341953240640251}
+  compared_to_existing_realmlp:
+    "007":
+      cv_auc: 0.9532701289015783
+      public_lb: 0.95273
+    "018":
+      cv_auc: 0.953475993350039
+      public_lb: 0.95316
+    "022":
+      cv_auc: 0.9534314709948207
+      public_lb: 0.95301
+    "023":
+      cv_auc: 0.9534462611732204
+      public_lb: 0.95304
+    "027":
+      cv_auc: 0.9531400778528742
+      public_lb: 0.95260
+
+artifacts:
+  notebook: exp_20260514_029_realmlp_shared001v2_min.ipynb
+  oof: oof_exp_20260514_029_realmlp_shared001v2_min.npy
+  pred: pred_exp_20260514_029_realmlp_shared001v2_min.npy
+  submission: submission_exp_20260514_029_realmlp_shared001v2_min.csv
+  cv_result: cv_result.json
+  feature_columns: feature_columns.csv
+  feature_columns_detail: feature_columns_detail.csv
+
+blend_policy:
+  benchmark_code: code_010_add_slsqp_drop020.txt
+  add_to_stack:
+    - "007"
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "021"
+    - "022"
+    - "023"
+    - "026"
+    - "027"
+    - "028"
+    - "029"
+  decision_focus:
+    - single_cv_vs_018_022_023_027
+    - corr_vs_realmlp_cluster
+    - whether_029_absorbs_007_or_027
+    - nm_hc_slsqp_weight
+    - public_lb_if_submitted
+  keep_rule: >
+    Keep if 029 receives meaningful blend weight or replaces weaker RealMLP branch.
+  replacement_rule: >
+    If 029 is highly correlated with 007/027 and absorbs their weight, prefer dropping weaker RealMLP branch
+    rather than simply increasing near-duplicate RealMLP count.
+
+judgement:
+  status: pending
+  summary: >
+    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
