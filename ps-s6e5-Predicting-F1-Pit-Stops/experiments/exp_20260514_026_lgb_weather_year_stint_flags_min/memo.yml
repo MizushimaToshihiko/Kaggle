@@ -314,6 +314,150 @@ blend_with_026:
         Signed SLSQP does not materially use negative weights here.
         It gives almost the same LGB-branch conclusion as NM:
         026 receives meaningful weight, 024 is nearly zero, and 025 is small.
+        
+blend_026_only_compressed:
+  source_notebook: ps-s6e5-010-blend-core-026-only-compressed.ipynb
+  source_json: blend_result.json
+  benchmark_code: code_010_add_slsqp_drop020.txt
+
+  purpose: >
+    024/025をdropし、026のみをLGB branch代表として残したcompressed stackを確認する。
+    026が024/025を十分に吸収できるか、またPublic LBが維持されるかを見る。
+
+  stack:
+    - "007"
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "021"
+    - "022"
+    - "023"
+    - "026"
+
+  single_026:
+    cv_auc: 0.9512793484860437
+    public_lb: 0.95096
+    note: >
+      026単体は024/025をCV上は上回り、Public LBも024/025と同水準以上。
+      ただし既存LGB branchとの相関は非常に高い。
+
+  results:
+    avg:
+      cv_auc: 0.9542835957527624
+      public_lb: null
+      weights:
+        "007": 0.0833333333
+        "014": 0.0833333333
+        "015": 0.0833333333
+        "016": 0.0833333333
+        "017": 0.0833333333
+        "018": 0.0833333333
+        "021": 0.0833333333
+        "022": 0.0833333333
+        "023": 0.0833333333
+        "026": 0.0833333333
+
+    ridge_meta_pruned:
+      cv_auc: 0.9538724912000125
+      public_lb: null
+      params:
+        alpha: 25.306397985574122
+      notes: >
+        Ridge uses raw + rank + logit meta features after pruning.
+        Stackが同じため今回Public LB提出は省略。
+
+    logreg_meta_pruned:
+      cv_auc: 0.9544117953390094
+      public_lb: null
+      params:
+        C: 1.0904196339974783
+      notes: >
+        LogisticRegression uses raw + rank + logit meta features after pruning.
+        Stackが同じため今回Public LB提出は省略。
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9544336239117127
+      public_lb: null
+      weights:
+        "007": 0.1040640770
+        "014": 0.1057913031
+        "015": 0.0787526322
+        "016": 0.1231256492
+        "017": 0.0334852217
+        "018": 0.1948010215
+        "021": 0.0757463911
+        "022": 0.0972904191
+        "023": 0.1006320039
+        "026": 0.0000000000
+      notes: >
+        HCでは026の重みが0になっており、026-only stack内ではHCはLGB branchをほぼ使っていない。
+
+    nm_softmax_raw:
+      cv_auc: 0.9544335268301877
+      public_lb: 0.95370
+      weights:
+        "007": 0.1030158900
+        "014": 0.1070551000
+        "015": 0.0767997100
+        "016": 0.1081964900
+        "017": 0.0472522300
+        "018": 0.1955989200
+        "021": 0.0753970600
+        "022": 0.0958988000
+        "023": 0.1036293100
+        "026": 0.0871564900
+      params:
+        constraint: softmax_sum1
+        success: true
+        nit: 194
+        fun: -0.9544335268301877
+      notes: >
+        今回提出した候補。
+        Public LBは0.95370で、既存best圏を維持。
+        026に0.087程度の重みがついており、NMでは026がLGB branch代表として機能している。
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9544335984050386
+      public_lb: null
+      weights:
+        "007": 0.1040278388
+        "014": 0.1061118191
+        "015": 0.0785620221
+        "016": 0.1231091834
+        "017": 0.0327838128
+        "018": 0.1966821588
+        "021": 0.0755521768
+        "022": 0.0949510374
+        "023": 0.1010234081
+        "026": 0.0003403184
+      params:
+        neg_bound: -0.05
+        pos_bound: 0.5
+      diagnostics:
+        min_weight: null
+        max_weight: null
+        negative_weight_models: null
+      notes: >
+        Signed SLSQPでは026の重みがほぼ0。
+        CVは高いが、NMとはLGB branchの扱いが大きく異なるため、提出優先度はNM未満。
+
+judgement_after_026_only_blend:
+  status: keep_compressed_stack_candidate
+  summary: >
+    026-only compressed stackのNMはCV 0.9544335268 / Public LB 0.95370。
+    024/025/026を同時投入したadd026 NMのCV 0.9544336574とほぼ同等であり、
+    Public LBも既存best圏を維持した。
+    したがって、026は024/025を概ね吸収できていると判断できる。
+  interpretation:
+    - 026はLGB branch代表としてkeep。
+    - 024はdropしてよい。
+    - 025はadd026時に小さく重みが残ったが、026-onlyでもPublic LBが維持されたため、いったんdrop寄りでよい。
+    - ただし最終候補では、026-only NMと024/025/026併用NMのどちらを残すかはLBと提出枠で判断する。
+  next_action: >
+    LGB派生の追加深掘りはここで停止。
+    次は027 shared_009 RealMLPへ進む。
 
 artifacts:
   notebook: exp_20260514_026_lgb_weather_year_stint_flags_min.ipynb
