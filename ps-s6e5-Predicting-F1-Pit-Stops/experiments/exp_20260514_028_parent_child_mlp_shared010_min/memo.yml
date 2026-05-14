@@ -1,1 +1,99 @@
+experiment:
+  id: exp_20260514_028_parent_child_mlp_shared010_min
+  title: Parent-Child MLP shared010 full
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
 
+objective:
+  summary: >
+    shared010 Parent-Child MLP ensembleをfullで再現し、
+    既存RealMLP/TabM/GBDTとは異なるNN branchとしてblend寄与があるか確認する。
+  intended_role: diversity_candidate
+
+source:
+  reference_code: code_shared_010.txt
+  model_family: ParentChildMLP
+  notes:
+    - parent MLP with progressive neuron freezing
+    - child models initialized from parent
+    - random inherited neurons are kept and the remaining neurons are reset
+    - rtdl_num_embeddings PiecewiseLinearEmbeddings are used when available
+
+data:
+  competition_train: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  competition_test: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  original: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  danger_col:
+    name: Normalized_TyreLife
+    used: false
+    note: >
+      Normalized_TyreLife is dropped if present.
+
+model:
+  family: ParentChildMLP
+  seed: 21
+  folds: 5
+  children_per_fold: 10
+  total_parents: 5
+  total_children: 50
+  use_num_embeddings: true
+  params:
+    parent_hidden: 300
+    n_hidden_layers: 3
+    parent_dropout: 0.1
+    batch_size: 4096
+    parent_lr: 0.0008
+    parent_weight_decay: 1e-05
+    child_weight_decay: 1e-05
+    parent_max_epochs_per_stage: 4
+    child_max_epochs_per_stage: 4
+
+result:
+  children_cv_auc: 0.951413760118673
+  parent_cv_auc: 0.9481002464123693
+  all_models_cv_auc: 0.951373817935769
+  public_lb: 0.95257
+  children_fold_scores: [0.9521740502191747, 0.9516408997806564, 0.9505727107706188, 0.9516687824916832, 0.951333159028636]
+  children_fold_mean: 0.9514779204581538
+  children_fold_std: 0.0005268676626001302
+  children_per_year_auc: {'2022': 0.9146779781474113, '2023': 0.9468561844499431, '2024': 0.9308360905010978, '2025': 0.9297889058437314}
+
+artifacts:
+  notebook: exp_20260514_028_parent_child_mlp_shared010_min.ipynb
+  oof: oof_exp_20260514_028_parent_child_mlp_shared010_min.npy
+  pred: pred_exp_20260514_028_parent_child_mlp_shared010_min.npy
+  submission: submission_exp_20260514_028_parent_child_mlp_shared010_min.csv
+  cv_result: cv_result.json
+
+blend_policy:
+  benchmark_code: code_010_add_slsqp_drop020.txt
+  add_to_stack:
+    - "007"
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "021"
+    - "022"
+    - "023"
+    - "026"
+    - "027"
+    - "028"
+  decision_focus:
+    - single_cv_vs_021_027
+    - corr_vs_021_tabm
+    - corr_vs_realmlp_cluster
+    - nm_hc_slsqp_weight
+  keep_rule: >
+    Keep if blend weight remains at least around 0.02,
+    even if single CV is below the main RealMLP models.
+  drop_rule: >
+    Drop if correlation is high and blend weight is near zero.
+
+judgement:
+  status: pending
+  summary: >
+    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
