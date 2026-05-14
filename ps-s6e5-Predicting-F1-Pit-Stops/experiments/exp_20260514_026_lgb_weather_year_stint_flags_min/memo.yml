@@ -239,7 +239,7 @@ blend_with_026:
 
     logreg_meta_pruned:
       cv_auc: 0.9544117953390094
-      public_lb: null
+      public_lb: 0.95367
       params:
         C: 1.0904196339974783
       notes: >
@@ -268,7 +268,7 @@ blend_with_026:
 
     nm_softmax_raw:
       cv_auc: 0.9544336573892226
-      public_lb: null
+      public_lb: 0.95370
       weights:
         "007": 0.1042339800
         "014": 0.1062567000
