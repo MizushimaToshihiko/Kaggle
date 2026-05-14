@@ -322,6 +322,28 @@ items:
       target_encoding: false
     notes: >
       
-    priority: low_until_proxy_checked
-    action: inspect_proxy
-    decision: pending
+    expected_role: diversity_candidate
+    priority: medium
+    estimated_single_cv: 0.9514
+    architectural_difference:
+      - custom_torch_mlp
+      - progressive_neuron_freezing
+      - parent_child_ensemble
+      - rtdl_num_embeddings_piecewise_linear_embeddings
+    likely_strength:
+      - not_single_core
+      - possible_blend_auxiliary
+    compare_against:
+      - "021 TabM"
+      - "027 RealMLP shared009"
+      - "018/022/023 RealMLP cluster"
+    key_success_condition: >
+      Even if single CV is around 0.9514, keep if correlation with existing RealMLP/TabM branches is meaningfully lower
+      and NM/HC/SLSQP assigns weight >= 0.02.
+    danger_features:
+      normalized_tyrelife_proxy: false_or_unknown
+      note: >
+        Code drops Normalized_TyreLife from train/test/original.
+        Need to inspect whether any derived feature reconstructs stint endpoint proxy.
+    implementation_cost: high
+    decision: watch_after_027
