@@ -388,3 +388,34 @@ items:
       - if corr is very high, it should replace weaker RealMLP branch rather than simply add another near-duplicate.
   
     current_decision: run_next_or_high_priority
+
+  - id: shared_011
+    title: F1 | Best CatBoost Solution | 0.95259
+    author: Игорь Жаров
+    url: https://www.kaggle.com/code/flexonafft/f1-best-catboost-solution-0-95259#Compact-Blend-Inputs
+    type: notebook
+    public_lb: 0.95255
+    cv: 0.952983
+    model_family:
+      - CatBoostMetaStacking
+    expected_role: catboost_branch_diversity_candidate
+    priority: low_to_medium
+  
+    why_watch:
+      - Not blind blending; it builds internal CatBoost OOF predictions and a Meta CatBoost stacker.
+      - Uses multiple feature-family views: base / clean / domain.
+      - May be different enough from current CatBoost 014/015 to provide small blend diversity.
+      - Output of interest is outputs/stacking/meta.csv, not the plain two-seed CatBoost mean.
+  
+    caution:
+      - Public LB 0.95255 is below current core models and far below add028 NM 0.95375.
+      - Still CatBoost-based, so it may correlate strongly with 014/015.
+      - Meta stacker uses a holdout-style meta validation and produces a full_oof_like signal; this needs careful OOF handling before trusting CV.
+      - Do not prioritize over structurally different model families.
+  
+    success_condition:
+      - corr_vs_014_015 meaningfully below existing CatBoost pair correlation
+      - nm_or_hc_weight >= 0.02
+      - add-to-stack CV improves without damaging Public LB
+  
+    current_decision: watch_only
