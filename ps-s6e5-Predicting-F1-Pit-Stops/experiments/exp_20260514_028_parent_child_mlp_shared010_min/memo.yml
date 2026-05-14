@@ -60,6 +60,239 @@ result:
   children_fold_std: 0.0005268676626001302
   children_per_year_auc: {'2022': 0.9146779781474113, '2023': 0.9468561844499431, '2024': 0.9308360905010978, '2025': 0.9297889058437314}
 
+correlation_028:
+  source: blend_result.json
+  summary: >
+    028 is Parent-Child MLP shared010.
+    Single CV is weak compared with the main RealMLP branch,
+    but correlation with existing RealMLP models is materially lower than the 018/022/023 cluster,
+    and 028 receives large positive blend weight.
+    Therefore, 028 is a successful diversity candidate.
+
+  single_result:
+    model: 028_parent_child_mlp_shared010_min
+    family: Parent-Child MLP
+    cv_auc: 0.951373817935769
+    public_lb: 0.95260
+    compared_to:
+      "021_tabm":
+        cv_auc: 0.9514915466418662
+        public_lb: 0.95171
+        delta_cv: -0.0001177287060972
+        delta_lb: 0.00089
+      "027_realmlp_shared009":
+        cv_auc: 0.9531400778528742
+        public_lb: 0.95260
+        delta_cv: -0.0017662599171052
+        delta_lb: 0.00000
+      "018_realmlp_core":
+        cv_auc: 0.953475993350039
+        public_lb: 0.95316
+        delta_cv: -0.0021021754142700
+        delta_lb: -0.00056
+
+  pearson_vs_core:
+    "007": 0.9816266855386039
+    "014": 0.9568460249115173
+    "015": 0.9560195559940249
+    "016": 0.9723659845530677
+    "017": 0.9722132509171643
+    "018": 0.9817236775065589
+    "021": 0.9744909376411962
+    "022": 0.9817591230060930
+    "023": 0.9818013036037481
+    "026": 0.9540810248378683
+    "027": 0.9808204060442648
+
+  spearman_vs_core:
+    "007": 0.9761029828683878
+    "014": 0.9683966895373675
+    "015": 0.9681810237860933
+    "016": 0.9674171216446306
+    "017": 0.9671241263281612
+    "018": 0.9751107381084820
+    "021": 0.9670543952582680
+    "022": 0.9754169930071959
+    "023": 0.9757211340026444
+    "026": 0.9599461998300239
+    "027": 0.9739254505306470
+
+blend_with_028:
+  source_notebook: ps-s6e5-010-blend-core-add-signed-slsqp-add028.ipynb
+  source_json: blend_result.json
+  benchmark_code: code_010_add_slsqp_drop020.txt
+
+  stack:
+    - "007"
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "021"
+    - "022"
+    - "023"
+    - "026"
+    - "027"
+    - "028"
+
+  results:
+    avg:
+      cv_auc: 0.9544688316784982
+      public_lb: null
+      weights:
+        "007": 0.0833333333
+        "014": 0.0833333333
+        "015": 0.0833333333
+        "016": 0.0833333333
+        "017": 0.0833333333
+        "018": 0.0833333333
+        "021": 0.0833333333
+        "022": 0.0833333333
+        "023": 0.0833333333
+        "026": 0.0833333333
+        "027": 0.0833333333
+        "028": 0.0833333333
+
+    ridge_meta_pruned:
+      cv_auc: 0.9540931852581092
+      public_lb: null
+      params:
+        alpha: 29.725374455179868
+      notes: >
+        Ridge uses raw + rank + logit meta features after pruning.
+        CV is clearly below NM/HC/SLSQP/LogReg and is not a submission priority.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9544625008178633
+      public_lb: 0.95372
+      params:
+        C: 0.011746189430880192
+      notes: >
+        LogisticRegression uses raw + rank + logit meta features after pruning.
+        Public LB 0.95372 improves over the previous 0.95370 level,
+        but remains below add028 NM.
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9544893494554083
+      public_lb: null
+      weights:
+        "007": 0.0761100926
+        "014": 0.1000045480
+        "015": 0.0709022391
+        "016": 0.1145660155
+        "017": 0.0274308739
+        "018": 0.1655521621
+        "021": 0.0499629628
+        "022": 0.0865309425
+        "023": 0.0727066489
+        "026": 0.0787041564
+        "027": 0.0438641551
+        "028": 0.1136652030
+      notes: >
+        HC gives 028 the second-largest non-RealMLP-like contribution after 018.
+        The weight around 0.114 is strong evidence that 028 is a useful diversity branch.
+
+    nm_softmax_raw:
+      cv_auc: 0.9544894250970122
+      public_lb: 0.95375
+      weights:
+        "007": 0.0749013697
+        "014": 0.0995492965
+        "015": 0.0718278557
+        "016": 0.1142236950
+        "017": 0.0267885919
+        "018": 0.1679231233
+        "021": 0.0503095059
+        "022": 0.0855693303
+        "023": 0.0736431861
+        "026": 0.0791067981
+        "027": 0.0428714310
+        "028": 0.1132858166
+      params:
+        constraint: softmax_sum1
+        success: true
+        nit: 252
+        fun: -0.9544894250970122
+      notes: >
+        Best CV and best Public LB so far.
+        028 receives large positive NM weight around 0.1133,
+        confirming that it contributes a distinct signal despite weak single CV.
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9544893794843118
+      public_lb: null
+      weights:
+        "007": 0.0749084887
+        "014": 0.0997978378
+        "015": 0.0719579790
+        "016": 0.1139393824
+        "017": 0.0270173135
+        "018": 0.1679099525
+        "021": 0.0501448436
+        "022": 0.0854184408
+        "023": 0.0736163617
+        "026": 0.0791767624
+        "027": 0.0428968730
+        "028": 0.1132157645
+      params:
+        neg_bound: -0.05
+        pos_bound: 0.5
+        success: true
+        nit: 22
+        fun: -0.9544893794843118
+      diagnostics:
+        min_weight: 0.0270173135
+        max_weight: 0.1679099525
+        negative_weight_models: []
+      notes: >
+        Signed SLSQP gives almost the same conclusion as NM/HC.
+        No negative weights are used, and 028 remains around 0.1132.
+
+public_lb_check_after_add028:
+  submitted:
+    nm_softmax_raw:
+      cv_auc: 0.9544894250970122
+      public_lb: 0.95375
+      judgement: main_candidate
+      note: >
+        This is the current best Public LB and the current best CV.
+        Promote add028 NM to the main submission candidate.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9544625008178633
+      public_lb: 0.95372
+      judgement: stable_backup
+      note: >
+        LogReg also improves over the previous 0.95370 level,
+        but it is below add028 NM. Keep as a stable backup candidate.
+
+  comparison:
+    previous_best_public_lb: 0.95370
+    add027_nm_public_lb: 0.95369
+    add026_026_only_nm_public_lb: 0.95370
+    add028_nm_delta_vs_previous_best: 0.00005
+    add028_logreg_delta_vs_previous_best: 0.00002
+
+judgement_after_blend:
+  status: strong_keep
+  summary: >
+    028 is a clear successful diversity branch.
+    Although its single CV is only 0.9513738179 and weaker than the main RealMLP models,
+    it receives stable large weights around 0.113 across NM/HC/SLSQP.
+    Add028 NM achieves CV 0.9544894251 and Public LB 0.95375,
+    which is the current best Public LB.
+  interpretation:
+    - 028 should be kept in the main blend pool.
+    - 028 validates the strategy of adding structurally different NN branches rather than more minor RealMLP/LGB variants.
+    - Single CV alone would have incorrectly rejected 028.
+    - The current main candidate is add028 NM.
+    - add028 LogReg is a reasonable stable backup, but not the main candidate.
+  next_action: >
+    Update final candidate list with add028 NM as current primary.
+    Do not deepen 028 immediately unless there is a very low-cost ablation.
+    Next experiments should continue prioritizing structurally different branches or final-selection robustness.
+
 artifacts:
   notebook: exp_20260514_028_parent_child_mlp_shared010_min.ipynb
   oof: oof_exp_20260514_028_parent_child_mlp_shared010_min.npy
@@ -92,8 +325,3 @@ blend_policy:
     even if single CV is below the main RealMLP models.
   drop_rule: >
     Drop if correlation is high and blend weight is near zero.
-
-judgement:
-  status: pending
-  summary: >
-    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
