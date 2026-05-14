@@ -117,6 +117,194 @@ result:
       cv_auc: 0.9534462611732204
       public_lb: 0.95304
 
+correlation_027:
+  source: blend_result.json
+  summary: >
+    027 is shared009 RealMLP branch.
+    Single CV is below 018/022/023 but still strong enough to be considered.
+    Correlation with existing RealMLP branches is high but lower than the 018/022/023 mutual cluster,
+    and 027 receives meaningful positive weight in NM/HC/SLSQP.
+  note: >
+    In blend_result.json, 027 family is recorded as LightGBM, but this is a label error.
+    Treat 027 as RealMLP shared009.
+
+  single_result:
+    model: 027_realmlp_shared009_min
+    cv_auc: 0.9531400778528742
+    public_lb: 0.95260
+    compared_to_existing_realmlp:
+      "007":
+        cv_auc: 0.9532701289015783
+        public_lb: 0.95273
+        delta_cv: -0.0001300510487041
+        delta_lb: -0.00013
+      "018":
+        cv_auc: 0.9534759933500390
+        public_lb: 0.95316
+        delta_cv: -0.0003359154971648
+        delta_lb: -0.00056
+      "022":
+        cv_auc: 0.9534314709948207
+        public_lb: 0.95301
+        delta_cv: -0.0002913931419465
+        delta_lb: -0.00041
+      "023":
+        cv_auc: 0.9534462611732204
+        public_lb: 0.95304
+        delta_cv: -0.0003061833203462
+        delta_lb: -0.00044
+
+  pearson_vs_core:
+    "007": 0.9917570541212791
+    "014": 0.9667175450015668
+    "015": 0.9659573913195925
+    "016": 0.9831076698559285
+    "017": 0.9828453349143775
+    "018": 0.9923815215218675
+    "021": 0.9857710857404652
+    "022": 0.9923428774776925
+    "023": 0.9923726870255092
+    "026": 0.9638824517337335
+
+  spearman_vs_core:
+    "007": 0.9873633024371005
+    "014": 0.9768867201189358
+    "015": 0.9770156274961901
+    "016": 0.9731504759361262
+    "017": 0.9728303535322518
+    "018": 0.9879490628090908
+    "021": 0.9720466377999929
+    "022": 0.9880145422401054
+    "023": 0.9880019620282084
+    "026": 0.9682912291121185
+
+blend_with_027:
+  source_notebook: ps-s6e5-010-blend-core-add-signed-slsqp-add027.ipynb
+  source_json: blend_result.json
+  benchmark_code: code_010_add_slsqp_drop020.txt
+
+  stack:
+    - "007"
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "021"
+    - "022"
+    - "023"
+    - "026"
+    - "027"
+
+  results:
+    avg:
+      cv_auc: 0.9544160762796459
+      public_lb: null
+      weights:
+        "007": 0.0909090909
+        "014": 0.0909090909
+        "015": 0.0909090909
+        "016": 0.0909090909
+        "017": 0.0909090909
+        "018": 0.0909090909
+        "021": 0.0909090909
+        "022": 0.0909090909
+        "023": 0.0909090909
+        "026": 0.0909090909
+        "027": 0.0909090909
+
+    ridge_meta_pruned:
+      cv_auc: 0.9538978729760553
+      public_lb: null
+      params:
+        alpha: 39.51569877981238
+      notes: >
+        Ridge uses raw + rank + logit meta features after pruning.
+        CV remains far below NM/HC/SLSQP/LogReg and is not a submission priority.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9544125152518741
+      public_lb: 0.95367
+      params:
+        C: 0.06404137790042713
+      notes: >
+        LogisticRegression uses raw + rank + logit meta features after pruning.
+        CV improves slightly over the previous 026-only LogReg level, but remains below NM/HC/SLSQP.
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9544377504621423
+      public_lb: null
+      weights:
+        "007": 0.0969695438
+        "014": 0.1071423760
+        "015": 0.0735371997
+        "016": 0.1318468121
+        "017": 0.0218332851
+        "018": 0.1819477905
+        "021": 0.0637318343
+        "022": 0.0992144695
+        "023": 0.0836852320
+        "026": 0.0818563681
+        "027": 0.0582350888
+      notes: >
+        HC gives 027 a meaningful positive weight around 0.0582.
+        This is strong enough to keep 027 as a blend candidate despite weaker single CV than 018/022/023.
+
+    nm_softmax_raw:
+      cv_auc: 0.9544377638336259
+      public_lb: 0.95369
+      weights:
+        "007": 0.0969214762
+        "014": 0.1071141055
+        "015": 0.0735485652
+        "016": 0.1318233771
+        "017": 0.0218492912
+        "018": 0.1820270387
+        "021": 0.0637597498
+        "022": 0.0992971260
+        "023": 0.0836523644
+        "026": 0.0818331532
+        "027": 0.0581737526
+      params:
+        constraint: softmax_sum1
+        success: true
+        nit: 212
+        fun: -0.9544377638336259
+      notes: >
+        Best CV in this blend run.
+        027 receives meaningful positive NM weight around 0.0582.
+        This confirms that 027 adds useful signal beyond the existing 018/022/023 RealMLP cluster.
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9544377349108791
+      public_lb: null
+      weights:
+        "007": 0.0967969259
+        "014": 0.1070119572
+        "015": 0.0735890488
+        "016": 0.1319232836
+        "017": 0.0219491087
+        "018": 0.1819744832
+        "021": 0.0636397348
+        "022": 0.0992554265
+        "023": 0.0837866394
+        "026": 0.0817813062
+        "027": 0.0582920857
+      params:
+        neg_bound: -0.05
+        pos_bound: 0.5
+        success: true
+        nit: 18
+        fun: -0.9544377349108791
+      diagnostics:
+        min_weight: 0.0219491087
+        max_weight: 0.1819744832
+        negative_weight_models: []
+      notes: >
+        Signed SLSQP gives almost the same conclusion as NM/HC.
+        No negative weights are used, and 027 remains around 0.0583.
+        Treat SLSQP as attack-only unless Public LB clearly improves.
+
 artifacts:
   notebook: exp_20260514_027_realmlp_shared009_min.ipynb
   oof: oof_exp_20260514_027_realmlp_shared009_min.npy
@@ -156,3 +344,22 @@ judgement:
   status: pending
   summary: >
     CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
+
+judgement_after_blend:
+  status: keep
+  summary: >
+    027 single CV is lower than the main RealMLP branch models 018/022/023,
+    but it receives stable positive weight around 0.058 across NM/HC/SLSQP.
+    Correlation with 018/022/023 is still high, but lower than the correlation among 018/022/023 themselves.
+    Therefore, 027 is a useful RealMLP branch candidate and should be kept in the blend pool.
+  interpretation:
+    - 027 is not a new low-correlation outlier, but it is different enough from the 018/022/023 cluster to help.
+    - The add027 NM CV 0.9544377638 is the current best CV among recent blends.
+    - 027 improves the blend more clearly than another minor LGB variant would.
+    - Public LB confirmation is needed before promoting add027 NM to final submission candidate.
+  next_action: >
+    Submit add027 NM first if slots allow.
+    If Public LB is at least 0.95370, keep add027 NM as a final candidate.
+    If Public LB improves over 0.95370, promote add027 NM as the new main candidate.
+    Do not tune 027 deeply yet; first verify LB conversion.
+
