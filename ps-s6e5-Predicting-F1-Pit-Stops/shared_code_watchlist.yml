@@ -347,3 +347,44 @@ items:
         Need to inspect whether any derived feature reconstructs stint endpoint proxy.
     implementation_cost: high
     decision: watch_after_027
+
+  - id: shared_001v2:
+    title: RealMLP shared001 updated
+    model_family: RealMLP
+    source_type: shared_notebook_updated
+    priority: high
+    expected_role: strong_realmlp_branch_candidate
+    reported_cv_auc: 0.95404
+    runtime: 15m16s
+    public_lb: unknown
+  
+    why_watch:
+      - Updated shared001 RealMLP is much stronger than previous 007.
+      - Reported OOF AUC 0.95404 exceeds current main single models 018/022/023.
+      - Runtime is short enough to run immediately.
+      - Uses fold-safe TargetEncoder and original fold-train append.
+  
+    implementation_notes:
+      - RealMLP_TD_Classifier
+      - n_ens: 24
+      - n_epochs: 6
+      - folds: 5
+      - Race_Compound and Race_Year combo TE
+      - floored numerical categorical features
+      - RaceProgress 200 quantile bin
+      - LapTime 7 quantile bin
+      - original dataset split and fold-train appended
+  
+    caution:
+      - Not a new family; likely high correlation with existing RealMLP branches.
+      - Uses PitStop and PitStop_cat_.
+      - Treat as attack-capable RealMLP branch, not fully safe branch.
+      - Need corr check against 007/018/022/023/027.
+  
+    success_condition:
+      - single_cv >= 0.9538
+      - public_lb >= 0.9531
+      - nm_or_hc_or_slsqp_weight >= 0.03
+      - if corr is very high, it should replace weaker RealMLP branch rather than simply add another near-duplicate.
+  
+    current_decision: run_next_or_high_priority
