@@ -419,3 +419,35 @@ items:
       - add-to-stack CV improves without damaging Public LB
   
     current_decision: watch_only
+
+  - id: shared_012_stacking_vibe_coding:
+    title: Multi-layer OOF stacking with raw/logit meta features
+    model_family: MetaStacking
+    source_type: shared_notebook
+    priority: medium_watch
+    expected_role: blend_method_reference
+    not_expected_role: direct_model_candidate
+  
+    why_watch:
+      - Blind blendingではなく、OOF predictionを使った多段stacking構成。
+      - raw predictionだけでなくlogit変換をmeta featureとして使っている。
+      - Layer1でXGB/LGBM/CatBoost/Torch MLP stackerを作り、Layer2でLogisticRegression系に渡している。
+      - LogRegのbest単体ではなく、複数候補を比較・平均する思想が参考になる。
+  
+    absorbable_ideas:
+      - LogReg top3/top5 equal blend
+      - meta feature variants:
+          - raw_only
+          - logit_only
+          - raw_logit
+          - raw_rank_logit
+      - L1 LightGBM/XGB stacker as a later experiment
+      - keep base predictions when adding L1 stacker outputs
+  
+    caution:
+      - そのまま導入すると010コードが複雑化しすぎる。
+      - 多段stackingはOOF過適合リスクが高い。
+      - 今のS6E5ではYear artifactが強いため、CVだけ伸びる危険がある。
+      - 029で大きく更新した直後なので、今は最終候補管理を優先。
+  
+    current_decision: watch_for_blend_code_improvement
