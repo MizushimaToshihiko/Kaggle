@@ -1,1 +1,92 @@
+experiment:
+  id: exp_20260514_030_catboost_meta_stacking_shared011_min
+  title: CatBoost meta-stacking shared011
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
+
+objective:
+  summary: >
+    shared011 CatBoost feature-view meta-stackingを実行し、
+    014/015 CatBoost branchの置換または補助候補になるか確認する。
+    これはBlind Blendingではなく、内部OOF predictionを使ったCatBoost meta-stackingである。
+  intended_role: catboost_branch_replacement_or_auxiliary_candidate
+
+source:
+  reference_code: code_shared_011.txt
+  model_family: CatBoostMetaStacking
+  known_public_lb: 0.95255
+  notes:
+    - base / clean / domain の3つのCatBoost feature viewを作成
+    - 各viewのOOFとtest predを作成
+    - それらをmeta featuresとしてMeta CatBoostを学習
+    - outputs/stacking/meta.csv が主提出
+    - external blenderには outputs/stacking/oof_stack.csv の meta と test_stack.csv の meta を使う
+
+caution:
+  oof_type: meta_oof_like
+  note: >
+    meta_oof_likeは完全なnested OOFではなく、Meta CatBoostをholdoutで学習した後、
+    stack_oof全体にpredictした値である。
+    そのため通常のOOFよりCVの信用度は低めに扱う。
+
+data:
+  competition_train: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  competition_test: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  original: f1_strategy_dataset_v4.csv
+  target: PitNextLap
+
+model:
+  family: CatBoostMetaStacking
+  base_views:
+    - base
+    - clean
+    - domain
+  meta_model: CatBoostClassifier
+  stacking_n_folds: 3
+  stacking_base_iterations: 5000
+  stacking_meta_iterations: 3000
+
+result:
+  cv_auc_oof_like: 0.952982881049659
+  public_lb: 0.95214
+  per_year_auc: {'2022': 0.9181639077327637, '2023': 0.9484913772916588, '2024': 0.9324878615329604, '2025': 0.9323654113175674}
+  view_summary: [{'view': 'base', 'n_features': 302, 'n_categorical': 77, 'mean_best_iter': 4988.333333333333, 'final_iterations': 5387, 'oof_auc': 0.9525192511949356, 'oof_logloss': 0.26568134127787907, 'test_mean': 0.2813204185155681, 'test_std': 0.3625219641787863}, {'view': 'clean', 'n_features': 141, 'n_categorical': 16, 'mean_best_iter': 4987.666666666667, 'final_iterations': 5386, 'oof_auc': 0.9516422097998805, 'oof_logloss': 0.26758807654340483, 'test_mean': 0.28153028360121635, 'test_std': 0.3632456601230568}, {'view': 'domain', 'n_features': 93, 'n_categorical': 16, 'mean_best_iter': 4996.333333333333, 'final_iterations': 5396, 'oof_auc': 0.9517960417554835, 'oof_logloss': 0.26887433223794893, 'test_mean': 0.2826671290785528, 'test_std': 0.36351485462991495}]
+  meta_summary: [{'model': 'meta_catboost', 'n_meta_features': 11, 'best_iter': 506, 'holdout_auc': 0.9523800100093736, 'holdout_logloss': 0.21863457247285462, 'full_oof_like_auc': 0.9529828809032559, 'full_oof_like_logloss': 0.21727106572828975, 'test_mean': 0.19887748216145995, 'test_std': 0.3040752911934696, 'corr_with_base_test': 0.9715079516868382, 'mean_abs_delta_vs_base_test': 0.08247235535738352}]
+
+artifacts:
+  notebook: exp_20260514_030_catboost_meta_stacking_shared011_min.ipynb
+  oof: oof_exp_20260514_030_catboost_meta_stacking_shared011_min.npy
+  pred: pred_exp_20260514_030_catboost_meta_stacking_shared011_min.npy
+  submission: submission_exp_20260514_030_catboost_meta_stacking_shared011_min.csv
+  cv_result: cv_result.json
+  stacking_folder: stacking/
+
+blend_policy:
+  benchmark_code: code_010_add_slsqp_drop020.txt
+  add_to_stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "030"
+  decision_focus:
+    - corr_vs_014_015
+    - nm_hc_slsqp_weight
+    - whether_030_replaces_014_or_015
+    - public_lb_if_submitted
+  keep_rule: >
+    Keep if 030 receives meaningful blend weight or replaces weaker CatBoost branch.
+  drop_rule: >
+    Drop if 030 is highly correlated with 014/015 and receives near-zero blend weight.
+
+judgement:
+  status: pending
+  summary: >
+    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
 
