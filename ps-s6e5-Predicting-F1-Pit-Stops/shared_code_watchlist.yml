@@ -422,6 +422,8 @@ items:
 
   - id: shared_xxx_stacking_vibe_coding:
     title: Multi-layer OOF stacking with raw/logit meta features
+    auther: Masaya Kawamata
+    url: https://www.kaggle.com/code/masayakawamata/s6e5-stacking-vibe-coding
     model_family: MetaStacking
     source_type: shared_notebook
     priority: medium_watch
@@ -454,6 +456,8 @@ items:
 
   - id: shared_012_custom_realmlp:
     title: Custom Torch RealMLP CV 0.95352
+    auther: yunsuxiaozi
+    url: https://www.kaggle.com/code/yunsuxiaozi/pss6e5-realmlp-cv-0-95352
     model_family: CustomTorchRealMLP
     source_type: shared_notebook
     priority: medium
