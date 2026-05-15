@@ -90,3 +90,208 @@ judgement:
   summary: >
     CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
 
+correlation_030:
+  source: blend_result030.json
+  summary: >
+    030 is CatBoost meta-stacking shared011.
+    Its single CV/LB is weak compared with the current main models, but it has a different score scale
+    and receives meaningful weight in full-stack NM/HC/SLSQP.
+    Correlation with 014/015 CatBoost is high but not identical; correlation with 029 is also high but lower in Spearman.
+
+  single_result:
+    model: 030_catboost_meta_stacking_shared011_min
+    family: CatBoostMetaStacking
+    cv_auc: 0.952982881049659
+    public_lb: 0.95214
+    note: >
+      Single Public LB is weak. Treat as a blend-only auxiliary CatBoost signal, not as a standalone candidate.
+
+  pearson_vs_core:
+    "014": 0.9726160546
+    "015": 0.9719362391
+    "016": 0.9840088693
+    "017": 0.9840124402
+    "018": 0.9848364345
+    "021": 0.9845091134
+    "026": 0.9661542390
+    "027": 0.9878088393
+    "028": 0.9766471410
+    "029": 0.9836099499
+
+  spearman_vs_core:
+    "014": 0.9871003282
+    "015": 0.9875217639
+    "016": 0.9733224243
+    "017": 0.9729334702
+    "018": 0.9727315787
+    "021": 0.9687474233
+    "026": 0.9722360749
+    "027": 0.9744470757
+    "028": 0.9678001253
+    "029": 0.9716642861
+
+blend_with_030:
+  source_notebook: ps-s6e5-010-blend-core-add-signed-slsqp-add030.ipynb
+  source_json: blend_result030.json
+  benchmark_code: code_010_add_slsqp_drop020.txt
+
+  note_on_pruning: >
+    This blend notebook intentionally runs Avg/HC/NM/SLSQP first on the full stack,
+    then prunes weak-weight models before running Ridge/LogReg.
+    Therefore, HC/NM/SLSQP weights below are full-stack weights from blend_summary.weights,
+    while Ridge/LogReg CV/LB are based on the pruned stack.
+
+  stack_full_for_avg_hc_nm_slsqp:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "021"
+    - "026"
+    - "027"
+    - "028"
+    - "029"
+    - "030"
+
+  results:
+    avg:
+      cv_auc: 0.954489850463098
+      public_lb: null
+      weights:
+        "014": 0.0909090909
+        "015": 0.0909090909
+        "016": 0.0909090909
+        "017": 0.0909090909
+        "018": 0.0909090909
+        "021": 0.0909090909
+        "026": 0.0909090909
+        "027": 0.0909090909
+        "028": 0.0909090909
+        "029": 0.0909090909
+        "030": 0.0909090909
+
+    ridge_meta_pruned:
+      cv_auc: 0.9546512989425959
+      public_lb: null
+      params:
+        alpha: 137.9729661461215
+      notes: >
+        Ridge uses raw + rank + logit meta features after pruning.
+        CV improves versus earlier Ridge levels but remains below LogReg/NM.
+        Not submitted in this run.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9547430998378728
+      public_lb: 0.95416
+      params:
+        C: 0.013293591587683593
+      notes: >
+        LogisticRegression uses raw + rank + logit meta features after pruning.
+        CV is strong, but Public LB 0.95416 is below add029 LogReg 0.95420 and add029 NM 0.95424.
+        Therefore, add030 LogReg is not promoted.
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9547830699024344
+      public_lb: null
+      weights:
+        "014": 0.0194142800
+        "015": 0.0182850200
+        "016": 0.0919277400
+        "017": 0.0294975200
+        "018": 0.0120060300
+        "021": 0.0399552400
+        "026": 0.0482168800
+        "027": 0.0000000000
+        "028": 0.0741636700
+        "029": 0.4900007600
+        "030": 0.1765328500
+      notes: >
+        HC gives 030 a meaningful large weight around 0.177 despite weak single LB.
+        029 remains dominant, and 028 remains useful.
+
+    nm_softmax_raw:
+      cv_auc: 0.954783133864324
+      public_lb: 0.95420
+      weights:
+        "014": 0.0192719400
+        "015": 0.0183766400
+        "016": 0.0932928600
+        "017": 0.0289673200
+        "018": 0.0130564400
+        "021": 0.0409586300
+        "026": 0.0478606200
+        "027": 0.0000000100
+        "028": 0.0752444300
+        "029": 0.4890428600
+        "030": 0.1739282600
+      params:
+        constraint: softmax_sum1
+        success: true
+        nit: 221
+        fun: -0.954783133864324
+      notes: >
+        Best CV in this run.
+        030 receives a large weight around 0.174, but Public LB is 0.95420,
+        below full add029 NM 0.95424.
+        This suggests that the CV gain from 030 is partly OOF/meta-stacking optimistic or not converted to Public.
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9547830980443645
+      public_lb: null
+      weights:
+        "014": 0.0189731400
+        "015": 0.0182851300
+        "016": 0.0933505100
+        "017": 0.0291750700
+        "018": 0.0132767100
+        "021": 0.0410538600
+        "026": 0.0477389700
+        "027": -0.0000472300
+        "028": 0.0753496600
+        "029": 0.4888888700
+        "030": 0.1739553300
+      params:
+        neg_bound: -0.05
+        pos_bound: 0.5
+        success: true
+        nit: 16
+        fun: -0.9547830980443645
+      diagnostics:
+        min_weight: -0.00004723
+        max_weight: 0.48888887
+        negative_weight_models:
+          - "027"
+      notes: >
+        Signed SLSQP gives almost the same conclusion as NM/HC.
+        The negative weight on 027 is practically zero.
+        030 is used heavily, but this did not improve Public LB over add029 NM.
+
+public_lb_check_after_add030:
+  submitted:
+    nm_softmax_raw:
+      cv_auc: 0.954783133864324
+      public_lb: 0.95420
+      judgement: hold_not_main
+      note: >
+        CV is higher than add029 NM, but Public LB is lower than add029 NM 0.95424.
+        030 has blend signal, but the Public conversion is weaker.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9547430998378728
+      public_lb: 0.95416
+      judgement: not_promoted
+      note: >
+        Public LB is below add029 LogReg 0.95420.
+        Do not use as main or stable backup.
+
+  comparison:
+    add029_nm_public_lb: 0.95424
+    add029_logreg_public_lb: 0.95420
+    add030_nm_delta_vs_add029_nm: -0.00004
+    add030_logreg_delta_vs_add029_logreg: -0.00004
+
+
+
+
+
