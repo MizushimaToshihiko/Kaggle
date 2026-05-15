@@ -372,3 +372,188 @@ judgement_after_blend:
     If Public LB improves over add028 NM 0.95375, promote add029 NM as the new main candidate.
     Also consider submitting add029 LogReg if slots allow, because its CV 0.9547023043 is strong and it may be more stable.
     After LB confirmation, run a compressed RealMLP stack dropping 007/022/023/027 to verify that CV/LB are preserved.
+blend_compressed_drop007_022_023_keep027:
+  source_json: blend_result.json
+  benchmark_code: code_010_add_slsqp_drop020.txt
+
+  purpose: >
+    029が007/022/023を吸収したか確認するため、007/022/023をdropしたcompressed stackを確認する。
+    ただし本来drop予定だった027は残っているため、これは完全なdrop007_022_023_027ではなく、
+    drop007_022_023_keep027の確認である。
+
+  note: >
+    blend_weights table in the JSON has a column alignment issue:
+    w_027 is missing, so weights after 026 are shifted.
+    The weights below use blend_summary.weights in the 10-model order:
+    014, 015, 016, 017, 018, 021, 026, 027, 028, 029.
+
+  stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "021"
+    - "026"
+    - "027"
+    - "028"
+    - "029"
+
+  dropped:
+    - "007"
+    - "022"
+    - "023"
+
+  intended_but_not_dropped:
+    - "027"
+
+  individual:
+    best_single:
+      key: "029"
+      cv_auc: 0.9540420784720796
+      public_lb: 0.95397
+
+  results:
+    avg:
+      cv_auc: 0.9544957487838949
+      public_lb: null
+      weights:
+        "014": 0.1000000000
+        "015": 0.1000000000
+        "016": 0.1000000000
+        "017": 0.1000000000
+        "018": 0.1000000000
+        "021": 0.1000000000
+        "026": 0.1000000000
+        "027": 0.1000000000
+        "028": 0.1000000000
+        "029": 0.1000000000
+
+    ridge_meta_pruned:
+      cv_auc: 0.9544229451066207
+      public_lb: 0.95403
+      params:
+        alpha: 33.64129193756012
+      notes: >
+        Ridge uses raw + rank + logit meta features after pruning.
+        Public LB 0.95403 improves over the old pre-029 level, but is clearly below add029 NM/LogReg.
+        Ridge remains low priority as a submission candidate.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9547113027428711
+      public_lb: 0.95420
+      params:
+        C: 100.0
+      notes: >
+        LogisticRegression uses raw + rank + logit meta features after pruning.
+        Public LB 0.95420 is close to the full add029 LogReg LB 0.95419 and below add029 NM 0.95424.
+        This confirms that dropping 007/022/023 did not hurt LogReg and may slightly improve it.
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9547455059240896
+      public_lb: null
+      weights:
+        "014": 0.0658216200
+        "015": 0.0606046800
+        "016": 0.1200672400
+        "017": 0.0205343900
+        "018": 0.0208818900
+        "021": 0.0632354400
+        "026": 0.0656601400
+        "027": 0.0032871200
+        "028": 0.0878941300
+        "029": 0.4920133400
+      notes: >
+        HC keeps 029 dominant and 028 useful.
+        027 receives only around 0.0033, supporting the original plan to drop 027.
+
+    nm_softmax_raw:
+      cv_auc: 0.9547455791907098
+      public_lb: null
+      weights:
+        "014": 0.0679729800
+        "015": 0.0618446200
+        "016": 0.1194091100
+        "017": 0.0201075500
+        "018": 0.0205563800
+        "021": 0.0633929600
+        "026": 0.0670862600
+        "027": 0.0029678400
+        "028": 0.0881483300
+        "029": 0.4885139700
+      params:
+        constraint: softmax_sum1
+        success: true
+        nit: 202
+        fun: -0.9547455791907098
+      notes: >
+        NM CV is virtually identical to full add029 NM CV 0.9547455892.
+        029 remains dominant with about 0.489 weight.
+        028 remains useful with about 0.088 weight.
+        027 receives only about 0.003 and is not needed.
+        NM was not submitted in this run.
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9547455331876009
+      public_lb: null
+      weights:
+        "014": 0.0681577500
+        "015": 0.0619133700
+        "016": 0.1194815300
+        "017": 0.0200120100
+        "018": 0.0205922500
+        "021": 0.0633842100
+        "026": 0.0670576000
+        "027": 0.0030233900
+        "028": 0.0879943600
+        "029": 0.4883835300
+      params:
+        neg_bound: -0.05
+        pos_bound: 0.5
+        success: true
+        nit: 16
+        fun: -0.9547455331876009
+      diagnostics:
+        min_weight: 0.0030233900
+        max_weight: 0.4883835300
+        negative_weight_models: []
+      notes: >
+        Signed SLSQP gives the same conclusion as NM/HC.
+        No negative weights are used.
+        027 is almost unused, while 029 and 028 remain important.
+
+judgement_after_compressed_drop007_022_023_keep027:
+  status: useful_but_incomplete_compression_check
+  summary: >
+    Dropping 007/022/023 did not hurt the main blend.
+    NM CV remains virtually unchanged from full add029 NM, and LogReg Public LB improves slightly to 0.95420.
+    However, 027 was accidentally kept. Its NM weight is only around 0.003, so the original plan to drop 027 is still supported.
+  public_lb:
+    logreg_meta_pruned: 0.95420
+    ridge_meta_pruned: 0.95403
+  interpretation:
+    - 007/022/023 can be dropped when 029 is kept.
+    - 027 should also be dropped in the next clean compressed stack.
+    - 018 should remain for now, because it still receives a small but nonzero weight around 0.0206.
+    - 028 should definitely remain, because it keeps around 0.088 weight.
+    - 026 should remain as the LGB representative.
+    - 029 remains the dominant RealMLP representative.
+  next_clean_stack:
+    keep:
+      - "014"
+      - "015"
+      - "016"
+      - "017"
+      - "018"
+      - "021"
+      - "026"
+      - "028"
+      - "029"
+    drop:
+      - "007"
+      - "022"
+      - "023"
+      - "027"
+  next_action: >
+    Run one clean compressed stack without 027.
+    If NM/LogReg CV and LB are preserved, use the compressed stack for final candidate management.        
