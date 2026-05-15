@@ -557,3 +557,72 @@ judgement_after_compressed_drop007_022_023_keep027:
   next_action: >
     Run one clean compressed stack without 027.
     If NM/LogReg CV and LB are preserved, use the compressed stack for final candidate management.        
+
+blend_clean_compressed_drop007_022_023_027:
+  source_notebook: ps-s6e5-010-blend-core-add-signed-slsqp-drop007-022-023-027.ipynb
+  benchmark_code: code_010_add_slsqp_drop020.txt
+
+  purpose: >
+    Previous compressed check accidentally kept 027.
+    This run removes 027 as originally intended and verifies whether the compressed stack preserves CV.
+
+  stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+
+  dropped:
+    - "007"
+    - "022"
+    - "023"
+    - "027"
+
+  result_summary:
+    nm_softmax_raw:
+      cv_change_vs_previous_keep027: slightly_worse
+      public_lb: null
+      submitted: false
+
+    hc_nonnegative_raw:
+      cv_change_vs_previous_keep027: slightly_worse
+      public_lb: null
+      submitted: false
+
+    slsqp_signed_raw_neg005:
+      cv_change_vs_previous_keep027: slightly_worse
+      public_lb: null
+      submitted: false
+
+    logreg_meta_pruned:
+      cv_change_vs_previous_keep027: unchanged
+      public_lb: null
+      submitted: false
+      reason: >
+        027 was already removed by the pruning step in the previous run, so dropping it from MODEL_SPECS does not change LogReg.
+
+    ridge_meta_pruned:
+      cv_change_vs_previous_keep027: unchanged
+      public_lb: null
+      submitted: false
+      reason: >
+        027 was already removed by the pruning step in the previous run, so dropping it from MODEL_SPECS does not change Ridge.
+
+  judgement:
+    status: hold_not_submit
+    summary: >
+      Removing 027 from the raw NM/HC/SLSQP stack slightly worsened CV.
+      Since Ridge and LogReg were already pruned without 027, their results are unchanged.
+      Therefore, this clean compressed stack does not improve the current candidate set and was not submitted.
+    interpretation:
+      - 007/022/023 can still be dropped.
+      - 027 has very small direct NM/HC/SLSQP weight, but removing it slightly worsens raw optimized CV.
+      - For final candidate management, keep both records:
+          1. compressed_keep027 for submitted LogReg/Ridge result
+          2. clean_compressed_drop027 as diagnostic only
+      - Do not promote clean_compressed_drop027 unless later Private-risk reasoning strongly favors simplicity.
