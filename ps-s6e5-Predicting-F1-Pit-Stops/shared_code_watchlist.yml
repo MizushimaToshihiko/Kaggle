@@ -420,7 +420,7 @@ items:
   
     current_decision: watch_only
 
-  - id: shared_012_stacking_vibe_coding:
+  - id: shared_xxx_stacking_vibe_coding:
     title: Multi-layer OOF stacking with raw/logit meta features
     model_family: MetaStacking
     source_type: shared_notebook
@@ -451,3 +451,41 @@ items:
       - 029で大きく更新した直後なので、今は最終候補管理を優先。
   
     current_decision: watch_for_blend_code_improvement
+
+  - id: shared_012_custom_realmlp:
+    title: Custom Torch RealMLP CV 0.95352
+    model_family: CustomTorchRealMLP
+    source_type: shared_notebook
+    priority: medium
+    expected_role: realmlp_branch_diversity_candidate
+    reported_cv_auc: 0.95352
+  
+    why_watch:
+      - pytabkit RealMLP_TDではなく、PyTorchで自前実装されたRealMLP風モデル。
+      - n_ens=32 の内部ensembleを持つ。
+      - scale / weight / bias のparameter groupごとに学習率を変えている。
+      - RobustScaleSmoothClip + TargetEncoder + categorical embedding/one-hot を使う。
+      - 既存RealMLP clusterと少し違うOOFになる可能性がある。
+  
+    implementation_notes:
+      - fold split is index % 5, not StratifiedKFold.
+      - original dataset is appended to each fold train.
+      - TargetEncoder is fitted inside fold after original append.
+      - PitStop is used.
+      - test prediction is mean across 5 folds.
+      - outputs need OOF/pred npy saving added before blend.
+  
+    caution:
+      - Not a completely new family; still RealMLP/MLP系。
+      - CV is not directly comparable because fold split differs from current standard.
+      - May be highly correlated with 029.
+      - Needs corr check vs 018/022/023/027/029 and blend weight check.
+      - Treat as attack-capable NN branch, not safe branch.
+  
+    success_condition:
+      - corr_vs_029 meaningfully below old RealMLP cluster
+      - nm_or_hc_or_slsqp_weight >= 0.02
+      - add-to-stack CV or LogReg improves
+      - Public LB does not regress if submitted
+  
+    current_decision: watch_after_030
