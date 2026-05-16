@@ -1,1 +1,121 @@
+experiment:
+  id: exp_20260516_032_custom_realmlp_cv095352_min
+  title: Custom Torch RealMLP CV0.95352
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
+
+objective:
+  summary: >
+    shared_012 custom Torch RealMLPを実行し、029 pytabkit RealMLP clusterとは違う誤差を出せるか確認する。
+    単体主力ではなく、RealMLP派生の別実装・相関確認候補として扱う。
+  intended_role: realmlp_branch_diversity_candidate
+
+source:
+  reference_code: pss6e5-realmlp-cv-0-95352.ipynb
+  model_family: CustomTorchRealMLP
+  reported_cv_auc: 0.95352
+  notes:
+    - pytabkit RealMLP_TDではなく、hand-written Torch RealMLP-like model
+    - n_ens=32
+    - PBLD numerical embedding
+    - categorical one-hot/embedding
+    - parameter group別AdamW
+    - fold split is index % 5, not StratifiedKFold
+    - original dataset is appended to each fold train
+    - TargetEncoder is fitted inside fold after original append
+
+data:
+  competition_train: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  competition_test: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  original: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  danger_col:
+    name: Normalized_TyreLife
+    used: false
+    note: >
+      FEATURES are derived from test columns, so Normalized_TyreLife from original is not used.
+
+caution:
+  fold_split: index_mod_5
+  note: >
+    CV is not directly comparable to StratifiedKFold-based experiments.
+    Judge primarily by correlation and blend weight.
+  pitstop_used: true
+
+model:
+  family: CustomTorchRealMLP
+  seed: 2026
+  folds: 5
+  epochs: 15
+  n_ens: 32
+  embed_dim: 4
+  train_bs: 1024
+  eval_bs: 10240
+  lr: 0.003
+  label_smoothing_base: 0.03
+  use_best_checkpoint_for_oof: true
+
+result:
+  cv_auc: 0.9535059927287899
+  public_lb: 0.95309
+  fold_scores: [0.953235852748878, 0.9536599389887362, 0.9537374470585397, 0.9534823649588113, 0.9534272875269265]
+  fold_mean: 0.9535085782563784
+  fold_std: 0.00017718099334192188
+  fold_best_epochs: [14, 14, 14, 14, 14]
+  per_year_auc: {'2022': 0.9185037817969386, '2023': 0.9456460539767518, '2024': 0.9336272605375866, '2025': 0.9336416542066612}
+  compared_to_existing_realmlp:
+    "018":
+      cv_auc: 0.953475993350039
+      public_lb: 0.95316
+    "022":
+      cv_auc: 0.9534314709948207
+      public_lb: 0.95301
+    "023":
+      cv_auc: 0.9534462611732204
+      public_lb: 0.95304
+    "027":
+      cv_auc: 0.9531400778528742
+      public_lb: 0.95260
+    "029":
+      cv_auc: 0.9540420784720796
+      public_lb: 0.95397
+
+artifacts:
+  notebook: exp_20260516_032_custom_realmlp_cv095352_min.ipynb
+  oof: oof_exp_20260516_032_custom_realmlp_cv095352_min.npy
+  pred: pred_exp_20260516_032_custom_realmlp_cv095352_min.npy
+  submission: submission_exp_20260516_032_custom_realmlp_cv095352_min.csv
+  cv_result: cv_result.json
+  feature_columns: feature_columns.csv
+  feature_columns_detail: feature_columns_detail.csv
+
+blend_policy:
+  benchmark_code: code_010_add_slsqp_drop020.txt
+  add_to_stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+  decision_focus:
+    - corr_vs_029
+    - corr_vs_018_022_023
+    - nm_hc_slsqp_weight
+    - logreg_cv
+    - public_lb_if_submitted
+  keep_rule: >
+    Keep if 032 receives meaningful blend weight or provides lower-correlation RealMLP signal.
+  drop_rule: >
+    Drop if it is highly correlated with 029 and receives near-zero blend weight.
+
+judgement:
+  status: pending
+  summary: >
+    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
 
