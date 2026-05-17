@@ -1,1 +1,150 @@
+experiment:
+  id: exp_20260517_034_lgb_laptime_delta_nonlinear_min
+  title: LGB weather/year-stint + LapTime_Delta nonlinear
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
 
+objective:
+  summary: >
+    026 LGB weather + Year/Stint flags をbaseとして維持し、
+    EDA由来の安全な LapTime_Delta 非線形特徴量だけを追加する。
+    026 LGB branchの改善・置換候補になるか確認する。
+  base_experiment: exp_20260517_034_lgb_laptime_delta_nonlinear_min
+  intended_role: lgb_branch_replacement_or_auxiliary_candidate
+
+implementation_check:
+  base_code: ps-s6e5-026-lgb-weather-year-stint-flags-min.ipynb
+  preserved_from_026:
+    - shared_003_style_full_FE
+    - 024_weather_aggregate_by_year_track
+    - 025_year_stint_flags
+    - original_rows_appended_to_each_fold_train
+    - target_x_year_stratification
+    - seed_ensemble_3407_42
+    - lgb_params_from_020_026
+    - gpu_with_cpu_fallback
+    - progress_window_base_features
+    - progress_window_count_frequency
+    - progress_window_target_encoding
+  added_in_034:
+    - LapTime_Delta_abs_034
+    - LapTime_Delta_sq_034
+    - LapTime_Delta_sign_034
+    - LapTime_Delta_abs_x_TyreLife_034
+    - LapTime_Delta_abs_x_RaceProgress_034
+    - LapTime_Delta_abs_x_Cumulative_Degradation_abs_034
+    - LapTime_Delta_abs_bin20_034
+  not_added:
+    - Driver_TE
+    - Driver_Compound_TE
+    - Driver_Year_TE
+    - Weather_x_target_TE
+    - Race_Year_RaceProgressBin
+    - 72_bins
+    - original_prior
+    - pseudo_label
+    - Time_RaceProgress_weather_interpolation
+    - Normalized_TyreLife
+    - Normalized_TyreLife_proxy
+    - TyreLife_div_compound_median_stint
+    - final_stint_length_or_future_endpoint_proxy
+
+data:
+  competition_train: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  competition_test: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  original: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  weather: F1_Weather_2022_2025.csv
+  target: PitNextLap
+  danger_col:
+    name: Normalized_TyreLife
+    used: false
+    note: >
+      originalのNormalized_TyreLifeはdropし、proxy再構成も行わない。
+
+model:
+  family: LightGBM
+  seeds: [3407, 42]
+  folds: 5
+  stratification: target_x_year
+  use_original_rows: True
+  use_target_encoding: True
+  params:
+    n_estimators: 9000
+    learning_rate: 0.022
+    num_leaves: 31
+    min_child_samples: 120
+    subsample: 0.88
+    subsample_freq: 1
+    colsample_bytree: 0.82
+    reg_alpha: 0.25
+    reg_lambda: 10.0
+    max_bin: 255
+    class_weight: balanced
+
+features:
+  total_features: 143
+  categorical_features: ['Driver', 'Compound', 'Race', 'Year_str', 'Driver_Compound', 'Race_Compound', 'Race_Year', 'Driver_Race', 'Driver_Year', 'Compound_TyreLifeBin', 'Compound_RaceProgressBin', 'Stint_Compound', 'RaceProgressBin_20', 'Race_RaceProgressBin_20', 'Race_Compound_RaceProgressBin_20', 'Year_Stint_025', 'Year_Compound_025']
+  target_encoding_columns: ['Driver', 'Race_Year', 'Driver_Race', 'Driver_Year', 'Race', 'Stint_Compound']
+  target_encoding_names: ['TE_Driver', 'TE_Race_Year', 'TE_Driver_Race', 'TE_Driver_Year', 'TE_Race', 'TE_Stint_Compound']
+  progress_window_cat_cols: ['RaceProgressBin_20', 'Race_RaceProgressBin_20', 'Race_Compound_RaceProgressBin_20']
+  progress_window_te_cols: ['Race_RaceProgressBin_20', 'Race_Compound_RaceProgressBin_20']
+  year_stint_flag_features_025: ['Is_2022_025', 'Is_2023_025', 'Is_2024_025', 'Is_2025_025', 'Is_Stint1_025', 'Is_Stint2_025', 'Is_Stint3_025', 'Is_Stint4Plus_025', 'Is_Second_Stint_025', 'Is_Third_StintPlus_025', 'TyreLife_sq_025', 'TyreLife_sqrt_025', 'TyreLife_log1p_025', 'LapTime_Delta_abs_025', 'Cumulative_Degradation_abs_025', 'Stint_x_RaceProgress_025', 'Stint_x_TyreLife_sq_025', 'TyreLife_sq_x_RaceProgress_025']
+  year_stint_cross_features_025: ['Year_Stint_025', 'Year_Compound_025']
+  laptime_delta_features_034: ['LapTime_Delta_abs_034', 'LapTime_Delta_sq_034', 'LapTime_Delta_sign_034', 'LapTime_Delta_abs_x_TyreLife_034', 'LapTime_Delta_abs_x_RaceProgress_034', 'LapTime_Delta_abs_x_Cumulative_Degradation_abs_034', 'LapTime_Delta_abs_bin20_034']
+
+result:
+  cv_auc: 0.951293489317875
+  public_lb: null
+  fold_scores: [0.950511389474005, 0.9515317689576898, 0.9509619495571758, 0.9513589392157232, 0.9521287115510069]
+  fold_mean: 0.9512985517511202
+  fold_std: 0.000544082290127228
+  fold_seed_scores: [{'fold': 1, 'seed': 3407, 'auc': 0.9503434253445702, 'best_iteration': 8999, 'used_device': 'gpu'}, {'fold': 1, 'seed': 42, 'auc': 0.950394446697723, 'best_iteration': 9000, 'used_device': 'gpu'}, {'fold': 2, 'seed': 3407, 'auc': 0.9513789615015107, 'best_iteration': 9000, 'used_device': 'gpu'}, {'fold': 2, 'seed': 42, 'auc': 0.9514125757177819, 'best_iteration': 9000, 'used_device': 'gpu'}, {'fold': 3, 'seed': 3407, 'auc': 0.9507923694098758, 'best_iteration': 8999, 'used_device': 'gpu'}, {'fold': 3, 'seed': 42, 'auc': 0.9508509601092566, 'best_iteration': 8999, 'used_device': 'gpu'}, {'fold': 4, 'seed': 3407, 'auc': 0.9512517584784532, 'best_iteration': 8990, 'used_device': 'gpu'}, {'fold': 4, 'seed': 42, 'auc': 0.9511689482022874, 'best_iteration': 9000, 'used_device': 'gpu'}, {'fold': 5, 'seed': 3407, 'auc': 0.9519527845866863, 'best_iteration': 9000, 'used_device': 'gpu'}, {'fold': 5, 'seed': 42, 'auc': 0.9520187417960099, 'best_iteration': 9000, 'used_device': 'gpu'}]
+  best_iterations: [8999, 9000, 9000, 9000, 8999, 8999, 8990, 9000, 9000, 9000]
+  per_year_auc: {'2022': 0.914806596007625, '2023': 0.9463118667084971, '2024': 0.9301058026751292, '2025': 0.9300791884139081}
+  compared_to_026:
+    cv_auc: 0.9512793484860437
+    public_lb: 0.95096
+    note: >
+      034は026へのLapTime_Delta非線形追加版として比較する。
+
+artifacts:
+  notebook: ps-s6e5-034-lgb-laptime-delta-nonlinear-min.ipynb
+  oof: oof_exp_20260517_034_lgb_laptime_delta_nonlinear_min.npy
+  pred: pred_exp_20260517_034_lgb_laptime_delta_nonlinear_min.npy
+  submission: submission_exp_20260517_034_lgb_laptime_delta_nonlinear_min.csv
+  cv_result: cv_result.json
+  feature_columns: feature_columns.csv
+  feature_importance: feature_importance.csv
+  memo_draft: memo_draft.yml
+
+blend_policy:
+  benchmark_code: 033_based_simplified
+  add_to_stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+    - "034"
+  decision_focus:
+    - corr_vs_026
+    - corr_vs_029
+    - corr_vs_032
+    - nm_hc_slsqp_weight
+    - whether_034_replaces_026
+    - logreg_cv
+    - public_lb_if_submitted
+  keep_rule: >
+    Keep if 034 receives meaningful blend weight, improves LogReg, or replaces 026 with equal/better CV/LB.
+  drop_rule: >
+    Drop if 034 is highly correlated with 026 and receives near-zero blend weight.
+
+judgement:
+  status: pending
+  summary: >
+    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
