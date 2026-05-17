@@ -114,8 +114,248 @@ blend_policy:
   drop_rule: >
     Drop if it is highly correlated with 029 and receives near-zero blend weight.
 
-judgement:
-  status: pending
+correlation_032:
+  source: blend_result.json
   summary: >
-    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
+    032 is custom Torch RealMLP.
+    It is not pytabkit RealMLP_TD, but it remains highly correlated with the existing RealMLP cluster,
+    especially 029. Single CV is decent but clearly below 029.
+    However, optimized blends assign a meaningful positive weight to 032,
+    so it is useful as a RealMLP-side auxiliary signal rather than a new main model.
 
+  single_result:
+    model: 032_custom_realmlp_cv095352_min
+    family: CustomTorchRealMLP
+    cv_auc: 0.9535059927287899
+    public_lb: 0.95309
+    compared_to_029:
+      cv_029: 0.9540420784720796
+      public_lb_029: 0.95397
+      delta_cv: -0.0005360857432897
+      delta_lb: -0.00088
+    note: >
+      032 is weaker than 029 as a single model.
+      Judge mainly by correlation and blend weight.
+
+  pearson_vs_core:
+    "014": 0.9609273047
+    "015": 0.9599145824
+    "016": 0.9791148352
+    "017": 0.9790234750
+    "018": 0.9899276986
+    "021": 0.9820808071
+    "026": 0.9581692160
+    "027": 0.9894471655
+    "028": 0.9791238974
+    "029": 0.9907745513
+
+  spearman_vs_core:
+    "014": 0.9723895280
+    "015": 0.9726072742
+    "016": 0.9663699369
+    "017": 0.9662016701
+    "018": 0.9796268097
+    "021": 0.9663832567
+    "026": 0.9651418823
+    "027": 0.9804970862
+    "028": 0.9673665960
+    "029": 0.9805979950
+
+blend_with_032:
+  source_notebook: ps-s6e5-010-blend-core-add-signed-slsqp-drop030-031.ipynb
+  source_json: blend_result.json
+  benchmark_code: code_010_add_slsqp_drop020.txt
+
+  note_on_stack: >
+    Intended stack is 014/015/016/017/018/021/026/028/029/032.
+    The JSON weight vector appears to still include 027 as a near-zero-weight entry between 026 and 028.
+    The weights below therefore keep 027 for traceability. Since w_027 is approximately zero,
+    the interpretation is unchanged even if 027 is omitted from the final memo.
+
+  stack_full_for_avg_hc_nm_slsqp:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "021"
+    - "026"
+    - "027"
+    - "028"
+    - "029"
+    - "032"
+
+  results:
+    avg:
+      cv_auc: 0.954581141745436
+      public_lb: null
+      weights:
+        "014": 0.0909090909
+        "015": 0.0909090909
+        "016": 0.0909090909
+        "017": 0.0909090909
+        "018": 0.0909090909
+        "021": 0.0909090909
+        "026": 0.0909090909
+        "027": 0.0909090909
+        "028": 0.0909090909
+        "029": 0.0909090909
+        "032": 0.0909090909
+
+    ridge_meta_pruned:
+      cv_auc: 0.954630732104379
+      public_lb: null
+      params:
+        alpha: 85.1339922520785
+      notes: >
+        Ridge uses raw + rank + logit meta features after pruning.
+        CV is below NM/HC/SLSQP and LogReg, so it was not submitted.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9547678907309867
+      public_lb: 0.95418
+      params:
+        C: 0.019036539387158793
+      notes: >
+        LogisticRegression uses raw + rank + logit meta features after pruning.
+        CV is strong, but Public LB 0.95418 is below add029 LogReg 0.95420
+        and add029 NM 0.95424. Do not promote as stable backup.
+
+    hc_nonnegative_raw:
+      cv_auc: 0.954808947692194
+      public_lb: null
+      weights:
+        "014": 0.0569419800
+        "015": 0.0526647000
+        "016": 0.0925358900
+        "017": 0.0415518700
+        "018": 0.0000000000
+        "021": 0.0372774200
+        "026": 0.0539004100
+        "027": 0.0000000000
+        "028": 0.0726229400
+        "029": 0.4034190000
+        "032": 0.1890858000
+      notes: >
+        HC gives 032 a meaningful weight around 0.189.
+        029 remains the dominant RealMLP representative.
+        018 and 027 are effectively zeroed out.
+
+    nm_softmax_raw:
+      cv_auc: 0.9548089998767673
+      public_lb: 0.95424
+      weights:
+        "014": 0.0572477700
+        "015": 0.0529708000
+        "016": 0.0937388300
+        "017": 0.0412651900
+        "018": 0.0000000100
+        "021": 0.0371526600
+        "026": 0.0531000000
+        "027": 0.0000000100
+        "028": 0.0721543300
+        "029": 0.4030825200
+        "032": 0.1892878800
+      params:
+        constraint: softmax_sum1
+        success: true
+        nit: 243
+        fun: -0.9548089998767673
+      notes: >
+        Best CV in this run.
+        032 receives a large positive weight around 0.189, so it is not merely a duplicate of 029.
+        However, Public LB is 0.95424, equal to current add029 NM and not an improvement.
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9548089842604361
+      public_lb: null
+      weights:
+        "014": 0.0572591900
+        "015": 0.0530133000
+        "016": 0.0937786100
+        "017": 0.0412780000
+        "018": -0.0000781300
+        "021": 0.0371372000
+        "026": 0.0531009700
+        "027": -0.0000406000
+        "028": 0.0721597500
+        "029": 0.4031332300
+        "032": 0.1892584900
+      params:
+        neg_bound: -0.05
+        pos_bound: 0.5
+        success: true
+        nit: 7
+        fun: -0.9548089842604361
+      diagnostics:
+        min_weight: -0.00007813
+        max_weight: 0.40313323
+        negative_weight_models:
+          - "018"
+          - "027"
+      notes: >
+        Signed SLSQP gives almost the same conclusion as NM/HC.
+        Negative weights are practically zero.
+        032 remains strongly positive.
+
+public_lb_check_after_add032:
+  submitted:
+    nm_softmax_raw:
+      cv_auc: 0.9548089998767673
+      public_lb: 0.95424
+      judgement: tie_with_current_best
+      note: >
+        CV is slightly above add031/add030 and above add029 NM,
+        but Public LB is 0.95424, equal to the current best add029 NM.
+        This is a valid candidate but not a new Public update.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9547678907309867
+      public_lb: 0.95418
+      judgement: not_promoted
+      note: >
+        Public LB is below add029 LogReg 0.95420 and add029 NM 0.95424.
+        Do not use as stable backup.
+
+  comparison:
+    add029_nm_public_lb: 0.95424
+    add029_logreg_public_lb: 0.95420
+    add031_nm_public_lb: 0.95420
+    add031_logreg_public_lb: 0.95415
+    add032_nm_delta_vs_add029_nm: 0.00000
+    add032_logreg_delta_vs_add029_logreg: -0.00002
+
+judgement_after_blend:
+  status: keep_hold
+  summary: >
+    032 is useful as a blend component but does not improve the current Public best.
+    Single CV/LB is weaker than 029, and correlation with 029 is high.
+    However, NM/HC/SLSQP assign about 0.189 weight to 032, indicating that it contributes
+    some complementary signal despite being a RealMLP-like branch.
+    Submitted NM reaches Public LB 0.95424, tying the current best add029 NM.
+  interpretation:
+    - 032 is not a new main candidate.
+    - 032 should be kept in the candidate pool as a private-diversity / RealMLP auxiliary signal.
+    - 032 does not replace 029; 029 remains the dominant RealMLP representative.
+    - 018 and 027 are effectively unnecessary in this optimized blend.
+    - 028 still keeps moderate positive weight and should remain.
+    - Further custom RealMLP tuning has limited expected value unless it changes correlation versus 029.
+  current_candidate_priority:
+    primary:
+      name: full_add029_nm
+      public_lb: 0.95424
+    tied_attack_candidate:
+      name: add032_nm
+      public_lb: 0.95424
+      note: >
+        Same Public LB as add029 NM but higher OOF CV.
+        Consider as a possible second final submission only if seeking Private diversity.
+    stable_backup:
+      name: compressed_drop007_022_023_keep027_logreg
+      public_lb: 0.95420
+    add032_logreg:
+      public_lb: 0.95418
+      role: low_priority
+  next_action: >
+    Do not deepen 032 immediately.
+    Move to 010 blend-code small improvements or a safe GBDT feature experiment from EDA.
