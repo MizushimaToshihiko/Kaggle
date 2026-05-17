@@ -1,1 +1,502 @@
+experiment_033_summary:
+  source_json: blend_result.json
+  source_notebook: ps-s6e5-033_blend_logreg_topk_feature_variants_min.ipynb
+  experiment_id: exp_20260516_033_blend_logreg_topk_feature_variants_min
+  purpose: >
+    shared_xxx_stacking_vibe_codingから、重い多段stacking本体ではなく、
+    010ブレンドコードに吸収しやすい小改良だけを検証する。
+    具体的にはLogReg topK equal blend、LogReg feature-set variants、
+    Ridge feature-set variantsを追加して、現行stackのPublic/LB改善につながるか確認する。
+  status: completed
+  created_at: "2026-05-16"
 
+  stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+
+  dropped_or_excluded:
+    - "007"
+    - "018"
+    - "020"
+    - "022"
+    - "023"
+    - "024"
+    - "025"
+    - "027"
+    - "030"
+    - "031"
+
+  notes:
+    - 030/031はCV上は強かったがPublic変換が弱いため、Dの検証対象から除外。
+    - 018は直近のoptimized blendでほぼゼロ重みだったため、今回の基本stackから除外。
+    - Dではfull multi-layer stackingは導入していない。
+    - 目的は、現行010コードの範囲内で低コストなLogReg/Ridge改善を試すこと。
+
+individual_033:
+  source: blend_result.json
+  best_single:
+    key: "029"
+    name: realmlp_shared001v2_min
+    family: RealMLP
+    cv_auc: 0.9540420784720796
+    public_lb: 0.95397
+
+  models:
+    "029":
+      name: realmlp_shared001v2_min
+      family: RealMLP
+      cv_auc: 0.9540420784720796
+      public_lb: 0.95397
+      oof_min: 0.0000000497
+      oof_max: 0.9989810586
+      pred_min: 0.0000077809
+      pred_max: 0.9984388947
+
+    "032":
+      name: custom_realmlp_cv095352_min
+      family: CustomTorchRealMLP
+      cv_auc: 0.9535059927287899
+      public_lb: 0.95309
+      oof_min: 0.0003416236
+      oof_max: 0.9988002777
+      pred_min: 0.0004744634
+      pred_max: 0.9983227849
+
+    "014":
+      name: cat_shared004_no_tyreageratio_str_min
+      family: CatBoost
+      cv_auc: 0.9527262386202738
+      public_lb: 0.95233
+
+    "015":
+      name: cat_shared004_no_race_year_groupstats_min
+      family: CatBoost
+      cv_auc: 0.9527138459391088
+      public_lb: 0.95244
+
+    "016":
+      name: xgb_shared005_fe_te_seedens_min
+      family: XGBoost
+      cv_auc: 0.9519855866173828
+      public_lb: 0.95164
+
+    "017":
+      name: xgb_shared005_no_pitstop_pairte_min
+      family: XGBoost
+      cv_auc: 0.9519393682635370
+      public_lb: 0.95164
+
+    "021":
+      name: tabm_shared007_comp_oof_no_pitstop_no_isoriginaldata_min
+      family: TabM
+      cv_auc: 0.9514915466418662
+      public_lb: 0.95171
+
+    "028":
+      name: parent_child_mlp_shared010_min
+      family: Parent-Child MLP
+      cv_auc: 0.9513738179357690
+      public_lb: 0.95260
+
+    "026":
+      name: lgb_weather_year_stint_flags_min
+      family: LightGBM
+      cv_auc: 0.9512793484860437
+      public_lb: 0.95096
+
+correlation_033:
+  source: blend_result.json
+  summary: >
+    029 remains the dominant single model. 032 is highly correlated with 029
+    but still gets a large optimized-blend weight, so it provides some complementary
+    signal. 014/015 and 016/017 remain near-duplicate branch pairs.
+
+  important_pairs:
+    pearson:
+      "014_vs_015": 0.9969169044
+      "016_vs_017": 0.9984854806
+      "029_vs_032": 0.9907745513
+      "028_vs_029": 0.9813196366
+      "028_vs_032": 0.9791238974
+      "026_vs_029": 0.9570609001
+      "026_vs_032": 0.9581692160
+
+    spearman:
+      "014_vs_015": 0.9946757569
+      "016_vs_017": 0.9982032307
+      "029_vs_032": 0.9805979950
+      "028_vs_029": 0.9730480210
+      "028_vs_032": 0.9673665960
+      "026_vs_029": 0.9664388833
+      "026_vs_032": 0.9651418823
+
+  pearson_vs_029:
+    "014": 0.9615074274
+    "015": 0.9603965676
+    "016": 0.9801011752
+    "017": 0.9798124385
+    "021": 0.9804129153
+    "026": 0.9570609001
+    "028": 0.9813196366
+    "032": 0.9907745513
+
+  spearman_vs_029:
+    "014": 0.9766082759
+    "015": 0.9764073085
+    "016": 0.9722489652
+    "017": 0.9721026918
+    "021": 0.9678944163
+    "026": 0.9664388833
+    "028": 0.9730480210
+    "032": 0.9805979950
+
+  pearson_vs_032:
+    "014": 0.9609273047
+    "015": 0.9599145824
+    "016": 0.9791148352
+    "017": 0.9790234750
+    "021": 0.9820808071
+    "026": 0.9581692160
+    "028": 0.9791238974
+    "029": 0.9907745513
+
+  spearman_vs_032:
+    "014": 0.9723895280
+    "015": 0.9726072742
+    "016": 0.9663699369
+    "017": 0.9662016701
+    "021": 0.9663832567
+    "026": 0.9651418823
+    "028": 0.9673665960
+    "029": 0.9805979950
+
+blend_with_033:
+  source_json: blend_result.json
+  benchmark_code: code_010_add_slsqp_drop020.txt
+
+  stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+
+  D_additions:
+    - logreg_meta_pruned_top3_equal
+    - logreg_meta_pruned_top5_equal
+    - logreg_meta_pruned_logit_only
+    - logreg_meta_pruned_raw_logit
+    - logreg_meta_pruned_raw_only
+    - ridge_meta_pruned_logit_only
+    - ridge_meta_pruned_raw_logit
+
+  results:
+    nm_softmax_raw:
+      cv_auc: 0.9548091062955570
+      public_lb: 0.95424
+      weights:
+        "014": 0.0597828258
+        "015": 0.0490727113
+        "016": 0.1110776489
+        "017": 0.0247825147
+        "021": 0.0360976226
+        "026": 0.0535800852
+        "028": 0.0711340609
+        "029": 0.4032975741
+        "032": 0.1911749564
+      params:
+        constraint: softmax_sum1
+        success: true
+        nit: 190
+        fun: -0.954809106295557
+      notes: >
+        Best CV in this run. Public LB is 0.95424, tying current best add029 NM and add032 NM.
+        No Public update. 029 remains dominant, while 032 keeps a large positive weight.
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9548090746724864
+      public_lb: null
+      weights:
+        "014": 0.0597821017
+        "015": 0.0491951918
+        "016": 0.1111333826
+        "017": 0.0245542143
+        "021": 0.0361382399
+        "026": 0.0536143490
+        "028": 0.0710946931
+        "029": 0.4034094186
+        "032": 0.1910784091
+      params:
+        constraint: sum1_signed
+        neg_bound: -0.05
+        pos_bound: 0.50
+        success: true
+        nit: 18
+        fun: -0.9548090746724864
+      notes: >
+        Almost identical to NM. No meaningful negative-weight advantage.
+        Not submitted.
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9548090685235561
+      public_lb: null
+      weights:
+        "014": 0.0606471960
+        "015": 0.0485873615
+        "016": 0.1103919824
+        "017": 0.0256398458
+        "021": 0.0359540609
+        "026": 0.0538791309
+        "028": 0.0721935219
+        "029": 0.4018386845
+        "032": 0.1908682160
+      notes: >
+        Very close to NM/SLSQP. Confirms that 029/032 are the main NN branch,
+        while GBDT/TabM branches provide smaller support.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9547749481414266
+      public_lb: 0.95418
+      params:
+        C: 0.01
+      notes: >
+        Baseline LogReg on raw+rank+logit meta features.
+        Submitted Public LB is 0.95418, below add029 LogReg 0.95420 and add029 NM 0.95424.
+        Not promoted.
+
+    logreg_meta_pruned_top3_equal:
+      cv_auc: 0.9547744554461800
+      public_lb: null
+      params:
+        k: 3
+        feature_variant: raw_rank_logit
+        Cs:
+          - 0.01
+          - 0.011746189430880192
+          - 0.021544346900318832
+      notes: >
+        Top3 equal blend of LogisticRegression C candidates.
+        Slightly worse than best single LogReg CV. No reason to submit.
+
+    logreg_meta_pruned_top5_equal:
+      cv_auc: 0.9547742636255794
+      public_lb: null
+      params:
+        k: 5
+        feature_variant: raw_rank_logit
+        Cs:
+          - 0.01
+          - 0.011746189430880192
+          - 0.021544346900318832
+          - 0.00851339922520785
+          - 0.022360679774997897
+      notes: >
+        Top5 equal blend of LogisticRegression C candidates.
+        Slightly worse than best single LogReg CV. No reason to submit.
+
+    logreg_meta_pruned_raw_logit:
+      cv_auc: 0.9547698687670608
+      public_lb: null
+      params:
+        C: 0.3491598792543897
+        feature_variant: raw_logit
+      notes: >
+        LogReg on raw+logit features. Slightly worse than raw+rank+logit baseline.
+
+    logreg_meta_pruned_logit_only:
+      cv_auc: 0.9547637492149066
+      public_lb: null
+      params:
+        C: 0.039515698779812425
+        feature_variant: logit_only
+      notes: >
+        LogReg on logit-only features. Worse than baseline.
+
+    logreg_meta_pruned_raw_only:
+      cv_auc: 0.9544587081315795
+      public_lb: null
+      params:
+        C: 0.00023492378861760373
+        feature_variant: raw_only
+      notes: >
+        Raw-only LogReg is clearly worse. Do not use.
+
+    ridge_meta_pruned:
+      cv_auc: 0.9546282879858891
+      public_lb: null
+      params:
+        alpha: 100.0
+      notes: >
+        Ridge on raw+rank+logit meta features. CV remains lower than LogReg/NM.
+        Not submitted.
+
+    ridge_meta_pruned_raw_logit:
+      cv_auc: 0.9544864624837950
+      public_lb: null
+      params:
+        alpha: 640.4137790042707
+        feature_variant: raw_logit
+      notes: >
+        Ridge raw+logit variant is worse than baseline Ridge.
+
+    ridge_meta_pruned_logit_only:
+      cv_auc: 0.9527186348171819
+      public_lb: null
+      params:
+        alpha: 5000.0
+        feature_variant: logit_only
+      notes: >
+        Ridge logit-only variant is poor and should be ignored.
+
+    avg:
+      cv_auc: 0.9545097546157970
+      public_lb: null
+      weights:
+        "014": 0.1111111111
+        "015": 0.1111111111
+        "016": 0.1111111111
+        "017": 0.1111111111
+        "021": 0.1111111111
+        "026": 0.1111111111
+        "028": 0.1111111111
+        "029": 0.1111111111
+        "032": 0.1111111111
+      notes: >
+        Simple average. Useful pool-quality check only; not a submission candidate.
+
+public_lb_check_after_033:
+  submitted:
+    nm_softmax_raw:
+      cv_auc: 0.9548091062955570
+      public_lb: 0.95424
+      judgement: tie_with_current_best
+      note: >
+        CV is the best among current clean stack variants, but Public LB is unchanged at 0.95424.
+        This ties add029 NM and add032 NM, but does not update the Public best.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9547749481414266
+      public_lb: 0.95418
+      judgement: not_promoted
+      note: >
+        Public LB is below add029 LogReg 0.95420 and below add029/add032/033 NM 0.95424.
+        The D LogReg baseline should not replace the current stable backup.
+
+  not_submitted:
+    logreg_meta_pruned_top3_equal:
+      cv_auc: 0.9547744554461800
+      reason: CV below logreg_meta_pruned
+    logreg_meta_pruned_top5_equal:
+      cv_auc: 0.9547742636255794
+      reason: CV below logreg_meta_pruned
+    logreg_meta_pruned_raw_logit:
+      cv_auc: 0.9547698687670608
+      reason: CV below logreg_meta_pruned
+    logreg_meta_pruned_logit_only:
+      cv_auc: 0.9547637492149066
+      reason: CV below logreg_meta_pruned
+    logreg_meta_pruned_raw_only:
+      cv_auc: 0.9544587081315795
+      reason: CV clearly below logreg_meta_pruned
+    ridge_meta_pruned:
+      cv_auc: 0.9546282879858891
+      reason: CV below LogReg/NM
+    ridge_meta_pruned_raw_logit:
+      cv_auc: 0.9544864624837950
+      reason: CV below baseline Ridge
+    ridge_meta_pruned_logit_only:
+      cv_auc: 0.9527186348171819
+      reason: poor CV
+
+  comparison:
+    add029_nm_public_lb: 0.95424
+    add032_nm_public_lb: 0.95424
+    add033_nm_public_lb: 0.95424
+    add029_logreg_public_lb: 0.95420
+    add033_logreg_public_lb: 0.95418
+    add033_nm_delta_vs_current_best: 0.00000
+    add033_logreg_delta_vs_add029_logreg: -0.00002
+
+D_addition_judgement:
+  status: no_public_update
+  summary: >
+    033 confirms that the clean 9-model stack with 029 and 032 remains strong.
+    NM CV reaches 0.9548091063, the highest clean-stack CV so far, but Public LB remains 0.95424.
+    The additional D ideas from stacking_vibe_coding did not improve over the existing LogReg baseline:
+    top3/top5 equal blends, logit_only, raw_logit, raw_only, and Ridge variants all failed to beat
+    logreg_meta_pruned on CV, and the submitted LogReg LB was only 0.95418.
+  interpretation:
+    - LogReg topK equal blending did not help.
+    - raw+rank+logit remains the best LogReg feature set among tested variants.
+    - raw_logit and logit_only are not better.
+    - Ridge feature variants are not useful.
+    - Full multi-layer stacking should not be imported at this stage.
+    - 033 NM is a valid candidate but only ties current best Public LB.
+    - The main actionable value is confirmation that 029+032 clean stack is robust.
+
+  current_candidate_priority:
+    primary:
+      name: add029_nm
+      public_lb: 0.95424
+      reason: >
+        First achieved current Public best and remains simplest strong primary candidate.
+
+    tied_attack_candidate:
+      name: add032_nm
+      public_lb: 0.95424
+      reason: >
+        Same Public LB as add029 NM, higher OOF CV and includes custom RealMLP signal.
+        Candidate for Private diversity.
+
+    tied_clean_stack_candidate:
+      name: add033_nm
+      public_lb: 0.95424
+      reason: >
+        Same Public LB with clean 9-model stack and highest CV.
+        Candidate if preferring compressed/clean stack.
+
+    stable_backup:
+      name: compressed_drop007_022_023_keep027_logreg
+      public_lb: 0.95420
+      reason: >
+        Best known LogReg backup. 033 LogReg was only 0.95418.
+
+    hold_private_diversity:
+      - add030_nm
+      - add031_nm
+
+  next_action: >
+    Do not deepen D blend-code variants further.
+    The next useful direction is E: candidate_from_eda,
+    starting with a low-risk GBDT feature experiment rather than full Driver TE.
+
+final_decision_after_033:
+  keep:
+    - add029_nm
+    - add032_nm
+    - add033_nm
+
+  do_not_promote:
+    - logreg_meta_pruned_top3_equal
+    - logreg_meta_pruned_top5_equal
+    - logreg_meta_pruned_logit_only
+    - logreg_meta_pruned_raw_logit
+    - logreg_meta_pruned_raw_only
+    - ridge_meta_pruned_logit_only
+    - ridge_meta_pruned_raw_logit
+
+  reason: >
+    D additions increased method coverage but did not improve Public LB.
+    The only competitive result is NM, which ties the existing best at 0.95424.
+    Since LogReg variants did not improve, this direction should stop here.
