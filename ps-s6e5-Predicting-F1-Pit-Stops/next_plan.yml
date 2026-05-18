@@ -63,7 +63,7 @@ do_not_do:
 
 036_realmlp_shared001v2_year_light:
   remove_or_disable:
-    - Race_Year_TE
+    - _Race_Year_TE
     - Driver_Year_TE
     - Year_Race系の高cardinality TEがあれば削除
   keep:
