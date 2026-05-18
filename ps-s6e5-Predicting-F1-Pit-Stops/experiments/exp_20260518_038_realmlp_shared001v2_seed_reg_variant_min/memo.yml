@@ -1,1 +1,152 @@
+experiment:
+  id: exp_20260518_038_realmlp_shared001v2_seed_reg_variant_min
+  title: RealMLP shared001v2 seed/regularization variant
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
 
+objective:
+  summary: >
+    029 RealMLP shared001v2をbaseとして、特徴量は同一のまま、
+    seedと正則化だけを少し変更する。
+    029/036/037と近い強さを維持しながら、NN解の揺らぎでblendに残るか確認する。
+  base_experiment: exp_20260518_038_realmlp_shared001v2_seed_reg_variant_min
+  intended_role: 029_seed_reg_variant
+
+source:
+  reference_code: ps-s6e5-029-realmlp-shared001v2-min.ipynb
+  model_family: RealMLP
+  notes:
+    - RealMLP_TD_Classifier
+    - 029 variant
+    - feature set same as 029
+    - Race_Year_TE remains used
+    - PitStop remains used
+    - Normalized_TyreLife is dropped if present
+    - n_epochs remains 6; epoch-length experiment is intentionally separated
+
+changes_from_029:
+  changed:
+    seed: 2026
+    random_state: 2026
+    p_drop: 0.07
+    wd: 0.020
+  kept:
+    feature_set: same_as_029
+    n_epochs: 6
+    batch_size: 256
+    lr: 0.01
+    n_ens: 24
+    hidden_sizes:
+      - 512
+      - 256
+      - 128
+    Race_Year_TE: true
+    raw_PitStop: true
+
+data:
+  competition_train: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  competition_test: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  original: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  caution:
+    - raw PitStop remains used
+    - Race_Year_TE remains used
+    - Normalized_TyreLife is dropped
+    - This is not a feature-ablation model
+
+features:
+  combo_features: ['Race_Compound_', 'Race_Year_']
+  target_encoding_columns: ['Race_Compound_', 'Race_Year_']
+  target_encoding_names: ['_Race_Compound_TE', '_Race_Year_TE']
+  notable_features:
+    - PitStop
+    - PitStop_cat_
+    - _PitStop_cat_count
+    - Race_Year_
+    - _Race_Year_TE
+    - RaceProgress_200_quantile_bin_
+    - LapTime (s)_7_quantile_bin_
+    - floored_numerical_categories
+    - count_encoding
+  note: >
+    Feature set should match 029. This experiment intentionally avoids feature deletion.
+
+model:
+  family: RealMLP
+  estimator: RealMLP_TD_Classifier
+  folds: 5
+  seed: 2026
+  params:
+    n_ens: 24
+    n_epochs: 6
+    batch_size: 256
+    lr: 0.01
+    wd: 0.02
+    p_drop: 0.07
+    hidden_sizes: [512, 256, 128]
+    ls_eps: 0.01
+
+result:
+  cv_auc: 0.9540649943806377
+  public_lb: 0.95384
+  fold_scores: [0.9529957858250832, 0.9542567508711255, 0.9541195992634077, 0.954502886700383, 0.9544561324669023]
+  fold_mean: 0.9540662310253805
+  fold_std: 0.000552754958350461
+  per_year_auc: {'2022': 0.9197619515368074, '2023': 0.9490583973824214, '2024': 0.9342333081637427, '2025': 0.9341177558072731}
+  compared_to_029:
+    cv_auc: 0.9540420784720796
+    public_lb: 0.95397
+  compared_to_036:
+    cv_auc: 0.9540748794531666
+    public_lb: 0.95393
+  compared_to_037:
+    cv_auc: 0.9540125764716788
+    public_lb: 0.95394
+    note: >
+      Judge 038 mainly by corr_vs_029/036/037 and blend weight, not just single CV.
+
+artifacts:
+  notebook: ps-s6e5-038-realmlp-shared001v2-seed-reg-variant-min.ipynb
+  oof: oof_exp_20260518_038_realmlp_shared001v2_seed_reg_variant_min.npy
+  pred: pred_exp_20260518_038_realmlp_shared001v2_seed_reg_variant_min.npy
+  submission: submission_exp_20260518_038_realmlp_shared001v2_seed_reg_variant_min.csv
+  cv_result: cv_result.json
+  feature_columns: feature_columns.csv
+  feature_columns_detail: feature_columns_detail.csv
+
+blend_policy:
+  benchmark_code: 033_based_simplified
+  add_to_stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+    - "036"
+    - "038"
+  optional_compare_with:
+    - "037"
+  decision_focus:
+    - single_cv_vs_029
+    - single_cv_vs_036
+    - corr_vs_029
+    - corr_vs_036
+    - corr_vs_037
+    - corr_vs_032
+    - nm_hc_slsqp_weight
+    - whether_038_gets_weight_alongside_029_036
+    - public_lb_if_submitted
+  keep_rule: >
+    Keep if 038 maintains reasonable single strength and receives meaningful blend weight.
+  drop_rule: >
+    Drop if 038 is simply a weaker high-correlation copy of 029/036 and receives near-zero blend weight.
+
+judgement:
+  status: pending
+  summary: >
+    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
