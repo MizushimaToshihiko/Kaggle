@@ -121,7 +121,254 @@ blend_policy:
   drop_rule: >
     Drop if 035 is highly correlated with 016/017 and receives near-zero blend weight.
 
-judgement:
-  status: pending
+blend_after_035_drop031:
+  source_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add035drop031.ipynb
+  source_json: blend_result_add035drop031.json
+  benchmark_code: 033_based_simplified
+  purpose: >
+    035 XGB LapTime_Delta nonlinear が、既存XGB branch 016/017を置換または補完できるか確認する。
+    031はPublic変換が弱いためdropした状態で評価する。
+
+  stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+    - "034"
+    - "035"
+
+  submitted:
+    nm_softmax_raw:
+      public_lb: null
+      note: >
+        今回の添付JSON上ではLB記載なし。提出した場合はここに追記する。
+    logreg_meta_pruned:
+      public_lb: null
+      note: >
+        今回の添付JSON上ではLB記載なし。提出した場合はここに追記する。
+
+single_result_035:
+  model: 035_xgb_laptime_delta_nonlinear_min
+  family: XGBoost
+  cv_auc: 0.9519203691024541
+  public_lb: 0.95162
+  compared_to_017:
+    cv_017: 0.9519393682635370
+    public_lb_017: 0.95164
+    delta_cv: -0.0000189991610829
+    delta_lb: -0.00002
+  compared_to_016:
+    cv_016: 0.9519855866173828
+    public_lb_016: 0.95164
+    delta_cv: -0.0000652175149287
+    delta_lb: -0.00002
+  judgement: >
+    035は017/016のどちらに対しても単体CV/LBで改善していない。
+    LapTime_Delta nonlinear特徴量のXGB単体改善効果は確認できない。
+    017置換候補としては不採用。
+
+correlation_035:
+  source: blend_result_add035drop031.json
   summary: >
-    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
+    035 is almost identical to the existing XGB branch, especially 017.
+    Pearson correlation vs 017 is 0.99893 and Spearman correlation is 0.99845.
+    It does not create a meaningfully new XGB signal.
+
+  pearson_vs_core:
+    "014": 0.9631906380
+    "015": 0.9627293106
+    "016": 0.9983989950
+    "017": 0.9989321071
+    "021": 0.9783370076
+    "026": 0.9614145920
+    "028": 0.9723667702
+    "029": 0.9797523821
+    "032": 0.9790370078
+    "034": 0.9615372385
+
+  spearman_vs_core:
+    "014": 0.9754741259
+    "015": 0.9753476194
+    "016": 0.9980618372
+    "017": 0.9984487720
+    "021": 0.9664284386
+    "026": 0.9700858815
+    "028": 0.9678216301
+    "029": 0.9723153008
+    "032": 0.9665282920
+    "034": 0.9704758250
+
+  interpretation: >
+    035 is effectively a tiny variation of 017/016.
+    Because single CV/LB is slightly worse and correlation is extremely high,
+    035 should not be treated as an independent branch.
+
+blend_stack_add035_drop031:
+  source_json: blend_result_add035drop031.json
+  stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+    - "034"
+    - "035"
+
+  results:
+    nm_softmax_raw:
+      cv_auc: 0.9548147383904424
+      public_lb: 0.95424
+      weights:
+        "014": 0.0561779500
+        "015": 0.0497530700
+        "016": 0.1039765400
+        "017": 0.0000000400
+        "021": 0.0353922400
+        "026": 0.0000000000
+        "028": 0.0703282400
+        "029": 0.4012346500
+        "032": 0.1890809000
+        "034": 0.0624365200
+        "035": 0.0316198400
+      params:
+        constraint: softmax_sum1
+        success: true
+        nit: 277
+        fun: -0.9548147383904424
+      notes: >
+        035 receives a small positive weight around 0.032, but 017 is zeroed out.
+        This suggests 035 can act as a tiny replacement for 017 in OOF optimization,
+        but the overall CV is slightly below the previous add034 NM result.
+        Given the very high correlation with 017 and worse single performance, this is not enough to keep 035.
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9548144343105935
+      public_lb: null
+      weights:
+        "014": 0.0530068400
+        "015": 0.0514424200
+        "016": 0.0947735500
+        "017": 0.0000000000
+        "021": 0.0319729500
+        "026": 0.0000000000
+        "028": 0.0697141800
+        "029": 0.4092879000
+        "032": 0.1891830400
+        "034": 0.0601686500
+        "035": 0.0404504700
+      notes: >
+        HC gives 035 a small weight around 0.040 and zeroes 017.
+        Same conclusion as NM: not independent enough and no evidence of Public improvement.
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9548147229042473
+      public_lb: null
+      weights:
+        "014": 0.0562164800
+        "015": 0.0497550100
+        "016": 0.1039792200
+        "017": 0.0000124800
+        "021": 0.0353425900
+        "026": -0.0000126800
+        "028": 0.0703226200
+        "029": 0.4012589400
+        "032": 0.1890907400
+        "034": 0.0624194700
+        "035": 0.0316151200
+      params:
+        constraint: sum1_signed
+        neg_bound: -0.05
+        pos_bound: 0.50
+        success: true
+        nit: 19
+        fun: -0.9548147229042473
+      notes: >
+        Signed SLSQP is almost identical to NM.
+        No useful negative-weight structure appears.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9547758401686810
+      public_lb: null
+      params:
+        C: 0.007247796636776954
+      notes: >
+        LogReg CV is below the previous add034 LogReg CV 0.9547782334
+        and below the best known LogReg backup. Not promoted.
+
+    ridge_meta_pruned:
+      cv_auc: 0.9546267626068777
+      public_lb: null
+      params:
+        alpha: 85.1339922520785
+      notes: >
+        Ridge remains below LogReg/NM. Not useful.
+
+    avg:
+      cv_auc: 0.9543838958299630
+      public_lb: null
+      weights:
+        "014": 0.0909090909
+        "015": 0.0909090909
+        "016": 0.0909090909
+        "017": 0.0909090909
+        "021": 0.0909090909
+        "026": 0.0909090909
+        "028": 0.0909090909
+        "029": 0.0909090909
+        "032": 0.0909090909
+        "034": 0.0909090909
+        "035": 0.0909090909
+
+judgement_after_035:
+  status: drop
+  summary: >
+    035 adds the same LapTime_Delta nonlinear feature block to the XGB branch,
+    but it does not improve 016/017 as a single model.
+    Correlation with 017 is extremely high, and blend optimization gives 035 only a small positive weight
+    while zeroing 017. The resulting NM CV is not better than the previous add034 stack.
+    Therefore 035 should be dropped.
+
+  interpretation:
+    - LapTime_Delta nonlinear did not help LGB clearly in 034.
+    - The same direction also did not help XGB in 035.
+    - 035 is almost a duplicate of 017 with slightly worse single CV/LB.
+    - The small blend weight is not enough to justify keeping it.
+    - CatBoost horizontal expansion should not be run unless there is a separate reason.
+
+  decision:
+    keep_035: false
+    replace_017_with_035: false
+    include_035_in_standard_stack: false
+    continue_laptime_delta_nonlinear_to_catboost: false
+    E_laptime_delta_nonlinear_direction: stop
+
+  current_candidate_priority:
+    primary:
+      name: add029_nm
+      public_lb: 0.95424
+    tied_private_diversity:
+      - name: add032_nm
+        public_lb: 0.95424
+      - name: add033_nm
+        public_lb: 0.95424
+      - name: stack_1_add034_nm
+        public_lb: 0.95424
+    not_promoted:
+      - "034_logreg"
+      - "035"
+      - "031_including_stacks"
+
+  next_action: >
+    Stop the LapTime_Delta nonlinear horizontal expansion.
+    Do not create a CatBoost version from this feature block.
+    Move either to a genuinely different EDA-derived feature block, such as fold-safe Driver/Compound/Race TE,
+    or begin final candidate consolidation.
