@@ -1,1 +1,127 @@
+experiment:
+  id: exp_20260518_035_xgb_laptime_delta_nonlinear_min
+  title: XGB shared005 no PitStop pairTE + LapTime_Delta nonlinear
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
 
+objective:
+  summary: >
+    017 XGB shared005 no_PitStop_pairTE をbaseとして維持し、
+    EDA由来の安全な LapTime_Delta 非線形特徴量だけを追加する。
+    034 LGB版で効果が弱かったため、XGB branchでも同方向が効くかを1本だけ確認する。
+  base_experiment: exp_20260509_017_xgb_shared005_no_pitstop_pairte_min
+  intended_role: xgb_branch_replacement_or_auxiliary_candidate
+
+implementation_check:
+  base_code: ps-s6e5-017-xgb-shared005-no-pitstop-pairte-min.ipynb
+  preserved_from_017:
+    - shared005_XGB_FE_TE_seed_ensemble
+    - PitStop_kept_as_base_feature
+    - PitStop_removed_from_pairwise_FE_TE_source_columns
+    - original_rows_appended_to_each_fold_train
+    - 5_outer_folds
+    - 5_seed_ensemble
+    - cuML_TargetEncoder
+    - XGB_params_from_017
+    - OOF_pred_artifact_format
+  added_in_035:
+    - LapTime_Delta_abs_035
+    - LapTime_Delta_sq_035
+    - LapTime_Delta_sign_035
+    - LapTime_Delta_abs_x_TyreLife_035
+    - LapTime_Delta_abs_x_RaceProgress_035
+    - LapTime_Delta_abs_x_Cumulative_Degradation_abs_035
+    - LapTime_Delta_abs_bin20_035
+  not_added:
+    - Driver_TE_extension
+    - Weather_x_target_TE
+    - Normalized_TyreLife
+    - Normalized_TyreLife_proxy
+    - TyreLife_div_compound_median_stint
+    - final_stint_length_or_future_endpoint_proxy
+
+data:
+  competition_path: /kaggle/input/competitions/playground-series-s6e5
+  original_path: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  danger_col:
+    name: Normalized_TyreLife
+    used: false
+    note: >
+      originalのNormalized_TyreLifeはdropし、proxy再構成も行わない。
+
+model:
+  family: XGBoost
+  seeds: [42, 43, 44, 45, 46]
+  folds: 5
+  use_original_rows: True
+  params: {'n_estimators': 10000, 'learning_rate': 0.03, 'grow_policy': 'lossguide', 'max_depth': 0, 'max_leaves': 64, 'min_child_weight': 5, 'subsample': 0.8, 'colsample_bytree': 0.8, 'reg_alpha': 0.0, 'reg_lambda': 2.0, 'objective': 'binary:logistic', 'eval_metric': 'auc', 'tree_method': 'hist', 'device': 'cuda', 'n_jobs': -1, 'enable_categorical': True, 'early_stopping_rounds': 200}
+
+features:
+  base_feature_count_before_fe_te: 111
+  final_feature_count_after_fe_te: 226
+  num_as_cat_count: 23
+  digit_feature_count: 67
+  bigram_spec_count: 45
+  laptime_delta_features_035: ['LapTime_Delta_abs_035', 'LapTime_Delta_sq_035', 'LapTime_Delta_sign_035', 'LapTime_Delta_abs_x_TyreLife_035', 'LapTime_Delta_abs_x_RaceProgress_035', 'LapTime_Delta_abs_x_Cumulative_Degradation_abs_035', 'LapTime_Delta_abs_bin20_035']
+  pitstop_in_base_features: True
+  pitstop_in_pairwise_source: False
+  removed_from_pairwise_fe_te: ['PitStop']
+
+result:
+  cv_auc: 0.951919781919443
+  cv_logloss: 0.21971128599770598
+  public_lb: null
+  fold_auc_mean: 0.9519265396745282
+  fold_auc_std: 0.0008758924377205993
+  seed_auc_mean: 0.9514561795596005
+  seed_auc_std: 0.0007871425539148242
+  compared_to_017:
+    cv_auc: 0.9519393682635370
+    public_lb: 0.95164
+  compared_to_016:
+    cv_auc: 0.9519855866173828
+    public_lb: 0.95164
+
+artifacts:
+  notebook: ps-s6e5-035-xgb-laptime-delta-nonlinear-min.ipynb
+  oof: oof_exp_20260518_035_xgb_laptime_delta_nonlinear_min.npy
+  pred: pred_exp_20260518_035_xgb_laptime_delta_nonlinear_min.npy
+  submission: submission_exp_20260518_035_xgb_laptime_delta_nonlinear_min.csv
+  cv_result: cv_result.json
+  feature_columns: feature_columns.csv
+  laptime_delta_features_035: laptime_delta_features_035.csv
+
+blend_policy:
+  benchmark_code: 033_based_simplified
+  add_to_stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "028"
+    - "029"
+    - "032"
+    - "034"
+    - "035"
+  decision_focus:
+    - corr_vs_016
+    - corr_vs_017
+    - corr_vs_034
+    - corr_vs_029
+    - corr_vs_032
+    - nm_hc_slsqp_weight
+    - whether_035_replaces_016_or_017
+    - logreg_cv
+    - public_lb_if_submitted
+  keep_rule: >
+    Keep if 035 receives meaningful blend weight, improves LogReg, or replaces 016/017 with equal/better CV/LB.
+  drop_rule: >
+    Drop if 035 is highly correlated with 016/017 and receives near-zero blend weight.
+
+judgement:
+  status: pending
+  summary: >
+    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
