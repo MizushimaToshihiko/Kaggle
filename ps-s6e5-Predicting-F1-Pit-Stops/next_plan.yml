@@ -1,0 +1,126 @@
+029:
+  model: realmlp_shared001v2_min
+  single_cv: 0.9540420785
+  public_lb: 0.95397
+  role: current strongest single / main blend core
+
+typical_nm_weight:
+  "029": 約0.40
+  "032": 約0.19
+  "028": 約0.07
+  "014/015/016/017/021/034": 補助
+
+029_variant_success_condition:
+  single_strength:
+    cv_auc: ">= 0.9536 目安"
+    public_lb: ">= 0.9535 目安"
+  diversity:
+    pearson_vs_029: "<= 0.985 ならかなり良い"
+    spearman_vs_029: "<= 0.975 ならかなり良い"
+  blend:
+    nm_or_hc_weight: ">= 0.02"
+    or_logreg_cv_improves: true
+
+recommended_029_variants:
+  "036":
+    name: realmlp_shared001v2_no_year_te_or_year_sensitive_min
+    purpose: >
+      029のYear artifact依存を少し弱める。
+      Public/Private耐性と相関低下を狙う。
+    expected_effect: "単体CVは少し落ちるが、Private diversity候補になる可能性"
+
+  "037":
+    name: realmlp_shared001v2_no_pitstop_or_pitstop_light_min
+    purpose: >
+      PitStop依存を弱める。
+      危険寄り特徴の影響を抑え、029と違う誤差を作る。
+    expected_effect: "単体は落ちやすいが、相関が下がればblend価値あり"
+
+  "038":
+    name: realmlp_shared001v2_seed_or_regularization_variant_min
+    purpose: >
+      特徴量は大きく変えず、seed/dropout/epoch/regularizationなどでNN内部の多様性を作る。
+    expected_effect: "相関低下は小さいが、強さは維持しやすい"
+
+next_exp_plan:
+  1. 036: Year依存を少し弱める029亜種
+  2. 037: PitStop依存を少し弱める029亜種
+  3. 038: seed/regularization違いの029亜種
+
+do_not_do:
+  - Year完全削除
+  - Race_Year完全削除
+  - Year関連を全部消す
+
+036_realmlp_shared001v2_year_light:
+  remove_or_disable:
+    - Race_Year_TE
+    - Driver_Year_TE
+    - Year_Race系の高cardinality TEがあれば削除
+  keep:
+    - Year raw
+    - Race_Year category if元コードの主要構造なら一旦keep
+    - Race
+    - Driver
+    - Compound
+  goal:
+    - 029より少し低CVでもよい
+    - 029との相関低下を見る
+
+037_realmlp_shared001v2_pitstop_light:
+  remove_or_disable:
+    - PitStop_cat_count
+    - PitStop pair/cross/count系
+    - PitStopを含むTE
+  keep_option_A:
+    - raw PitStopは残す
+  stronger_option_B:
+    - raw PitStopも削除
+  recommendation:
+    - まずA。BはAが強すぎる/相関が下がらない場合だけ。
+
+038_realmlp_shared001v2_seed_reg_variant:
+  change:
+    - seed
+    - dropout slightly up
+    - weight_decay slightly up
+    - maybe epochs/early stopping behavior
+  keep:
+    - feature set same as 029
+  risk:
+    - 029との相関が高すぎてblendで残らない可能性
+
+next_two:
+  "036": 029_year_light
+  "037": 029_pitstop_light
+
+blend_stack_for_036_037:
+  base:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "028"
+    - "029"
+    - "032"
+    - "034"
+  add:
+    - "036"  # or 037
+  optional:
+    - "026" は034とほぼ同じなので基本不要
+    - "031" はPublic変換が弱いので標準では不要
+
+decision:
+  make_029_variants: yes
+  count: 2_first
+  priority:
+    - "036: 029 year-light variant"
+    - "037: 029 pitstop-light variant"
+  do_038_only_if:
+    - "036 or 037 shows some blend value"
+    - "or time/GPU budget remains and final diversity candidate is needed"
+  stop_if:
+    - "both are high-corr copies and get near-zero weight"
+
+
