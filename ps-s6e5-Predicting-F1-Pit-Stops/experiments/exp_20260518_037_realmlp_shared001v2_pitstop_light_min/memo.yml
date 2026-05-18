@@ -131,3 +131,301 @@ judgement:
   status: pending
   summary: >
     CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
+
+blend_after_037:
+  source_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add037.ipynb
+  source_json: blend_result_Add037.json
+  benchmark_code: 033_based_simplified
+
+  purpose: >
+    037 RealMLP shared001v2 pitstop_light が、029/036の単なる高相関コピーではなく、
+    追加blend価値を持つか確認する。
+    037では raw PitStop は残し、PitStop_cat_ と _PitStop_cat_count のみ削除している。
+
+  stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+    - "036"
+    - "037"
+
+  submitted:
+    nm_softmax_raw:
+      public_lb: 0.95429
+    logreg_meta_pruned:
+      public_lb: null
+
+single_result_037:
+  model: 037_realmlp_shared001v2_pitstop_light_min
+  family: RealMLP
+  cv_auc: 0.9540125764716788
+  public_lb: 0.95394
+
+  compared_to_029:
+    cv_029: 0.9540420784720796
+    public_lb_029: 0.95397
+    delta_cv: -0.0000295020004008
+    delta_lb: -0.00003
+
+  compared_to_036:
+    cv_036: 0.9540748794531666
+    public_lb_036: 0.95393
+    delta_cv: -0.0000623029814878
+    delta_lb: 0.00001
+
+  interpretation: >
+    037はPitStop派生特徴を弱めたにもかかわらず、029/036に近い単体性能を維持している。
+    ただし、単体CVでは029/036を上回らず、Public LBも029より低い。
+    036のような明確な単体CV改善はない。
+
+correlation_037:
+  source: blend_result_Add037.json
+  summary: >
+    037 is extremely close to the 029/036 RealMLP cluster.
+    Pearson vs 029 is 0.99836 and Pearson vs 036 is 0.99788.
+    Spearman vs 029 is 0.99678 and Spearman vs 036 is 0.99554.
+    This means 037 does not create much diversity beyond the current 029/036 pair.
+
+  pearson_vs_core:
+    "014": 0.9615750362
+    "015": 0.9604691623
+    "016": 0.9801090572
+    "017": 0.9799268155
+    "021": 0.9804584164
+    "026": 0.9572697622
+    "028": 0.9812784461
+    "029": 0.9983635688
+    "032": 0.9908449229
+    "036": 0.9978808318
+
+  spearman_vs_core:
+    "014": 0.9765598720
+    "015": 0.9763566842
+    "016": 0.9721200457
+    "017": 0.9720501121
+    "021": 0.9679792401
+    "026": 0.9665431907
+    "028": 0.9730487363
+    "029": 0.9967847500
+    "032": 0.9805263260
+    "036": 0.9955401375
+
+  interpretation: >
+    037は029/036とほぼ同じRealMLP信号であり、相関低下という当初目的は十分には達成していない。
+    PitStop_cat_ と _PitStop_cat_count の削除だけでは、029-familyの誤差構造を大きく変えるには弱かった。
+
+blend_stack_add037:
+  source_json: blend_result_Add037.json
+  stack_full_for_avg_hc_nm_slsqp:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+    - "036"
+    - "037"
+
+  stack_pruned_for_ridge_logreg:
+    - "014"
+    - "015"
+    - "016"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+    - "036"
+    - "037"
+
+  note_on_pruning: >
+    Avg/HC/NM/SLSQP are run on the full stack.
+    Ridge/LogReg are run after pruning weak-weight models, and 017 is pruned in this result.
+
+  results:
+    nm_softmax_raw:
+      cv_auc: 0.9548542504410260
+      public_lb: null
+      weights:
+        "014": 0.0539171300
+        "015": 0.0517307200
+        "016": 0.1310996200
+        "017": 0.0029643000
+        "021": 0.0337662000
+        "026": 0.0533737100
+        "028": 0.0645198000
+        "029": 0.1297282300
+        "032": 0.1623967100
+        "036": 0.2781563300
+        "037": 0.0383472400
+      params:
+        constraint: softmax_sum1
+        success: true
+        nit: 234
+        fun: -0.954854250441026
+      notes: >
+        Best CV in this run.
+        036 remains the largest RealMLP component, followed by 032 and 029.
+        037 receives a small positive weight around 0.038, but it is not a major component.
+        CV is only slightly above add036 NM 0.9548539407.
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9548542226569702
+      public_lb: null
+      weights:
+        "014": 0.0538459800
+        "015": 0.0517389900
+        "016": 0.1311540300
+        "017": 0.0031550300
+        "021": 0.0337335300
+        "026": 0.0532540300
+        "028": 0.0644950100
+        "029": 0.1297235300
+        "032": 0.1624587400
+        "036": 0.2781983900
+        "037": 0.0382427300
+      params:
+        constraint: sum1_signed
+        neg_bound: -0.05
+        pos_bound: 0.5
+        success: true
+        nit: 17
+        fun: -0.9548542226569702
+      notes: >
+        Signed SLSQP gives almost the same conclusion as NM.
+        No useful negative-weight structure is observed.
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9548537862455836
+      public_lb: null
+      weights:
+        "014": 0.0541636600
+        "015": 0.0514222700
+        "016": 0.1310986800
+        "017": 0.0029850700
+        "021": 0.0340785900
+        "026": 0.0532749900
+        "028": 0.0643767200
+        "029": 0.1305167200
+        "032": 0.1628168900
+        "036": 0.2772461000
+        "037": 0.0380203100
+      notes: >
+        HC gives the same conclusion as NM.
+        037 is kept with small positive weight, but most of the 029-family weight is still concentrated in 036/032/029.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9548099930658338
+      public_lb: null
+      params:
+        C: 0.0021544346900318843
+      notes: >
+        LogReg CV is slightly below add036 LogReg 0.9548152425.
+        Since add036 LogReg already achieved Public LB 0.95422,
+        this result does not justify promotion unless Public LB later proves better.
+
+    ridge_meta_pruned:
+      cv_auc: 0.9546710187971999
+      public_lb: null
+      params:
+        alpha: 72.47796636776954
+      notes: >
+        Ridge remains below LogReg/NM and is not useful as a main candidate.
+
+    avg:
+      cv_auc: 0.9547216034035699
+      public_lb: null
+      weights:
+        "014": 0.0909090909
+        "015": 0.0909090909
+        "016": 0.0909090909
+        "017": 0.0909090909
+        "021": 0.0909090909
+        "026": 0.0909090909
+        "028": 0.0909090909
+        "029": 0.0909090909
+        "032": 0.0909090909
+        "036": 0.0909090909
+        "037": 0.0909090909
+      notes: >
+        Simple average improves pool quality but remains below optimized blends.
+
+comparison_after_037:
+  against_add036:
+    add036_nm_cv: 0.9548539407496595
+    add037_nm_cv: 0.9548542504410260
+    delta_nm_cv: 0.0000003096913665
+    add036_logreg_cv: 0.9548152425376653
+    add037_logreg_cv: 0.9548099930658338
+    delta_logreg_cv: -0.0000052494718315
+    add036_nm_public_lb: 0.95429
+    add036_logreg_public_lb: 0.95422
+    add037_nm_public_lb: null
+    add037_logreg_public_lb: null
+
+  interpretation: >
+    037追加によるNM CV改善は約+0.00000031で、実質的には誤差レベル。
+    一方でLogReg CVはadd036より低下している。
+    037の追加価値は限定的であり、036のような明確なPublic更新候補とはまだ言えない。
+
+judgement_after_037:
+  status: hold_not_promoted
+  summary: >
+    037 is a strong single model, but it is too close to the existing 029/036 cluster.
+    It receives a small positive NM/HC/SLSQP weight around 0.038,
+    but the NM CV gain over add036 is almost zero and LogReg CV decreases.
+    Therefore 037 should not be promoted to the standard main stack unless Public LB is submitted and improves.
+  interpretation:
+    - PitStop-light direction did not create as much diversity as hoped.
+    - Removing only PitStop_cat_ and _PitStop_cat_count is too mild.
+    - 036 remains the successful 029-family variant.
+    - 037 can be kept as a hold candidate, but not as a current main candidate.
+    - If pursuing this direction further, a stronger no-PitStop-derived or raw-PitStop-removed variant would be needed.
+  decision:
+    keep_037: hold
+    include_037_in_standard_stack: false_for_now
+    replace_029_or_036_with_037: false
+    submit_037_blend: optional_only_if_submission_slots_remain
+    next_pitstop_variant_strategy: >
+      Do not deepen immediately unless there is enough runtime/submission budget.
+      A stronger 037b removing raw PitStop as well may lower correlation, but likely risks single strength.
+
+  current_candidate_priority:
+    primary:
+      name: add036_nm
+      public_lb: 0.95429
+    stable_backup:
+      name: add036_logreg
+      public_lb: 0.95422
+    hold_private_diversity:
+      - name: add032_nm
+        public_lb: 0.95424
+      - name: add033_nm
+        public_lb: 0.95424
+      - name: add029_nm
+        public_lb: 0.95424
+      - name: add037_nm
+        public_lb: null
+        note: >
+          Requires Public LB before promotion, but CV gain over add036 is negligible.
+    not_promoted:
+      - "030"
+      - "031"
+      - "034"
+      - "035"
+
+  next_action: >
+    Do not treat 037 as a clear success.
+    If continuing 029-variant search, prefer 038 seed/regularization variant over a mild PitStop-light repeat.
+    If attempting PitStop again, use a stronger 037b only if willing to accept larger single-CV loss.
+
+
