@@ -150,3 +150,338 @@ judgement:
   status: pending
   summary: >
     CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
+
+blend_after_038:
+  source_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add038.ipynb
+  source_json: blend_result_add038.json
+  benchmark_code: 033_based_simplified
+
+  purpose: >
+    038 RealMLP shared001v2 seed/regularization variant が、029/036/037の単なる高相関コピーではなく、
+    追加blend価値を持つか確認する。
+    038では特徴量は029と同一のまま、seed=2026、p_drop=0.07、wd=0.020に変更している。
+
+  stack_full_for_avg_hc_nm_slsqp:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+    - "036"
+    - "037"
+    - "038"
+
+  stack_pruned_for_ridge_logreg:
+    - "014"
+    - "015"
+    - "016"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+    - "036"
+    - "038"
+
+  note_on_pruning: >
+    Avg/HC/NM/SLSQP are run on the full stack.
+    Ridge/LogReg are run after pruning weak-weight models.
+    In this result, 017 and 037 are pruned for Ridge/LogReg.
+
+  submitted:
+    nm_softmax_raw:
+      public_lb: null
+      note: >
+        Submission pending because today's 10 submission slots were already used.
+    logreg_meta_pruned:
+      public_lb: null
+      note: >
+        Submission pending if selected tomorrow.
+
+single_result_038:
+  model: 038_realmlp_shared001v2_seed_reg_variant_min
+  family: RealMLP
+  cv_auc: 0.9540649156030295
+  public_lb: 0.95384
+
+  compared_to_029:
+    cv_029: 0.9540420784720796
+    public_lb_029: 0.95397
+    delta_cv: 0.0000228371309499
+    delta_lb: -0.00013
+
+  compared_to_036:
+    cv_036: 0.9540748794531666
+    public_lb_036: 0.95393
+    delta_cv: -0.0000099638501371
+    delta_lb: -0.00009
+
+  compared_to_037:
+    cv_037: 0.9540125764716788
+    public_lb_037: 0.95394
+    delta_cv: 0.0000523391313507
+    delta_lb: -0.00010
+
+  interpretation: >
+    038は単体CVでは029/037を上回り、036とほぼ同等。
+    一方で単体Public LBは029/036/037より低い。
+    単体だけなら昇格根拠は弱いが、blendで大きな重みを取っているため価値がある。
+
+correlation_038:
+  source: blend_result_add038.json
+  summary: >
+    038 is still highly correlated with the 029-family, but correlation is lower than 037.
+    Pearson vs 029 is 0.99540, vs 036 is 0.99558, and vs 037 is 0.99535.
+    Spearman vs 029 is 0.99101, vs 036 is 0.99201, and vs 037 is 0.99105.
+    This is a stronger diversity result than 037, which stayed closer to 029/036.
+
+  pearson_vs_core:
+    "014": 0.9588061792
+    "015": 0.9576780983
+    "016": 0.9782080956
+    "017": 0.9778759975
+    "021": 0.9798230995
+    "026": 0.9554876388
+    "028": 0.9810408282
+    "029": 0.9953978220
+    "032": 0.9907519971
+    "036": 0.9955849426
+    "037": 0.9953531381
+
+  spearman_vs_core:
+    "014": 0.9746654751
+    "015": 0.9745203024
+    "016": 0.9700935336
+    "017": 0.9697820721
+    "021": 0.9687509131
+    "026": 0.9668907276
+    "028": 0.9735664273
+    "029": 0.9910090860
+    "032": 0.9816940191
+    "036": 0.9920055071
+    "037": 0.9910491151
+
+  interpretation: >
+    038は029-family内ではまだ高相関だが、037よりは明確に相関を下げている。
+    特徴量を変えず、seed/正則化だけでこの程度の相関低下と強さ維持ができた点は有効。
+
+blend_stack_add038:
+  source_json: blend_result_add038.json
+
+  results:
+    nm_softmax_raw:
+      cv_auc: 0.9549081509886924
+      public_lb: null
+      weights:
+        "014": 0.0538401900
+        "015": 0.0501443900
+        "016": 0.1323924500
+        "017": 0.0051089800
+        "021": 0.0287256300
+        "026": 0.0497732400
+        "028": 0.0498410700
+        "029": 0.0766287000
+        "032": 0.1263624300
+        "036": 0.1814874000
+        "037": 0.0000000100
+        "038": 0.2456955100
+      params:
+        constraint: softmax_sum1
+        success: true
+        nit: 256
+        fun: -0.9549081509886924
+      notes: >
+        Best CV so far.
+        038 receives the largest weight around 0.246.
+        036 remains strongly positive around 0.181, while 029 is reduced to around 0.077.
+        037 is effectively zeroed out.
+        This indicates 038 is a stronger 029-family diversity component than 037.
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9549081096054150
+      public_lb: null
+      weights:
+        "014": 0.0539324000
+        "015": 0.0501170100
+        "016": 0.1324268600
+        "017": 0.0053455800
+        "021": 0.0284958800
+        "026": 0.0500007100
+        "028": 0.0493846100
+        "029": 0.0767427500
+        "032": 0.1262390600
+        "036": 0.1815633600
+        "037": 0.0000183400
+        "038": 0.2457334300
+      params:
+        constraint: sum1_signed
+        neg_bound: -0.05
+        pos_bound: 0.5
+        success: true
+        nit: 20
+        fun: -0.954908109605415
+      notes: >
+        Signed SLSQP gives essentially the same conclusion as NM.
+        No meaningful negative-weight structure appears.
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9549076344479130
+      public_lb: null
+      weights:
+        "014": 0.0549648900
+        "015": 0.0495903400
+        "016": 0.1328399700
+        "017": 0.0048915300
+        "021": 0.0287332000
+        "026": 0.0495903400
+        "028": 0.0495943300
+        "029": 0.0760378500
+        "032": 0.1264387300
+        "036": 0.1816625400
+        "037": 0.0000000000
+        "038": 0.2456562800
+      notes: >
+        HC confirms the same structure as NM.
+        038 is the largest component, 036 remains the second-largest RealMLP variant,
+        and 037 is removed.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9548707006521889
+      public_lb: null
+      params:
+        C: 0.004641588833612777
+      notes: >
+        LogReg CV is much higher than add036 LogReg 0.9548152425 and add037 LogReg 0.9548100.
+        This is the strongest LogReg CV so far and should be submitted when slots reset.
+
+    ridge_meta_pruned:
+      cv_auc: 0.9547329142621152
+      public_lb: null
+      params:
+        alpha: 85.1339922520785
+      notes: >
+        Ridge improves versus add036/add037 Ridge but remains below LogReg/NM.
+        Not a primary submission candidate.
+
+    avg:
+      cv_auc: 0.9547974131885276
+      public_lb: null
+      weights:
+        "014": 0.0833333300
+        "015": 0.0833333300
+        "016": 0.0833333300
+        "017": 0.0833333300
+        "021": 0.0833333300
+        "026": 0.0833333300
+        "028": 0.0833333300
+        "029": 0.0833333300
+        "032": 0.0833333300
+        "036": 0.0833333300
+        "037": 0.0833333300
+        "038": 0.0833333300
+      notes: >
+        Simple average CV is also high, showing that 038 improves overall pool quality.
+
+comparison_after_038:
+  against_add036:
+    add036_nm_cv: 0.9548539407496595
+    add038_nm_cv: 0.9549081509886924
+    delta_nm_cv: 0.0000542102390329
+    add036_logreg_cv: 0.9548152425376653
+    add038_logreg_cv: 0.9548707006521889
+    delta_logreg_cv: 0.0000554581145236
+    add036_nm_public_lb: 0.95429
+    add036_logreg_public_lb: 0.95422
+    add038_nm_public_lb: null
+    add038_logreg_public_lb: null
+
+  against_add037:
+    add037_nm_cv: 0.9548542504410260
+    add038_nm_cv: 0.9549081509886924
+    delta_nm_cv: 0.0000539005476664
+    add037_logreg_cv: 0.9548099930658338
+    add038_logreg_cv: 0.9548707006521889
+    delta_logreg_cv: 0.0000607075863551
+
+  interpretation: >
+    038 provides a clear CV improvement over both add036 and add037.
+    Unlike 037, 038 improves both NM and LogReg CV materially.
+    Public LB validation is still pending.
+
+judgement_after_038:
+  status: pending_public_but_promising
+  summary: >
+    038 is the strongest 029-family variant by blend CV so far.
+    It keeps the same feature set as 029, but seed/regularization changes create enough diversity
+    for optimized blends to assign it the largest weight.
+    It also improves LogReg CV substantially over add036, which is important because LogReg has been
+    a useful stability reference.
+    However, Public LB has not yet been submitted due to the daily submission limit.
+
+  interpretation:
+    - 038 should be submitted tomorrow, at least NM and LogReg.
+    - 038 is clearly more useful than 037 in blend CV.
+    - 037 is effectively displaced by 038 and can be dropped from standard stack.
+    - 036 remains important and should stay.
+    - 029 is reduced but still positive in optimized blends.
+    - 032 remains useful as a different RealMLP/custom RealMLP branch.
+    - The seed/regularization variant direction is validated on CV.
+    - Public LB is required before full promotion.
+
+  decision:
+    keep_038: pending_public
+    include_038_in_standard_stack: likely_yes_if_public_does_not_regress
+    drop_037_from_standard_stack: true
+    keep_036: true
+    keep_029: true
+    keep_032: true
+
+  submit_next:
+    priority_1:
+      name: add038_nm_softmax_raw
+      reason: >
+        Best CV so far and largest 038 weight.
+    priority_2:
+      name: add038_logreg_meta_pruned
+      reason: >
+        Best LogReg CV so far; important stability candidate.
+    optional:
+      name: add038_slsqp_signed_raw_neg005
+      reason: >
+        Nearly identical to NM. Submit only if enough slots and attack candidate needed.
+
+  current_candidate_priority_before_public_check:
+    primary:
+      name: add036_nm
+      public_lb: 0.95429
+      role: current_public_best
+    likely_next_primary_if_lb_confirms:
+      name: add038_nm
+      public_lb: null
+      role: highest_CV_candidate
+    stable_backup:
+      name: add036_logreg
+      public_lb: 0.95422
+    likely_next_stable_backup_if_lb_confirms:
+      name: add038_logreg
+      public_lb: null
+      role: highest_LogReg_CV_candidate
+    hold_private_diversity:
+      - add032_nm
+      - add033_nm
+      - add029_nm
+    drop_or_low_priority:
+      - add037_nm
+      - "030"
+      - "031"
+      - "034"
+      - "035"
+
+  next_action: >
+    Tomorrow, submit add038 NM and add038 LogReg first.
+    If either improves or ties add036 with better CV profile, update final candidate pool.
+    Do not continue 037 direction unless add038 unexpectedly fails on Public.
