@@ -45,9 +45,16 @@ recommended_029_variants:
     expected_effect: "相関低下は小さいが、強さは維持しやすい"
 
 next_exp_plan:
-  1. 036: Year依存を少し弱める029亜種
-  2. 037: PitStop依存を少し弱める029亜種
-  3. 038: seed/regularization違いの029亜種
+  - id: "036"
+    name: realmlp_shared001v2_year_light
+    priority: 1
+  - id: "037"
+    name: realmlp_shared001v2_pitstop_light
+    priority: 2
+  - id: "038"
+    name: realmlp_shared001v2_seed_reg_variant
+    priority: 3
+    condition: "036 or 037 shows blend value, or time/GPU budget remains"
 
 do_not_do:
   - Year完全削除
