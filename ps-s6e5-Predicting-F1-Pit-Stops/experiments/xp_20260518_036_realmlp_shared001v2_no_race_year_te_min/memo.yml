@@ -1,1 +1,125 @@
+experiment:
+  id: exp_20260518_036_realmlp_shared001v2_no_race_year_te_min
+  title: RealMLP shared001v2 without Race_Year TE
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
 
+objective:
+  summary: >
+    029 RealMLP shared001v2をbaseとして、Year artifact依存を少し弱めるために
+    _Race_Year_TEだけを削除する。Race_Year_カテゴリ、Year raw、Race rawは残す。
+    029の強さをある程度維持しながら、029との相関を下げるPrivate diversity候補を狙う。
+  base_experiment: exp_20260518_036_realmlp_shared001v2_no_race_year_te_min
+  intended_role: 029_year_light_variant
+
+source:
+  reference_code: ps-s6e5-029-realmlp-shared001v2-min.ipynb
+  model_family: RealMLP
+  notes:
+    - RealMLP_TD_Classifier
+    - 029 variant
+    - remove only _Race_Year_TE
+    - keep Race_Year_ category
+    - keep Year raw and Race raw
+    - PitStop remains used
+    - Normalized_TyreLife is dropped if present
+
+data:
+  competition_train: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  competition_test: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  original: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  caution:
+    - PitStop appears to be used, same as 029
+    - Normalized_TyreLife is dropped
+    - This is not a Year-free model
+
+features:
+  combo_features: ['Race_Compound_', 'Race_Year_']
+  active_target_encoding_columns: ['Race_Compound_']
+  active_target_encoding_names: ['_Race_Compound_TE']
+  dropped_target_encoding_columns_036: ['Race_Year_']
+  dropped_target_encoding_names_036: ['_Race_Year_TE']
+  guardrails:
+    race_year_category_kept: True
+    race_year_te_removed: True
+  notable_features:
+    - PitStop
+    - PitStop_cat_
+    - RaceProgress_200_quantile_bin_
+    - LapTime (s)_7_quantile_bin_
+    - floored_numerical_categories
+    - count_encoding
+
+model:
+  family: RealMLP
+  estimator: RealMLP_TD_Classifier
+  folds: 5
+  seed: 42
+  params:
+    n_ens: 24
+    n_epochs: 6
+    batch_size: 256
+    lr: 0.01
+    wd: 0.016
+    hidden_sizes:
+      - 512
+      - 256
+      - 128
+    ls_eps: 0.01
+
+result:
+  cv_auc: 0.9540748794531666
+  public_lb: 0.95393
+  fold_scores: [0.9551480618936902, 0.9529964793361887, 0.9539753441973092, 0.9533005685193764, 0.9549861414768219]
+  fold_mean: 0.9540813190846773
+  fold_std: 0.0008665244582558736
+  per_year_auc: {'2022': 0.9195234296151378, '2023': 0.9490373449790717, '2024': 0.9342915901041295, '2025': 0.9342079575726483}
+  compared_to_029:
+    cv_auc: 0.9540420784720796
+    public_lb: 0.95397
+    note: >
+      036 is expected to lose some CV versus 029.
+      Judge primarily by corr_vs_029 and blend weight.
+
+artifacts:
+  notebook: ps-s6e5-036-realmlp-shared001v2-no-race-year-te-min.ipynb
+  oof: oof_exp_20260518_036_realmlp_shared001v2_no_race_year_te_min.npy
+  pred: pred_exp_20260518_036_realmlp_shared001v2_no_race_year_te_min.npy
+  submission: submission_exp_20260518_036_realmlp_shared001v2_no_race_year_te_min.csv
+  cv_result: cv_result.json
+  feature_columns: feature_columns.csv
+  feature_columns_detail: feature_columns_detail.csv
+
+blend_policy:
+  benchmark_code: 033_based_simplified
+  add_to_stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "028"
+    - "029"
+    - "032"
+    - "034"
+    - "036"
+  decision_focus:
+    - single_cv_vs_029
+    - corr_vs_029
+    - corr_vs_032
+    - corr_vs_028
+    - nm_hc_slsqp_weight
+    - whether_036_gets_weight_alongside_029
+    - public_lb_if_submitted
+  keep_rule: >
+    Keep if 036 maintains reasonable single strength and receives meaningful blend weight,
+    especially if corr_vs_029 is lower than near-duplicate variants.
+  drop_rule: >
+    Drop if 036 is simply a weaker high-correlation copy of 029 and receives near-zero blend weight.
+
+judgement:
+  status: pending
+  summary: >
+    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
