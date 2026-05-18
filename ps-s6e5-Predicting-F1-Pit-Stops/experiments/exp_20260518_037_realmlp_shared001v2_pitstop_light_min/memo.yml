@@ -1,1 +1,133 @@
+experiment:
+  id: exp_20260518_037_realmlp_shared001v2_pitstop_light_min
+  title: RealMLP shared001v2 PitStop-light
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
 
+objective:
+  summary: >
+    029 RealMLP shared001v2をbaseとして、PitStop由来の派生特徴だけを弱める。
+    具体的には PitStop_cat_ と _PitStop_cat_count を削除し、raw PitStopは残す。
+    029の強さをある程度維持しながら、029/036とは違う誤差を作れるか確認する。
+  base_experiment: exp_20260514_029_realmlp_shared001v2_min
+  intended_role: 029_pitstop_light_variant
+
+source:
+  reference_code: ps-s6e5-029-realmlp-shared001v2-min.ipynb
+  model_family: RealMLP
+  notes:
+    - RealMLP_TD_Classifier
+    - 029 variant
+    - remove PitStop_cat_ and _PitStop_cat_count only
+    - keep raw PitStop
+    - keep Race_Year_TE unchanged from 029
+    - Normalized_TyreLife is dropped if present
+
+data:
+  competition_train: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  competition_test: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  original: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  caution:
+    - raw PitStop remains used
+    - PitStop_cat_ and _PitStop_cat_count are removed
+    - Normalized_TyreLife is dropped
+    - This is not a no-PitStop model
+
+features:
+  combo_features: ['Race_Compound_', 'Race_Year_']
+  target_encoding_columns: ['Race_Compound_', 'Race_Year_']
+  target_encoding_names: ['_Race_Compound_TE', '_Race_Year_TE']
+  dropped_pitstop_derived_features_037: ['PitStop_cat_', '_PitStop_cat_count']
+  guardrails:
+    raw_pitstop_kept: True
+    pitstop_cat_removed: True
+    pitstop_cat_count_removed: True
+  notable_features:
+    - PitStop
+    - Race_Year_
+    - _Race_Year_TE
+    - RaceProgress_200_quantile_bin_
+    - LapTime (s)_7_quantile_bin_
+    - floored_numerical_categories
+    - count_encoding
+
+model:
+  family: RealMLP
+  estimator: RealMLP_TD_Classifier
+  folds: 5
+  seed: 42
+  params:
+    n_ens: 24
+    n_epochs: 6
+    batch_size: 256
+    lr: 0.01
+    wd: 0.016
+    hidden_sizes:
+      - 512
+      - 256
+      - 128
+    ls_eps: 0.01
+
+result:
+  cv_auc: 0.9540126314885079
+  public_lb: 0.95394
+  fold_scores: [0.9550936306855496, 0.9530757581123764, 0.9540173557427704, 0.9532632244263591, 0.9549389130558753]
+  fold_mean: 0.9540777764045861
+  fold_std: 0.0008300243962530293
+  per_year_auc: {'2022': 0.9194077746323744, '2023': 0.9490754496590372, '2024': 0.934209723346015, '2025': 0.9341707893250599}
+  compared_to_029:
+    cv_auc: 0.9540420784720796
+    public_lb: 0.95397
+    note: >
+      037 is expected to lose some CV if PitStop-derived features are important.
+      Judge primarily by corr_vs_029/036 and blend weight.
+  compared_to_036:
+    cv_auc: 0.9540748794531666
+    public_lb: 0.95393
+    note: >
+      036 is the successful no_Race_Year_TE variant and current strong 029-family candidate.
+
+artifacts:
+  notebook: ps-s6e5-037-realmlp-shared001v2-pitstop-light-min.ipynb
+  oof: oof_exp_20260518_037_realmlp_shared001v2_pitstop_light_min.npy
+  pred: pred_exp_20260518_037_realmlp_shared001v2_pitstop_light_min.npy
+  submission: submission_exp_20260518_037_realmlp_shared001v2_pitstop_light_min.csv
+  cv_result: cv_result.json
+  feature_columns: feature_columns.csv
+  feature_columns_detail: feature_columns_detail.csv
+
+blend_policy:
+  benchmark_code: 033_based_simplified
+  add_to_stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+    - "036"
+    - "037"
+  decision_focus:
+    - single_cv_vs_029
+    - single_cv_vs_036
+    - corr_vs_029
+    - corr_vs_036
+    - corr_vs_032
+    - nm_hc_slsqp_weight
+    - whether_037_gets_weight_alongside_029_036
+    - public_lb_if_submitted
+  keep_rule: >
+    Keep if 037 maintains reasonable single strength and receives meaningful blend weight,
+    especially if it complements 036 rather than simply duplicating 029.
+  drop_rule: >
+    Drop if 037 is simply a weaker high-correlation copy of 029/036 and receives near-zero blend weight.
+
+judgement:
+  status: pending
+  summary: >
+    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
