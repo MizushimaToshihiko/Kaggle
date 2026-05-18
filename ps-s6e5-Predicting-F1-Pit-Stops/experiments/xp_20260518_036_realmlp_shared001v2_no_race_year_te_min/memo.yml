@@ -123,3 +123,288 @@ judgement:
   status: pending
   summary: >
     CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
+
+blend_after_036:
+  source_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add036.ipynb
+  source_json: blend_result_add036.json
+  benchmark_code: 033_based_simplified
+
+  purpose: >
+    036 RealMLP shared001v2 no_Race_Year_TE が、029の単なる劣化コピーではなく、
+    029と併用できるPrivate/Public diversity候補になるか確認する。
+    034/026は微差だったため、本blendでは034ではなく026を採用。
+
+  stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+    - "036"
+
+  submitted:
+    nm_softmax_raw:
+      public_lb: 0.95429
+    logreg_meta_pruned:
+      public_lb: 0.95422
+
+single_result_036:
+  model: 036_realmlp_shared001v2_no_race_year_te_min
+  family: RealMLP
+  cv_auc: 0.9540748794531666
+  public_lb: 0.95393
+
+  compared_to_029:
+    cv_029: 0.9540420784720796
+    public_lb_029: 0.95397
+    delta_cv: 0.0000328009810870
+    delta_lb: -0.00004
+
+  interpretation: >
+    036は_Race_Year_TEを削除したにもかかわらず、単体CVは029をわずかに上回った。
+    Public LBは029より0.00004低いが、強さはほぼ維持できている。
+    当初の狙いである「029のYear依存を少し弱めつつ強さを維持する」は概ね達成。
+
+correlation_036:
+  source: blend_result_add036.json
+  summary: >
+    036 is still highly correlated with 029, but not identical.
+    Pearson vs 029 is 0.99788 and Spearman vs 029 is 0.99548.
+    The correlation reduction is small, but optimized blends assign large positive weight to both 029 and 036,
+    meaning 036 is not treated as a useless duplicate by the optimizer.
+
+  pearson_vs_core:
+    "014": 0.9600410485
+    "015": 0.9588724984
+    "016": 0.9794007358
+    "017": 0.9790891582
+    "021": 0.9796493924
+    "026": 0.9557839949
+    "028": 0.9807524056
+    "029": 0.9978764004
+    "032": 0.9905106757
+
+  spearman_vs_core:
+    "014": 0.9762325456
+    "015": 0.9759954734
+    "016": 0.9717311691
+    "017": 0.9714443730
+    "021": 0.9681087070
+    "026": 0.9667822298
+    "028": 0.9726246475
+    "029": 0.9954795802
+    "032": 0.9810782223
+
+  interpretation: >
+    036は029との相関低下幅だけを見ると小さい。
+    ただし、029と036の両方に大きな重みが付いており、Public LBも更新しているため、
+    実務上は「029の有効な亜種」と判断する。
+
+blend_stack_add036:
+  source_json: blend_result_add036.json
+  stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+    - "036"
+
+  results:
+    nm_softmax_raw:
+      cv_auc: 0.9548539407496595
+      public_lb: 0.95429
+      weights:
+        "014": 0.0544113300
+        "015": 0.0516230500
+        "016": 0.1151445600
+        "017": 0.0195546700
+        "021": 0.0340873200
+        "026": 0.0522457400
+        "028": 0.0656335400
+        "029": 0.1486018600
+        "032": 0.1659574800
+        "036": 0.2927404600
+      params:
+        constraint: softmax_sum1
+        success: true
+        nit: 252
+        fun: -0.9548539407496595
+      notes: >
+        Best CV in this run and new Public LB best.
+        036 receives the largest weight around 0.293, while 029 still keeps positive weight around 0.149.
+        This confirms that 036 is not simply replacing 029 as a worse duplicate; it becomes a new main blend component.
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9548537862455836
+      public_lb: null
+      weights:
+        "014": 0.0576385400
+        "015": 0.0472961000
+        "016": 0.1125404300
+        "017": 0.0195360600
+        "021": 0.0361888000
+        "026": 0.0555164000
+        "028": 0.0629824800
+        "029": 0.1519228300
+        "032": 0.1649443800
+        "036": 0.2914339800
+      notes: >
+        HC gives almost the same conclusion as NM.
+        036 is the largest component, 029 and 032 remain meaningful, and 017 is barely retained.
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9548538996917223
+      public_lb: null
+      weights:
+        "014": 0.0544961100
+        "015": 0.0515261500
+        "016": 0.1151389200
+        "017": 0.0195664300
+        "021": 0.0342617700
+        "026": 0.0519890500
+        "028": 0.0655742600
+        "029": 0.1488282900
+        "032": 0.1659304800
+        "036": 0.2926885500
+      params:
+        constraint: sum1_signed
+        neg_bound: -0.05
+        pos_bound: 0.50
+        success: true
+        nit: 13
+        fun: -0.9548538996917223
+      notes: >
+        Signed SLSQP is almost identical to NM/HC.
+        No useful negative-weight structure is observed.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9548152425376653
+      public_lb: 0.95422
+      params:
+        C: 0.0034915987925438997
+      notes: >
+        LogReg achieves new best Public LB among LogReg/Ridge-style candidates.
+        This is important because NM/HC can be CV-optimistic, while LogReg has been a useful stability reference.
+        Promote as the current stable backup candidate.
+
+    ridge_meta_pruned:
+      cv_auc: 0.9546753275635473
+      public_lb: null
+      params:
+        alpha: 85.1339922520785
+      notes: >
+        Ridge improves but remains below LogReg/NM.
+        Not submitted.
+
+    avg:
+      cv_auc: 0.9546488952476300
+      public_lb: null
+      weights:
+        "014": 0.1000000000
+        "015": 0.1000000000
+        "016": 0.1000000000
+        "017": 0.1000000000
+        "021": 0.1000000000
+        "026": 0.1000000000
+        "028": 0.1000000000
+        "029": 0.1000000000
+        "032": 0.1000000000
+        "036": 0.1000000000
+      notes: >
+        Simple average is not competitive, but the CV is higher than previous simple averages,
+        reflecting that 036 improves the pool quality.
+
+public_lb_check_after_036:
+  submitted:
+    nm_softmax_raw:
+      cv_auc: 0.9548539407496595
+      public_lb: 0.95429
+      judgement: new_public_best
+      note: >
+        Public LB improves over previous best 0.95424 by +0.00005.
+        This is the current main candidate.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9548152425376653
+      public_lb: 0.95422
+      judgement: new_logreg_best
+      note: >
+        Public LB improves over previous LogReg best 0.95420 by +0.00002.
+        This should replace the previous stable backup candidate.
+
+  comparison:
+    previous_best_nm_public_lb: 0.95424
+    add029_nm_public_lb: 0.95424
+    add032_nm_public_lb: 0.95424
+    add033_nm_public_lb: 0.95424
+    add034_nm_public_lb: 0.95424
+    add036_nm_public_lb: 0.95429
+    previous_best_logreg_public_lb: 0.95420
+    add036_logreg_public_lb: 0.95422
+    add036_nm_delta_vs_previous_best: 0.00005
+    add036_logreg_delta_vs_previous_best_logreg: 0.00002
+
+judgement_after_036:
+  status: promote
+  summary: >
+    036 is successful.
+    Removing only _Race_Year_TE from 029 preserved single-model strength and created a useful 029 variant.
+    Although 036 remains highly correlated with 029, optimized blends assign 036 the largest weight
+    while keeping 029 and 032 positive. Submitted NM improves Public LB to 0.95429,
+    and submitted LogReg improves the stable backup to 0.95422.
+    This is the first clear Public update after the add029/add032/add033 plateau.
+
+  interpretation:
+    - 036 should be promoted to the current main stack.
+    - 036 does not replace 029 completely; 029 still keeps positive blend weight.
+    - 036 and 029 should be kept together for now.
+    - 032 remains useful as a secondary NN branch.
+    - The Year-light direction is validated.
+    - 037 PitStop-light variant is now worth doing, because the 029-variant strategy worked.
+
+  current_candidate_priority:
+    primary:
+      name: add036_nm
+      public_lb: 0.95429
+      role: current_public_best
+
+    stable_backup:
+      name: add036_logreg
+      public_lb: 0.95422
+      role: current_best_LogReg_backup
+
+    hold_private_diversity:
+      - name: add032_nm
+        public_lb: 0.95424
+      - name: add033_nm
+        public_lb: 0.95424
+      - name: add029_nm
+        public_lb: 0.95424
+
+    not_promoted:
+      - "030"
+      - "031"
+      - "034"
+      - "035"
+
+  decision:
+    keep_036: true
+    include_036_in_standard_stack: true
+    replace_029_with_036: false
+    keep_029_and_036_together: true
+    next_029_variant_strategy: continue
+
+  next_action: >
+    Proceed to 037: 029 PitStop-light variant.
+    Because 036 confirmed that a controlled 029 variant can improve both NM and LogReg,
+    the next best experiment is to weaken a different dependency axis, namely PitStop-related derived features,
+    while trying to preserve 029-level strength.
