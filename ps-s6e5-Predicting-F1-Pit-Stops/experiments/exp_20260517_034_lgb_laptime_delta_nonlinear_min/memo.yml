@@ -144,7 +144,406 @@ blend_policy:
   drop_rule: >
     Drop if 034 is highly correlated with 026 and receives near-zero blend weight.
 
-judgement:
-  status: pending
+blend_after_034:
+  source_notebook_1: ps-s6e5-033-blend-logreg-topk-feature-variants-min-add034.ipynb
+  source_json_1: 1.blend_result.json
+  source_notebook_2: ps-s6e5-033-blend-logreg-topk-feature-variants-min-add031.ipynb
+  source_json_2: 2.blend_result.json
+  benchmark_code: 033_based_simplified
+
+  purpose: >
+    034 LGB LapTime_Delta nonlinear が、既存026 LGB branchを置換または補完できるか確認する。
+    さらに、031 CatBoost meta-stackingを戻した場合にCV/LBが改善するかも確認する。
+
+  submitted:
+    stack_1_add034:
+      nm_softmax_raw:
+        public_lb: 0.95424
+      logreg_meta_pruned:
+        public_lb: 0.95416
+    stack_2_add034_plus031:
+      nm_softmax_raw:
+        public_lb: 0.95419
+      logreg_meta_pruned:
+        public_lb: 0.95415
+
+single_result_034:
+  model: 034_lgb_laptime_delta_nonlinear_min
+  family: LightGBM
+  cv_auc: 0.9512929432775596
+  public_lb: 0.95089
+  compared_to_026:
+    cv_026: 0.9512793484860437
+    public_lb_026: 0.95096
+    delta_cv: 0.0000135947915159
+    delta_lb: -0.00007
+  judgement: >
+    034は026に対してCVは微増だが、Public LBは悪化。
+    LapTime_Delta nonlinear特徴量の単体改善効果はほぼ確認できない。
+    026置換候補としては弱い。
+
+correlation_034:
+  source: 1.blend_result.json
   summary: >
-    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
+    034 is almost identical to 026 as an LGB branch.
+    Pearson correlation vs 026 is 0.99898 and Spearman correlation is 0.99797.
+    Therefore, 034 is not a meaningfully new LGB signal.
+
+  pearson_vs_core:
+    "014": 0.9848525407
+    "015": 0.9848620295
+    "016": 0.9603457327
+    "017": 0.9609611966
+    "021": 0.9663685136
+    "026": 0.9989781194
+    "028": 0.9540807649
+    "029": 0.9570107829
+    "032": 0.9581105133
+
+  spearman_vs_core:
+    "014": 0.9730692954
+    "015": 0.9726551728
+    "016": 0.9692742050
+    "017": 0.9698376189
+    "021": 0.9630084883
+    "026": 0.9979660305
+    "028": 0.9602296275
+    "029": 0.9665141632
+    "032": 0.9650823478
+
+  interpretation: >
+    034 is effectively a tiny variation of 026.
+    It does not create a new branch. If a future clean stack wants one LGB representative,
+    026 and 034 should not both be treated as independent signals.
+
+blend_stack_1_add034:
+  source_json: 1.blend_result.json
+  stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+    - "034"
+
+  results:
+    nm_softmax_raw:
+      cv_auc: 0.9548149545139583
+      public_lb: 0.95424
+      weights:
+        "014": 0.0566291202
+        "015": 0.0483311336
+        "016": 0.1012591456
+        "017": 0.0342217204
+        "021": 0.0334969740
+        "026": 0.0000000087
+        "028": 0.0684197577
+        "029": 0.4074990088
+        "032": 0.1887209453
+        "034": 0.0614221858
+      params:
+        constraint: softmax_sum1
+        success: true
+        nit: 177
+        fun: -0.9548149545139583
+      notes: >
+        NM gives 034 a positive weight around 0.061 while zeroing 026.
+        However, Public LB remains 0.95424, tying the current best but not improving it.
+        Because 034 is almost identical to 026 and single LB is worse, this is not a clear promotion.
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9548148874763303
+      public_lb: null
+      weights:
+        "014": 0.0543606171
+        "015": 0.0486402028
+        "016": 0.0993717578
+        "017": 0.0363159837
+        "021": 0.0343946806
+        "026": 0.0000000000
+        "028": 0.0692247250
+        "029": 0.4051697720
+        "032": 0.1902491871
+        "034": 0.0622730738
+      notes: >
+        HC gives the same conclusion as NM: 034 replaces 026 in optimized weights,
+        but the improvement is only OOF-side.
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9548149490807762
+      public_lb: null
+      weights:
+        "014": 0.0566596964
+        "015": 0.0482355572
+        "016": 0.1012782388
+        "017": 0.0342849472
+        "021": 0.0334663772
+        "026": -0.0000698767
+        "028": 0.0684637666
+        "029": 0.4074077857
+        "032": 0.1887010807
+        "034": 0.0615724269
+      params:
+        constraint: sum1_signed
+        neg_bound: -0.05
+        pos_bound: 0.50
+        success: true
+        nit: 18
+        fun: -0.9548149490807762
+      notes: >
+        Signed SLSQP is essentially identical to NM/HC.
+        Negative weight on 026 is practically zero.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9547782334296219
+      public_lb: 0.95416
+      params:
+        C: 0.01
+      notes: >
+        LogReg CV is high, but Public LB 0.95416 is below add029 LogReg 0.95420
+        and below current NM candidates. Not promoted.
+
+    ridge_meta_pruned:
+      cv_auc: 0.9546369230723723
+      public_lb: null
+      params:
+        alpha: 117.46189430880185
+      notes: >
+        Ridge remains below NM/LogReg and was not submitted.
+
+    avg:
+      cv_auc: 0.9544386270151736
+      public_lb: null
+      weights:
+        "014": 0.1000000000
+        "015": 0.1000000000
+        "016": 0.1000000000
+        "017": 0.1000000000
+        "021": 0.1000000000
+        "026": 0.1000000000
+        "028": 0.1000000000
+        "029": 0.1000000000
+        "032": 0.1000000000
+        "034": 0.1000000000
+
+blend_stack_2_add034_plus031:
+  source_json: 2.blend_result.json
+  stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "031"
+    - "032"
+    - "034"
+
+  results:
+    nm_softmax_raw:
+      cv_auc: 0.9548528238891786
+      public_lb: 0.95419
+      weights:
+        "014": 0.0109516634
+        "015": 0.0094540440
+        "016": 0.0894467048
+        "017": 0.0210967408
+        "021": 0.0152933480
+        "026": 0.0000000066
+        "028": 0.0616801632
+        "029": 0.4093616172
+        "031": 0.1791722553
+        "032": 0.1577504250
+        "034": 0.0457930318
+      params:
+        constraint: softmax_sum1
+        success: true
+        nit: 235
+        fun: -0.9548528238891786
+      notes: >
+        Adding 031 raises OOF CV substantially, but submitted Public LB drops to 0.95419.
+        This repeats the prior pattern: 031 improves OOF but does not convert to Public.
+        Do not promote this stack.
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9548527817632579
+      public_lb: null
+      weights:
+        "014": 0.0102893035
+        "015": 0.0083682392
+        "016": 0.0896105969
+        "017": 0.0220000513
+        "021": 0.0151589952
+        "026": 0.0000000000
+        "028": 0.0632780345
+        "029": 0.4092606557
+        "031": 0.1792944093
+        "032": 0.1585981413
+        "034": 0.0441415732
+      notes: >
+        HC confirms the same structure as NM. 031 receives large weight,
+        but Public LB does not support promotion.
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9548527918106317
+      public_lb: null
+      weights:
+        "014": 0.0109630562
+        "015": 0.0094387740
+        "016": 0.0895984032
+        "017": 0.0209693072
+        "021": 0.0152144844
+        "026": 0.0000277708
+        "028": 0.0615098174
+        "029": 0.4094843432
+        "031": 0.1792697647
+        "032": 0.1577614250
+        "034": 0.0457628540
+      params:
+        constraint: sum1_signed
+        neg_bound: -0.05
+        pos_bound: 0.50
+        success: true
+        nit: 8
+        fun: -0.9548527918106317
+      notes: >
+        Signed SLSQP again tracks NM/HC. No meaningful negative-weight advantage.
+
+    logreg_meta_pruned:
+      cv_auc: 0.9548112493566114
+      public_lb: 0.95415
+      params:
+        C: 0.023492378861760387
+      notes: >
+        LogReg CV improves strongly after adding 031, but Public LB is only 0.95415.
+        This is worse than stack_1 LogReg and clearly below add029 LogReg 0.95420.
+
+    ridge_meta_pruned:
+      cv_auc: 0.9547587389273714
+      public_lb: null
+      params:
+        alpha: 336.4129193756012
+      notes: >
+        Ridge CV improves due to 031, but not submitted and not trusted as Public/Private evidence.
+
+    avg:
+      cv_auc: 0.9544405132153813
+      public_lb: null
+      weights:
+        "014": 0.0909090909
+        "015": 0.0909090909
+        "016": 0.0909090909
+        "017": 0.0909090909
+        "021": 0.0909090909
+        "026": 0.0909090909
+        "028": 0.0909090909
+        "029": 0.0909090909
+        "031": 0.0909090909
+        "032": 0.0909090909
+        "034": 0.0909090909
+
+public_lb_check_after_034:
+  submitted:
+    stack_1_add034:
+      nm_softmax_raw:
+        cv_auc: 0.9548149545139583
+        public_lb: 0.95424
+        judgement: tie_with_current_best
+        note: >
+          Ties current best but does not improve Public LB.
+          034 receives positive optimized-blend weight, but the single LB is worse than 026
+          and correlation with 026 is almost identical.
+
+      logreg_meta_pruned:
+        cv_auc: 0.9547782334296219
+        public_lb: 0.95416
+        judgement: not_promoted
+        note: >
+          Public LB is below the best known LogReg backup 0.95420.
+
+    stack_2_add034_plus031:
+      nm_softmax_raw:
+        cv_auc: 0.9548528238891786
+        public_lb: 0.95419
+        judgement: overfit_or_public_mismatch
+        note: >
+          CV is much higher, but Public LB is lower than stack_1 and current best.
+          031 again behaves like an OOF booster that does not convert to Public.
+
+      logreg_meta_pruned:
+        cv_auc: 0.9548112493566114
+        public_lb: 0.95415
+        judgement: not_promoted
+        note: >
+          CV improves but Public LB worsens. Do not use.
+
+  comparison:
+    current_best_nm_public_lb: 0.95424
+    add029_nm_public_lb: 0.95424
+    add032_nm_public_lb: 0.95424
+    add033_nm_public_lb: 0.95424
+    stack_1_add034_nm_public_lb: 0.95424
+    stack_2_add034_plus031_nm_public_lb: 0.95419
+    stack_1_add034_lr_public_lb: 0.95416
+    stack_2_add034_plus031_lr_public_lb: 0.95415
+
+judgement_after_034:
+  status: no_public_update
+  summary: >
+    034 adds safe LapTime_Delta nonlinear features to 026, but the single model barely improves CV
+    and worsens Public LB. In blend stack_1, 034 receives a modest positive NM weight around 0.061
+    and 026 is zeroed out, but Public LB only ties the current best at 0.95424.
+    In stack_2, adding 031 raises CV substantially but lowers Public LB to 0.95419,
+    reinforcing the prior conclusion that 031 is an OOF-optimistic component.
+
+  interpretation:
+    - 034 is not a clear upgrade over 026.
+    - 034 and 026 are almost identical signals.
+    - If one LGB representative is needed, 034 may replace 026 in optimized NM weights,
+      but the evidence is weak because single LB is worse.
+    - 034 should not be promoted as a new main candidate.
+    - 031 should remain hold-only and should not be included in standard blend despite high CV.
+    - LapTime_Delta nonlinear features alone are not enough to materially improve the LGB branch.
+
+  current_candidate_priority:
+    primary:
+      name: add029_nm
+      public_lb: 0.95424
+      reason: >
+        Simple current best.
+
+    tied_private_diversity:
+      - name: add032_nm
+        public_lb: 0.95424
+        reason: >
+          Same Public LB with custom RealMLP branch.
+      - name: add033_nm
+        public_lb: 0.95424
+        reason: >
+          Clean 9-model stack.
+      - name: stack_1_add034_nm
+        public_lb: 0.95424
+        reason: >
+          Same Public LB, but no clear evidence it is better than add033.
+
+    not_promoted:
+      - stack_1_add034_logreg
+      - stack_2_add034_plus031_nm
+      - stack_2_add034_plus031_logreg
+
+  decision:
+    keep_034: hold
+    replace_026_with_034: optional_but_not_mandatory
+    include_031_in_standard_stack: false
+    deepen_laptime_delta_nonlinear: false
+
+  next_action: >
+    Do not deepen LapTime_Delta nonlinear alone.
+    If continuing EDA-derived features, next candidate should be a more distinct feature block,
+    such as carefully fold-safe Driver/Compound/Race TE or a different GBDT family variant.
