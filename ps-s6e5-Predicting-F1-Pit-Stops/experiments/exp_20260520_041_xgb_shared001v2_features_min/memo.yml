@@ -1,1 +1,141 @@
+experiment:
+  id: exp_20260520_041_xgb_shared001v2_features_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed_single_pending_public_lb_and_blend
 
+objective:
+  summary: >
+    016 XGB shared005 FE/TE seed ensembleをベースに、
+    029/038 RealMLP shared001v2系で効いている特徴表現をXGBoostへ移植する。
+    目的は単体主力化ではなく、XGB branchの016/017を更新し、
+    add041 blendでXGB補助素材として機能するか確認する。
+  role: xgb_branch_update_candidate
+
+base:
+  experiment: exp_20260508_016_xgb_shared005_fe_te_seedens_min
+  model: XGBClassifier
+  family: XGBoost
+  reference_scores:
+    "016":
+      cv_auc: 0.9519855866173828
+      public_lb: 0.95164
+    "017":
+      cv_auc: 0.9519393682635370
+      public_lb: 0.95164
+    "040_lgb_reference":
+      cv_auc: 0.9524028165133429
+      public_lb: 0.95195
+
+changes_from_016:
+  add_shared001v2_features_041:
+    - PitStop_cat_
+    - _PitStop_cat_count
+    - floored numerical category features
+    - RaceProgress_200_quantile_bin_
+    - LapTime (s)_7_quantile_bin_
+    - Race_Compound_
+    - Race_Year_
+    - count encoding for added categorical/bin features
+  intentionally_not_added:
+    - 039 LOG features
+    - pseudo label
+    - Normalized_TyreLife
+    - Normalized_TyreLife proxy
+    - future endpoint proxy
+    - Optuna
+
+kept_from_016:
+  model: XGBClassifier
+  original_rows_appended_to_fold_train: True
+  outer_cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  inner_te_folds: 5
+  seeds_per_fold: [42, 43, 44, 45, 46]
+  xgb_params:
+    n_estimators: 10000
+    learning_rate: 0.03
+    grow_policy: lossguide
+    max_depth: 0
+    max_leaves: 64
+    min_child_weight: 5
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.0
+    reg_lambda: 2.0
+    tree_method: hist
+    device: cuda
+    enable_categorical: True
+
+features:
+  base_feature_count_before_fe_te: 135
+  final_feature_count_after_fe_te: 284
+  num_as_cat_count: 37
+  digit_feature_count: 67
+  bigram_spec_count: 55
+  shared001v2_cat_feature_count_041: 14
+  shared001v2_count_feature_count_041: 17
+
+result:
+  cv_auc: 0.952012440704
+  cv_logloss: 0.219506621784
+  fold_auc_mean: 0.952018698432
+  fold_auc_std: 0.000900782971
+  public_lb: 0.95173
+
+comparison:
+  vs_016:
+    cv_016: 0.9519855866173828
+    public_lb_016: 0.95164
+    delta_cv: "+0.000026854087"
+  vs_017:
+    cv_017: 0.9519393682635370
+    public_lb_017: 0.95164
+    delta_cv: "+0.000073072441"
+  vs_040_lgb_reference:
+    cv_040: 0.9524028165133429
+    public_lb_040: 0.95195
+    delta_cv: "-0.000390375809"
+
+artifacts:
+  outdir: /kaggle/working/exp_20260520_041_xgb_shared001v2_features_min
+  oof_npy: oof_exp_20260520_041_xgb_shared001v2_features_min.npy
+  pred_npy: pred_exp_20260520_041_xgb_shared001v2_features_min.npy
+  submission: submission_exp_20260520_041_xgb_shared001v2_features_min.csv
+  fold_scores: fold_scores.csv
+  seed_scores: seed_scores.csv
+  feature_columns: feature_columns.csv
+  shared001v2_features_041: shared001v2_features_041.csv
+  cv_result: cv_result.json
+  memo_draft: memo_draft.yml
+
+blend_policy:
+  benchmark_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add041.ipynb
+  compare_methods:
+    - avg
+    - hc_nonnegative_raw
+    - nm_softmax_raw
+    - ridge_meta_pruned
+    - logreg_meta_pruned
+  decision_rule:
+    keep:
+      - single_cv_above_016_017
+      - public_lb_above_016_017
+      - add041_nm_or_logreg_improves_add040
+      - useful_weight_in_nm_or_hc
+    hold:
+      - single_cv_above_016_017_but_no_blend_update
+      - low_corr_against_realmlp_core_but_weak_single
+    drop:
+      - single_cv_not_above_016_017
+      - public_lb_not_above_016_017
+      - no_weight_in_blend
+
+judgement:
+  status: pending_public_lb_and_blend
+  summary: >
+    041はXGB branchの更新確認であり、単体RealMLP級を期待する実験ではない。
+    016/017より明確に強く、blendでXGB branchの置換または併用価値が出るかで判断する。
