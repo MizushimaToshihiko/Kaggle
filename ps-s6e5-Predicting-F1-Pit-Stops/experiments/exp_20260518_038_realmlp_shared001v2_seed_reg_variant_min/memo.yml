@@ -275,7 +275,7 @@ blend_stack_add038:
   results:
     nm_softmax_raw:
       cv_auc: 0.9549081509886924
-      public_lb: null
+      public_lb: 0.95431
       weights:
         "014": 0.0538401900
         "015": 0.0501443900
@@ -351,7 +351,7 @@ blend_stack_add038:
 
     logreg_meta_pruned:
       cv_auc: 0.9548707006521889
-      public_lb: null
+      public_lb: 0.95425
       params:
         C: 0.004641588833612777
       notes: >
@@ -396,8 +396,8 @@ comparison_after_038:
     delta_logreg_cv: 0.0000554581145236
     add036_nm_public_lb: 0.95429
     add036_logreg_public_lb: 0.95422
-    add038_nm_public_lb: null
-    add038_logreg_public_lb: null
+    add038_nm_public_lb: 0.95431
+    add038_logreg_public_lb: 0.95425
 
   against_add037:
     add037_nm_cv: 0.9548542504410260
