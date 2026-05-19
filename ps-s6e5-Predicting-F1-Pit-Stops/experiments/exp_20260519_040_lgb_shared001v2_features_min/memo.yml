@@ -150,3 +150,187 @@ judgement:
   summary: >
     040はLGB branchの更新確認であり、単体RealMLP級を期待する実験ではない。
     026より明確に強く、blendで026の置換または併用価値が出るかで判断する。
+blend_result_add040:
+  blend_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add040.ipynb
+  result_file: blend_result_add040.json
+
+  submitted:
+    - candidate: nm_softmax_raw
+      cv_auc: 0.9549622374683012
+      public_lb: 0.95431
+    - candidate: logreg_meta_pruned
+      cv_auc: 0.9549298034221942
+      public_lb: 0.95426
+
+  single_040:
+    cv_auc: 0.9524028165133429
+    public_lb: 0.95195
+    comparison_to_026:
+      cv_026: 0.9512793484860437
+      public_lb_026: 0.95096
+      delta_cv: "+0.0011234680272992"
+      delta_public_lb: "+0.00099"
+    judgement: successful_lgb_branch_update
+    note: >
+      040は026を明確に上回った。
+      029/038系特徴セットのLGB移植は、単体性能でもPublic LBでも有効。
+      ただしRealMLP主力級には届かないため、役割は主力単体ではなくLGB branchの置換候補。
+
+  blend_summary:
+    nm_softmax_raw:
+      cv_auc: 0.9549622374683012
+      public_lb: 0.95431
+      comparison_to_add039_nm:
+        previous_cv_auc: 0.9549491204333775
+        previous_public_lb: 0.95430
+        delta_cv: "+0.0000131170349237"
+        delta_public_lb: "+0.00001"
+      comparison_to_add038_nm:
+        previous_cv_auc: 0.9549081509886924
+        previous_public_lb: 0.95431
+        delta_cv: "+0.0000540864796088"
+        delta_public_lb: "+0.00000"
+      judgement: co_best_public_and_best_cv
+      note: >
+        CVはadd038/add039 NMを上回り、現時点のNM系最高CV。
+        Public LBは0.95431でadd038 NMと同値。
+        Public単独更新ではないが、add040 NMはPublic best同値かつCV上位の攻め候補。
+
+    logreg_meta_pruned:
+      cv_auc: 0.9549298034221942
+      public_lb: 0.95426
+      comparison_to_add039_logreg:
+        previous_cv_auc: 0.9549119222675890
+        previous_public_lb: 0.95425
+        delta_cv: "+0.0000178811546052"
+        delta_public_lb: "+0.00001"
+      comparison_to_add038_logreg:
+        previous_cv_auc: 0.9548707006521889
+        previous_public_lb: 0.95425
+        delta_cv: "+0.0000591027690053"
+        delta_public_lb: "+0.00001"
+      judgement: new_best_logreg_backup
+      note: >
+        LogRegはCV/LBともにadd038/add039を上回った。
+        Public LB 0.95426で、現時点の安定候補として最良。
+        最終提出候補では、NM攻め枠に対する安定枠として優先度が高い。
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9549620878117947
+      public_lb: not_submitted
+      note: >
+        NMとほぼ同等CV。
+        ただしNM提出が0.95431でbest同値だったため、追加提出の優先度は高くない。
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9549622129376477
+      public_lb: not_submitted
+      note: >
+        NMとほぼ同等CVだが、signed weightを許す攻め枠。
+        現時点ではPrivate耐性の判断材料に乏しく、通常提出候補にはしない。
+
+    avg:
+      cv_auc: 0.9548430793310956
+      public_lb: not_submitted
+
+    ridge_meta_pruned:
+      cv_auc: 0.9547586715973779
+      public_lb: not_submitted
+      note: >
+        Ridgeは今回も弱い。
+        S6E5では現時点でRidgeを安定候補として扱う根拠は薄い。
+
+  nm_weights:
+    "014": 0.0452075304
+    "015": 0.0561367677
+    "016": 0.0685456934
+    "017": 0.0604977529
+    "021": 0.0236195098
+    "026": 0.0000000085
+    "028": 0.0418300177
+    "029": 0.0504086333
+    "032": 0.1158780854
+    "036": 0.1508846711
+    "037": 0.0000000151
+    "038": 0.0286142259
+    "039": 0.2842866011
+    "040": 0.0740904878
+
+  weight_interpretation:
+    - >
+      040はNMで約0.074の重みを取得し、026はほぼゼロ化した。
+      したがって040は026の明確な置換候補。
+    - >
+      039は引き続き最大重みで約0.284。
+      039はPublic単体こそ弱いが、blend上は主力として機能している。
+    - >
+      036は約0.151、032は約0.116で引き続き重要。
+    - >
+      037は今回も実質ゼロ。
+      標準stackから037を外す方針は維持してよい。
+    - >
+      017はadd039ではゼロ近かったが、add040 NMでは約0.060残った。
+      ただしLogReg/Ridgeのpruned側では今後も外れる可能性がある。
+
+  correlation:
+    pearson:
+      vs_026: 0.9951024016905602
+      vs_039: 0.9609040321600661
+      vs_038: 0.9610797390551503
+      vs_036: 0.9613283698949149
+      vs_032: 0.9623398994675229
+      vs_029: 0.9624857895539718
+      vs_014: 0.9866750325856305
+      vs_015: 0.9866659471930043
+    spearman:
+      vs_026: 0.9941705032426534
+      vs_039: 0.9715696821212420
+      vs_038: 0.9705358509710941
+      vs_036: 0.9706071429121599
+      vs_032: 0.9667268928192299
+      vs_029: 0.9701131008783194
+      vs_014: 0.9739360558133511
+      vs_015: 0.9735436473983545
+    interpretation: >
+      040は026とは非常に高相関で、LGB branch内の置換に近い。
+      一方でRealMLP系の029/036/038/039とはPearson約0.961前後で、
+      026より強いLGB補助素材としては意味がある。
+      CatBoost系014/015とはPearson約0.987で高めなので、完全な別人格ではない。
+
+  final_judgement:
+    decision: keep
+    reason: >
+      040は単体で026をCV/LBともに明確に更新し、
+      blendでもNM CV 0.9549622375、Public LB 0.95431を達成した。
+      NMのPublic LBはadd038 NMと同値で単独更新ではないが、
+      CVは現時点で最高。
+      LogRegはPublic LB 0.95426で現安定候補を更新した。
+      よって040は026置換候補としてkeep。
+    current_best_after_040:
+      public_attack_candidates:
+        - name: add038_nm
+          public_lb: 0.95431
+          cv_auc: 0.9549081509886924
+          note: previous_public_best
+        - name: add040_nm
+          public_lb: 0.95431
+          cv_auc: 0.9549622374683012
+          note: public_best_tie_and_best_cv
+      stable_backup:
+        name: add040_logreg
+        public_lb: 0.95426
+        cv_auc: 0.9549298034221942
+        note: current_best_logreg_backup
+
+  next_action:
+    - >
+      040は026置換として採用候補。
+      次回以降の標準stackでは、026を外して040を入れる構成を基本にする価値がある。
+    - >
+      ただし026と040は高相関なので、026+040併用の優先度は低い。
+      併用する場合はNM/HC限定で確認し、LogReg/Ridgeでは040優先でよい。
+    - >
+      039と040を入れた構成でPublic best同値まで来たため、
+      次はRealMLP近傍の微修正ではなく、別familyまたは最終候補管理に進む。
+    - >
+      現時点の提出候補管理では、攻め枠add040_nm、安定枠add040_logregを明示する。
