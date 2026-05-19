@@ -1,1 +1,152 @@
+experiment:
+  id: exp_20260519_040_lgb_shared001v2_features_min
+  title: LGB 026 + RealMLP 029/038 shared001v2 feature representation
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
 
+objective:
+  summary: >
+    026 LGB weather/year-stint/progress-window branchをbaseとして維持し、
+    RealMLP 029/038 familyで効いた特徴表現をLGBへ移植する。
+    目的はRealMLP単体を超えることではなく、026を更新できるLGB素材を作り、
+    RealMLP過多stackの補助branchとして機能するか確認する。
+  base_experiment: exp_20260514_026_lgb_weather_year_stint_flags_min
+  intended_role: lgb_branch_replacement_or_aux_material
+
+implementation_check:
+  base_code: exp_20260514_026_lgb_weather_year_stint_flags_min.ipynb
+  preserved_from_026:
+    - shared_003_style_full_FE
+    - 024_weather_aggregate_by_year_track
+    - 025_year_stint_flags
+    - original_rows_appended_to_each_fold_train
+    - target_x_year_stratification
+    - seed_ensemble_3407_42
+    - lgb_params_from_026
+    - gpu_with_cpu_fallback
+    - progress_window_count_frequency
+    - progress_window_target_encoding
+  added_from_029_038_family:
+    - raw_PitStop_kept
+    - PitStop_cat_
+    - _PitStop_cat_count
+    - floored_numerical_categories
+    - count_encoding_for_added_categories
+    - RaceProgress_200_quantile_bin_
+    - LapTime_s_7_quantile_bin
+    - Race_Compound_TE
+  not_added:
+    - 039_LOG_features
+    - Race_Year_RaceProgressBin
+    - 72_bins
+    - original_prior
+    - pseudo_label
+    - Weather_x_target_TE
+    - Time_or_RaceProgress_weather_interpolation
+    - Normalized_TyreLife_or_proxy
+    - Stint_x_Normalized
+    - Norm_x_Hardness
+    - TyreLife_div_inferred_stint_length
+    - future_or_endpoint_proxy
+
+data:
+  competition_train: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  competition_test: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  original: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  weather_dataset: /kaggle/input/playground-series-s6-e5-weather-conditions/F1_Weather_2022_2025.csv
+  target: PitNextLap
+  danger_col:
+    name: Normalized_TyreLife
+    used: false
+
+features:
+  inherited_from_026:
+    - shared_003_full_FE
+    - 024_weather_aggregate
+    - 025_year_stint_flags
+    - RaceProgressBin_20
+    - Race_RaceProgressBin_20
+    - Race_Compound_RaceProgressBin_20
+    - fold_safe_count_frequency_for_progress_window
+    - fold_safe_TE_for_progress_window
+  added_040:
+    raw_features:
+      - PitStop
+    categorical_views:
+      - PitStop_cat_
+      - floored_numerical_categories
+      - RaceProgress_200_quantile_bin_
+      - LapTime_s_7_quantile_bin
+    count_encoding:
+      - _PitStop_cat_count
+      - selected_040_count_features
+    target_encoding:
+      - TE_Race_Compound
+  te_policy:
+    Race_Year_TE: true
+    Race_Compound_TE: true
+    added_year_stint_te: false
+    weather_target_te: false
+
+model:
+  family: LightGBM
+  seeds:
+    - 3407
+    - 42
+  cv:
+    scheme: StratifiedKFold
+    stratification: target_x_Year
+    n_splits: 5
+    shuffle: true
+    random_state: 3407
+
+result:
+  cv_auc: 0.952402816513
+  public_lb: 0.95195
+  fold_scores: [0.9513568000873885, 0.9525340821065283, 0.9523705880748882, 0.9525419975420497, 0.9532469613960749]
+  compared_to_026:
+    cv_026: 0.9512793484860437
+    public_lb_026: 0.95096
+    delta_cv: +0.001123468027
+    delta_lb: +0.00099
+
+artifacts:
+  notebook: ps-s6e5-040-lgb-shared001v2-features-min.ipynb
+  oof: oof_exp_20260519_040_lgb_shared001v2_features_min.npy
+  pred: pred_exp_20260519_040_lgb_shared001v2_features_min.npy
+  submission: submission_exp_20260519_040_lgb_shared001v2_features_min.csv
+  feature_columns: feature_columns.csv
+  shared001v2_features_040: shared001v2_features_040.csv
+  feature_importance: feature_importance.csv
+  cv_result: cv_result.json
+
+blend_policy:
+  benchmark_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add040.ipynb
+  check_patterns:
+    - add040_with_026
+    - replace026_with_040
+  compare_methods:
+    - avg
+    - hc_nonnegative_raw
+    - nm_softmax_raw
+    - ridge_meta_pruned
+    - logreg_meta_pruned
+  decision_rule:
+    keep:
+      - single_cv_clearly_above_026
+      - public_lb_above_026
+      - add040_nm_or_logreg_improves_current_best
+    hold:
+      - single_cv_above_026_but_no_blend_update
+      - useful_weight_in_nm_or_hc
+    drop:
+      - single_cv_not_above_026
+      - no_weight_in_blend
+      - public_lb_worse_than_026
+
+judgement:
+  status: pending_public_lb_and_blend
+  summary: >
+    040はLGB branchの更新確認であり、単体RealMLP級を期待する実験ではない。
+    026より明確に強く、blendで026の置換または併用価値が出るかで判断する。
