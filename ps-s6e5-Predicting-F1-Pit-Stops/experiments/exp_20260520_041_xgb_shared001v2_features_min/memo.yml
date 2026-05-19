@@ -138,4 +138,184 @@ judgement:
   status: pending_public_lb_and_blend
   summary: >
     041はXGB branchの更新確認であり、単体RealMLP級を期待する実験ではない。
-    016/017より明確に強く、blendでXGB branchの置換または併用価値が出るかで判断する。
+
+    blend_result_add041:
+  blend_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add041.ipynb
+  result_file: blend_result_add041.json
+  submitted: false
+  reason_not_submitted: >
+    add041のNM/HC/LogReg CVがadd040から実質改善しなかったため提出しなかった。
+
+  single_041:
+    cv_auc: 0.9520124407043763
+    public_lb: 0.95173
+    comparison_to_016:
+      cv_016: 0.9519855866173828
+      public_lb_016: 0.95164
+      delta_cv: "+0.0000268540869935"
+      delta_public_lb: "+0.00009"
+    comparison_to_017:
+      cv_017: 0.9519393682635370
+      public_lb_017: 0.95164
+      delta_cv: "+0.0000730724408393"
+      delta_public_lb: "+0.00009"
+    comparison_to_040:
+      cv_040: 0.9524028165133429
+      public_lb_040: 0.95195
+      delta_cv: "-0.0003903758089666"
+      delta_public_lb: "-0.00022"
+    judgement: weak_single_update
+    note: >
+      041は016/017を単体CV/LBでわずかに上回った。
+      ただし040 LGBには明確に届かず、XGB branchの強化としては小幅。
+      029/038系特徴セットのXGB移植は、LGBほど有効ではなかった。
+
+  blend_summary:
+    nm_softmax_raw:
+      cv_auc: 0.9549622140763385
+      public_lb: not_submitted
+      comparison_to_add040_nm:
+        previous_cv_auc: 0.9549622374683012
+        previous_public_lb: 0.95431
+        delta_cv: "-0.0000000233919627"
+        delta_public_lb: not_available
+      judgement: no_update
+      note: >
+        add041 NMはadd040 NMとほぼ同等だが、CVはわずかに低下。
+        Public提出する根拠は薄い。
+
+    logreg_meta_pruned:
+      cv_auc: 0.9549298034221942
+      public_lb: not_submitted
+      comparison_to_add040_logreg:
+        previous_cv_auc: 0.9549298034221942
+        previous_public_lb: 0.95426
+        delta_cv: "+0.0000000000000000"
+        delta_public_lb: not_available
+      judgement: unchanged
+      note: >
+        LogRegはadd040と完全に同じCV。
+        041はpruned stack/current stackに入っておらず、LogReg更新には寄与していない。
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9549621417857390
+      public_lb: not_submitted
+      comparison_to_add040_hc:
+        previous_cv_auc: 0.9549620878117947
+        delta_cv: "+0.0000000539739443"
+      judgement: negligible
+      note: >
+        HCはadd040より極小改善だが、差が小さすぎる。
+        NM/LogRegが更新していないため提出候補にはしない。
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9549621628677860
+      public_lb: not_submitted
+      note: >
+        signed SLSQPは攻め枠だが、add040からの実質改善なし。
+        提出候補にはしない。
+
+    avg:
+      cv_auc: 0.9548135441152532
+      public_lb: not_submitted
+      note: >
+        add040 avg 0.9548430793 から低下。
+        041追加で単純平均は悪化。
+
+    ridge_meta_pruned:
+      cv_auc: 0.9547586715973779
+      public_lb: not_submitted
+      note: >
+        add040と同じ。Ridgeは引き続き弱く、提出候補ではない。
+
+  nm_weights:
+    "014": 0.0508116033
+    "015": 0.0539462045
+    "016": 0.0928163339
+    "017": 0.0217448862
+    "021": 0.0235290526
+    "026": 0.0000000058
+    "028": 0.0412451926
+    "029": 0.0622413127
+    "032": 0.1162914654
+    "036": 0.1471570588
+    "037": 0.0000000086
+    "038": 0.0213545047
+    "039": 0.2814931739
+    "040": 0.0732275087
+    "041": 0.0141416884
+
+  weight_interpretation:
+    - >
+      041はNMで約0.014しか重みを取っていない。
+      016が約0.093、017が約0.022残っており、041はXGB branchの置換には至っていない。
+    - >
+      040は約0.073で残っており、LGB branch更新としては引き続き有効。
+    - >
+      039は約0.281で最大重みを維持。
+      blend上の中心は039/036/032/016/040周辺。
+    - >
+      026と037は今回も実質ゼロ。
+      026は040に置換、037は標準stackから除外でよい。
+    - >
+      041追加により016/017の重みが再配分されたが、全体CV更新にはつながらなかった。
+
+  correlation:
+    pearson:
+      vs_016: 0.9988739117908446
+      vs_017: 0.9982792216498761
+      vs_040: 0.9652504782146526
+      vs_039: 0.9782639573175091
+      vs_038: 0.9786207649499141
+      vs_036: 0.9798283183808776
+      vs_029: 0.9805029271521151
+    spearman:
+      vs_016: 0.9984757825712934
+      vs_017: 0.9979985282092042
+      vs_040: 0.9723280688479480
+      vs_039: 0.9711249553987630
+      vs_038: 0.9704787163880468
+      vs_036: 0.9721497005214762
+      vs_029: 0.9725972371658672
+    interpretation: >
+      041は016/017とほぼ同一のXGB branch内variant。
+      単体ではわずかに改善したが、相関が高すぎるため新しい別人格ではない。
+      040やRealMLP系とはある程度ズレるが、blend上の追加価値は小さかった。
+
+  final_judgement:
+    decision: hold_weak_or_drop_for_standard_stack
+    reason: >
+      041は単体では016/017をわずかに上回ったが、add041 NMはadd040 NMを更新せず、
+      LogRegもadd040から不変だった。
+      NM重みも約0.014と小さく、XGB branchの明確な置換候補にはならなかった。
+      したがって標準stackには現時点で入れない。
+    current_best_after_041:
+      public_attack_candidates:
+        - name: add038_nm
+          public_lb: 0.95431
+          cv_auc: 0.9549081509886924
+          note: previous_public_best
+        - name: add040_nm
+          public_lb: 0.95431
+          cv_auc: 0.9549622374683012
+          note: public_best_tie_and_best_cv_before_041
+      stable_backup:
+        name: add040_logreg
+        public_lb: 0.95426
+        cv_auc: 0.9549298034221942
+        note: current_best_logreg_backup
+      add041:
+        public_lb: not_submitted
+        cv_auc: 0.9549622140763385
+        note: no_update_vs_add040
+
+  next_action:
+    - >
+      041の深掘りは優先しない。
+      XGBへの029/038系特徴移植は、単体微改善にとどまり、blend更新には変換されなかった。
+    - >
+      次に進むならCatBoostへの029/038系特徴移植を最小確認するか、
+      ここでfamily横展開を打ち切って最終候補管理へ移る。
+    - >
+      標準stackは040時点を基本にし、026と037は外す。
+      041はXGB branchの参考候補としてholdするが、通常のadd stackには入れない。016/017より明確に強く、blendでXGB branchの置換または併用価値が出るかで判断する。
