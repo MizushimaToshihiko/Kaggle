@@ -1,0 +1,240 @@
+experiment:
+  id: exp_20260520_043_blend_pruned_standard_after_042_min
+  title: pruned standard blend after 042
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: planned
+  created_at: 2026-05-20
+
+objective:
+  summary: >
+    Add042までの結果を踏まえ、標準stackを整理する。
+    014/015は042で置換、026は040で置換、037は継続して実質ゼロ寄りのため除外し、
+    040/042を残したpruned standard stackでNM/LogRegのCVとPublic LBを確認する。
+    目的は新規単体モデル追加ではなく、過剰な同系統モデルを落として、
+    最終候補として扱いやすい標準stackを作ること。
+  main_questions:
+    - 014/015/026/037を外してもAdd042 NMのCV/LBを維持できるか
+    - LogReg安定候補のPublic LB 0.95430を維持または更新できるか
+    - 040/042を正式なLGB/CatBoost branch置換として採用できるか
+    - 最終提出候補として、攻め枠NMと安定枠LogRegを整理できるか
+
+background:
+  current_public_best_tie:
+    - name: add038_nm
+      cv_auc: 0.9549081509886924
+      public_lb: 0.95431
+    - name: add040_nm
+      cv_auc: 0.9549622374683012
+      public_lb: 0.95431
+    - name: add042_nm
+      cv_auc: 0.9549955448577259
+      public_lb: 0.95431
+  current_best_logreg:
+    name: add042_logreg
+    cv_auc: 0.9549723928660285
+    public_lb: 0.95430
+  rationale: >
+    Add042では042がNMで約0.146の重みを取り、014/015はほぼゼロ化した。
+    Add040では040が026を置換する形で有効だった。
+    037は複数回のblendで実質ゼロ寄り。
+    よって、014/015/026/037を標準stackから外す整理実験を行う。
+
+base_blend_notebook:
+  source: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add042.ipynb
+  new_notebook: ps-s6e5-043-blend-pruned-standard-after-042-min.ipynb
+
+stack_design:
+  previous_full_stack_add042:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "032"
+    - "036"
+    - "037"
+    - "038"
+    - "039"
+    - "040"
+    - "041"
+    - "042"
+
+  removed_from_standard_stack:
+    "014":
+      reason: >
+        042がCatBoost branchの置換候補。
+        Add042 NMで014はほぼゼロ化。
+    "015":
+      reason: >
+        042が015を単体CV/LBで明確に上回り、Add042 NMで015はほぼゼロ化。
+    "026":
+      reason: >
+        040が026を単体CV/LBで明確に上回り、Add040/Add042で026は実質ゼロ化。
+    "037":
+      reason: >
+        複数回のblendで実質ゼロ寄り。
+        標準stackからは外してよい。
+
+  keep_candidates:
+    "016":
+      role: XGB main branch
+      reason: >
+        041より依然としてNM重みが大きく、XGB branchの主素材として残す。
+    "017":
+      role: XGB auxiliary branch
+      reason: >
+        Add042では重み小さいが、full-stack NMでは微小に残る可能性があるため、
+        今回は残して確認する。
+    "021":
+      role: TabM auxiliary
+      reason: >
+        小さいが別family素材として残す。
+    "028":
+      role: Parent-Child MLP auxiliary
+      reason: >
+        単体は強くないが、blend補助として継続確認。
+    "029":
+      role: original RealMLP shared001v2
+      reason: >
+        039に置換され気味だが、完全にはゼロではないため残す。
+    "032":
+      role: CustomTorchRealMLP
+      reason: >
+        Add042でも約0.119の大きな重みを維持。
+    "036":
+      role: RealMLP no Race_Year_TE
+      reason: >
+        Add042でも約0.122の大きな重みを維持。
+    "038":
+      role: RealMLP seed/reg variant
+      reason: >
+        039にかなり置換されたが、完全にゼロではないため今回までは残す。
+    "039":
+      role: RealMLP LOG features seed/reg variant
+      reason: >
+        Add042でも最大重み約0.276。現stackの中心素材。
+    "040":
+      role: LGB branch replacement
+      reason: >
+        026置換候補。Add042でも約0.073で残る。
+    "041":
+      role: XGB weak hold
+      reason: >
+        041単体は016/017をわずかに上回ったがblend寄与は小さい。
+        標準stack必須ではないが、今回は最終判断のため残す。
+    "042":
+      role: CatBoost branch replacement
+      reason: >
+        014/015置換候補。Add042で約0.146の大きな重み。
+
+  pruned_standard_stack_after_042:
+    - "016"
+    - "017"
+    - "021"
+    - "028"
+    - "029"
+    - "032"
+    - "036"
+    - "038"
+    - "039"
+    - "040"
+    - "041"
+    - "042"
+
+blend_methods_to_run:
+  primary:
+    - nm_softmax_raw
+    - logreg_meta_pruned
+  secondary:
+    - hc_nonnegative_raw
+    - avg
+  reference_only:
+    - slsqp_signed_raw_neg005
+    - ridge_meta_pruned
+
+submission_policy:
+  submit:
+    - nm_softmax_raw
+    - logreg_meta_pruned
+  submit_only_if:
+    nm_softmax_raw:
+      condition: >
+        CVがAdd042 NM 0.9549955448577259と同等以上、
+        またはprunedによりCV微減でもPublic耐性がありそうな構成として確認したい場合。
+    logreg_meta_pruned:
+      condition: >
+        CVがAdd042 LogReg 0.9549723928660285と同等以上、
+        または最終安定候補としてPublic LB確認が必要な場合。
+  do_not_submit:
+    - ridge_meta_pruned
+    - avg
+    - slsqp_signed_raw_neg005
+  note: >
+    SLSQP signedは攻め枠すぎるため通常提出しない。
+    RidgeはS6E5では弱く、現時点で安定候補として扱わない。
+
+success_criteria:
+  nm:
+    cv_target: 0.9549955448577259
+    public_lb_target: 0.95431
+    judgement:
+      keep: >
+        CVがAdd042 NM以上、またはPublic LB 0.95431以上。
+      hold: >
+        CVがわずかに低下しても、Public LB 0.95431を維持。
+      fail: >
+        CV低下かつPublic LBが0.95430以下。
+  logreg:
+    cv_target: 0.9549723928660285
+    public_lb_target: 0.95430
+    judgement:
+      keep: >
+        CVまたはPublic LBがAdd042 LogReg以上。
+      hold: >
+        CV微減でもPublic LB 0.95430を維持。
+      fail: >
+        CV低下かつPublic LB 0.95429以下。
+
+expected_outcome:
+  hypothesis: >
+    014/015/026/037を外してもNM/LogRegの性能は大きく落ちない可能性が高い。
+    もしCV/LBが維持されるなら、Add042 full stackよりも整理された標準stackとして採用できる。
+  risk: >
+    NMは同系統モデルを含めた微妙な重み調整でCVを稼いでいる可能性がある。
+    014/015/026/037を外すことでCVが微減する可能性はある。
+    ただし最終候補管理上は、過剰な同系統モデルを落とすメリットがある。
+
+outputs:
+  result_json: blend_result_043_pruned_standard_after_042.json
+  blend_summary: blend_summary.csv
+  blend_weights: blend_weights.csv
+  submissions:
+    nm: submission_043_pruned_standard_after_042_nm_softmax_raw.csv
+    logreg: submission_043_pruned_standard_after_042_logreg_meta_pruned.csv
+  memo_update: >
+    実行後、NM/LogRegのCV、Public LB、weights、Add042との差分をmemo.ymlへ追記する。
+
+final_judgement_template:
+  decision: pending
+  possible_decisions:
+    - adopt_as_standard_stack
+    - hold_full_add042_stack
+    - revert_to_add042_full_stack
+  criteria: >
+    pruned stackがAdd042と同等以上なら標準stackとして採用。
+    CV微減でもLogReg Public LBが維持されるなら安定候補として採用余地あり。
+    NM/LogRegともに悪化するならAdd042 full stackへ戻す。
+
+notes:
+  - >
+    この実験は新モデル追加ではなく、最終候補管理のためのstack整理。
+  - >
+    042はCatBoost branchの置換、040はLGB branchの置換として扱う。
+  - >
+    041は弱いが、XGB branch補助として今回だけ残して確認する。
+  - >
+    037は標準stackから除外する。
