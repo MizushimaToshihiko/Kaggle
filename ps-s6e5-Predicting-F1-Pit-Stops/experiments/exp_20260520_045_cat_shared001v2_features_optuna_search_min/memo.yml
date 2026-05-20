@@ -1,1 +1,109 @@
+experiment:
+  id: exp_20260520_045_cat_shared001v2_features_optuna_search_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-20
+  type: optuna_search
+  status: completed
 
+objective:
+  summary: >
+    042 CatBoost shared001v2 features構成を固定し、
+    CatBoostの主要ハイパラだけをOptunaで探索した。
+    特徴量追加やstack変更は行っていない。
+
+base:
+  experiment: exp_20260520_042_cat_shared001v2_features_min
+  model: CatBoostClassifier
+  baseline_cv_auc: 0.953240915414691
+  baseline_public_lb: 0.95283
+
+fixed:
+  feature_set: same_as_042
+  folds: same_as_042
+  n_splits: 5
+  original_rows: same_as_042
+  use_original: true
+  target: PitNextLap
+  metric: AUC
+  forbidden:
+    - Normalized_TyreLife
+    - Normalized_TyreLife proxy
+    - future endpoint proxy
+    - pseudo label
+    - new feature engineering
+    - 039 LOG features
+
+search_space:
+  learning_rate:
+    type: float_log
+    low: 0.015
+    high: 0.08
+  depth:
+    type: int
+    low: 4
+    high: 8
+  l2_leaf_reg:
+    type: float_log
+    low: 1.0
+    high: 30.0
+  random_strength:
+    type: float
+    low: 0.0
+    high: 2.0
+  min_data_in_leaf:
+    type: int
+    low: 1
+    high: 40
+  border_count:
+    type: categorical
+    choices: [128, 254]
+
+fixed_catboost_params:
+  loss_function: Logloss
+  eval_metric: AUC
+  task_type: GPU
+  devices: "0:1"
+  bootstrap_type: Bernoulli
+  subsample: 0.8
+  iterations: 8000
+  early_stopping_rounds: 300
+  auto_class_weights: Balanced
+
+optuna:
+  direction: maximize
+  n_trials_requested: 40
+  n_trials_completed: 7
+  timeout_sec: 36000
+  sampler: TPESampler
+  seed: 42
+
+result:
+  best_trial_number: 6
+  best_cv_auc: 0.953352253739158
+  delta_vs_042_cv: 0.00011133832446696967
+  best_params:
+    learning_rate: 0.015888820918127773
+    depth: 8
+    l2_leaf_reg: 2.411289811529197
+    random_strength: 1.325044568707964
+    min_data_in_leaf: 13
+    border_count: 254
+
+outputs:
+  best_params: best_params_045.json
+  trials: optuna_trials_045.csv
+  study_summary: optuna_study_summary_045.json
+  study_pickle: optuna_study_045.pkl
+  feature_columns: feature_columns.csv
+  memo_draft: memo_draft.yml
+
+success_criteria:
+  best_cv_auc_must_exceed: 0.953240915414691
+  strong_if_cv_auc_at_least: 0.95335
+
+judgement:
+  decision: pending
+  note: >
+    045は探索段階であり、正式OOF/pred/submissionは作成していない。
+    best_cv_aucが042を上回る場合、046でbest_paramsを適用した正式refitを行う。
