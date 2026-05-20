@@ -1,1 +1,172 @@
+experiment:
+  id: exp_20260520_044_realmlp_shared001v2_seed_reg_variant2_min
+  title: RealMLP shared001v2 seed/regularization variant2
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
+  created_at: 2026-05-20
 
+objective:
+  summary: >
+    038 RealMLP shared001v2 seed/reg variantをbaseとして、特徴量は同一のまま、
+    seedと正則化だけを少し変更する。
+    039 LOG特徴の深掘りではなく、029/038 familyのseed/reg diversityを1本だけ追加し、
+    blendで残るか確認する。
+  base_experiment: exp_20260518_038_realmlp_shared001v2_seed_reg_variant_min
+  intended_role: realmlp_seed_reg_bagging_candidate
+  not_intended:
+    - LOG feature deep dive
+    - feature ablation
+    - PitStop ablation
+    - Race_Year_TE ablation
+
+source:
+  reference_code: ps-s6e5-038-realmlp-shared001v2-seed-reg-valiant.ipynb
+  model_family: RealMLP
+  notes:
+    - RealMLP_TD_Classifier
+    - 038 variant2
+    - feature set same as 038/029
+    - 039 LOG features are intentionally not added
+    - Race_Year_TE remains used
+    - PitStop remains used
+    - Normalized_TyreLife is dropped if present
+    - n_epochs remains 6
+
+changes_from_038:
+  changed:
+    seed: 777
+    random_state: 777
+    p_drop: 0.06
+    wd: 0.018
+  kept:
+    feature_set: same_as_038_029
+    n_epochs: 6
+    batch_size: 256
+    lr: 0.01
+    n_ens: 24
+    hidden_sizes:
+      - 512
+      - 256
+      - 128
+    Race_Year_TE: true
+    raw_PitStop: true
+    PitStop_cat_: true
+    PitStop_cat_count: true
+  explicitly_not_added:
+    - 039_LOG_features
+
+data:
+  competition_train: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  competition_test: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  original: /kaggle/input/datasets/aadigupta1601/f1-strategy-dataset-pit-stop-prediction/f1_strategy_dataset_v4.csv
+  target: PitNextLap
+  caution:
+    - raw PitStop remains used
+    - Race_Year_TE remains used
+    - Normalized_TyreLife is dropped
+    - This is not a feature-ablation model
+
+features:
+  combo_features: ['Race_Compound_', 'Race_Year_']
+  target_encoding_columns: ['Race_Compound_', 'Race_Year_']
+  target_encoding_names: ['_Race_Compound_TE', '_Race_Year_TE']
+  notable_features:
+    - PitStop
+    - PitStop_cat_
+    - _PitStop_cat_count
+    - Race_Year_
+    - _Race_Year_TE
+    - Race_Compound_
+    - _Race_Compound_TE
+    - RaceProgress_200_quantile_bin_
+    - LapTime (s)_7_quantile_bin_
+    - floored_numerical_categories
+    - count_encoding
+  note: >
+    Feature set should match 038/029. This experiment intentionally avoids LOG feature additions.
+
+model:
+  family: RealMLP
+  estimator: RealMLP_TD_Classifier
+  folds: 5
+  seed: 777
+  params:
+    n_ens: 24
+    n_epochs: 6
+    batch_size: 256
+    lr: 0.01
+    wd: 0.018
+    p_drop: 0.06
+    hidden_sizes: [512, 256, 128]
+    ls_eps: 0.01
+
+result:
+  cv_auc: 0.953996458711726
+  public_lb: 0.95381
+  fold_scores: [0.9550534980953249, 0.9538407103379649, 0.9538324250710276, 0.9542317140982535, 0.9530441729976685]
+  fold_mean: 0.9540005041200479
+  fold_std: 0.0006527799324634381
+  per_year_auc: {'2022': 0.9192627251439827, '2023': 0.9496546884218224, '2024': 0.9341404229337753, '2025': 0.9342093839778542}
+  compared_to_029:
+    cv_auc: 0.9540420784720796
+    public_lb: 0.95397
+  compared_to_036:
+    cv_auc: 0.9540748794531666
+    public_lb: 0.95393
+  compared_to_038:
+    cv_auc: 0.9540649943806377
+    public_lb: 0.95384
+  compared_to_039:
+    cv_auc: 0.9541459595754959
+    public_lb: 0.95375
+    note: >
+      039 includes LOG features, while 044 intentionally does not.
+      Compare 044 mainly to 038 for seed/reg effect.
+
+artifacts:
+  notebook: ps-s6e5-044-realmlp-shared001v2-seed-reg-variant2-min.ipynb
+  oof: oof_exp_20260520_044_realmlp_shared001v2_seed_reg_variant2_min.npy
+  pred: pred_exp_20260520_044_realmlp_shared001v2_seed_reg_variant2_min.npy
+  submission: submission_exp_20260520_044_realmlp_shared001v2_seed_reg_variant2_min.csv
+  cv_result: cv_result.json
+  feature_columns: feature_columns.csv
+  feature_columns_detail: feature_columns_detail.csv
+  memo_draft: memo_draft.yml
+
+blend_policy:
+  benchmark_code: 043_pruned_standard_or_033_based
+  suggested_add_stack:
+    - "016"
+    - "017"
+    - "021"
+    - "028"
+    - "029"
+    - "032"
+    - "036"
+    - "038"
+    - "039"
+    - "040"
+    - "041"
+    - "042"
+    - "044"
+  decision_focus:
+    - single_cv_vs_038
+    - single_cv_vs_039
+    - corr_vs_038
+    - corr_vs_039
+    - corr_vs_036
+    - corr_vs_032
+    - nm_hc_weight
+    - logreg_cv
+    - public_lb_if_submitted
+  keep_rule: >
+    Keep if 044 maintains reasonable single strength and receives meaningful blend weight
+    without degrading add043/add042 NM or LogReg.
+  drop_rule: >
+    Drop if 044 is a weaker high-correlation copy of 038/039 and receives near-zero blend weight.
+
+judgement:
+  status: pending
+  summary: >
+    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
