@@ -3,7 +3,7 @@ experiment:
   title: pruned standard blend after 042
   competition: PS S6E5 Predicting F1 Pit Stops
   metric: AUC
-  status: planned
+  status: complate
   created_at: 2026-05-20
 
 objective:
