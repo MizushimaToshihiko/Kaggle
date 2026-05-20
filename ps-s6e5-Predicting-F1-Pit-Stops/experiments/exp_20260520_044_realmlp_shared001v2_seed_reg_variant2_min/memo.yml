@@ -170,3 +170,234 @@ judgement:
   status: pending
   summary: >
     CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
+blend_result_add044:
+  blend_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add044.ipynb
+  result_file: blend_result_add044.json
+
+  submitted:
+    - candidate: nm_softmax_raw
+      cv_auc: 0.9550053246176218
+      public_lb: 0.95431
+    - candidate: logreg_meta_pruned
+      cv_auc: 0.9549866651841146
+      public_lb: 0.95427
+
+  single_044:
+    cv_auc: 0.9539964587117260
+    public_lb: 0.95381
+    comparison_to_038:
+      cv_038: 0.9540649943806377
+      public_lb_038: 0.95384
+      delta_cv: "-0.0000685356689117"
+      delta_public_lb: "-0.00003"
+    comparison_to_039:
+      cv_039: 0.9541459595754959
+      public_lb_039: 0.95375
+      delta_cv: "-0.0001495008637699"
+      delta_public_lb: "+0.00006"
+    comparison_to_029:
+      cv_029: 0.9540420784720796
+      public_lb_029: 0.95397
+      delta_cv: "-0.0000456197603536"
+      delta_public_lb: "-0.00016"
+    judgement: weak_single_but_useful_blend_material
+    note: >
+      044単体は038/029よりCV/LBともにやや弱い。
+      ただし039よりPublic LBは少し高い。
+      単体主力ではないが、seed/reg variantとしてblend上の追加価値がある。
+
+  blend_summary:
+    nm_softmax_raw:
+      cv_auc: 0.9550053246176218
+      public_lb: 0.95431
+      comparison_to_043_pruned_nm:
+        previous_cv_auc: 0.9549957251612822
+        previous_public_lb: 0.95431
+        delta_cv: "+0.0000095994563396"
+        delta_public_lb: "+0.00000"
+      comparison_to_add042_nm:
+        previous_cv_auc: 0.9549955448577259
+        previous_public_lb: 0.95431
+        delta_cv: "+0.0000097797598959"
+        delta_public_lb: "+0.00000"
+      judgement: new_best_cv_public_best_tie
+      note: >
+        add044 NMはCV 0.9550053246で初めて0.955台に到達。
+        Public LBは0.95431で既存best tieのまま。
+        攻め枠としては現時点の最高CV候補。
+        ただしPublic単独更新ではないため、Private耐性は別途慎重に見る。
+
+    logreg_meta_pruned:
+      cv_auc: 0.9549866651841146
+      public_lb: 0.95427
+      comparison_to_043_pruned_logreg:
+        previous_cv_auc: 0.9549768024624596
+        previous_public_lb: 0.95428
+        delta_cv: "+0.0000098627216550"
+        delta_public_lb: "-0.00001"
+      comparison_to_add042_logreg:
+        previous_cv_auc: 0.9549723928660285
+        previous_public_lb: 0.95430
+        delta_cv: "+0.0000142723180861"
+        delta_public_lb: "-0.00003"
+      judgement: cv_update_but_public_down
+      note: >
+        LogRegはCV上はadd042/043を上回ったが、Public LBは0.95427。
+        安定候補としてはadd042 LogReg 0.95430を維持する。
+        RealMLP同系統追加によりLogRegのPublic変換は悪化した可能性がある。
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9550053089036887
+      public_lb: not_submitted
+      note: >
+        NMとほぼ同等CV。
+        NM提出結果がPublic 0.95431だったため、追加提出優先度は低い。
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9550052934825617
+      public_lb: not_submitted
+      note: >
+        signed SLSQPはCV上はNMに近いが、攻め枠すぎる。
+        通常提出候補にはしない。
+
+    avg:
+      cv_auc: 0.9548975884113982
+      public_lb: not_submitted
+      note: >
+        単純平均としては比較的高いが、NM/LogRegには劣る。
+        提出候補ではない。
+
+    ridge_meta_pruned:
+      cv_auc: 0.9547259257451930
+      public_lb: not_submitted
+      note: >
+        Ridgeは引き続き弱い。
+        S6E5では安定候補にしない。
+
+  nm_weights:
+    "016": 0.1076674321
+    "017": 0.0030512366
+    "021": 0.0204383031
+    "028": 0.0366831031
+    "029": 0.0461609944
+    "032": 0.1053452190
+    "036": 0.0991850532
+    "038": 0.0000000050
+    "039": 0.2492353186
+    "040": 0.0721019120
+    "041": 0.0052256754
+    "042": 0.1480737478
+    "044": 0.1068319998
+
+  weight_interpretation:
+    - >
+      044はNMで約0.107の大きな重みを取得。
+      単体では弱いが、038の置換・029/039補完としてblend上では有効。
+    - >
+      038はほぼゼロ化。
+      044追加により038の役割はほぼ吸収されたと見てよい。
+    - >
+      039は約0.249で最大重みを維持。
+      ただし043時点の約0.284からは下がった。
+    - >
+      042は約0.148で引き続き重要。
+      CatBoost branch置換として安定している。
+    - >
+      040は約0.072で残り、LGB branchとして有効。
+    - >
+      016は約0.108まで増加。
+      XGB branchでは016が主素材で、041/017は小さい。
+    - >
+      032と036もそれぞれ約0.105、約0.099で残る。
+      RealMLP/Custom NN周辺の多様性は依然として重要。
+
+  correlation:
+    pearson:
+      vs_038: 0.9957482409039087
+      vs_039: 0.9952531946669078
+      vs_029: 0.9953127306245393
+      vs_036: 0.9955529957752477
+      vs_032: 0.9907540544732750
+      vs_042: 0.9598539252342491
+      vs_040: 0.9608026056387756
+      vs_016: 0.9781215326102322
+    spearman:
+      vs_038: 0.9925139279765376
+      vs_039: 0.9905218485492003
+      vs_029: 0.9910045432544777
+      vs_036: 0.9919926270566852
+      vs_032: 0.9815745018172733
+      vs_042: 0.9758790925011668
+      vs_040: 0.9705470180211245
+      vs_016: 0.9699456937069293
+    interpretation: >
+      044は029/036/038/039と高相関のRealMLP近傍variant。
+      低相関素材ではないが、seed/reg差によりNMでは大きな追加重みを取った。
+      一方でLogRegのPublic LBは下がっており、同系統RealMLP追加によるOOF過適合リスクもある。
+
+  current_candidate_status_after_044:
+    public_attack_candidates:
+      - name: add038_nm
+        cv_auc: 0.9549081509886924
+        public_lb: 0.95431
+        note: earlier_public_best
+      - name: add040_nm
+        cv_auc: 0.9549622374683012
+        public_lb: 0.95431
+        note: public_best_tie
+      - name: add042_nm
+        cv_auc: 0.9549955448577259
+        public_lb: 0.95431
+        note: public_best_tie_full_stack
+      - name: 043_pruned_nm
+        cv_auc: 0.9549957251612822
+        public_lb: 0.95431
+        note: public_best_tie_pruned_stack
+      - name: add044_nm
+        cv_auc: 0.9550053246176218
+        public_lb: 0.95431
+        note: current_best_cv_but_public_best_tie
+    stable_backup_candidates:
+      - name: add042_logreg
+        cv_auc: 0.9549723928660285
+        public_lb: 0.95430
+        note: current_best_logreg_public
+      - name: 043_pruned_logreg
+        cv_auc: 0.9549768024624596
+        public_lb: 0.95428
+        note: higher_cv_than_add042_but_lower_public
+      - name: add044_logreg
+        cv_auc: 0.9549866651841146
+        public_lb: 0.95427
+        note: highest_logreg_cv_but_public_down
+
+  final_judgement:
+    decision: keep_for_nm_attack_only
+    reason: >
+      044は単体では038/029より弱いが、NM blendでは約0.107の重みを取り、
+      CVを0.9550053246まで更新した。
+      Public LBは0.95431で既存NM候補と同値のため、攻め枠としては保持する。
+      一方、LogRegはCVが上がったにもかかわらずPublic LBが0.95427まで低下した。
+      よって044は安定候補更新ではなく、NM攻め枠専用の追加素材として扱う。
+    current_best_after_044:
+      attack:
+        name: add044_nm
+        cv_auc: 0.9550053246176218
+        public_lb: 0.95431
+      stable:
+        name: add042_logreg
+        cv_auc: 0.9549723928660285
+        public_lb: 0.95430
+
+  next_action:
+    - >
+      RealMLP seed/reg variantの追加は044で一旦止める。
+      044はNMでは効いたが、LogReg Publicは悪化したため、同系統RealMLP量産は危険。
+    - >
+      最終候補管理表を作成する。
+      Public LB 0.95431同値のNM候補と、LogReg安定候補を分けて管理する。
+    - >
+      現時点の候補は、攻め枠add044_nm、安定枠add042_logregを中心に置く。
+    - >
+      ただしadd044_nmはCV最高だがRealMLP近傍追加による過適合リスクがあるため、
+      add042_nm/043_pruned_nmも攻め枠候補として横並びで保持する。
