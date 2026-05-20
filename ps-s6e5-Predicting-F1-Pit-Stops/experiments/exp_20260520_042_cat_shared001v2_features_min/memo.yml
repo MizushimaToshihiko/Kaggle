@@ -1,1 +1,130 @@
+experiment:
+  id: exp_20260520_042_cat_shared001v2_features_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
 
+objective:
+  summary: >
+    015 CatBoost shared004 no_Race_Year_groupstats をベースに、
+    029/038 RealMLP branchで効いた shared001v2-style のカテゴリ/bin/count特徴を最小移植する。
+    目的はCatBoost branchの014/015更新、またはblend補助素材としての寄与確認。
+  success_criteria:
+    single:
+      - "015 CV 0.9527138459 / Public LB 0.95244 を超える"
+      - "014 CV 0.9527262386 / Public LB 0.95233 も比較対象"
+      - "CV 0.953台ならかなり良い"
+    blend:
+      - "add042 NM / LogRegでadd040を超えるか確認"
+      - "014/015置換または併用価値を確認"
+
+base:
+  experiment: exp_20260508_015_cat_shared004_no_race_year_groupstats_min
+  model: CatBoostClassifier
+  reason: >
+    015は014よりPublic LBが高く、Race_Year groupstatsを外した安全寄りCatBoost branch。
+    014/015は高相関のため、まず015だけをベースに最小確認する。
+
+changes_from_015:
+  added_feature_blocks:
+    - shared001v2_style_features_042
+    - shared001v2_count_features_042
+  added_features_examples:
+    - PitStop_cat_
+    - Race_Year_
+    - Race_Compound_
+    - RaceProgress_200_quantile_bin_
+    - LapTime (s)_7_quantile_bin_
+    - "*_floor_cat_042"
+    - "_*_count"
+    - "_*_freq"
+  kept_from_015:
+    - shared004 domain_features
+    - digit_features
+    - float_signature_features
+    - string_precision_features
+    - frequency_features
+    - light_group_stats
+    - Race_Year group-stat drop policy
+    - IsOriginalData
+    - TyreAgeRatio_str
+    - original rows appended to fold train side only
+  not_added:
+    - 039 LOG features
+    - pseudo label
+    - Optuna
+
+guardrails:
+  normalized_tyrelife:
+    direct_use: false
+    proxy_reconstruction: false
+  target_leakage:
+    competition_target_encoding_before_cv: false
+    note: >
+      042で追加したshared001v2-style特徴は行単位変換とcount/frequencyのみ。
+      competition targetを使った事前TEは入れていない。
+  future_endpoint_proxy: false
+
+data:
+  train_shape: [439140, 16]
+  test_shape: [188165, 15]
+  original_available: True
+  original_shape_after_drop: [101371, 15]
+  target: PitNextLap
+  use_original_rows: True
+
+features:
+  n_features: 337
+  n_cat_features: 93
+  shared001v2_042_feature_count: 26
+  dropped_groupstat_feature_count_015: 12
+  race_year_used: True
+  race_year_groupstats_used: False
+  isoriginaldata_used: True
+  tyreageratio_str_used: True
+
+model:
+  family: CatBoost
+  params:
+    iterations: 9000
+    learning_rate: 0.033
+    depth: 8
+    l2_leaf_reg: 7.0
+    random_strength: 0.8
+    bootstrap_type: Bernoulli
+    subsample: 0.8
+    border_count: 254
+    auto_class_weights: Balanced
+    early_stopping_rounds: 350
+    task_type_requested: GPU
+    devices_requested: "0:1"
+    devices_used: ['GPU']
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+
+result:
+  cv_auc: 0.953240915414691
+  cv_logloss: 0.2607808731067952
+  fold_auc_mean: 0.9532587211426613
+  fold_auc_std: 0.0008069801407631083
+  public_lb: 0.95283
+
+outputs:
+  oof_npy: oof_exp_20260520_042_cat_shared001v2_features_min.npy
+  pred_npy: pred_exp_20260520_042_cat_shared001v2_features_min.npy
+  submission: submission_exp_20260520_042_cat_shared001v2_features_min.csv
+  cv_result: cv_result.json
+  memo_draft: memo_draft.yml
+  feature_columns: feature_columns.csv
+  feature_importance: feature_importance.csv
+  categorical_features: categorical_features.csv
+
+judgement:
+  decision: pending
+  notes: >
+    まず015/014単体との比較を行う。
+    次にadd042 blendでadd040 NM / add040 LogRegを超えるか確認する。
+    CatBoost branchは014/015と高相関が想定されるため、単体微改善だけでは採用しない。
