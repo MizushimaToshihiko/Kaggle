@@ -1,0 +1,65 @@
+experiment:
+  id: exp_20260520_045_final_candidate_table_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-20
+  type: final_candidate_management
+  status: planned
+
+objective:
+  summary: >
+    038〜044までのblend候補を、最終提出判断用に整理する。
+    Public LBだけ、CVだけ、NMだけで判断せず、
+    攻め枠と安定枠を分けて最終2候補を管理する。
+
+candidate_groups:
+  attack_candidates:
+    - add038_nm
+    - add040_nm
+    - add042_nm
+    - 043_pruned_nm
+    - add044_nm
+  stable_candidates:
+    - add042_logreg
+    - 043_pruned_logreg
+    - add044_logreg
+
+current_recommendation:
+  stable_slot:
+    candidate: add042_logreg
+    cv_auc: 0.9549723928660285
+    public_lb: 0.95430
+    reason: >
+      LogRegでPublic最高。
+      NM bestとの差が0.00001しかなく、Private耐性候補として最も筋が良い。
+
+  attack_slot:
+    candidate: add044_nm
+    cv_auc: 0.9550053246176218
+    public_lb: 0.95431
+    reason: >
+      現時点CV最高かつPublic best tie。
+      ただしRealMLP近傍追加による過適合懸念があるため攻め枠扱い。
+
+backup_attack:
+  candidate: 043_pruned_nm
+  cv_auc: 0.9549957251612822
+  public_lb: 0.95431
+  reason: >
+    add044_nmよりCVは少し低いが、削った標準stackでPublic best tieを維持。
+    構成の締まりを重視する場合の攻め枠候補。
+
+decision_rule:
+  - >
+    安定枠はPublic LBだけでなく、methodがLogRegであることを重視する。
+  - >
+    NM候補はPublic best tieを攻め枠として扱い、安定枠と混同しない。
+  - >
+    CV最高のNMを無条件に最終本命にしない。
+  - >
+    Public LB 0.95431同値のNM群は、CV・stack構成・過剰最適化リスクで比較する。
+
+next_action:
+  - final_candidates.csvを作る
+  - candidatesごとにrole/method/CV/Public/stack_type/risk/decisionを記録する
+  - 最終提出直前に、slot_1_stableとslot_2_attackを再確認する
