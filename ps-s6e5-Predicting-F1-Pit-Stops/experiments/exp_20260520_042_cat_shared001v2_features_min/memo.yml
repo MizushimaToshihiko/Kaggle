@@ -128,3 +128,214 @@ judgement:
     まず015/014単体との比較を行う。
     次にadd042 blendでadd040 NM / add040 LogRegを超えるか確認する。
     CatBoost branchは014/015と高相関が想定されるため、単体微改善だけでは採用しない。
+blend_result_add042:
+  blend_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add042.ipynb
+  result_file: blend_result_add042.json
+
+  submitted:
+    - candidate: nm_softmax_raw
+      cv_auc: 0.9549955448577259
+      public_lb: 0.95431
+    - candidate: logreg_meta_pruned
+      cv_auc: 0.9549723928660285
+      public_lb: 0.95430
+
+  single_042:
+    cv_auc: 0.9532409154146910
+    public_lb: 0.95283
+    comparison_to_015:
+      cv_015: 0.9527138459391088
+      public_lb_015: 0.95244
+      delta_cv: "+0.0005270694755822"
+      delta_public_lb: "+0.00039"
+    comparison_to_014:
+      cv_014: 0.9527262386202738
+      public_lb_014: 0.95233
+      delta_cv: "+0.0005146767944172"
+      delta_public_lb: "+0.00050"
+    comparison_to_040:
+      cv_040: 0.9524028165133429
+      public_lb_040: 0.95195
+      delta_cv: "+0.0008380989013481"
+      delta_public_lb: "+0.00088"
+    judgement: successful_cat_branch_update
+    note: >
+      042は014/015 CatBoost branchを単体CV/LBともに明確に更新した。
+      029/038系特徴セットのCatBoost移植は有効。
+      単体LB 0.95283で、GBDT横展開の中では040/041より強い。
+
+  blend_summary:
+    nm_softmax_raw:
+      cv_auc: 0.9549955448577259
+      public_lb: 0.95431
+      comparison_to_add040_nm:
+        previous_cv_auc: 0.9549622374683012
+        previous_public_lb: 0.95431
+        delta_cv: "+0.0000333073894247"
+        delta_public_lb: "+0.00000"
+      comparison_to_add041_nm:
+        previous_cv_auc: 0.9549622140763385
+        previous_public_lb: not_submitted
+        delta_cv: "+0.0000333307813874"
+      comparison_to_add038_nm:
+        previous_cv_auc: 0.9549081509886924
+        previous_public_lb: 0.95431
+        delta_cv: "+0.0000873938690335"
+        delta_public_lb: "+0.00000"
+      judgement: public_best_tie_and_new_best_cv
+      note: >
+        add042 NMはCV 0.9549955449で現時点最高。
+        Public LBは0.95431でadd038/add040 NMと同値。
+        Public単独更新ではないが、CV上は最も強い攻め候補。
+
+    logreg_meta_pruned:
+      cv_auc: 0.9549723928660285
+      public_lb: 0.95430
+      comparison_to_add040_logreg:
+        previous_cv_auc: 0.9549298034221942
+        previous_public_lb: 0.95426
+        delta_cv: "+0.0000425894438343"
+        delta_public_lb: "+0.00004"
+      comparison_to_add038_logreg:
+        previous_cv_auc: 0.9548707006521889
+        previous_public_lb: 0.95425
+        delta_cv: "+0.0001016922138396"
+        delta_public_lb: "+0.00005"
+      judgement: new_best_logreg_backup
+      note: >
+        add042 LogRegはCV/LBともに既存LogReg候補を更新。
+        Public LB 0.95430で、現時点の安定候補として最良。
+        NM系Public best 0.95431との差は0.00001のみで、最終提出候補として非常に重要。
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9549954644986887
+      public_lb: not_submitted
+      note: >
+        NMとほぼ同等CV。
+        NM提出が0.95431だったため、追加提出の優先度は低い。
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9549955140805400
+      public_lb: not_submitted
+      note: >
+        CVはNMとほぼ同等だが、signed weightを許す攻め枠。
+        Private耐性は読みづらく、通常提出候補にはしない。
+
+    avg:
+      cv_auc: 0.9548236600980113
+      public_lb: not_submitted
+      note: >
+        simple averageはNM/LogRegに劣る。
+        提出候補ではない。
+
+    ridge_meta_pruned:
+      cv_auc: 0.9547292634431630
+      public_lb: not_submitted
+      note: >
+        Ridgeは今回も弱い。
+        S6E5ではRidgeを安定枠として扱う根拠は薄い。
+
+  nm_weights:
+    "014": 0.0000000089
+    "015": 0.0000000082
+    "016": 0.0810567231
+    "017": 0.0063545983
+    "021": 0.0198289487
+    "026": 0.0000000085
+    "028": 0.0406022249
+    "029": 0.0664025616
+    "032": 0.1188295137
+    "036": 0.1221522041
+    "037": 0.0045936027
+    "038": 0.0184335897
+    "039": 0.2755167938
+    "040": 0.0730956368
+    "041": 0.0274527072
+    "042": 0.1456808699
+
+  weight_interpretation:
+    - >
+      042はNMで約0.146の大きな重みを取得。
+      014/015はほぼゼロ化しており、042はCatBoost branchの明確な置換候補。
+    - >
+      039は約0.276で引き続き最大重み。
+      039は単体Public LBは弱いが、blend上では中心素材。
+    - >
+      036は約0.122、032は約0.119で依然として重要。
+    - >
+      040は約0.073で残り、026はゼロ化。
+      LGB branchは040で置換済みと見てよい。
+    - >
+      041は約0.027で小さく残ったが、XGB branchの主役は016の約0.081。
+      041は標準stack必須ではない。
+    - >
+      037は約0.0046でほぼゼロ。
+      標準stackから除外でよい。
+
+  correlation:
+    pearson:
+      vs_015: 0.9957321067715587
+      vs_014: 0.9953533864839895
+      vs_040: 0.9868009815983490
+      vs_039: 0.9595304194515533
+      vs_038: 0.9600843507183405
+      vs_036: 0.9613827176417730
+      vs_032: 0.9611433540655481
+      vs_029: 0.9625350449388755
+      vs_041: 0.9641370001072074
+    spearman:
+      vs_015: 0.9932552099287913
+      vs_014: 0.9926638896766068
+      vs_040: 0.9740044413149358
+      vs_039: 0.9759925330833813
+      vs_038: 0.9759846656987098
+      vs_036: 0.9774856141377041
+      vs_032: 0.9726680936486763
+      vs_029: 0.9766681776724776
+      vs_041: 0.9768780926455120
+    interpretation: >
+      042は014/015とは非常に高相関で、CatBoost branch内の置換に近い。
+      一方でRealMLP系とはPearson約0.96前後で、blend素材としてのズレは残る。
+      040ともPearson約0.987で高めだが、NMでは040と042が両方残っているため、
+      LGB/CatBoostの補助branchとして併用価値がある。
+
+  final_judgement:
+    decision: keep
+    reason: >
+      042は単体で014/015をCV/LBともに明確に上回り、
+      add042 NMでは現最高CV 0.9549955449、Public LB 0.95431を達成した。
+      Public LBはadd038/add040 NMと同値で単独更新ではないが、
+      add042 LogRegはPublic LB 0.95430まで伸び、安定候補を明確に更新した。
+      よって042はCatBoost branchの置換候補としてkeep。
+    current_best_after_042:
+      public_attack_candidates:
+        - name: add038_nm
+          public_lb: 0.95431
+          cv_auc: 0.9549081509886924
+          note: previous_public_best
+        - name: add040_nm
+          public_lb: 0.95431
+          cv_auc: 0.9549622374683012
+          note: public_best_tie
+        - name: add042_nm
+          public_lb: 0.95431
+          cv_auc: 0.9549955448577259
+          note: public_best_tie_and_current_best_cv
+      stable_backup:
+        name: add042_logreg
+        public_lb: 0.95430
+        cv_auc: 0.9549723928660285
+        note: current_best_logreg_backup
+
+  next_action:
+    - >
+      042は014/015置換候補として採用。
+      今後の標準stackでは014/015を外して042を入れる構成を検討する。
+    - >
+      026は040に置換、014/015は042に置換、037は除外でよい。
+    - >
+      041はXGB branchの参考候補だが、標準stack必須ではない。
+      XGB branchは016を中心に、041を入れるかはblend側で判断する。
+    - >
+      次は単体モデル追加より、標準stack整理版でadd042相当のNM/LogRegを再確認する価値が高い。
+      具体的には、014/015/026/037を外し、040/042を残すpruned standard stackを作る。
