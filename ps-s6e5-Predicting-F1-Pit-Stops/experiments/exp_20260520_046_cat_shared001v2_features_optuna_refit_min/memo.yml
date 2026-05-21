@@ -1,1 +1,144 @@
+experiment:
+  id: exp_20260520_046_cat_shared001v2_features_optuna_refit_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-20
+  type: optuna_refit
+  status: completed
 
+objective:
+  summary: >
+    045 Optuna searchで得たbest CatBoost paramsを、042 CatBoost shared001v2 features構成へ適用し、
+    正式な5fold OOF/pred/submissionを作成する。
+    046では特徴量・fold・original rows append・禁止列処理は042から変更しない。
+  purpose:
+    - 042単体CV/LBをOptuna paramsで更新できるか確認する
+    - add046 blendでadd044_nm / add042_logregを置換できるか確認する
+  not_purpose:
+    - 新規特徴量追加
+    - 039 LOG特徴の追加
+    - pseudo label
+    - stack構成変更
+
+base:
+  model_structure: exp_20260520_042_cat_shared001v2_features_min
+  params_source: exp_20260520_045_cat_shared001v2_features_optuna_search_min
+  baseline_042:
+    cv_auc: 0.953240915414691
+    public_lb: 0.95283
+  optuna_045:
+    best_cv_auc: 0.953352253739158
+    best_params_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/exp_20260520_045_cat_shared001v2_features_optuna_search_min/best_params_045.json
+
+best_params_from_045:
+  learning_rate: 0.015888820918127773
+  depth: 8
+  l2_leaf_reg: 2.411289811529197
+  random_strength: 1.325044568707964
+  min_data_in_leaf: 13
+  border_count: 254
+
+fixed_from_042:
+  feature_set: same_as_042
+  folds: same_as_042
+  original_rows: same_as_042
+  target: PitNextLap
+  metric: AUC
+  forbidden:
+    - Normalized_TyreLife
+    - Normalized_TyreLife proxy
+    - future endpoint proxy
+    - pseudo label
+    - new feature engineering
+  inherited_policy:
+    - Race_Year group-stat features are dropped
+    - Race_Year itself is kept
+    - IsOriginalData is kept
+    - TyreAgeRatio_str is kept
+    - 039 LOG features are not added
+
+data:
+  train_shape: [439140, 16]
+  test_shape: [188165, 15]
+  original_available: True
+  original_shape_after_drop: [101371, 15]
+  target: PitNextLap
+  use_original_rows: True
+
+features:
+  n_features: 337
+  n_cat_features: 93
+  shared001v2_042_feature_count: 26
+  dropped_race_year_groupstat_feature_count: 12
+  race_year_used: True
+  race_year_groupstats_used: False
+  isoriginaldata_used: True
+  tyreageratio_str_used: True
+
+model:
+  family: CatBoost
+  params_effective:
+    iterations: 9000
+    learning_rate: 0.015888820918127773
+    depth: 8
+    l2_leaf_reg: 2.411289811529197
+    random_strength: 1.325044568707964
+    bootstrap_type: Bernoulli
+    subsample: 0.8
+    border_count: 254
+    loss_function: Logloss
+    eval_metric: AUC
+    auto_class_weights: Balanced
+    task_type: GPU
+    random_seed: 42
+    early_stopping_rounds: 350
+    allow_writing_files: False
+    min_data_in_leaf: 13
+    devices: 0:1
+  cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+
+result:
+  cv_auc: 0.9533614771835248
+  cv_logloss: 0.26060506238336834
+  fold_auc_mean: 0.9533713576817572
+  fold_auc_std: 0.0008231311147775614
+  public_lb: 0.95283
+  comparison_to_042:
+    baseline_cv_auc: 0.953240915414691
+    delta_cv_auc: 0.00012056176883379344
+    baseline_public_lb: 0.95283
+  comparison_to_045_search:
+    optuna_best_cv_auc: 0.953352253739158
+    delta_cv_auc: 9.223444366823763e-06
+
+outputs:
+  oof_npy: oof_exp_20260520_046_cat_shared001v2_features_optuna_refit_min.npy
+  pred_npy: pred_exp_20260520_046_cat_shared001v2_features_optuna_refit_min.npy
+  submission: submission_exp_20260520_046_cat_shared001v2_features_optuna_refit_min.csv
+  cv_result: cv_result.json
+  memo_draft: memo_draft.yml
+  feature_columns: feature_columns.csv
+  feature_importance: feature_importance.csv
+  categorical_features: categorical_features.csv
+
+success_criteria:
+  single:
+    cv_must_exceed_042: 0.953240915414691
+    public_lb_must_exceed_042: 0.95283
+    strong_if_cv_at_least: 0.95335
+  blend:
+    nm_cv_must_exceed: 0.9550053246176218
+    nm_public_lb_must_be_at_least: 0.95431
+    logreg_public_lb_must_exceed: 0.95430
+
+judgement:
+  decision: pending
+  notes: >
+    まず046単体CVとPublic LBを042と比較する。
+    単体CVだけ改善しても採用しない。
+    次にadd046 blendでadd044_nmおよびadd042_logregを超えるか確認する。
+    CVだけでなくPublic LBとstack内重みを必ず確認する。
