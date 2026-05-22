@@ -1,1 +1,75 @@
+experiment:
+  id: exp_20260521_047_lgb_shared001v2_features_optuna_search_min
+  title: LGB 040 shared001v2 features Optuna search
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-21
+  type: optuna_search
+  status: completed
 
+objective:
+  summary: >
+    040 LGB shared001v2 features構成を固定し、LightGBMの主要ハイパラのみをOptunaで探索する。
+    特徴量追加やstack変更は行わず、040単体CVを改善できるか確認する。
+  base_experiment: exp_20260519_040_lgb_shared001v2_features_min
+  next_step: exp_20260521_048_lgb_shared001v2_features_optuna_refit_min
+
+fixed:
+  feature_set: same_as_040
+  folds: same_as_040
+  original_rows: same_as_040
+  target: PitNextLap
+  metric: AUC
+  forbidden:
+    - Normalized_TyreLife
+    - Normalized_TyreLife_proxy
+    - future_endpoint_proxy
+    - pseudo_label
+    - new_feature_engineering
+    - 039_LOG_features
+
+search_space:
+  learning_rate: [0.010, 0.050]
+  num_leaves: [15, 31, 63, 95, 127]
+  min_child_samples: [40, 260]
+  subsample: [0.70, 0.95]
+  colsample_bytree: [0.65, 0.95]
+  reg_alpha: [0.001, 5.0]
+  reg_lambda: [1.0, 50.0]
+  max_bin: [127, 255]
+  max_depth: [-1, 5, 7, 9]
+
+optuna:
+  direction: maximize
+  n_trials_requested: 40
+  n_trials_completed: 23
+  timeout_sec: 36000
+  sampler: TPESampler
+  seed: 3407
+  search_seeds: [3407]
+  note: >
+    探索段階は計算量を抑えるため1 seedで実施。
+    048 refitでは040と同じ2 seed ensembleに戻す。
+
+baseline:
+  cv_040: 0.952402816513
+  public_lb_040: 0.95195
+
+result:
+  best_trial_number: 21
+  best_cv_auc: 0.952367897958
+  delta_vs_040_cv: -0.000034918556
+  best_params: {"learning_rate": 0.017965984946211905, "num_leaves": 31, "min_child_samples": 42, "subsample": 0.7793380889375259, "colsample_bytree": 0.766621013389853, "reg_alpha": 1.7319525525998427, "reg_lambda": 20.02452600933855, "max_bin": 255, "max_depth": 7}
+
+artifacts:
+  best_params: best_params_047.json
+  trials: optuna_trials_047.csv
+  study_summary: optuna_study_summary_047.json
+  study_pickle: optuna_study_047.pkl
+  feature_columns: feature_columns.csv
+
+judgement:
+  decision: pending_refit
+  reason: >
+    047は探索実験であり、正式OOF/pred/submissionは作成しない。
+    best paramsを048へ適用し、040と同じ2 seed ensembleで正式refitしてから採否判断する。
