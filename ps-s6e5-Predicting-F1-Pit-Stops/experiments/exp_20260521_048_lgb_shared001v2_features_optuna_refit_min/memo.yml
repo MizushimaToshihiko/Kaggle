@@ -66,3 +66,246 @@ judgement:
   decision: pending_public_lb_and_blend
   note: >
     048は正式refitであり、採否は単体CVだけでなくPublic LBとadd048 blendで判断する。
+
+blend_result_add048:
+  blend_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add048.ipynb
+  result_file: blend_result_add048.json
+
+  submitted:
+    - candidate: nm_softmax_raw
+      cv_auc: 0.9550141257866351
+      public_lb: 0.95431
+    - candidate: logreg_meta_pruned
+      cv_auc: 0.9549893921534018
+      public_lb: 0.95427
+
+  single_048:
+    cv_auc: 0.9524552154694373
+    public_lb: 0.95191
+    comparison_to_040:
+      cv_040: 0.9524028165133429
+      public_lb_040: 0.95195
+      delta_cv: "+0.0000523989560944"
+      delta_public_lb: "-0.00004"
+    comparison_to_047_search:
+      best_cv_auc_047: 0.952367897958
+      delta_cv_vs_047_best: "+0.0000873175114373"
+      note: >
+        048 refitでは047 search bestを上回った。
+        2 seed ensembleに戻した効果でCVは040をわずかに超えた。
+    judgement: cv_slight_success_public_down
+    note: >
+      048は040より単体CVをわずかに改善したが、Public LBは0.95195から0.95191へ低下。
+      LGB OptunaはOOF上では少し効いたが、単体Public更新には変換されなかった。
+
+  blend_summary:
+    nm_softmax_raw:
+      cv_auc: 0.9550141257866351
+      public_lb: 0.95431
+      comparison_to_add046_nm:
+        previous_cv_auc: 0.9550131965498656
+        previous_public_lb: 0.95431
+        delta_cv: "+0.0000009292367695"
+        delta_public_lb: "+0.00000"
+      comparison_to_add044_nm:
+        previous_cv_auc: 0.9550053246176218
+        previous_public_lb: 0.95431
+        delta_cv: "+0.0000088011690133"
+        delta_public_lb: "+0.00000"
+      comparison_to_043_pruned_nm:
+        previous_cv_auc: 0.9549957251612822
+        previous_public_lb: 0.95431
+        delta_cv: "+0.0000184006253529"
+        delta_public_lb: "+0.00000"
+      judgement: new_best_cv_public_best_tie
+      note: >
+        add048 NMはCV 0.9550141258で現時点最高CV。
+        ただしPublic LBは0.95431で既存best tieのまま。
+        048追加によるCV改善は極小であり、Public単独更新ではない。
+
+    logreg_meta_pruned:
+      cv_auc: 0.9549893921534018
+      public_lb: 0.95427
+      comparison_to_add046_logreg:
+        previous_cv_auc: 0.9549899744798823
+        previous_public_lb: 0.95428
+        delta_cv: "-0.0000005823264805"
+        delta_public_lb: "-0.00001"
+      comparison_to_add042_logreg:
+        previous_cv_auc: 0.9549723928660285
+        previous_public_lb: 0.95430
+        delta_cv: "+0.0000169992873733"
+        delta_public_lb: "-0.00003"
+      judgement: not_stable_update
+      note: >
+        LogRegはadd042よりCVは上だが、Public LBは0.95427。
+        add042 LogReg 0.95430を下回るため、安定候補更新ではない。
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9550140058662258
+      public_lb: not_submitted
+      note: >
+        NMとほぼ同等CV。
+        NM提出結果がPublic 0.95431だったため、追加提出優先度は低い。
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9550140955299935
+      public_lb: not_submitted
+      note: >
+        signed SLSQPはCV上はNMに近いが、攻め枠すぎる。
+        通常提出候補にはしない。
+
+    avg:
+      cv_auc: 0.9548920208802818
+      public_lb: not_submitted
+      note: >
+        単純平均はadd046 avg 0.9549114014より低下。
+        048追加により平均性能は改善していない。
+
+    ridge_meta_pruned:
+      cv_auc: 0.9547389993471956
+      public_lb: not_submitted
+      note: >
+        Ridgeは依然として弱い。
+        046でPublic LB 0.95416だったため、今後も提出候補にしない。
+
+  nm_weights:
+    "016": 0.0805645726
+    "017": 0.0169436929
+    "021": 0.0174325541
+    "028": 0.0353654121
+    "029": 0.0361832176
+    "032": 0.1030848906
+    "036": 0.1019812847
+    "038": 0.0000000082
+    "039": 0.2537724809
+    "040": 0.0342080822
+    "041": 0.0122487229
+    "042": 0.0707707204
+    "044": 0.1060177882
+    "046": 0.0951829248
+    "048": 0.0362436477
+
+  weight_interpretation:
+    - >
+      048はNMで約0.036の重みを取得。
+      完全に不要ではないが、040と比較して強い置換候補とは言いにくい。
+    - >
+      040も約0.034で残っており、048は040を完全置換していない。
+      LGB branchは040/048併存だが、どちらも重みは中小規模。
+    - >
+      039が約0.254で最大重みを維持。
+      RealMLP LOG/seedreg系が引き続きblend中心。
+    - >
+      044は約0.106、046は約0.095、032は約0.103、036は約0.102で重要。
+      044/046追加後の構成は維持されている。
+    - >
+      042は約0.071で残る。
+      CatBoost branchは042/046の両方が有効。
+    - >
+      038はほぼゼロ化。
+      038は044/039に吸収されたと見てよい。
+    - >
+      016は約0.081でXGB branch主素材。
+      017/041は小さいがゼロではない。
+
+  correlation:
+    pearson:
+      vs_040: 0.9986002103289040
+      vs_046: 0.9877138042537298
+      vs_042: 0.9871267287891850
+      vs_039: 0.9580464556746090
+      vs_044: 0.9579056202198728
+      vs_036: 0.9584204566212865
+      vs_032: 0.9595848740096169
+      vs_016: 0.9624360140371502
+    spearman:
+      vs_040: 0.9974302362501811
+      vs_046: 0.9753078297225724
+      vs_042: 0.9747196249762035
+      vs_039: 0.9739072622490833
+      vs_044: 0.9725631216228584
+      vs_036: 0.9725304729892456
+      vs_032: 0.9692313107911027
+      vs_016: 0.9732626623544776
+    interpretation: >
+      048は040と極めて高相関で、LGB branch内の近傍variant。
+      040より単体CVは少し高いが、Public LBは低い。
+      低相関な新素材ではなく、LGB補助branchの微修正版として扱うべき。
+
+  current_candidate_status_after_048:
+    public_attack_candidates:
+      - name: add038_nm
+        cv_auc: 0.9549081509886924
+        public_lb: 0.95431
+        note: earlier_public_best
+      - name: add040_nm
+        cv_auc: 0.9549622374683012
+        public_lb: 0.95431
+        note: public_best_tie
+      - name: add042_nm
+        cv_auc: 0.9549955448577259
+        public_lb: 0.95431
+        note: public_best_tie_full_stack
+      - name: 043_pruned_nm
+        cv_auc: 0.9549957251612822
+        public_lb: 0.95431
+        note: public_best_tie_pruned_stack
+      - name: add044_nm
+        cv_auc: 0.9550053246176218
+        public_lb: 0.95431
+        note: public_best_tie
+      - name: add046_nm
+        cv_auc: 0.9550131965498656
+        public_lb: 0.95431
+        note: previous_best_cv_public_best_tie
+      - name: add048_nm
+        cv_auc: 0.9550141257866351
+        public_lb: 0.95431
+        note: current_best_cv_public_best_tie
+    stable_backup_candidates:
+      - name: add042_logreg
+        cv_auc: 0.9549723928660285
+        public_lb: 0.95430
+        note: current_best_logreg_public
+      - name: add046_logreg
+        cv_auc: 0.9549899744798823
+        public_lb: 0.95428
+        note: higher_cv_than_add042_but_lower_public
+      - name: add048_logreg
+        cv_auc: 0.9549893921534018
+        public_lb: 0.95427
+        note: high_cv_but_public_down
+    rejected_or_deprioritized:
+      - name: ridge_family
+        reason: >
+          Ridgeは046提出でPublic LB 0.95416と弱く、最終候補から外す。
+
+  final_judgement:
+    decision: hold_for_nm_attack_only_not_standard_update
+    reason: >
+      048は040より単体CVをわずかに改善したが、単体Public LBは低下した。
+      add048 NMでは現時点最高CVをわずかに更新したものの、Public LBは0.95431で既存best tieに留まった。
+      LogRegは0.95427でadd042 LogReg 0.95430を下回る。
+      したがって048はNM攻め枠の補助素材としてholdするが、LGB branchの明確な標準更新とはしない。
+    current_best_after_048:
+      attack:
+        name: add048_nm
+        cv_auc: 0.9550141257866351
+        public_lb: 0.95431
+      stable:
+        name: add042_logreg
+        cv_auc: 0.9549723928660285
+        public_lb: 0.95430
+
+  next_action:
+    - >
+      LGB OptunaはCV上わずかに効いたが、Public LBには変換されなかった。
+      追加のLGB Optuna深掘りは優先度を下げる。
+    - >
+      次にOptunaを継続するなら、予定通りXGB 016/041 Optunaへ進む。
+    - >
+      現在の最終候補は、攻め枠add048_nm、安定枠add042_logregを中心に管理する。
+    - >
+      ただしadd048_nmのCV更新幅は極小で、048単体Publicも弱いため、
+      攻め枠はadd046_nm/add048_nm/043_pruned_nmを横並びで保持する。
