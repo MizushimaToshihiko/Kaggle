@@ -1,1 +1,68 @@
+experiment:
+  id: exp_20260521_048_lgb_shared001v2_features_optuna_refit_min
+  title: LGB 040 shared001v2 features + 047 Optuna best params refit
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-21
+  type: optuna_refit
+  status: completed
 
+objective:
+  summary: >
+    047 Optuna searchで得たbest LightGBM paramsを040構成へ適用し、
+    正式な5fold OOF/pred/submissionを作成する。
+    特徴量・fold・original rows append・禁止列処理は040から変更しない。
+  base_experiment: exp_20260519_040_lgb_shared001v2_features_min
+  params_source: exp_20260521_047_lgb_shared001v2_features_optuna_search_min
+  intended_role: lgb_branch_optuna_variant_for_blend
+
+fixed:
+  feature_set: same_as_040
+  folds: same_as_040
+  original_rows: same_as_040
+  seeds: [3407, 42]
+  target: PitNextLap
+  metric: AUC
+  forbidden:
+    - Normalized_TyreLife
+    - Normalized_TyreLife_proxy
+    - future_endpoint_proxy
+    - pseudo_label
+    - new_feature_engineering
+    - 039_LOG_features
+
+best_params_from_047:
+  params: {"learning_rate": 0.017965984946211905, "num_leaves": 31, "min_child_samples": 42, "subsample": 0.7793380889375259, "colsample_bytree": 0.766621013389853, "reg_alpha": 1.7319525525998427, "reg_lambda": 20.02452600933855, "max_bin": 255, "max_depth": 7}
+
+baseline:
+  cv_040: 0.952402816513
+  public_lb_040: 0.95195
+
+result:
+  cv_auc: 0.952455215469
+  public_lb: 0.95191
+  delta_vs_040_cv: +0.000052398956
+  fold_scores: [0.9514854856153258, 0.9524769392808492, 0.9524685904905423, 0.9527097947328642, 0.9531756199911593]
+  fold_mean: 0.952463286022
+  fold_std: 0.000552176496
+
+outputs:
+  oof: oof_exp_20260521_048_lgb_shared001v2_features_optuna_refit_min.npy
+  pred: pred_exp_20260521_048_lgb_shared001v2_features_optuna_refit_min.npy
+  submission: submission_exp_20260521_048_lgb_shared001v2_features_optuna_refit_min.csv
+  cv_result: cv_result.json
+  memo_draft: memo_draft.yml
+
+success_criteria:
+  single:
+    cv_must_exceed_040: 0.9524028165133429
+    public_lb_must_exceed_040: 0.95195
+  blend:
+    nm_cv_must_exceed: 0.9550131965498656
+    nm_public_lb_must_be_at_least: 0.95431
+    logreg_public_lb_must_exceed: 0.95430
+
+judgement:
+  decision: pending_public_lb_and_blend
+  note: >
+    048は正式refitであり、採否は単体CVだけでなくPublic LBとadd048 blendで判断する。
