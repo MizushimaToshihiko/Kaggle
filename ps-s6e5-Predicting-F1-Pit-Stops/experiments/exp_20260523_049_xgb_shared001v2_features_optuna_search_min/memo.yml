@@ -1,1 +1,117 @@
+experiment:
+  id: exp_20260523_049_xgb_shared001v2_features_optuna_search_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-23
+  type: optuna_search
+  status: completed
+
+objective:
+  summary: >
+    041 XGB shared001v2 features構成を固定し、XGBoostの主要ハイパラだけをOptunaで探索する。
+    目的はXGB branchの016/041を更新できる可能性を確認することであり、
+    新規特徴量追加やstack変更は行わない。
+
+base:
+  experiment: exp_20260520_041_xgb_shared001v2_features_min
+  model: XGBClassifier
+  baseline_016:
+    cv_auc: 0.9519855866173828
+    public_lb: 0.95164
+  baseline_041:
+    cv_auc: 0.9520124407043763
+    public_lb: 0.95173
+
+fixed:
+  feature_set: same_as_041
+  folds: same_as_041
+  original_rows: same_as_041
+  target: PitNextLap
+  metric: AUC
+  forbidden:
+    - Normalized_TyreLife
+    - Normalized_TyreLife proxy
+    - future endpoint proxy
+    - pseudo label
+    - new feature engineering
+    - 039 LOG features
+
+search_space:
+  learning_rate: [0.01, 0.06, log]
+  max_leaves: [32, 128]
+  min_child_weight: [1.0, 30.0, log]
+  subsample: [0.65, 0.95]
+  colsample_bytree: [0.65, 0.95]
+  reg_alpha: [0.0001, 10.0, log]
+  reg_lambda: [1.0, 50.0, log]
+  gamma: [0.0, 5.0]
+  max_bin: [128, 256]
+
+fixed_xgb_params:
+  objective: binary:logistic
+  eval_metric: auc
+  n_estimators: 10000
+  early_stopping_rounds: 200
+  grow_policy: lossguide
+  max_depth: 0
+  tree_method: hist
+  device: cuda
+  enable_categorical: true
+
+optuna:
+  direction: maximize
+  n_trials_requested: 40
+  n_trials_completed: 40
+  timeout_sec: 36000
+  sampler: TPESampler
+  seed: 42
+  model_seed_policy: single_seed_for_search
+  optuna_model_seed: 42
+
+result:
+  best_trial_number: 11
+  best_cv_auc: 0.9522274536894715
+  delta_vs_016_cv: +0.0002418670720887
+  delta_vs_041_cv: +0.0002150129850952
+  strong_if_cv_at_least: 0.9522000000000000
+  decision: success_go_to_050_refit
+
+best_params:
+  learning_rate: 0.010068327898866912
+  max_leaves: 128
+  min_child_weight: 7.2092861848805745
+  subsample: 0.6582752198269224
+  colsample_bytree: 0.6585993126442755
+  reg_alpha: 0.0001235471477916111
+  reg_lambda: 40.207068290141855
+  gamma: 1.7896753305924635
+  max_bin: 128
+
+
+outputs:
+  best_params: best_params_049.json
+  trials: optuna_trials_049.csv
+  study_summary: optuna_study_summary_049.json
+  study_pkl: optuna_study_049.pkl
+  feature_columns: feature_columns.csv
+  shared001v2_features: shared001v2_features_049.csv
+  memo_draft: memo_draft.yml
+
+success_criteria:
+  best_cv_must_exceed: 0.9520124407043763
+  strong_if_cv_at_least: 0.9522000000000000
+
+next_step:
+  if_success: >
+    Create 050 refit notebook using best_params_049.json.
+  if_fail: >
+    Do not deepen XGB Optuna. Optionally run 050 once only if best params look reasonable.
+
+notes:
+  - >
+    049 is search-only. It does not create final OOF/pred/submission.
+  - >
+    050 should use the same feature set and fold design as 041 and apply best_params_049.json.
+  - >
+    CV-only improvement is not enough for final adoption. 050 single LB and add050 blend must be checked.
 
