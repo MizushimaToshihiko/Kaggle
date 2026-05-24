@@ -1,1 +1,156 @@
+experiment:
+  id: exp_20260524_050_xgb_shared001v2_features_optuna_refit_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-24
+  type: optuna_refit
+  status: completed_single_pending_public_lb_and_blend
+
+objective:
+  summary: >
+    049 Optuna searchで得たbest XGB paramsを041構成へ適用し、
+    正式な5fold x 5seed OOF/pred/submissionを作成する。
+    目的はXGB branchの016/041を置換または補強できるか確認すること。
+  role: xgb_optuna_refit_candidate
+
+base:
+  model_structure: exp_20260520_041_xgb_shared001v2_features_min
+  params_source: exp_20260523_049_xgb_shared001v2_features_optuna_search_min
+  model: XGBClassifier
+  family: XGBoost
+  reference_scores:
+    "016":
+      cv_auc: 0.9519855866173828
+      public_lb: 0.95164
+    "041":
+      cv_auc: 0.9520124407043763
+      public_lb: 0.95173
+    "049_search_best":
+      cv_auc: 0.9522274536894715
+      public_lb: null
+
+params_from_049:
+  source_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/exp_20260523_049_xgb_shared001v2_features_optuna_search_min/best_params_049.json
+  best_params: {"learning_rate": 0.010068327898866912, "max_leaves": 128, "min_child_weight": 7.2092861848805745, "subsample": 0.6582752198269224, "colsample_bytree": 0.6585993126442755, "reg_alpha": 0.0001235471477916111, "reg_lambda": 40.207068290141855, "gamma": 1.7896753305924635, "max_bin": 128}
+
+fixed_from_041:
+  feature_set: same_as_041
+  original_rows_appended_to_fold_train: True
+  no_new_features: true
+  no_039_log_features: true
+  outer_cv:
+    scheme: StratifiedKFold
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  inner_te_folds: 5
+  seeds_per_fold: [42, 43, 44, 45, 46]
+
+forbidden:
+  - Normalized_TyreLife
+  - Normalized_TyreLife proxy
+  - future endpoint proxy
+  - pseudo label
+  - new feature engineering
+  - 039 LOG features
+
+model:
+  effective_xgb_params:
+    n_estimators: 10000
+    learning_rate: 0.010068327898866912
+    grow_policy: lossguide
+    max_depth: 0
+    max_leaves: 128
+    min_child_weight: 7.2092861848805745
+    subsample: 0.6582752198269224
+    colsample_bytree: 0.6585993126442755
+    reg_alpha: 0.0001235471477916111
+    reg_lambda: 40.207068290141855
+    gamma: 1.7896753305924635
+    max_bin: 128
+    tree_method: hist
+    device: cuda
+    enable_categorical: True
+
+features:
+  base_feature_count_before_fe_te: 135
+  final_feature_count_after_fe_te: 284
+  num_as_cat_count: 37
+  digit_feature_count: 67
+  bigram_spec_count: 55
+  shared001v2_cat_feature_count: 14
+  shared001v2_count_feature_count: 17
+
+result:
+  cv_auc: 0.952322910008
+  cv_logloss: 0.218922419027
+  fold_auc_mean: 0.952327343450
+  fold_auc_std: 0.000939958593
+  public_lb: null
+
+comparison:
+  vs_016:
+    cv_016: 0.9519855866173828
+    public_lb_016: 0.95164
+    delta_cv: "+0.000337323391"
+  vs_041:
+    cv_041: 0.9520124407043763
+    public_lb_041: 0.95173
+    delta_cv: "+0.000310469304"
+  vs_049_search_best:
+    cv_049_best: 0.9522274536894715
+    delta_cv: "+0.000095456319"
+
+artifacts:
+  outdir: /kaggle/working/exp_20260524_050_xgb_shared001v2_features_optuna_refit_min
+  oof_npy: oof_exp_20260524_050_xgb_shared001v2_features_optuna_refit_min.npy
+  pred_npy: pred_exp_20260524_050_xgb_shared001v2_features_optuna_refit_min.npy
+  submission: submission_exp_20260524_050_xgb_shared001v2_features_optuna_refit_min.csv
+  fold_scores: fold_scores.csv
+  seed_scores: seed_scores.csv
+  feature_columns: feature_columns.csv
+  shared001v2_features_050: shared001v2_features_050.csv
+  cv_result: cv_result.json
+  memo_draft: memo_draft.yml
+
+success_criteria:
+  single:
+    cv_must_exceed_041: 0.9520124407043763
+    public_lb_must_exceed_041: 0.95173
+    strong_if_cv_at_least: 0.95220
+  blend:
+    nm_cv_must_exceed: 0.9550141257866351
+    nm_public_lb_must_be_at_least: 0.95431
+    logreg_public_lb_must_exceed: 0.9543
+
+blend_policy:
+  benchmark_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add050.ipynb
+  compare_against:
+    current_attack: add048_nm
+    current_stable: add042_logreg
+  compare_methods:
+    - avg
+    - hc_nonnegative_raw
+    - nm_softmax_raw
+    - ridge_meta_pruned
+    - logreg_meta_pruned
+  decision_rule:
+    keep:
+      - single_cv_and_public_lb_above_041
+      - add050_nm_cv_above_add048_nm
+      - add050_nm_public_lb_at_least_0.95431
+      - useful_weight_in_nm_or_hc
+    hold:
+      - single_cv_above_041_but_public_or_blend_not_updated
+      - useful_weight_in_nm_but_no_public_update
+    drop:
+      - single_cv_not_above_041
+      - public_lb_not_above_041
+      - no_weight_in_blend
+
+judgement:
+  status: pending_public_lb_and_blend
+  summary: >
+    050はXGB Optuna refitであり、CVだけで採用しない。
+    041単体、049 search best、add048 NM、add042 LogRegを基準に判断する。
 
