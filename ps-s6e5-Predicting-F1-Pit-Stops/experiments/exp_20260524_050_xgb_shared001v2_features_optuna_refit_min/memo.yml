@@ -86,7 +86,7 @@ result:
   cv_logloss: 0.218922419027
   fold_auc_mean: 0.952327343450
   fold_auc_std: 0.000939958593
-  public_lb: null
+  public_lb: 0.95223
 
 comparison:
   vs_016:
