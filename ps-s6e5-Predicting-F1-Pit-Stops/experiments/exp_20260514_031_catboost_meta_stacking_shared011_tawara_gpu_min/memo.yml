@@ -1,1 +1,105 @@
+experiment:
+  id: exp_20260514_031_catboost_meta_stacking_shared011_tawara_gpu_min
+  title: CatBoost meta-stacking shared011 with Tawara GPU params
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  status: completed
 
+objective:
+  summary: >
+    030 shared011 as-is のCatBoost meta-stacking部分だけにTawara GPU paramsを反映し、
+    Public変換またはblend寄与が改善するか確認する。
+    030と違い、提出に関係しない前段の42/777 final seed ensembleは実行しない。
+  intended_role: catboost_meta_stacking_ablation
+
+source:
+  reference_code: code_shared_011.txt
+  base_experiment: exp_20260514_030_catboost_meta_stacking_shared011_min
+  model_family: CatBoostMetaStacking
+
+changes_from_030:
+  removed:
+    - front_42_777_final_seed_ensemble
+    - outputs_blends_prob_s42_s777_generation
+  kept:
+    - data_load
+    - feature_engineering
+    - base_clean_domain_feature_view_stacking
+    - meta_catboost_stacker
+  added_gpu_params:
+    bootstrap_type: Bernoulli
+    subsample: 0.8
+    border_count: 254
+  note: >
+    Tawara GPU params are applied to the later stacking CatBoost training.
+    The front seed ensemble is intentionally skipped.
+
+caution:
+  oof_type: meta_oof_like
+  note: >
+    meta_oof_likeは完全なnested OOFではなく、Meta CatBoostをholdoutで学習した後、
+    stack_oof全体にpredictした値である。
+    そのため通常のOOFよりCVの信用度は低めに扱う。
+
+data:
+  competition_train: /kaggle/input/competitions/playground-series-s6e5/train.csv
+  competition_test: /kaggle/input/competitions/playground-series-s6e5/test.csv
+  original: f1_strategy_dataset_v4.csv
+  target: PitNextLap
+
+model:
+  family: CatBoostMetaStacking
+  base_views:
+    - base
+    - clean
+    - domain
+  meta_model: CatBoostClassifier
+  stacking_n_folds: 3
+  stacking_base_iterations: 5000
+  stacking_meta_iterations: 3000
+
+result:
+  cv_auc_oof_like: 0.95309308326977
+  public_lb: 0.95220
+  per_year_auc: {'2022': 0.9183083492613118, '2023': 0.949084802187808, '2024': 0.932699873283053, '2025': 0.9324610618938868}
+  view_summary: [{'view': 'base', 'n_features': 302, 'n_categorical': 77, 'mean_best_iter': 4997.333333333333, 'final_iterations': 5397, 'oof_auc': 0.952567990577702, 'oof_logloss': 0.2651276975114224, 'test_mean': 0.28096533526843653, 'test_std': 0.3624111913484836}, {'view': 'clean', 'n_features': 141, 'n_categorical': 16, 'mean_best_iter': 4994.666666666667, 'final_iterations': 5394, 'oof_auc': 0.951628268808286, 'oof_logloss': 0.2670369018791838, 'test_mean': 0.28127545364940437, 'test_std': 0.3631882855846601}, {'view': 'domain', 'n_features': 93, 'n_categorical': 16, 'mean_best_iter': 4996.666666666667, 'final_iterations': 5396, 'oof_auc': 0.9518464252451101, 'oof_logloss': 0.26856143737929306, 'test_mean': 0.2825771667983729, 'test_std': 0.3635576858379232}]
+  meta_summary: [{'model': 'meta_catboost', 'n_meta_features': 11, 'best_iter': 700, 'holdout_auc': 0.9523696628809839, 'holdout_logloss': 0.21862186333384917, 'full_oof_like_auc': 0.9530930833673723, 'full_oof_like_logloss': 0.21704947340685846, 'test_mean': 0.19866253405041284, 'test_std': 0.3037333936289273, 'corr_with_base_test': 0.97145043222554, 'mean_abs_delta_vs_base_test': 0.08234202316344144}]
+
+artifacts:
+  notebook: exp_20260514_031_catboost_meta_stacking_shared011_tawara_gpu_min.ipynb
+  oof: oof_exp_20260514_031_catboost_meta_stacking_shared011_tawara_gpu_min.npy
+  pred: pred_exp_20260514_031_catboost_meta_stacking_shared011_tawara_gpu_min.npy
+  submission: submission_exp_20260514_031_catboost_meta_stacking_shared011_tawara_gpu_min.csv
+  cv_result: cv_result.json
+  stacking_folder: stacking/
+
+blend_policy:
+  benchmark_code: code_010_add_slsqp_drop020.txt
+  add_to_stack:
+    - "014"
+    - "015"
+    - "016"
+    - "017"
+    - "018"
+    - "021"
+    - "026"
+    - "028"
+    - "029"
+    - "031"
+  compare_against:
+    - "030"
+  decision_focus:
+    - corr_vs_030
+    - corr_vs_014_015
+    - nm_hc_slsqp_weight
+    - whether_031_replaces_030
+    - public_lb_if_submitted
+  keep_rule: >
+    Keep if 031 improves over 030 in blend CV/LB or replaces 030 with similar weight and better Public conversion.
+  drop_rule: >
+    Drop if 031 does not improve over 030 or receives near-zero blend weight.
+
+judgement:
+  status: pending
+  summary: >
+    CV/LB/correlation/blend weight確認後に keep / hold / drop を判断する。
