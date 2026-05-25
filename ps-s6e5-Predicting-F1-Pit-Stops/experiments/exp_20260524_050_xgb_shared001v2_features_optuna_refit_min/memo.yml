@@ -154,3 +154,388 @@ judgement:
     050はXGB Optuna refitであり、CVだけで採用しない。
     041単体、049 search best、add048 NM、add042 LogRegを基準に判断する。
 
+blend_result_add050:
+  blend_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add050.ipynb
+  result_files:
+    full_stack: blend_result_add050.json
+    drop016017: blend_result_add050drop016017.json
+
+  submitted: false
+  reason_not_submitted: >
+    CVが既存bestを改善しなかったため提出しなかった。
+    ただし後述の通り、今回のAdd050 blend結果は050評価としては無効。
+
+  data_issue:
+    status: invalid_blend_result
+    reason: >
+      blend_result_add050.json上で、key "050" のoof/predが
+      050 XGB Optuna refitのファイルではなく、
+      048 LGB Optuna refitのファイルを参照している。
+      そのため、050は実質的に048の複製としてblendに入っている。
+    observed_wrong_paths:
+      key: "050"
+      expected_family: XGBoost
+      actual_oof_in_json: oof_exp_20260521_048_lgb_shared001v2_features_optuna_refit_min.npy
+      actual_pred_in_json: pred_exp_20260521_048_lgb_shared001v2_features_optuna_refit_min.npy
+    evidence:
+      - >
+        individual sectionで050のcv_auc/oof_min/oof_max/pred_min/pred_maxが048と完全一致。
+      - >
+        correlation sectionで048と050のPearson/Spearmanが完全に1.0。
+      - >
+        drop016017版でも同じ問題が発生している。
+
+  single_050_from_invalid_blend_json:
+    cv_auc_reported: 0.9524552154694373
+    public_lb_reported: 0.95223
+    note: >
+      このcv_aucは実際には048と同一のOOFを使っているため、
+      050 XGB Optuna refitの単体CVとして扱わない。
+      public_lb 0.95223は別途050 submissionを提出した結果である可能性はあるが、
+      blend JSON上のOOF/pred参照が誤っているため、
+      OOFベースの相関・blend重み・blend CV判断には使えない。
+
+  invalid_full_stack_result_reference_only:
+    nm_softmax_raw:
+      cv_auc: 0.9550135775232769
+      public_lb: not_submitted
+      note: >
+        050が048の複製として入っているため、Add050 full-stack結果としては無効。
+        既存add048_nm 0.9550141257866351よりCVも低い。
+    logreg_meta_pruned:
+      cv_auc: 0.9549895285360269
+      public_lb: not_submitted
+      note: >
+        050評価としては無効。
+    avg:
+      cv_auc: 0.9548547626404196
+      note: >
+        050が048複製のため参考外。
+    ridge_meta_pruned:
+      cv_auc: 0.9547245696295056
+      note: >
+        050評価としては無効。
+
+  invalid_drop016017_result_reference_only:
+    nm_softmax_raw:
+      cv_auc: 0.9550099383975822
+      public_lb: not_submitted
+      note: >
+        drop016017版でも050が048の複製として入っているため無効。
+        016/017を落とす比較としても、050評価としても採用しない。
+    logreg_meta_pruned:
+      cv_auc: 0.9549857042266725
+      public_lb: not_submitted
+      note: >
+        050評価としては無効。
+
+  judgement:
+    decision: rerun_blend_required
+    reason: >
+      049 search自体は041を上回っており、050 refitへ進む根拠はあった。
+      しかし今回のAdd050 blendでは、050のOOF/pred入力が048のものになっているため、
+      050 XGB Optuna refitのblend寄与を評価できていない。
+      よって、このAdd050結果は採用・hold・dropの判断材料にしない。
+      正しい050 OOF/predを参照するようにblend notebookを修正し、再実行する必要がある。
+
+  required_fix:
+    correct_model_spec_for_050:
+      key: "050"
+      family: XGBoost
+      expected_oof: oof_exp_20260524_050_xgb_shared001v2_features_optuna_refit_min.npy
+      expected_pred: pred_exp_20260524_050_xgb_shared001v2_features_optuna_refit_min.npy
+      expected_public_lb: 0.95223
+    note: >
+      実際の050出力ファイル名が上記と異なる場合は、
+      Kaggle working/output上の050 refit notebookの保存名に合わせる。
+      重要なのは、048ではなく050のOOF/predを参照すること。
+
+  next_action:
+    - >
+      Add050 blend notebookのmodel_specsで、050のoof/predパスを050 XGB refitの出力に修正する。
+    - >
+      full-stack版を再実行する。
+    - >
+      必要ならdrop016017版も再実行する。
+    - >
+      再実行後、050単体CV、050 vs 041/016/048相関、NM weight、add050 NM/LogReg CVを改めて判断する。
+    - >
+      現時点では、攻め枠add048_nm、安定枠add042_logregの候補管理は変更しない。
+
+blend_result_add050_fixed:
+  blend_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add050.ipynb
+  result_file: blend_result_add050_fixed.json
+
+  submitted:
+    - candidate: nm_softmax_raw
+      cv_auc: 0.9550174162126694
+      public_lb: 0.95433
+    - candidate: logreg_meta_pruned
+      cv_auc: 0.9549943053114434
+      public_lb: 0.95430
+
+  fixed_from_previous_invalid_run:
+    status: fixed
+    previous_issue: >
+      前回のAdd050では、key "050" のoof/predが誤って048 LGB Optuna refitの
+      oof/predを参照していたため、050評価として無効だった。
+    fix: >
+      今回はkey "050" が正しく
+      oof_exp_20260524_050_xgb_shared001v2_features_optuna_refit_min.npy と
+      pred_exp_20260524_050_xgb_shared001v2_features_optuna_refit_min.npy を参照している。
+    judgement: >
+      今回のAdd050 fixed結果を正式な050 blend結果として採用する。
+
+  single_050:
+    cv_auc: 0.9523229100081324
+    public_lb: 0.95223
+    comparison_to_041:
+      cv_041: 0.9520124407043763
+      public_lb_041: 0.95173
+      delta_cv: "+0.0003104693037561"
+      delta_public_lb: "+0.00050"
+    comparison_to_016:
+      cv_016: 0.9519855866173828
+      public_lb_016: 0.95164
+      delta_cv: "+0.0003373233907496"
+      delta_public_lb: "+0.00059"
+    comparison_to_049_search:
+      best_cv_auc_049: 0.9522274536894715
+      delta_cv_vs_049_best: "+0.0000954563186609"
+      note: >
+        050 refitは049 search best CVを上回った。
+        049で得たXGB Optuna paramsは正式refitでも再現性があった。
+    judgement: successful_xgb_branch_update
+    note: >
+      050は041/016を単体CV・Public LBともに明確に上回った。
+      XGB OptunaはLGB Optunaより効果が明確で、XGB branch更新として成功。
+
+  blend_summary:
+    nm_softmax_raw:
+      cv_auc: 0.9550174162126694
+      public_lb: 0.95433
+      comparison_to_add048_nm:
+        previous_cv_auc: 0.9550141257866351
+        previous_public_lb: 0.95431
+        delta_cv: "+0.0000032904260343"
+        delta_public_lb: "+0.00002"
+      comparison_to_add046_nm:
+        previous_cv_auc: 0.9550131965498656
+        previous_public_lb: 0.95431
+        delta_cv: "+0.0000042196628038"
+        delta_public_lb: "+0.00002"
+      comparison_to_add044_nm:
+        previous_cv_auc: 0.9550053246176218
+        previous_public_lb: 0.95431
+        delta_cv: "+0.0000120915950476"
+        delta_public_lb: "+0.00002"
+      judgement: new_public_best_and_new_best_cv
+      note: >
+        add050 fixed NMはCV 0.9550174162で現時点最高CV。
+        Public LBも0.95433で、これまでの0.95431を明確に更新。
+        050 XGB Optuna refitはblend上でも有効で、攻め枠の最有力候補に昇格。
+
+    logreg_meta_pruned:
+      cv_auc: 0.9549943053114434
+      public_lb: 0.95430
+      comparison_to_add042_logreg:
+        previous_cv_auc: 0.9549723928660285
+        previous_public_lb: 0.95430
+        delta_cv: "+0.0000219124454149"
+        delta_public_lb: "+0.00000"
+      comparison_to_add048_logreg:
+        previous_cv_auc: 0.9549893921534018
+        previous_public_lb: 0.95427
+        delta_cv: "+0.0000049131580416"
+        delta_public_lb: "+0.00003"
+      comparison_to_add046_logreg:
+        previous_cv_auc: 0.9549899744798823
+        previous_public_lb: 0.95428
+        delta_cv: "+0.0000043308315611"
+        delta_public_lb: "+0.00002"
+      judgement: public_best_logreg_tie_and_best_logreg_cv
+      note: >
+        LogRegはPublic LB 0.95430でadd042 LogRegと同値。
+        CVはadd042/add046/add048 LogRegを上回り、現時点のLogReg最高CV。
+        安定枠としてはadd042 LogRegと同格以上に扱える。
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9550173335762506
+      public_lb: not_submitted
+      note: >
+        NMとほぼ同等CV。
+        NMがPublic LB 0.95433を達成したため、追加提出優先度は高くない。
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9550174048908295
+      public_lb: not_submitted
+      note: >
+        CVはNMに近いが、signed weightを許す攻め枠。
+        通常提出候補にはしない。
+
+    avg:
+      cv_auc: 0.9548558458607206
+      public_lb: not_submitted
+      note: >
+        simple averageはNM/LogRegより明確に低い。
+        提出候補ではない。
+
+    ridge_meta_pruned:
+      cv_auc: 0.9547399698696405
+      public_lb: not_submitted
+      note: >
+        Ridgeは依然として弱い。
+        046でPublic LB 0.95416だったため、今後も提出候補にしない。
+
+  nm_weights:
+    "016": 0.0250944541
+    "017": 0.0000000090
+    "021": 0.0128223928
+    "028": 0.0356547498
+    "029": 0.0389327982
+    "032": 0.1063934675
+    "036": 0.0927207503
+    "038": 0.0000000099
+    "039": 0.2436724609
+    "040": 0.0394318090
+    "041": 0.0000000094
+    "042": 0.0743953377
+    "044": 0.1129222037
+    "046": 0.0932201735
+    "048": 0.0297217414
+    "050": 0.0950176329
+
+  weight_interpretation:
+    - >
+      050はNMで約0.095の大きな重みを取得。
+      016/041/017の既存XGB branchをほぼ置換する形になった。
+    - >
+      016は約0.025まで低下、041と017はほぼゼロ化。
+      XGB branchは今後050中心でよい。
+    - >
+      039は約0.244で最大重みを維持。
+      RealMLP LOG/seedreg系は引き続きblend中心。
+    - >
+      044は約0.113、032は約0.106、036は約0.093、046は約0.093で重要。
+      NN/RealMLP/CatBoost Optuna系の補助が効いている。
+    - >
+      042は約0.074、046は約0.093で両方残る。
+      CatBoost branchは042/046併用価値がある。
+    - >
+      040は約0.039、048は約0.030で残る。
+      LGB branchは中小重みだが完全には不要ではない。
+    - >
+      038はほぼゼロ化。
+      038は039/044に吸収されたと見てよい。
+
+  correlation:
+    pearson:
+      vs_041: 0.9977013769350965
+      vs_016: 0.9974573394717542
+      vs_017: 0.9969632273094615
+      vs_039: 0.9799701582848869
+      vs_044: 0.9800611184937594
+      vs_036: 0.9815398695599146
+      vs_032: 0.9801455705134638
+      vs_048: 0.9620860687010918
+      vs_046: 0.9636276860145144
+      vs_042: 0.9632579482215556
+    spearman:
+      vs_041: 0.9961849119261718
+      vs_016: 0.9957957510366111
+      vs_017: 0.9953904865547567
+      vs_039: 0.9730940889189448
+      vs_044: 0.9722324452382013
+      vs_036: 0.9737915026191873
+      vs_032: 0.9684341067114371
+      vs_048: 0.9734282185547486
+      vs_046: 0.9779486789257023
+      vs_042: 0.9773044467612343
+    interpretation: >
+      050は041/016/017と高相関のXGB branch内variant。
+      低相関素材ではないが、041/016より単体性能が明確に高く、
+      blendでは既存XGB branchを置換する形で大きな重みを取った。
+      CatBoost/LGB/RealMLP系とは相関が相対的に低く、branch補強として意味がある。
+
+  current_candidate_status_after_050_fixed:
+    public_attack_candidates:
+      - name: add050_fixed_nm
+        cv_auc: 0.9550174162126694
+        public_lb: 0.95433
+        note: current_public_best_and_current_best_cv
+      - name: add048_nm
+        cv_auc: 0.9550141257866351
+        public_lb: 0.95431
+        note: previous_best_cv_public_best_tie
+      - name: add046_nm
+        cv_auc: 0.9550131965498656
+        public_lb: 0.95431
+        note: previous_best_cv_public_best_tie
+      - name: add044_nm
+        cv_auc: 0.9550053246176218
+        public_lb: 0.95431
+        note: public_best_tie_before_050
+      - name: 043_pruned_nm
+        cv_auc: 0.9549957251612822
+        public_lb: 0.95431
+        note: pruned_public_best_tie_before_050
+    stable_backup_candidates:
+      - name: add050_fixed_logreg
+        cv_auc: 0.9549943053114434
+        public_lb: 0.95430
+        note: best_logreg_cv_and_public_tie_with_add042
+      - name: add042_logreg
+        cv_auc: 0.9549723928660285
+        public_lb: 0.95430
+        note: previous_best_logreg_public
+      - name: add046_logreg
+        cv_auc: 0.9549899744798823
+        public_lb: 0.95428
+        note: higher_cv_than_add042_but_lower_public
+      - name: add048_logreg
+        cv_auc: 0.9549893921534018
+        public_lb: 0.95427
+        note: high_cv_but_public_down
+
+  final_judgement:
+    decision: keep_as_current_best_attack_and_stable_candidate
+    reason: >
+      修正版Add050では、050 XGB Optuna refitの正しいOOF/predを使ってblendを再実行した。
+      050単体は041/016をCV/LBともに明確に上回り、XGB branch更新として成功。
+      add050 fixed NMはCV 0.9550174162、Public LB 0.95433で、現時点の最高CVかつPublic best。
+      add050 fixed LogRegもPublic LB 0.95430でadd042 LogRegと同値、かつCVは上回った。
+      よって050は攻め枠NMの本命に昇格し、LogReg安定候補としても採用候補に入れる。
+
+    current_best_after_050_fixed:
+      attack:
+        name: add050_fixed_nm
+        cv_auc: 0.9550174162126694
+        public_lb: 0.95433
+      stable:
+        name: add050_fixed_logreg
+        cv_auc: 0.9549943053114434
+        public_lb: 0.95430
+        comparison_stable_backup:
+          alternative: add042_logreg
+          cv_auc: 0.9549723928660285
+          public_lb: 0.95430
+          note: >
+            Public LBは同値だが、add050 fixed LogRegの方がCVは高い。
+            ただし最終提出では、add042 LogRegもPrivate耐性比較用に保持する。
+
+  next_action:
+    - >
+      050 fixed結果を正式採用し、前回の無効Add050結果は参考外として扱う。
+    - >
+      現時点の最終候補表を更新する。
+      攻め枠はadd050_fixed_nmを第一候補、安定枠はadd050_fixed_logregとadd042_logregを比較候補にする。
+    - >
+      XGB Optunaは成功したため、050を標準stackに採用する。
+      016/017/041は標準stackから外す候補。
+    - >
+      ただしadd050_fixed_nmはNM最適化であり、OOF過適合リスクは残る。
+      最終提出ではLogReg安定枠を必ず残す。
+    - >
+      次は新規モデル追加より、final_candidates表を更新し、
+      current_best_attack/current_best_stableを明示する。
+
