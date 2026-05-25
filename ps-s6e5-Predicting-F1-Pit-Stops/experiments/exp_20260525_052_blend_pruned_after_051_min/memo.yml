@@ -216,4 +216,246 @@ notes:
   - >
     016はAdd051 NMで重みが残るため、今回の削除対象にはしない。
 
+blend_result_052_pruned_after_051:
+  blend_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-pruned.ipynb
+  result_file: blend_result_052pruned.json
 
+  submitted:
+    - candidate: nm_softmax_raw
+      cv_auc: 0.9550261129800026
+      public_lb: 0.95435
+    - candidate: logreg_meta_pruned
+      cv_auc: 0.9550030438849962
+      public_lb: 0.95432
+
+  stack_design:
+    experiment_type: pruned_stack_after_051
+    purpose: >
+      Add051で051 watchlist updated RealMLPを追加した後、
+      冗長化した旧RealMLP/XGB branchを削っても、
+      NM/LogRegの性能を維持または改善できるか確認する。
+    removed_from_add051:
+      - "017"
+      - "029"
+      - "038"
+      - "041"
+    kept_stack:
+      - "016"
+      - "021"
+      - "028"
+      - "032"
+      - "036"
+      - "039"
+      - "040"
+      - "042"
+      - "044"
+      - "046"
+      - "048"
+      - "050"
+      - "051"
+    n_models: 13
+
+  comparison_to_add051:
+    nm_softmax_raw:
+      add051_cv_auc: 0.9550260532475361
+      add051_public_lb: 0.95435
+      add052_cv_auc: 0.9550261129800026
+      add052_public_lb: 0.95435
+      delta_cv: "+0.0000000597324665"
+      delta_public_lb: "+0.00000"
+      judgement: cv_tiny_update_public_maintained
+      note: >
+        017/029/038/041を削っても、NM CVは極小更新し、
+        Public LB 0.95435を維持した。
+        攻め枠としてAdd051 full stackから052 pruned stackへ置換可能。
+
+    logreg_meta_pruned:
+      add051_cv_auc: 0.9549996654869631
+      add051_public_lb: 0.95431
+      add052_cv_auc: 0.9550030438849962
+      add052_public_lb: 0.95432
+      delta_cv: "+0.0000033783980331"
+      delta_public_lb: "+0.00001"
+      judgement: new_best_logreg_cv_and_public
+      note: >
+        LogRegはCV/Public LBともにAdd051を上回った。
+        Public LB 0.95432は現時点のLogReg最高であり、
+        安定枠として052 LogRegを第一候補に昇格できる。
+
+  blend_summary:
+    nm_softmax_raw:
+      cv_auc: 0.9550261129800026
+      public_lb: 0.95435
+      judgement: keep_as_attack_candidate
+      note: >
+        CVは現時点最高。
+        Public LBはAdd051 NMと同値の0.95435。
+        pruned stackで同値維持できたため、052 NMを攻め枠第一候補として採用可能。
+
+    logreg_meta_pruned:
+      cv_auc: 0.9550030438849962
+      public_lb: 0.95432
+      judgement: new_stable_best
+      note: >
+        LogRegでPublic LB 0.95432を達成。
+        Add051 LogReg 0.95431、Add050 LogReg 0.95430、Add042 LogReg 0.95430を上回る。
+        現時点の安定枠第一候補。
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9550260776480534
+      public_lb: not_submitted
+      note: >
+        NMとほぼ同等CV。
+        NMがPublic LB 0.95435を維持したため、追加提出優先度は低い。
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9550260692542754
+      public_lb: not_submitted
+      note: >
+        CVはNMに近いが、signed weightを許す攻め枠。
+        通常提出候補にはしない。
+
+    avg:
+      cv_auc: 0.9549096961107872
+      public_lb: not_submitted
+      note: >
+        simple averageはAdd051 avg 0.9548914261より改善。
+        ただしNM/LogRegには大きく劣るため提出候補ではない。
+
+    ridge_meta_pruned:
+      cv_auc: 0.9547523062506784
+      public_lb: not_submitted
+      note: >
+        Ridgeは引き続きNM/LogRegより明確に弱い。
+        046でPublic LB 0.95416だったため、提出候補にしない。
+
+  nm_weights:
+    "016": 0.0377188508
+    "021": 0.0148205047
+    "028": 0.0366510146
+    "032": 0.1003393794
+    "036": 0.0293010361
+    "039": 0.2395680261
+    "040": 0.0350916212
+    "042": 0.0691629128
+    "044": 0.0996891582
+    "046": 0.0929268016
+    "048": 0.0351380011
+    "050": 0.0776499128
+    "051": 0.1319427806
+
+  weight_interpretation:
+    - >
+      051は約0.132で大きな重みを維持。
+      Add051からやや低下したが、引き続き重要素材。
+    - >
+      039は約0.240で最大重み。
+      051追加後もRealMLP LOG/seedreg系の中心素材として強い。
+    - >
+      032は約0.100、044は約0.100、046は約0.093で強く残る。
+      CustomTorchRealMLP、RealMLP seedreg、CatBoost Optunaは重要。
+    - >
+      050は約0.078で残る。
+      XGB Optuna branchは016/041旧branchの整理後も有効。
+    - >
+      042は約0.069で残る。
+      CatBoost base branchは046と併存価値あり。
+    - >
+      016は約0.038で残る。
+      050と高相関だが、完全には不要ではないため残した判断は妥当。
+    - >
+      040/048はそれぞれ約0.035で残る。
+      LGB branchは補助的だが完全には不要ではない。
+    - >
+      036は約0.029で残る。
+      no Race_Year_TE構造差分は小さいながら補助価値あり。
+    - >
+      021は約0.015、028は約0.037。
+      別family補助として残るが、優先度は中小。
+
+  removed_model_assessment:
+    "017":
+      decision: removed_successfully
+      reason: >
+        052で削ってもNM/LRともに悪化しなかった。
+        旧XGB補助branchとして標準stackから外してよい。
+    "029":
+      decision: removed_successfully
+      reason: >
+        051と極めて高相関で、Add051 NMでもほぼゼロ。
+        052で削っても性能維持・改善したため、051に置換されたと判断。
+    "038":
+      decision: removed_successfully
+      reason: >
+        Add051でほぼゼロ化しており、052で削っても性能維持。
+        039/044/051に役割を吸収されたと判断。
+    "041":
+      decision: removed_successfully
+      reason: >
+        050が041を単体CV/LBで上回り、Add051でも041はほぼゼロ。
+        052で削っても性能維持したため、XGB branchは050中心へ更新。
+
+  current_candidate_status_after_052:
+    public_attack_candidates:
+      - name: add052_pruned_nm
+        cv_auc: 0.9550261129800026
+        public_lb: 0.95435
+        note: current_best_cv_and_public_best_tie
+      - name: add051_nm
+        cv_auc: 0.9550260532475361
+        public_lb: 0.95435
+        note: previous_public_best_full_stack
+      - name: add050_fixed_nm
+        cv_auc: 0.9550174162126694
+        public_lb: 0.95433
+        note: previous_attack_candidate
+    stable_backup_candidates:
+      - name: add052_pruned_logreg
+        cv_auc: 0.9550030438849962
+        public_lb: 0.95432
+        note: current_best_logreg_cv_and_public
+      - name: add051_logreg
+        cv_auc: 0.9549996654869631
+        public_lb: 0.95431
+        note: previous_best_logreg
+      - name: add042_logreg
+        cv_auc: 0.9549723928660285
+        public_lb: 0.95430
+        note: earlier_conservative_backup
+
+  final_judgement:
+    decision: adopt_pruned_after_051_as_standard_stack
+    reason: >
+      052はAdd051から017/029/038/041を削った整理stackだが、
+      NMはCVを極小更新しPublic LB 0.95435を維持した。
+      さらにLogRegはCV 0.9550030439、Public LB 0.95432でLogReg最高を更新した。
+      したがって、052 pruned stackはAdd051 full stackより管理上優れており、
+      今後の標準stackとして採用する。
+    current_best_after_052:
+      attack:
+        name: add052_pruned_nm
+        cv_auc: 0.9550261129800026
+        public_lb: 0.95435
+      stable:
+        name: add052_pruned_logreg
+        cv_auc: 0.9550030438849962
+        public_lb: 0.95432
+      conservative_backup:
+        name: add051_nm_or_add051_logreg
+        note: >
+          052がprunedである点を不安視する場合はAdd051 full stackも保持する。
+          ただしCV/LB上は052の方が優勢。
+
+  next_action:
+    - >
+      052 pruned stackを標準stackとして採用する。
+    - >
+      最終候補表を更新し、攻め枠はadd052_pruned_nm、安定枠はadd052_pruned_logregを第一候補にする。
+    - >
+      Add051 full stackはバックアップとして保持するが、標準管理は052へ移す。
+    - >
+      これ以上の新規RealMLP追加は避ける。
+      051でPublic変換は良かったが、RealMLP近傍が多くなりすぎる。
+    - >
+      次に行うなら、新規追加ではなく最終候補表の更新、
+      あるいは052からさらに小さく削る小規模確認に限定する。
