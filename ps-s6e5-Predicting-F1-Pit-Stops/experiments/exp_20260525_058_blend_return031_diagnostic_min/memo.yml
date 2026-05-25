@@ -1,0 +1,241 @@
+experiment:
+  id: exp_20260525_058_blend_return031_diagnostic_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-25
+  type: blend_diagnostic
+  status: completed
+
+objective:
+  summary: >
+    以前Public LBに変換されなかった031 CatBoost meta-stacking modelを、
+    052 pruned系stackへ戻してblendを確認した。
+    目的は031を最終候補に採用することではなく、
+    031がOOF/NM上で大きな重みを取る理由と、
+    Public LBに変換されない原因を後から振り返れるように記録すること。
+
+base:
+  previous_standard_stack:
+    experiment: exp_20260525_052_blend_pruned_after_051_min
+    attack:
+      name: add052_pruned_nm
+      cv_auc: 0.9550261129800026
+      public_lb: 0.95435
+    stable:
+      name: add052_pruned_logreg
+      cv_auc: 0.9550030438849962
+      public_lb: 0.95432
+
+source_model_031:
+  experiment: exp_20260514_031_catboost_meta_stacking_shared011_tawara_gpu_min
+  model_name: catboost_meta_stacking_shared011_tawara_gpu_min
+  family: CatBoost meta-stacking
+  single_cv_auc: 0.95309308326977
+  single_public_lb: 0.95220
+  note: >
+    031単体はCV 0.95309に対してPublic LB 0.95220であり、
+    CVからPublicへの変換が弱い。
+    以前からwatch対象だったが、標準stackには入れていなかった。
+
+notebook:
+  blend_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-return031.ipynb
+  result_json: blend_result_return031.json
+
+stack_design:
+  purpose: >
+    052 pruned stackをベースに、031を戻した場合のCV/LB/weightを確認する。
+  base_like_stack:
+    - "016"
+    - "021"
+    - "028"
+    - "032"
+    - "036"
+    - "039"
+    - "040"
+    - "042"
+    - "044"
+    - "046"
+    - "048"
+    - "050"
+    - "051"
+  returned_model:
+    - "031"
+  actual_current_stack_for_blend:
+    - "021"
+    - "028"
+    - "031"
+    - "032"
+    - "036"
+    - "039"
+    - "042"
+    - "044"
+    - "046"
+    - "048"
+    - "050"
+    - "051"
+  note: >
+    JSON上のmodel_specsには016/040も含まれているが、
+    model_keys_currentは021/028/031/032/036/039/042/044/046/048/050/051。
+    Return031診断では031を戻した構成として扱う。
+
+submitted:
+  - candidate: nm_softmax_raw
+    cv_auc: 0.9550489497820834
+    public_lb: 0.95433
+
+not_submitted:
+  - candidate: logreg_meta_pruned
+    cv_auc: 0.9550097688627874
+    public_lb: null
+  - candidate: hc_nonnegative_raw
+    cv_auc: 0.9550489076179894
+    public_lb: null
+  - candidate: slsqp_signed_raw_neg005
+    cv_auc: 0.9550489142223962
+    public_lb: null
+  - candidate: avg
+    cv_auc: 0.9549083417682042
+    public_lb: null
+  - candidate: ridge_meta_pruned
+    cv_auc: 0.9548675205485286
+    public_lb: null
+
+result_summary:
+  return031_nm:
+    cv_auc: 0.9550489497820834
+    public_lb: 0.95433
+    comparison_to_052_pruned_nm:
+      cv_052_nm: 0.9550261129800026
+      public_lb_052_nm: 0.95435
+      delta_cv: "+0.0000228368010808"
+      delta_public_lb: "-0.00002"
+    judgement: cv_up_public_down
+    note: >
+      031を戻すとNM CVは大きく上がったが、Public LBは0.95435から0.95433へ低下した。
+      CV改善がPublicに変換されておらず、最終候補としては採用しない。
+
+  return031_logreg:
+    cv_auc: 0.9550097688627874
+    comparison_to_052_logreg:
+      cv_052_logreg: 0.9550030438849962
+      public_lb_052_logreg: 0.95432
+      delta_cv: "+0.0000067249777912"
+    judgement: not_submitted_reference_only
+    note: >
+      LogReg CVも052より上がったが、031のOOF信頼性に疑義があるため、
+      このCV上昇をそのまま安定性改善とは見なさない。
+
+031_weight_analysis:
+  nm_weight:
+    w_031: 0.1252192331530818
+    interpretation: >
+      031はNMで約0.125という大きな重みを取得した。
+      しかし031単体Public LBは0.95220と弱く、Return031 NMもPublic LBを更新していない。
+      したがって、この重みはPrivate耐性の根拠というより、
+      OOF上の過大評価にNMが引っ張られている可能性が高い。
+
+  related_weights:
+    w_039: 0.24856886606684356
+    w_051: 0.12902494492914834
+    w_032: 0.07885457592236027
+    w_050: 0.09201132575616132
+    w_046: 0.055616225608942874
+    note: >
+      031を戻しても039/051/050/032は重みを維持している。
+      031は一部CatBoost/stacking的な情報を追加しているように見えるが、
+      Publicには変換されていない。
+
+correlation:
+  pearson:
+    vs_042: 0.971498832218712
+    vs_046: 0.9720160603535767
+    vs_050: 0.9831593470121395
+    vs_051: 0.983187250243592
+    vs_039: 0.9822426233105931
+    vs_032: 0.9857180285380255
+  spearman:
+    vs_042: 0.9869118461513514
+    vs_046: 0.9879088498691293
+    vs_050: 0.9749542880358459
+    vs_051: 0.9725024703460267
+    vs_039: 0.9734591680635477
+    vs_032: 0.9721894303976509
+  interpretation: >
+    031は低相関の新規素材ではなく、042/046 CatBoost系や050/051/039とも高相関。
+    特にSpearmanで042/046と非常に高く、CatBoost branch近傍の素材と見なす。
+    低相関によるPrivate期待というより、既存branchに近いOOF上の補助素材。
+
+notebook_diagnostic:
+  suspected_issue:
+    name: meta_oof_like_is_not_strict_nested_oof
+    summary: >
+      031 notebookではbase viewのOOFからstack_oofを作成し、
+      Meta CatBoostをholdoutで学習した後、
+      stack_oof全体に対してpredictしたmeta_oof_likeを保存している。
+      そのため、meta modelにとって一部in-sample予測がOOFに混入している。
+      外部blendではこれを通常OOFとして扱うため、NM/HCで過大評価されやすい。
+  severity: high
+  note: >
+    完全なターゲットリークとまでは断定しないが、
+    外部blend用OOFとしての信頼度は通常のnested OOFより低い。
+    この点が031のCVがPublicに変換されない主要因候補。
+
+why_not_private_bet:
+  reasons:
+    - >
+      031単体Public LBが0.95220と弱い。
+    - >
+      Return031 NMはCVを+0.0000228改善したが、Public LBは0.95435から0.95433へ低下。
+    - >
+      031はCatBoost branchや既存主力と高相関で、独立した低相関素材ではない。
+    - >
+      meta_oof_likeが厳密なnested OOFではなく、CV過大評価リスクがある。
+  conclusion: >
+    Privateで刺さる可能性はゼロではないが、
+    現時点ではそれを積極的に信じる根拠は不足。
+    最終提出候補には入れない。
+
+final_judgement:
+  decision: reject_for_final_submission
+  reason: >
+    031を戻すとNM CVは現時点の052 pruned NMより高くなるが、
+    Public LBは0.95433で052 pruned NMの0.95435を下回った。
+    031単体Publicも弱く、notebook構造上meta_oof_likeが厳密なnested OOFではない。
+    したがって、031入りNMの高CVはCV盛りの疑いが強く、
+    最終提出候補には採用しない。
+  final_candidates_unchanged:
+    attack:
+      name: add052_pruned_nm
+      cv_auc: 0.9550261129800026
+      public_lb: 0.95435
+    stable:
+      name: add052_pruned_logreg
+      cv_auc: 0.9550030438849962
+      public_lb: 0.95432
+
+lessons_learned:
+  - >
+    meta-stacking modelを外部blendに入れる場合、
+    保存するOOFが完全なnested OOFか必ず確認する。
+  - >
+    holdout metaで学習したmeta modelをstack_oof全体へpredictした値は、
+    外部blend用OOFとしては信用度が低い。
+  - >
+    NM/HCはOOF上の歪みに強く反応するため、
+    CVが上がってもPublicに出ないモデルは重みだけで採用しない。
+  - >
+    CV上昇とPublic LB低下が同時に起きた場合、
+    Private期待より先にOOF設計の健全性を疑う。
+  - >
+    最終提出では031なしの052 pruned NM/LogRegを優先する。
+
+next_action:
+  - >
+    031は最終提出候補から外す。
+  - >
+    031入りblend結果は診断・振り返り用として保存する。
+  - >
+    今後meta-stackingを再試行する場合は、
+    meta modelもKFoldでnested OOF化してから外部blendへ投入する。
+  - >
+    提出用チェックでは031がmodel_specsに含まれていないことを確認する。
