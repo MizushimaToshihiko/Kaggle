@@ -102,3 +102,255 @@ judgement:
   note: >
     Even if single-model Public LB is strong, this is likely a RealMLP-family near variant.
     Do not replace final candidates based on single score alone; use Add051 blend result.
+
+blend_result_add051:
+  blend_notebook: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add051.ipynb
+  result_file: blend_result_add051.json
+
+  submitted:
+    - candidate: nm_softmax_raw
+      cv_auc: 0.9550260532475361
+      public_lb: 0.95435
+    - candidate: logreg_meta_pruned
+      cv_auc: 0.9549996654869631
+      public_lb: 0.95431
+
+  single_051:
+    cv_auc: 0.9540932672601146
+    public_lb: 0.95407
+    comparison_to_existing_realmlp:
+      comparison_to_039:
+        cv_039: 0.9541459595754959
+        public_lb_039: 0.95375
+        delta_cv: "-0.0000526923153813"
+        delta_public_lb: "+0.00032"
+      comparison_to_036:
+        cv_036: 0.9540748794531666
+        public_lb_036: 0.95393
+        delta_cv: "+0.0000183878069480"
+        delta_public_lb: "+0.00014"
+      comparison_to_029:
+        cv_029: 0.9540420784720796
+        public_lb_029: 0.95397
+        delta_cv: "+0.0000511887880350"
+        delta_public_lb: "+0.00010"
+      comparison_to_044:
+        cv_044: 0.9539964587117260
+        public_lb_044: 0.95381
+        delta_cv: "+0.0000968085483886"
+        delta_public_lb: "+0.00026"
+    judgement: strong_single_realmlp_update
+    note: >
+      051はCVでは039に少し劣るが、Public LBは既存RealMLP単体を明確に上回った。
+      watchlist更新版RealMLPは単体Public変換が非常に良く、blend投入価値が高い。
+
+  blend_summary:
+    nm_softmax_raw:
+      cv_auc: 0.9550260532475361
+      public_lb: 0.95435
+      comparison_to_add050_fixed_nm:
+        previous_cv_auc: 0.9550174162126694
+        previous_public_lb: 0.95433
+        delta_cv: "+0.0000086370348667"
+        delta_public_lb: "+0.00002"
+      comparison_to_add048_nm:
+        previous_cv_auc: 0.9550141257866351
+        previous_public_lb: 0.95431
+        delta_cv: "+0.0000119274609010"
+        delta_public_lb: "+0.00004"
+      judgement: new_public_best_and_new_best_cv
+      note: >
+        Add051 NMはCV 0.9550260532で現時点最高CV。
+        Public LBも0.95435で現時点最高。
+        051はRealMLP近傍だが、Publicにも明確に変換されたため、
+        攻め枠の第一候補に昇格。
+
+    logreg_meta_pruned:
+      cv_auc: 0.9549996654869631
+      public_lb: 0.95431
+      comparison_to_add050_fixed_logreg:
+        previous_cv_auc: 0.9549943053114434
+        previous_public_lb: 0.95430
+        delta_cv: "+0.0000053601755197"
+        delta_public_lb: "+0.00001"
+      comparison_to_add042_logreg:
+        previous_cv_auc: 0.9549723928660285
+        previous_public_lb: 0.95430
+        delta_cv: "+0.0000272726209346"
+        delta_public_lb: "+0.00001"
+      judgement: new_best_logreg_public_and_cv
+      note: >
+        Add051 LogRegはPublic LB 0.95431で、これまでのLogReg最高0.95430を更新。
+        CVもLogReg系で最高。
+        安定枠候補としてもAdd051 LogRegを第一候補にできる。
+
+    hc_nonnegative_raw:
+      cv_auc: 0.9550260187940054
+      public_lb: not_submitted
+      note: >
+        NMとほぼ同等CV。
+        NMがPublic LB 0.95435を出したため、追加提出優先度は低い。
+
+    slsqp_signed_raw_neg005:
+      cv_auc: 0.9550260351260851
+      public_lb: not_submitted
+      note: >
+        CVはNMに近いが、signed weightを許す攻め枠。
+        通常提出候補にはしない。
+
+    avg:
+      cv_auc: 0.9548914260770033
+      public_lb: not_submitted
+      note: >
+        simple averageはNM/LogRegより低い。
+        提出候補ではない。
+
+    ridge_meta_pruned:
+      cv_auc: 0.9547520999849718
+      public_lb: not_submitted
+      note: >
+        Ridgeは以前より少し改善しているが、依然としてNM/LogRegに大きく劣る。
+        046でRidge Public LB 0.95416が弱かったこともあり、提出候補にしない。
+
+  nm_weights:
+    "016": 0.0307646330
+    "017": 0.0000000087
+    "021": 0.0126118064
+    "028": 0.0369842639
+    "029": 0.0000000088
+    "032": 0.0991115720
+    "036": 0.0273766337
+    "038": 0.0000000089
+    "039": 0.2381501703
+    "040": 0.0360633361
+    "041": 0.0000000086
+    "042": 0.0699836497
+    "044": 0.1005924982
+    "046": 0.0952923303
+    "048": 0.0326521783
+    "050": 0.0858622668
+    "051": 0.1345546263
+
+  weight_interpretation:
+    - >
+      051はNMで約0.135の大きな重みを取得。
+      単体Publicが強いだけでなく、blend素材としても明確に有効。
+    - >
+      039は約0.238で依然として最大重み。
+      ただし051追加により、RealMLP family内で029/036/038の役割がかなり吸収された。
+    - >
+      029はほぼゼロ化。
+      051は029近傍の強化版として機能している可能性が高い。
+    - >
+      036は約0.027まで低下。
+      051追加前より重要度が下がっている。
+    - >
+      044は約0.101、032は約0.099で残る。
+      RealMLP/Custom NN周辺の多様性はまだ有効。
+    - >
+      050は約0.086で残り、XGB Optuna branchとして継続して有効。
+    - >
+      042/046はそれぞれ約0.070/0.095で残る。
+      CatBoost branchも引き続き重要。
+    - >
+      040/048は約0.036/0.033で中小重み。
+      LGB branchは補助的だが完全には不要ではない。
+    - >
+      017/038/041はほぼゼロ。
+      標準stackから外す候補。
+
+  correlation:
+    pearson:
+      vs_029: 0.9981619169211506
+      vs_036: 0.9975848825874333
+      vs_038: 0.9949816278532745
+      vs_039: 0.9944928850629137
+      vs_044: 0.9949539358854030
+      vs_032: 0.9904460269562786
+      vs_050: 0.9817126325675917
+      vs_042: 0.9618796059628596
+      vs_046: 0.9622454173905165
+      vs_048: 0.9588509852710079
+    spearman:
+      vs_029: 0.9956690133964985
+      vs_036: 0.9954257602630354
+      vs_038: 0.9908825706124451
+      vs_039: 0.9890238732763302
+      vs_044: 0.9909370350376273
+      vs_032: 0.9800529644477867
+      vs_050: 0.9741010888747208
+      vs_042: 0.9770118988834429
+      vs_046: 0.9777196343748198
+      vs_048: 0.9723792968258532
+    interpretation: >
+      051は029/036/038/039/044と高相関のRealMLP近傍モデル。
+      特に029/036とは極めて近い。
+      低相関新素材ではないが、単体Public LBとblend重みが非常に強く、
+      既存RealMLP branchの上位置換として扱える。
+
+  current_candidate_status_after_051:
+    public_attack_candidates:
+      - name: add051_nm
+        cv_auc: 0.9550260532475361
+        public_lb: 0.95435
+        note: current_public_best_and_current_best_cv
+      - name: add050_fixed_nm
+        cv_auc: 0.9550174162126694
+        public_lb: 0.95433
+        note: previous_public_best
+      - name: add048_nm
+        cv_auc: 0.9550141257866351
+        public_lb: 0.95431
+        note: older_public_best_tie
+    stable_backup_candidates:
+      - name: add051_logreg
+        cv_auc: 0.9549996654869631
+        public_lb: 0.95431
+        note: current_best_logreg_public_and_cv
+      - name: add050_fixed_logreg
+        cv_auc: 0.9549943053114434
+        public_lb: 0.95430
+        note: previous_best_logreg_cv
+      - name: add042_logreg
+        cv_auc: 0.9549723928660285
+        public_lb: 0.95430
+        note: earlier_stable_candidate
+
+  final_judgement:
+    decision: keep_as_current_best_attack_and_stable_candidate
+    reason: >
+      051はwatchlist更新版RealMLPとして単体CV 0.9540932673、Public LB 0.95407を再現した。
+      Add051 NMはCV 0.9550260532、Public LB 0.95435で現時点最高。
+      Add051 LogRegもCV 0.9549996655、Public LB 0.95431でLogReg最高。
+      RealMLP近傍で相関は高いが、Publicにも明確に変換されているため、
+      攻め枠・安定枠の両方で第一候補に昇格させる。
+    current_best_after_051:
+      attack:
+        name: add051_nm
+        cv_auc: 0.9550260532475361
+        public_lb: 0.95435
+      stable:
+        name: add051_logreg
+        cv_auc: 0.9549996654869631
+        public_lb: 0.95431
+      conservative_backup:
+        name: add042_logreg
+        cv_auc: 0.9549723928660285
+        public_lb: 0.95430
+        note: >
+          add051_logregの方がCV/LBともに上だが、
+          051はRealMLP近傍追加であるため、保守的バックアップとしてadd042_logregも保持。
+
+  next_action:
+    - >
+      051を正式採用し、最終候補表を更新する。
+      攻め枠はadd051_nm、安定枠はadd051_logregを第一候補にする。
+    - >
+      ただし051はRealMLP近傍であり、既存RealMLP branchとの相関が高い。
+      CV/LBは良いが、RealMLP過多リスクは残るため、最終候補からadd042_logregを消さない。
+    - >
+      今後の標準stackでは、029/036/038の一部を削る整理実験を検討する価値がある。
+      特に029と038はNMでほぼゼロ化しており、051/039/044に置換された可能性が高い。
+    - >
+      次に行うなら、新規モデル追加ではなく、051採用後のpruned stack確認。
+      029/038/017/041を外し、051/050/044/039/032/042/046/040/048を残す整理版を確認する。
