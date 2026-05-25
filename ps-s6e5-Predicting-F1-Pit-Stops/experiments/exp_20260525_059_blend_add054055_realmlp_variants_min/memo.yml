@@ -1,1 +1,131 @@
+experiment:
+  id: exp_20260525_059_blend_add054055_realmlp_variants_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-25
+  type: blend_diagnostic
+  status: planned
 
+objective:
+  summary: >
+    052 pruned stackをベースに、051近傍のRealMLP variantである054/055を追加し、
+    blend上で補助素材として機能するか確認する。
+    054/055単体は051より弱いため、主目的は単体更新ではなく、
+    相関差・重み・LogReg/NM改善の有無を確認すること。
+
+base:
+  experiment: exp_20260525_052_blend_pruned_after_051_min
+  current_best:
+    attack:
+      name: add052_pruned_nm
+      cv_auc: 0.9550261129800026
+      public_lb: 0.95435
+    stable:
+      name: add052_pruned_logreg
+      cv_auc: 0.9550030438849962
+      public_lb: 0.95432
+
+add_models:
+  "054":
+    experiment: exp_20260525_054_realmlp_watchlist_updated_optuna_refit_min
+    cv_auc: 0.954066947138
+    public_lb: 0.95389
+    note: >
+      053 best paramsをn_ens=20/n_epochs=5で正式refitしたRealMLP variant。
+      051より単体CV/LBは低い。
+  "055":
+    experiment: exp_20260525_055_realmlp_watchlist_updated_optuna_refit_epoch6_min
+    cv_auc: 0.953907994181
+    public_lb: 0.95390
+    note: >
+      054からn_epochsのみ6へ増やしたRealMLP variant。
+      051より単体CV/LBは低い。
+
+stack_design:
+  base_stack_052:
+    - "016"
+    - "021"
+    - "028"
+    - "032"
+    - "036"
+    - "039"
+    - "040"
+    - "042"
+    - "044"
+    - "046"
+    - "048"
+    - "050"
+    - "051"
+  add:
+    - "054"
+    - "055"
+  current_stack:
+    - "016"
+    - "021"
+    - "028"
+    - "032"
+    - "036"
+    - "039"
+    - "040"
+    - "042"
+    - "044"
+    - "046"
+    - "048"
+    - "050"
+    - "051"
+    - "054"
+    - "055"
+
+checks:
+  primary:
+    - nm_softmax_raw
+    - logreg_meta_pruned
+  secondary:
+    - hc_nonnegative_raw
+    - avg
+  reference_only:
+    - slsqp_signed_raw_neg005
+    - ridge_meta_pruned
+
+success_criteria:
+  nm:
+    baseline_cv_auc: 0.9550261129800026
+    baseline_public_lb: 0.95435
+    keep_if: >
+      CVが052 NMを上回り、かつPublic LBが0.95435以上。
+    caution: >
+      NMだけCVが伸びる場合はOOF過適合の可能性が高い。
+  logreg:
+    baseline_cv_auc: 0.9550030438849962
+    baseline_public_lb: 0.95432
+    keep_if: >
+      CVまたはPublic LBが052 LogReg以上。
+    priority: >
+      054/055追加でLogRegが改善する場合は、NM改善より信用度が高い。
+
+submission_policy:
+  submit_nm: >
+    NM CVが052を明確に超えた場合のみ検討。
+    ただし054/055は051近傍variantで単体Publicも弱いため、提出は慎重に判断する。
+  submit_logreg: >
+    LogReg CVが052を超えた場合は提出候補。
+    Public LB 0.95432以上なら安定候補更新として扱う。
+  do_not_submit:
+    - ridge_meta_pruned
+    - avg
+    - slsqp_signed_raw_neg005
+
+expected_risk:
+  - >
+    054/055は051と同じ特徴量・同じRealMLP構造の近傍variantであり、
+    真の低相関素材ではない可能性が高い。
+  - >
+    単体Public LBは051より弱いため、blend CVが伸びてもPublic/Private耐性は過信しない。
+  - >
+    NMは近傍モデル追加でCVだけ伸びやすいため、LogReg側の改善を重視する。
+
+judgement:
+  decision: pending
+  note: >
+    現時点の本命はadd052_pruned_nm/add052_pruned_logregのまま。
+    059は候補更新ではなく、054/055の補助価値確認として扱う。
