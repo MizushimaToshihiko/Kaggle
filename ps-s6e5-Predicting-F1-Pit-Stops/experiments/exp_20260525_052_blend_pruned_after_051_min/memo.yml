@@ -1,0 +1,219 @@
+experiment:
+  id: exp_20260525_052_blend_pruned_after_051_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-25
+  type: blend_pruning
+  status: planned
+
+objective:
+  summary: >
+    Add051でwatchlist更新版RealMLPを追加した結果、
+    NM/LRともにPublic LBが改善した。
+    一方で、既存RealMLP/XGB branchの一部が冗長化しているため、
+    017/029/038/041を外したpruned stackで、
+    Add051 NM/LogRegの性能を維持できるか確認する。
+    目的は新規モデル追加ではなく、最終候補管理のためのstack整理。
+
+base:
+  previous_best:
+    name: add051
+    nm:
+      cv_auc: 0.9550260532475361
+      public_lb: 0.95435
+    logreg:
+      cv_auc: 0.9549996654869631
+      public_lb: 0.95431
+
+source_blend_notebook:
+  base: ps-s6e5-033-blend-logreg-topk-feature-variants-min-Add051.ipynb
+  new: ps-s6e5-033-blend-logreg-topk-feature-variants-min-052-pruned-after-051.ipynb
+
+stack_design:
+  add051_full_stack:
+    - "016"
+    - "017"
+    - "021"
+    - "028"
+    - "029"
+    - "032"
+    - "036"
+    - "038"
+    - "039"
+    - "040"
+    - "041"
+    - "042"
+    - "044"
+    - "046"
+    - "048"
+    - "050"
+    - "051"
+
+  removed_from_add051:
+    "017":
+      reason: >
+        XGB補助branch。Add051 NMでほぼゼロ。
+        050がXGB branchの主力になったため標準stackからは外す。
+    "029":
+      reason: >
+        051と極めて高相関で、Add051 NMではほぼゼロ。
+        051が029の上位置換に近い。
+    "038":
+      reason: >
+        RealMLP seed/reg variant。Add051 NMでほぼゼロ。
+        039/044/051に吸収された可能性が高い。
+    "041":
+      reason: >
+        050が041を単体CV/LBで明確に上回り、Add051 NMでもほぼゼロ。
+        XGB branchは050中心へ更新する。
+
+  keep:
+    "016":
+      reason: >
+        Add051 NMで約0.031の重みが残る。
+        050と高相関だが、完全には不要と判断しない。
+    "021":
+      reason: >
+        TabM補助branch。小さいが別family素材として残す。
+    "028":
+      reason: >
+        Parent-Child MLP。小さいが別系統補助として残す。
+    "032":
+      reason: >
+        CustomTorchRealMLP。Add051でも約0.099の重みで重要。
+    "036":
+      reason: >
+        no Race_Year_TE RealMLP。Add051で重みは低下したが、構造差分があるため残す。
+    "039":
+      reason: >
+        Add051 NMでも約0.238で最大重み。中心素材。
+    "040":
+      reason: >
+        LGB branch。中小重みだが補助として残る。
+    "042":
+      reason: >
+        CatBoost base branch。046と併存価値あり。
+    "044":
+      reason: >
+        RealMLP seed/reg variant2。Add051でも約0.101で重要。
+    "046":
+      reason: >
+        CatBoost Optuna branch。Add051でも約0.095で重要。
+    "048":
+      reason: >
+        LGB Optuna branch。中小重みだが残る。
+    "050":
+      reason: >
+        XGB Optuna branch。Add051でも約0.086で重要。
+    "051":
+      reason: >
+        watchlist更新版RealMLP。Add051で約0.135の重み。
+        現在のPublic/CV改善の主因候補。
+
+  pruned_stack_after_051:
+    - "016"
+    - "021"
+    - "028"
+    - "032"
+    - "036"
+    - "039"
+    - "040"
+    - "042"
+    - "044"
+    - "046"
+    - "048"
+    - "050"
+    - "051"
+
+blend_methods_to_run:
+  primary:
+    - nm_softmax_raw
+    - logreg_meta_pruned
+  secondary:
+    - hc_nonnegative_raw
+    - avg
+  reference_only:
+    - slsqp_signed_raw_neg005
+    - ridge_meta_pruned
+
+submission_policy:
+  submit:
+    - nm_softmax_raw
+    - logreg_meta_pruned
+  submit_only_if:
+    nm_softmax_raw: >
+      CVがAdd051 NM 0.9550260532475361以上、
+      またはCV微減でもPublic LB 0.95435以上を維持する可能性を確認したい場合。
+    logreg_meta_pruned: >
+      CVがAdd051 LogReg 0.9549996654869631以上、
+      またはPublic LB 0.95431以上を維持する可能性を確認したい場合。
+  do_not_submit:
+    - ridge_meta_pruned
+    - avg
+    - slsqp_signed_raw_neg005
+  note: >
+    SLSQP signedは攻め枠すぎるため通常提出しない。
+    Ridgeは過去提出でPublicが弱いため提出候補にしない。
+
+success_criteria:
+  nm:
+    baseline_cv_auc: 0.9550260532475361
+    baseline_public_lb: 0.95435
+    keep_if: >
+      CVがAdd051 NM以上、またはPublic LB 0.95435以上。
+    hold_if: >
+      CVが極小低下しても、Public LB 0.95435を維持。
+    fail_if: >
+      CV低下かつPublic LBが0.95433以下。
+  logreg:
+    baseline_cv_auc: 0.9549996654869631
+    baseline_public_lb: 0.95431
+    keep_if: >
+      CVまたはPublic LBがAdd051 LogReg以上。
+    hold_if: >
+      CV微減でもPublic LB 0.95431を維持。
+    fail_if: >
+      CV低下かつPublic LBが0.95430以下。
+
+expected_outcome:
+  hypothesis: >
+    017/029/038/041はAdd051でほぼゼロ化しているため、
+    削ってもNM/LogRegの性能は大きく落ちない可能性がある。
+    特に029/038/041は051/050に置換された可能性が高い。
+  risk: >
+    NMは微小な重み調整でCVを稼いでいるため、
+    ほぼゼロ重みのモデルでも削るとわずかにCVやPublicが落ちる可能性がある。
+    また、016はまだ重みが残るため今回は削らない。
+
+outputs:
+  result_json: blend_result_052_pruned_after_051.json
+  blend_summary: blend_summary.csv
+  blend_weights: blend_weights.csv
+  submissions:
+    nm: submission_052_pruned_after_051_nm_softmax_raw.csv
+    logreg: submission_052_pruned_after_051_logreg_meta_pruned.csv
+  memo_update: >
+    実行後、NM/LogRegのCV、Public LB、weights、Add051との差分をmemo.ymlへ追記する。
+
+final_judgement_template:
+  decision: pending
+  possible_decisions:
+    - adopt_pruned_after_051_as_standard_stack
+    - keep_add051_full_stack
+    - retry_less_aggressive_pruning
+  criteria: >
+    052 pruned stackがAdd051と同等以上なら標準stackとして採用。
+    NMは微減でもLogRegが維持されるなら安定候補として採用余地あり。
+    NM/LogRegともに悪化するならAdd051 full stackへ戻す。
+
+notes:
+  - >
+    この実験は新規モデル追加ではなく、Add051後のstack整理。
+  - >
+    029/038はRealMLP branch内で051/039/044に吸収された可能性が高い。
+  - >
+    041/017はXGB branch内で050に置換された可能性が高い。
+  - >
+    016はAdd051 NMで重みが残るため、今回の削除対象にはしない。
+
+
