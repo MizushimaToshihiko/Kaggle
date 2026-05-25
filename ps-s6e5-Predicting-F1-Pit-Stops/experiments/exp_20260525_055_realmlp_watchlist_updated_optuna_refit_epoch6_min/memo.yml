@@ -1,1 +1,124 @@
+experiment:
+  id: exp_20260525_055_realmlp_watchlist_updated_optuna_refit_epoch6_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-25
+  type: optuna_refit
+  status: completed
 
+objective:
+  summary: >
+    Apply the best lr/wd/p_drop from 053 RealMLP Optuna search to the 051 watchlist-updated
+    RealMLP structure, and run formal 5-fold refit with n_ens=20 and n_epochs=6.
+    This is an epoch ablation of the failed 054 n_epochs=5 refit.
+    This checks whether one additional epoch can recover the weak 054 result while keeping all other settings fixed.
+    This is not a new feature-engineering experiment.
+
+base:
+  model_structure: exp_20260525_051_realmlp_watchlist_updated_shared001v2_min
+  params_source: exp_20260525_053_realmlp_watchlist_updated_optuna_search_min
+  baseline_051:
+    cv_auc: 0.9540932672601146
+    public_lb: 0.95407
+  search_053:
+    best_cv_auc: 0.9537520811535959
+    note: >
+      053 search used n_ens=8 and underperformed 051.
+  refit_054:
+    cv_auc: 0.954066947138
+    public_lb: 0.95389
+    note: >
+      054 used the same 053 best params with n_ens=20/n_epochs=5 and underperformed 051.
+      055 changes only n_epochs to 6.
+
+best_params_from_053:
+  path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/exp_20260525_053_realmlp_watchlist_updated_optuna_search_min/best_params_053.json
+  lr: 0.018404750770168805
+  wd: 0.01916246653891711
+  p_drop: 0.05922492800757212
+
+fixed:
+  feature_set: same_as_051
+  folds: same_as_051
+  original_rows: same_as_051
+  target_encoding: True
+  n_ens: 20
+  n_epochs: 6
+  random_state: 42
+  forbidden:
+    - Normalized_TyreLife
+    - Normalized_TyreLife proxy
+    - future endpoint proxy
+    - pseudo label
+    - new feature engineering
+
+params_effective:
+  lr: 0.018404750770168805
+  wd: 0.01916246653891711
+  p_drop: 0.05922492800757212
+  n_ens: 20
+  n_epochs: 6
+  embedding_size: 6
+  max_one_hot_cat_size: 18
+  hidden_sizes: [512, 256, 128]
+  plr_lr_factor: 0.1151
+  plr_sigma: 2.33
+  ls_eps: 0.01
+
+result:
+  cv_auc: 0.953907994181
+  public_lb: 0.95390
+  fold_scores: [0.9550775590243723, 0.9529691456415252, 0.9539344319046107, 0.9532752474780318, 0.9548848296572867]
+
+comparison_targets:
+  single_baseline:
+    name: "051_realmlp_watchlist_updated_shared001v2"
+    cv_auc: 0.9540932672601146
+    public_lb: 0.95407
+  previous_epoch_ablation:
+    name: "054_realmlp_watchlist_updated_optuna_refit_epoch5"
+    cv_auc: 0.954066947138
+    public_lb: 0.95389
+  current_best_attack:
+    name: add052_pruned_nm
+    cv_auc: 0.9550261129800026
+    public_lb: 0.95435
+  current_best_stable:
+    name: add052_pruned_logreg
+    cv_auc: 0.9550030438849962
+    public_lb: 0.95432
+
+artifacts:
+  outdir: /kaggle/working/exp_20260525_055_realmlp_watchlist_updated_optuna_refit_epoch6_min
+  oof_npy: /kaggle/working/exp_20260525_055_realmlp_watchlist_updated_optuna_refit_epoch6_min/oof_exp_20260525_055_realmlp_watchlist_updated_optuna_refit_epoch6_min.npy
+  pred_npy: /kaggle/working/exp_20260525_055_realmlp_watchlist_updated_optuna_refit_epoch6_min/pred_exp_20260525_055_realmlp_watchlist_updated_optuna_refit_epoch6_min.npy
+  submission: /kaggle/working/exp_20260525_055_realmlp_watchlist_updated_optuna_refit_epoch6_min/submission_exp_20260525_055_realmlp_watchlist_updated_optuna_refit_epoch6_min.csv
+  oof_csv: /kaggle/working/exp_20260525_055_realmlp_watchlist_updated_optuna_refit_epoch6_min/oof_exp_20260525_055_realmlp_watchlist_updated_optuna_refit_epoch6_min.csv
+  cv_result: /kaggle/working/exp_20260525_055_realmlp_watchlist_updated_optuna_refit_epoch6_min/cv_result.json
+  feature_columns: /kaggle/working/exp_20260525_055_realmlp_watchlist_updated_optuna_refit_epoch6_min/feature_columns.csv
+  feature_columns_base_before_te: /kaggle/working/exp_20260525_055_realmlp_watchlist_updated_optuna_refit_epoch6_min/feature_columns_base_before_te.csv
+
+success_criteria:
+  single:
+    cv_must_exceed_051: 0.9540932672601146
+    public_lb_must_be_at_least: 0.95407
+  blend:
+    nm_cv_must_exceed: 0.9550261129800026
+    nm_public_lb_must_be_at_least: 0.95435
+    logreg_public_lb_must_be_at_least: 0.95432
+
+next_action:
+  - >
+    Submit the single model only if necessary to verify Public LB.
+  - >
+    Proceed to Add055 / Replace051 blend only if single CV is at least 051 level and
+    Public LB is at least 0.95407, or if intentionally checking despite low expectation.
+  - >
+    Keep add052_pruned_nm and add052_pruned_logreg as current final candidates unless
+    055 clearly beats them in blend.
+
+judgement:
+  decision: pending_public_lb
+  note: >
+    055 is an epoch6 confirmation run after weak 053 search and failed 054 refit.
+    Do not promote this model by CV alone. Stop epoch ablation if 055 remains below 051.
