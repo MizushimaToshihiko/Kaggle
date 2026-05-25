@@ -1,1 +1,104 @@
+experiment:
+  id: exp_20260525_051_realmlp_watchlist_updated_shared001v2_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-25
+  type: single_model_reproduction
+  status: completed
 
+objective:
+  summary: >
+    Reproduce the updated watchlist RealMLP / PyTabKit shared_001/shared_001v2-style notebook
+    as-is as much as possible, and add standard experiment-management outputs.
+    The purpose is to test whether the reported CV around 0.95409 / Public LB around 0.95407
+    can be reproduced and whether the model contributes to the current add050 stack.
+
+source_reference:
+  model_family: RealMLP / PyTabKit
+  reported_cv_auc: 0.95409
+  reported_public_lb: 0.95407
+  note: >
+    Updated public/watchlist notebook reported stronger single-model performance than previous
+    RealMLP-family single models, especially on Public LB.
+
+implementation:
+  policy: as_is_reproduction
+  kept:
+    - feature engineering from source notebook
+    - RealMLP params from source notebook
+    - FOLDS=5
+    - SEED=42
+    - original rows concatenated into fold train only
+    - TargetEncoder for Race_Compound_ and Race_Year_
+    - Normalized_TyreLife dropped from original data
+  added_only:
+    - EXP_ID / OUTDIR
+    - OOF npy / pred npy / submission outputs
+    - cv_result.json
+    - memo_draft.yml
+    - feature_columns.csv
+  forbidden:
+    - Normalized_TyreLife direct use
+    - Normalized_TyreLife proxy construction
+    - future endpoint proxy
+    - pseudo label
+    - extra feature engineering beyond source notebook
+
+params:
+  random_state: 42
+  n_ens: 20
+  n_epochs: 5
+  batch_size: 256
+  lr: 0.019
+  wd: 0.01
+  p_drop: 0.05
+  embedding_size: 6
+  max_one_hot_cat_size: 18
+  hidden_sizes: [512, 256, 128]
+  plr_lr_factor: 0.1151
+  plr_sigma: 2.33
+  ls_eps: 0.01
+
+result:
+  cv_auc: 0.954093267260
+  public_lb: 0.95407
+  fold_scores: [0.9551704164719291, 0.9529745174616289, 0.9540707294868749, 0.9533204571454776, 0.9549611136508833]
+
+comparison_targets:
+  current_best_attack:
+    name: add050_fixed_nm
+    cv_auc: 0.9550174162126694
+    public_lb: 0.95433
+  current_best_stable:
+    name: add050_fixed_logreg
+    cv_auc: 0.9549943053114434
+    public_lb: 0.9543
+
+artifacts:
+  outdir: /kaggle/working/exp_20260525_051_realmlp_watchlist_updated_shared001v2_min
+  oof_npy: /kaggle/working/exp_20260525_051_realmlp_watchlist_updated_shared001v2_min/oof_exp_20260525_051_realmlp_watchlist_updated_shared001v2_min.npy
+  pred_npy: /kaggle/working/exp_20260525_051_realmlp_watchlist_updated_shared001v2_min/pred_exp_20260525_051_realmlp_watchlist_updated_shared001v2_min.npy
+  submission: /kaggle/working/exp_20260525_051_realmlp_watchlist_updated_shared001v2_min/submission_exp_20260525_051_realmlp_watchlist_updated_shared001v2_min.csv
+  oof_csv: /kaggle/working/exp_20260525_051_realmlp_watchlist_updated_shared001v2_min/oof_exp_20260525_051_realmlp_watchlist_updated_shared001v2_min.csv
+  cv_result: /kaggle/working/exp_20260525_051_realmlp_watchlist_updated_shared001v2_min/cv_result.json
+  feature_columns: /kaggle/working/exp_20260525_051_realmlp_watchlist_updated_shared001v2_min/feature_columns.csv
+
+success_criteria:
+  single:
+    minimum_cv_auc: 0.95404
+    strong_public_lb: 0.95407
+  blend:
+    nm_cv_must_exceed: 0.9550174162126694
+    nm_public_lb_must_exceed: 0.95433
+    logreg_public_lb_must_tie_or_exceed: 0.9543
+
+next_action:
+  - Submit single model only if needed to verify Public LB.
+  - Run Add051 blend with oof/pred from this experiment.
+  - Compare weight, correlation, NM CV/Public LB, and LogReg CV/Public LB against add050 fixed.
+
+judgement:
+  decision: pending_public_lb_and_blend
+  note: >
+    Even if single-model Public LB is strong, this is likely a RealMLP-family near variant.
+    Do not replace final candidates based on single score alone; use Add051 blend result.
