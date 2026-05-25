@@ -122,3 +122,47 @@ judgement:
   note: >
     055 is an epoch6 confirmation run after weak 053 search and failed 054 refit.
     Do not promote this model by CV alone. Stop epoch ablation if 055 remains below 051.
+
+final_result_summary:
+  single_055:
+    cv_auc: 0.953907994181
+    public_lb: 0.95390
+    n_epochs: 6
+    fold_scores:
+      - 0.9550775590243723
+      - 0.9529691456415252
+      - 0.9539344319046107
+      - 0.9532752474780318
+      - 0.9548848296572867
+
+  comparison_to_051:
+    cv_051: 0.9540932672601146
+    public_lb_051: 0.95407
+    delta_cv: "-0.0001852730791146"
+    delta_public_lb: "-0.00017"
+
+  comparison_to_054_epoch5:
+    cv_054: 0.954066947138
+    public_lb_054: 0.95389
+    delta_cv: "-0.000158952957"
+    delta_public_lb: "+0.00001"
+
+  judgement:
+    decision: drop_stop_epoch_ablation
+    reason: >
+      055は054と同じ053 best paramsを使い、n_epochsだけを5から6へ増やした確認実験。
+      Public LBは054から0.95389→0.95390へわずかに改善したが、
+      CVは0.9540669471→0.9539079942へ明確に悪化した。
+      また、051 baselineのCV 0.9540932673 / Public LB 0.95407をどちらも下回った。
+      したがって、Add055 / Replace051 blendへ進む根拠はない。
+      n_epochs=7/8の追加確認も期待値が低く、ここでepoch ablationを打ち切る。
+
+  next_action:
+    - >
+      Add055 / Replace051 blendは実施しない。
+    - >
+      056 epoch7 / 057 epoch8 は原則実施しない。
+    - >
+      RealMLP 053 best params系は不採用。
+    - >
+      現在の最終候補は add052_pruned_nm と add052_pruned_logreg のまま維持する。
