@@ -1,1 +1,92 @@
+experiment:
+  id: exp_20260525_053_realmlp_watchlist_updated_optuna_search_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-25
+  type: optuna_search
+  status: completed
 
+objective:
+  summary: >
+    051 watchlist updated RealMLPの特徴量・fold・original concatを固定し、
+    RealMLPのlr / wd / p_dropのみを狭くOptuna探索する。
+    n_epochsは5で固定し、探索段階ではn_ens=8に軽量化する。
+    目的は054 refit候補のbest paramsを取得すること。
+
+base:
+  experiment: exp_20260525_051_realmlp_watchlist_updated_shared001v2_min
+  model: RealMLP_TD_Classifier
+  baseline_051:
+    cv_auc: 0.9540932672601146
+    public_lb: 0.95407
+
+fixed:
+  feature_set: same_as_051
+  folds: 5
+  seed: 42
+  target_encoding: True
+  n_epochs: 5
+  n_ens_search: 8
+  forbidden:
+    - Normalized_TyreLife
+    - Normalized_TyreLife proxy
+    - future endpoint proxy
+    - pseudo label
+    - new feature engineering
+
+search_space:
+  lr:
+    type: float_log
+    low: 0.012
+    high: 0.026
+  wd:
+    type: float_log
+    low: 0.004
+    high: 0.025
+  p_drop:
+    type: float
+    low: 0.03
+    high: 0.08
+
+optuna:
+  direction: maximize
+  n_trials_requested: 20
+  timeout_sec: 36000
+  sampler: TPESampler
+  seed: 42
+  n_trials_completed: 20
+  best_trial_number: 19
+  best_cv_auc: 0.9537520811535959
+  best_params: {'lr': 0.018404750770168805, 'wd': 0.01916246653891711, 'p_drop': 0.05922492800757212}
+  delta_best_cv_vs_051: -0.0003411861065186761
+
+outputs:
+  best_params: best_params_053.json
+  trials: optuna_trials_053.csv
+  study_summary: optuna_study_summary_053.json
+  study_pkl: optuna_study_053.pkl
+  cv_result: cv_result.json
+  memo_draft: memo_draft.yml
+
+next_step:
+  - >
+    054でbest_params_053.jsonを読み込み、051構成へ適用して正式OOF/PRED/submissionを作る。
+  - >
+    054ではn_ens=20、n_epochs=5に戻す。
+  - >
+    054単体CV/LBとAdd054 blendで、052 pruned NM/LogRegを上回るか確認する。
+
+success_criteria_for_054:
+  single:
+    cv_must_exceed_051: 0.9540932672601146
+    public_lb_must_be_at_least: 0.95407
+  blend:
+    nm_cv_must_exceed: 0.9550261129800026
+    nm_public_lb_must_be_at_least: 0.95435
+    logreg_public_lb_must_be_at_least: 0.95432
+
+judgement:
+  decision: pending_054_refit
+  note: >
+    053は探索段階であり、正式採用判断はしない。
+    054 refitおよびAdd054 blend後に判断する。
