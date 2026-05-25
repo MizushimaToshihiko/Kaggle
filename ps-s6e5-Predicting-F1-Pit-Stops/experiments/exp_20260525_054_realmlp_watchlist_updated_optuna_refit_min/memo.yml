@@ -1,1 +1,114 @@
+experiment:
+  id: exp_20260525_054_realmlp_watchlist_updated_optuna_refit_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-25
+  type: optuna_refit
+  status: completed
 
+objective:
+  summary: >
+    Apply the best lr/wd/p_drop from 053 RealMLP Optuna search to the 051 watchlist-updated
+    RealMLP structure, and run formal 5-fold refit with n_ens=20 and n_epochs=5.
+    This checks whether the weak n_ens=8 search result can recover under the formal ensemble setting.
+    This is not a new feature-engineering experiment.
+
+base:
+  model_structure: exp_20260525_051_realmlp_watchlist_updated_shared001v2_min
+  params_source: exp_20260525_053_realmlp_watchlist_updated_optuna_search_min
+  baseline_051:
+    cv_auc: 0.9540932672601146
+    public_lb: 0.95407
+  search_053:
+    best_cv_auc: 0.9537520811535959
+    note: >
+      053 search used n_ens=8 and underperformed 051.
+      054 is a low-expectation confirmation refit.
+
+best_params_from_053:
+  path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/exp_20260525_053_realmlp_watchlist_updated_optuna_search_min/best_params_053.json
+  lr: 0.018404750770168805
+  wd: 0.01916246653891711
+  p_drop: 0.05922492800757212
+
+fixed:
+  feature_set: same_as_051
+  folds: same_as_051
+  original_rows: same_as_051
+  target_encoding: True
+  n_ens: 20
+  n_epochs: 5
+  random_state: 42
+  forbidden:
+    - Normalized_TyreLife
+    - Normalized_TyreLife proxy
+    - future endpoint proxy
+    - pseudo label
+    - new feature engineering
+
+params_effective:
+  lr: 0.018404750770168805
+  wd: 0.01916246653891711
+  p_drop: 0.05922492800757212
+  n_ens: 20
+  n_epochs: 5
+  embedding_size: 6
+  max_one_hot_cat_size: 18
+  hidden_sizes: [512, 256, 128]
+  plr_lr_factor: 0.1151
+  plr_sigma: 2.33
+  ls_eps: 0.01
+
+result:
+  cv_auc: 0.954066947138
+  public_lb: 0.95389
+  fold_scores: [0.9551840518252673, 0.9530476797888529, 0.9539106269617859, 0.9532654611596901, 0.9549628294286875]
+
+comparison_targets:
+  single_baseline:
+    name: "051_realmlp_watchlist_updated_shared001v2"
+    cv_auc: 0.9540932672601146
+    public_lb: 0.95407
+  current_best_attack:
+    name: add052_pruned_nm
+    cv_auc: 0.9550261129800026
+    public_lb: 0.95435
+  current_best_stable:
+    name: add052_pruned_logreg
+    cv_auc: 0.9550030438849962
+    public_lb: 0.95432
+
+artifacts:
+  outdir: /kaggle/working/exp_20260525_054_realmlp_watchlist_updated_optuna_refit_min
+  oof_npy: /kaggle/working/exp_20260525_054_realmlp_watchlist_updated_optuna_refit_min/oof_exp_20260525_054_realmlp_watchlist_updated_optuna_refit_min.npy
+  pred_npy: /kaggle/working/exp_20260525_054_realmlp_watchlist_updated_optuna_refit_min/pred_exp_20260525_054_realmlp_watchlist_updated_optuna_refit_min.npy
+  submission: /kaggle/working/exp_20260525_054_realmlp_watchlist_updated_optuna_refit_min/submission_exp_20260525_054_realmlp_watchlist_updated_optuna_refit_min.csv
+  oof_csv: /kaggle/working/exp_20260525_054_realmlp_watchlist_updated_optuna_refit_min/oof_exp_20260525_054_realmlp_watchlist_updated_optuna_refit_min.csv
+  cv_result: /kaggle/working/exp_20260525_054_realmlp_watchlist_updated_optuna_refit_min/cv_result.json
+  feature_columns: /kaggle/working/exp_20260525_054_realmlp_watchlist_updated_optuna_refit_min/feature_columns.csv
+  feature_columns_base_before_te: /kaggle/working/exp_20260525_054_realmlp_watchlist_updated_optuna_refit_min/feature_columns_base_before_te.csv
+
+success_criteria:
+  single:
+    cv_must_exceed_051: 0.9540932672601146
+    public_lb_must_be_at_least: 0.95407
+  blend:
+    nm_cv_must_exceed: 0.9550261129800026
+    nm_public_lb_must_be_at_least: 0.95435
+    logreg_public_lb_must_be_at_least: 0.95432
+
+next_action:
+  - >
+    Submit the single model only if necessary to verify Public LB.
+  - >
+    Proceed to Add054 / Replace051 blend only if single CV is at least 051 level and
+    Public LB is at least 0.95407, or if intentionally checking despite low expectation.
+  - >
+    Keep add052_pruned_nm and add052_pruned_logreg as current final candidates unless
+    054 clearly beats them in blend.
+
+judgement:
+  decision: pending_public_lb
+  note: >
+    054 is a confirmation run after weak 053 search.
+    Do not promote this model by CV alone.
