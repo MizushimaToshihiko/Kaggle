@@ -128,4 +128,146 @@ judgement:
   decision: pending
   note: >
     現時点の本命はadd052_pruned_nm/add052_pruned_logregのまま。
-    059は候補更新ではなく、054/055の補助価値確認として扱う。
+
+    result_summary:
+  result_file: blend_result_add054055.json
+  submitted: false
+
+  individual_added_models:
+    "054":
+      cv_auc: 0.9540669471377758
+      public_lb: 0.95389
+      comparison_to_051:
+        cv_051: 0.9540932672601146
+        public_lb_051: 0.95407
+        delta_cv: "-0.0000263201223388"
+        delta_public_lb: "-0.00018"
+      note: >
+        054は051と同じ特徴量・同系統RealMLP構造のOptuna refit variant。
+        単体CV/LBともに051を下回る。
+
+    "055":
+      cv_auc: 0.9539079941805242
+      public_lb: 0.95390
+      comparison_to_051:
+        cv_051: 0.9540932672601146
+        public_lb_051: 0.95407
+        delta_cv: "-0.000185273080"
+        delta_public_lb: "-0.00017"
+      note: >
+        055は054からn_epochsのみ6へ増やしたvariant。
+        単体CV/LBともに051を下回る。
+
+  correlation_to_051:
+    "054":
+      pearson: 0.9992852979131059
+      spearman: 0.9985548853109946
+      interpretation: >
+        054は051とほぼ同一に近い高相関variant。
+        相関を下げた補助素材とは言えない。
+    "055":
+      pearson: 0.9972408414556116
+      spearman: 0.9928982259144676
+      interpretation: >
+        055は054よりわずかに051から離れるが、それでも非常に高相関。
+        051の低相関補助素材としては弱い。
+
+  blend_result:
+    nm_softmax_raw:
+      cv_auc: 0.9550259897736568
+      public_lb: not_submitted
+      comparison_to_052_nm:
+        cv_052_nm: 0.9550261129800026
+        public_lb_052_nm: 0.95435
+        delta_cv: "-0.0000001232063458"
+      judgement: worse_than_052
+      note: >
+        054/055を追加したNMは052 NMをわずかに下回った。
+        追加価値は確認できない。
+
+    logreg_meta_pruned:
+      cv_auc: 0.9550030438849962
+      public_lb: not_submitted
+      comparison_to_052_logreg:
+        cv_052_logreg: 0.9550030438849962
+        public_lb_052_logreg: 0.95432
+        delta_cv: "+0.0000000000000000"
+      judgement: unchanged
+      note: >
+        logreg_meta_prunedはmodel_keys_pruned/currentが052と同じ13モデルのため、
+        054/055が実質的にLogReg側には入っていない。
+        結果も052 LogRegと完全同一。
+
+    avg:
+      cv_auc: 0.9549451780580529
+      comparison_to_052_avg:
+        cv_052_avg: 0.9549096961107872
+        delta_cv: "+0.0000354819472657"
+      note: >
+        単純平均は改善したが、NM/LogRegには大きく劣る。
+        採用判断には使わない。
+
+    ridge_meta_pruned:
+      cv_auc: 0.9547523062506784
+      note: >
+        052 ridgeと同一。提出候補ではない。
+
+  nm_weights:
+    "016": 0.0277917196
+    "021": 0.0130905175
+    "028": 0.0353010437
+    "032": 0.1027583926
+    "036": 0.0279649124
+    "039": 0.2351842826
+    "040": 0.0278159592
+    "042": 0.0764433749
+    "044": 0.0997101256
+    "046": 0.0867246877
+    "048": 0.0384899609
+    "050": 0.0897473990
+    "051": 0.1292940171
+    "054": 0.0000000090
+    "055": 0.0096835983
+
+  weight_interpretation:
+    - >
+      054はNMでほぼゼロ重み。
+      051とほぼ同一相関かつ単体性能も弱いため、追加価値なし。
+    - >
+      055は約0.0097だけ重みを取ったが、非常に小さい。
+      052 NMを超えるには至らず、採用する価値はない。
+    - >
+      051は約0.129で引き続き重要。
+      054/055によって051の役割は置換されていない。
+    - >
+      039, 032, 044, 046, 050 は引き続き主要素材として残る。
+
+  judgement:
+    decision: reject_054055_addition
+    reason: >
+      054/055は051近傍のRealMLP variantsとして追加したが、
+      054は051とPearson 0.9993 / Spearman 0.9986でほぼ同一、
+      055もPearson 0.9972 / Spearman 0.9929と非常に高相関だった。
+      単体CV/LBも051を下回り、NMでは054がほぼゼロ、055も小重みのみ。
+      NM CVは052よりわずかに低下し、LogRegは052と同一。
+      したがって054/055追加は不採用。
+
+  final_candidates_unchanged:
+    attack:
+      name: add052_pruned_nm
+      cv_auc: 0.9550261129800026
+      public_lb: 0.95435
+    stable:
+      name: add052_pruned_logreg
+      cv_auc: 0.9550030438849962
+      public_lb: 0.95432
+
+  next_action:
+    - >
+      054/055は最終stackに追加しない。
+    - >
+      052 pruned stackを標準stackとして維持する。
+    - >
+      RealMLP近傍variantの追加はここで打ち切る。
+    - >
+      最終提出チェックではadd052_pruned_nmとadd052_pruned_logregを中心に確認する。059は候補更新ではなく、054/055の補助価値確認として扱う。
