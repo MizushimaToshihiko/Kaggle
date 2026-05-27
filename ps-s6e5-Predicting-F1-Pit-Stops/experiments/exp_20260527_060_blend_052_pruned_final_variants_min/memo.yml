@@ -1,1 +1,96 @@
+experiment:
+  id: exp_20260527_060_blend_052_pruned_final_variants_min
+  competition: PS S6E5 Predicting F1 Pit Stops
+  metric: AUC
+  created_at: 2026-05-27
+  type: final_blend_variants
+  status: completed
 
+objective:
+  summary: >
+    052 pruned stackを固定し、モデル追加なしでblend方法だけを最終調整する。
+    目的は、add052_pruned_nm / add052_pruned_logregを上回る候補、
+    または両者の中間的なPrivate耐性候補を作れるか確認すること。
+
+base:
+  experiment: exp_20260525_052_blend_pruned_after_051_min
+  current_best_before_060:
+    attack:
+      name: add052_pruned_nm
+      cv_auc: 0.9550261129800026
+      public_lb: 0.95435
+    stable:
+      name: add052_pruned_logreg
+      cv_auc: 0.9550030438849962
+      public_lb: 0.95432
+
+stack:
+  fixed_models:
+    - "016"
+    - "021"
+    - "028"
+    - "032"
+    - "036"
+    - "039"
+    - "040"
+    - "042"
+    - "044"
+    - "046"
+    - "048"
+    - "050"
+    - "051"
+  excluded:
+    - "017"
+    - "029"
+    - "031"
+    - "038"
+    - "041"
+    - "054"
+    - "055"
+  note: >
+    031はCV盛り疑い、054/055は051高相関かつ追加価値なしのため除外。
+    本実験では新規モデルを追加しない。
+
+blend_variants:
+  - avg
+  - hc_nonnegative_raw
+  - nm_softmax_raw
+  - nm_softmax_raw_multi_restart
+  - slsqp_signed_raw_neg005
+  - ridge_meta_pruned
+  - logreg_meta_pruned
+  - logreg_meta_pruned_top3_equal
+  - logreg_meta_pruned_top5_equal
+  - logreg_meta_pruned_logit_only
+  - logreg_meta_pruned_raw_logit
+  - logreg_meta_pruned_raw_only
+  - ridge_meta_pruned_logit_only
+  - ridge_meta_pruned_raw_logit
+  - nm_logreg_convex_mix
+
+success_criteria:
+  attack:
+    cv_must_exceed: 0.9550261129800026
+    public_lb_must_be_at_least: 0.95435
+  stable:
+    public_lb_must_be_at_least: 0.95432
+    prefer_if_cv_exceeds: 0.9550030438849962
+  caution: >
+    NM multi-restartでCVだけ上がる場合はOOF過適合の可能性がある。
+    LogRegまたはNM/LogReg mixの改善をより重視する。
+
+result_summary:
+  best_candidate: "mix_nm_softmax_raw_restart_nm_base_70_logreg_meta_pruned_30"
+  best_cv_auc: 0.9550284050019342
+  submitted: []
+  judgement:
+    decision: pending
+    reason: >
+      実行後にblend_result.jsonを確認し、052 pruned NM/LogRegを置換できるか判断する。
+
+outputs:
+  result_json: blend_result.json
+  blend_summary: blend_summary.csv
+  blend_weights: blend_weights.csv
+  nm_multi_restart_results: nm_multi_restart_results.csv
+  submissions_dir: submissions
