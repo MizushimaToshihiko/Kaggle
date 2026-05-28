@@ -94,3 +94,252 @@ outputs:
   blend_weights: blend_weights.csv
   nm_multi_restart_results: nm_multi_restart_results.csv
   submissions_dir: submissions
+
+result_summary:
+  result_file: blend_result_060.json
+  submitted:
+    - candidate: mix_nm_softmax_raw_restart_nm_base_70_logreg_meta_pruned_30
+      cv_auc: 0.9550284050019342
+      public_lb: 0.95435
+
+  stack:
+    fixed_052_pruned_stack:
+      - "016"
+      - "021"
+      - "028"
+      - "032"
+      - "036"
+      - "039"
+      - "040"
+      - "042"
+      - "044"
+      - "046"
+      - "048"
+      - "050"
+      - "051"
+    excluded:
+      - "017"
+      - "029"
+      - "031"
+      - "038"
+      - "041"
+      - "054"
+      - "055"
+    note: >
+      060では新規モデル追加は行わず、052 pruned stackを固定したまま
+      blend variantsのみ確認した。
+
+  best_candidate:
+    name: mix_nm_softmax_raw_restart_nm_base_70_logreg_meta_pruned_30
+    method: convex_mix
+    cv_auc: 0.9550284050019342
+    public_lb: 0.95435
+    params:
+      left: nm_softmax_raw_restart_nm_base
+      right: logreg_meta_pruned
+      alpha_left: 0.7
+      alpha_right: 0.3
+    comparison_to_052_nm:
+      cv_052_nm: 0.9550261129800026
+      public_lb_052_nm: 0.95435
+      delta_cv: "+0.0000022920219316"
+      delta_public_lb: "+0.00000"
+    comparison_to_052_logreg:
+      cv_052_logreg: 0.9550030438849962
+      public_lb_052_logreg: 0.95432
+      delta_cv: "+0.0000253611169380"
+      delta_public_lb: "+0.00003"
+    judgement: cv_update_public_tie_with_attack
+    note: >
+      NM 70% + LogReg 30% のconvex mixがCV最高。
+      Public LBは0.95435で052 NMと同値。
+      LogReg要素を30%混ぜてもPublic bestを維持したため、
+      attackとstableの中間候補として保持する価値がある。
+
+  blend_summary:
+    mix_nm70_logreg30_restart_base:
+      cv_auc: 0.9550284050019342
+      public_lb: 0.95435
+      judgement: best_cv_public_best_tie
+      note: >
+        060のbest candidate。
+        Public LBは更新しなかったが、052 NMと同値でCVは上。
+        NM単体よりLogReg寄りの安定性を少し加えた中間候補。
+
+    mix_nm70_logreg30_original_nm:
+      cv_auc: 0.9550284049368660
+      public_lb: not_submitted
+      note: >
+        restart版との差は極小。
+        ほぼ同一候補と見てよい。
+
+    mix_nm80_logreg20:
+      cv_auc: 0.9550284037331072
+      public_lb: not_submitted
+      note: >
+        70/30とほぼ同等CVだが、bestは70/30。
+        追加提出優先度は低い。
+
+    mix_nm60_logreg40:
+      cv_auc: 0.9550275615899178
+      public_lb: not_submitted
+      note: >
+        CVは70/30や80/20より低い。
+        LogReg比率を上げすぎるとCVはやや落ちる。
+
+    mix_nm90_logreg10:
+      cv_auc: 0.9550275608091011
+      public_lb: not_submitted
+      note: >
+        ほぼNM寄りだが、70/30や80/20よりCVは低い。
+
+    nm_softmax_raw_restart_nm_base:
+      cv_auc: 0.9550261130125366
+      public_lb: not_submitted
+      comparison_to_052_nm:
+        cv_052_nm: 0.9550261129800026
+        delta_cv: "+0.0000000325340000"
+      note: >
+        NM multi-restartでは実質的な改善なし。
+        052 NMとほぼ同一解に収束した。
+
+    nm_softmax_raw:
+      cv_auc: 0.9550261129800026
+      public_lb: 0.95435
+      note: >
+        052 pruned NMと同一。
+        060のbaseline attack candidate。
+
+    logreg_meta_pruned:
+      cv_auc: 0.9550030438849962
+      public_lb: 0.95432
+      note: >
+        052 pruned LogRegと同一。
+        060のbaseline stable candidate。
+
+    logreg_feature_variants:
+      top3_equal:
+        cv_auc: 0.9550030034777395
+        judgement: slightly_below_current_logreg
+      top5_equal:
+        cv_auc: 0.9550028317956991
+        judgement: slightly_below_current_logreg
+      raw_logit:
+        cv_auc: 0.9550001911066414
+        judgement: below_current_logreg
+      logit_only:
+        cv_auc: 0.9549946430146039
+        judgement: below_current_logreg
+      raw_only:
+        cv_auc: 0.9548312020701925
+        judgement: weak
+      note: >
+        LogReg派生はcurrent logreg_meta_prunedを上回らなかった。
+        安定枠は052 LogRegのまま。
+
+    ridge_variants:
+      ridge_meta_pruned:
+        cv_auc: 0.9547523062506784
+        judgement: weak
+      ridge_raw_logit:
+        cv_auc: 0.9546865571696515
+        judgement: weak
+      ridge_logit_only:
+        cv_auc: 0.9528822502740935
+        judgement: reject
+      note: >
+        Ridge系は引き続き提出候補ではない。
+
+  nm_weights_reference:
+    candidate: nm_softmax_raw_restart_nm_base
+    cv_auc: 0.9550261130125366
+    weights:
+      "016": 0.0377188483
+      "021": 0.0148205038
+      "028": 0.0366510145
+      "032": 0.1003393811
+      "036": 0.0293010554
+      "039": 0.2395680175
+      "040": 0.0350916197
+      "042": 0.0691629173
+      "044": 0.0996891613
+      "046": 0.0929267994
+      "048": 0.0351380022
+      "050": 0.0776499145
+      "051": 0.1319427649
+    interpretation: >
+      060のNM multi-restartは052 NMとほぼ同一の重みに収束。
+      052 pruned stackのNM解は安定していると見てよい。
+
+  interpretation:
+    - >
+      060では新規モデル追加なしで、052 pruned stackのblendのみを最終調整した。
+    - >
+      NM multi-restart単体では実質改善なし。
+      052 NMは局所解として大きく外れていない。
+    - >
+      最も良かったのはNM 70% + LogReg 30%のconvex mix。
+      CVは052 NMをわずかに上回り、Public LBは0.95435で同値維持。
+    - >
+      Public LB更新ではないが、LogRegを混ぜてもPublic bestを維持したため、
+      attack/stable中間の最終候補として保持できる。
+    - >
+      LogReg派生・Ridge派生は現行052 LogRegを上回らず、不採用。
+
+  final_judgement:
+    decision: keep_as_intermediate_final_candidate
+    reason: >
+      060 bestのNM70/LogReg30 mixはCV 0.9550284050で現時点最高CVとなった。
+      Public LBは0.95435で052 NMと同値のため、Public更新ではない。
+      ただし、NM単体よりLogReg成分を含むため、Private耐性の中間候補として価値がある。
+      攻め枠の052 NM、安定枠の052 LogRegに加え、
+      最終候補の第三候補として保持する。
+
+  current_candidate_status_after_060:
+    attack:
+      name: add052_pruned_nm
+      cv_auc: 0.9550261129800026
+      public_lb: 0.95435
+      note: >
+        Public bestの攻め枠。060 mixとPublic同値。
+    stable:
+      name: add052_pruned_logreg
+      cv_auc: 0.9550030438849962
+      public_lb: 0.95432
+      note: >
+        安定枠。LogReg派生ではこれを上回るものなし。
+    intermediate:
+      name: mix_nm_softmax_raw_restart_nm_base_70_logreg_meta_pruned_30
+      cv_auc: 0.9550284050019342
+      public_lb: 0.95435
+      note: >
+        060で得たNM/LogReg中間候補。
+        CV最高かつPublic best同値。
+        最終提出2枠に入れるかは、攻め枠/安定枠の役割配分で判断する。
+
+  next_action:
+    - >
+      060 best mixを最終候補表へ追加する。
+    - >
+      ただしPublic LBは052 NMと同値のため、052 NMを完全置換する必要はない。
+    - >
+      最終提出候補は、052 NM、052 LogReg、060 mixの3本で比較する。
+    - >
+      提出枠が2本の場合、Public重視なら052 NM + 060 mix、
+      Private耐性重視なら060 mix + 052 LogReg、
+      バランス重視なら052 NM + 052 LogRegを検討する。
+    - >
+      今後さらにモデル追加・RealMLP派生追加は行わず、提出候補選定とファイル確認に移る。
+
+current_submission_choice:
+  slot_1:
+    name: 060_mix_nm70_logreg30
+    role: 攻め寄りだがNM単体より少し安定寄り
+    cv_auc: 0.9550284050019342
+    public_lb: 0.95435
+
+  slot_2:
+    name: 052_pruned_logreg
+    role: 安定枠
+    cv_auc: 0.9550030438849962
+    public_lb: 0.95432
