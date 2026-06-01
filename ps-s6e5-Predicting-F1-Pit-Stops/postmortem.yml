@@ -1,0 +1,306 @@
+postmortem:
+  competition:
+    name: "Playground Series S6E5 - Predicting F1 Pit Stops"
+    short_name: "PS S6E5"
+    task: "Predicting F1 Pit Stops"
+    target: "PitNextLap"
+    metric: "AUC"
+    final_rank:
+      rank: 140
+      total_teams: 3023
+      top_percent: 4.63
+    final_private_best: 0.95462
+    final_public_best_selected: 0.95435
+
+  final_selected_submissions:
+    slot_1:
+      name: "060_nm70_logreg30_mix"
+      experiment: "exp_20260527_060_blend_052_pruned_final_variants_min"
+      candidate: "mix_nm_softmax_raw_restart_nm_base_70_logreg_meta_pruned_30"
+      role: "attack_intermediate"
+      public_lb: 0.95435
+      private_lb: 0.95462
+      cv_auc: 0.9550284050019342
+      selection_reason: >
+        Public LB は 052 NM と同値だったが、CV は 052 NM より上。
+        NM 70% + LogReg 30% の convex mix により、NM 単体より少し安定寄りの攻め候補になった。
+        最終的に Private LB 最高となり、選択は正しかった。
+
+    slot_2:
+      name: "052_pruned_logreg"
+      experiment: "exp_20260525_052_blend_pruned_after_051_min"
+      candidate: "logreg_meta_pruned"
+      role: "stable"
+      public_lb: 0.95432
+      private_lb: 0.95459
+      cv_auc: 0.9550030438849962
+      selection_reason: >
+        Public LB は 060 mix / 052 NM より低かったが、LogReg 系の安定枠として選択。
+        Private LB は 0.95459 で、060 mix と 0.00003 差だった。
+        S6E4 の反省を踏まえ、攻め枠だけで2本を埋めず、安定枠を残した判断は妥当だった。
+
+  final_candidate_pool:
+    kept:
+      - name: "060_nm70_logreg30_mix"
+        public_lb: 0.95435
+        private_lb: 0.95462
+        cv_auc: 0.9550284050019342
+        role: "attack_intermediate"
+        final_status: "selected_best_private"
+
+      - name: "052_pruned_logreg"
+        public_lb: 0.95432
+        private_lb: 0.95459
+        cv_auc: 0.9550030438849962
+        role: "stable"
+        final_status: "selected_stable_backup"
+
+      - name: "052_pruned_nm"
+        public_lb: 0.95435
+        private_lb: null
+        cv_auc: 0.9550261129800026
+        role: "attack"
+        final_status: "not_selected_because_060_mix_had_same_public_and_higher_cv"
+
+    rejected_or_excluded:
+      "031_return":
+        reason: >
+          031 を戻すと blend CV は上がったが、Public LB は 0.95435 から 0.95433 へ低下。
+          031 notebook の meta_oof_like は strict nested OOF ではなく、OOF 過大評価リスクが高い。
+          Private で刺さる可能性より CV 盛り疑いを重く見て除外。
+        lesson: >
+          meta-stacking 系を外部blendに入れる場合は、保存OOFが完全なnested OOFか必ず確認する。
+
+      "054_optuna_refit":
+        public_lb: 0.95389
+        cv_auc: 0.954066947138
+        reason: >
+          051 近傍のRealMLP Optuna refitだったが、単体CV/LBともに051未満。
+          Add054 / Replace051 へ進む根拠なし。
+
+      "055_optuna_refit_epoch6":
+        public_lb: 0.95390
+        cv_auc: 0.953907994181
+        reason: >
+          054からn_epochsのみ6へ増やしたが、051未満。
+          epoch 7/8 は明確な基準で中止。
+
+      "059_add054055":
+        reason: >
+          054/055 は 051 と極めて高相関で、相関を下げた補助素材にはならなかった。
+          NM CV も052を下回り、LogRegは実質052と同一。
+          RealMLP近傍variant追加は打ち切り。
+
+  main_timeline:
+    early_phase:
+      summary: >
+        original dataset と危険列 Normalized_TyreLife の扱いを確認し、
+        strict baseline、original prior、RealMLP shared系、LGB/XGB/Cat/TabM などを順に追加した。
+      key_lessons:
+        - "Normalized_TyreLife direct use / proxy 再構成は危険列扱いにした。"
+        - "Year artifact は強かったが、Year prior 依存だけでないかを006bなどで確認した。"
+        - "単体が弱いモデルでも、blend補助素材になる可能性を確認した。"
+
+    middle_phase:
+      summary: >
+        029/036/038系RealMLP、032 CustomTorchRealMLP、GBDT系派生、Optuna refitを追加し、
+        033 blend notebook を標準化した。
+      key_models:
+        - "029 RealMLP shared001v2"
+        - "036 RealMLP no Race_Year_TE"
+        - "038 RealMLP seed/reg variant"
+        - "039 RealMLP log features seed/reg"
+        - "040 LGB shared001v2 features"
+        - "042 CatBoost shared001v2 features"
+        - "050 XGB shared001v2 Optuna refit"
+        - "051 RealMLP watchlist updated shared001v2"
+      key_lessons:
+        - "単体Publicが最強でなくても、blendで大きな重みを取る素材はある。"
+        - "XGB 050 は oof/pred 更新漏れにより一度評価を誤りかけた。提出前・blend前の成果物更新確認が必須。"
+        - "D追加やLogReg feature variantsは有効な場合もあるが、今回の主力は raw+rank+logit のLogRegだった。"
+
+    final_phase:
+      summary: >
+        051追加後に052 pruned stackを作り、冗長モデルを整理。
+        その後、053-055のRealMLP Optuna系、058/059の診断、060の最終blend variantsを実施した。
+      key_decisions:
+        - "052で017/029/038/041を削ってもNM/LogRegが維持・改善したため、052 pruned stackを標準化。"
+        - "031はCV盛り疑いが強く、最終候補から除外。"
+        - "054/055は051高相関かつ弱いため除外。"
+        - "060でNM70/LogReg30 mixを作り、最終Private最高候補として選択。"
+
+  what_worked:
+    final_selection:
+      - >
+        060 mix と 052 LogReg を最終2本に選んだこと。
+        060 mix が Private 最高、052 LogReg もPrivateで僅差だった。
+      - >
+        攻め枠だけで2本を埋めず、LogReg安定枠を残したこと。
+        S6E4の反省が活きた。
+
+    pruning:
+      - >
+        052 pruned stackで冗長な017/029/038/041を削り、管理しやすい標準stackを作れた。
+      - >
+        Public LBだけでなく、CV、weight、相関、OOF健全性を見て031/054/055を除外できた。
+
+    blend_design:
+      - >
+        NM単体とLogReg単体だけでなく、NM/LogReg convex mixを試したこと。
+        Public best同値を維持しながらPrivate最高になった。
+      - >
+        033ベースのblend notebookで weight_keys を扱い、full/pruned stackの重み列ズレを避けられた。
+
+    shared_code_usage:
+      - >
+        強い共有コードを発見し、051として再現・投入できた。
+      - >
+        そのまま使うだけでなく、052 pruning、053-055 Optuna確認、059診断を通じて限界も確認した。
+
+  what_did_not_work:
+    realmlp_nearby_variants:
+      - >
+        051近傍の054/055は、単体もblendも有効ではなかった。
+        同じ特徴量・同じ構造・同じfoldで lr/wd/p_drop/epoch だけを変えても、相関低下はほぼ得られない。
+
+    unsafe_meta_stacking:
+      - >
+        031はCV上では魅力的だったが、meta_oof_likeがstrict nested OOFではなく、外部blendで過大評価されやすかった。
+        Public LBも下がったため不採用。
+
+    blind_cv_chasing:
+      - >
+        CVだけ上がる候補は複数あったが、Publicに変換されないものは採用しなかった。
+        特に031 ReturnやRealMLP近傍追加は、CVより構造的リスクを重視した。
+
+    broad_late_optuna:
+      - >
+        終盤のRealMLP Optunaは改善しなかった。
+        既に強い共有コード近傍での狭いOptunaは、相関低下にも性能改善にもつながりにくかった。
+
+  key_lessons_for_next_competition:
+    final_submission_selection:
+      - >
+        最終提出候補には必ず role を付ける。
+        attack / stable / intermediate / risky_cv_only を分ける。
+      - >
+        Public最高候補とCV最高候補が同じ役割なら、2本とも選ばない。
+        役割が重なりすぎるとPrivate耐性が落ちる。
+      - >
+        最終2本は、Public LB、CV、OOF健全性、メタ手法のPrivate耐性を総合して選ぶ。
+
+    shared_code_protocol:
+      - >
+        強い共有コードを見つけたら、as-is再現だけで終わらせない。
+        まずCV/LB/OOF/predを保存し、危険列・fold設計・OOF生成の健全性を確認する。
+      - >
+        次に、強さの源泉を分解する。
+        例: TE削除、original rows削除、feature group drop、model family transfer。
+      - >
+        パラメータ近傍variantだけを量産しない。
+        それは相関をほとんど下げない。
+      - >
+        共有コードを「コピー」ではなく、「自分の実験資産」に変換する。
+
+    oof_management:
+      - >
+        OOF/predは実験の副産物ではなく主資産。
+        oof_registry.csv または final_candidates.yml で横断管理する。
+      - >
+        各OOFには exp_id, family, feature_family, cv, public_lb, corr_to_core, role, keep/hold/drop を付ける。
+      - >
+        blend前には必ずoof/predの更新漏れを確認する。
+        050で更新漏れがあり、一度評価を誤りかけた。
+
+    model_diversity:
+      - >
+        seedや正則化だけでは相関低下は小さい。
+        相関を下げるには、入力特徴量、学習データの見せ方、モデルfamily、学習目的を変える必要がある。
+      - >
+        強いNN共有コードが出た場合、同じ特徴量をLGB/XGB/CatBoost/TabMへ横展開する方が、seed違いNNより価値が出やすい。
+      - >
+        低相関素材は単体が弱くてもblendで効くことがある。
+        ただしOOF健全性が怪しい素材は除外する。
+
+    meta_model_selection:
+      - >
+        NM/HCはCVを伸ばしやすいが、OOF歪みにも反応しやすい。
+        LogReg/Ridge/ElasticNetなどの線形メタも毎回比較する。
+      - >
+        そのコンペでPrivate耐性がありそうなメタ手法を途中で見極め、
+        最終提出ルールへ昇格させる。
+      - >
+        NMとLogRegのconvex mixは、attack/stableの中間候補として有効な可能性がある。
+        今回は060 mixがPrivate最高だった。
+
+  next_competition_workflow:
+    phase_0_setup:
+      - "competition rootに experiments/ と shared_code_watchlist.yml を作る。"
+      - "各experimentに memo.yml, cv_result.json, oof, pred, submission を保存する。"
+      - "最初から oof_registry.csv / final_candidates.yml を用意する。"
+
+    phase_1_baseline:
+      - "strict baselineを作る。"
+      - "CV schemeを固定する。"
+      - "original dataset と危険列を確認する。"
+      - "target artifactやYear/Race/ID系の偏りを初期に確認する。"
+
+    phase_2_feature_and_family_diversity:
+      - "RAW / LOG / DIGIT / artifact系など、入力表現を分ける。"
+      - "GBDT / NN / TabM / CatBoost / XGB / LGB を役割別に作る。"
+      - "単体CVだけでなく相関とblend weightを見る。"
+
+    phase_3_shared_code_absorption:
+      - "強い共有コードをas-is再現する。"
+      - "危険列・OOF・fold設計を確認する。"
+      - "feature ablation、original ablation、model family transferで自分の素材に変換する。"
+      - "パラメータ近傍だけのvariant量産は優先度を下げる。"
+
+    phase_4_blend_and_pruning:
+      - "avg / Ridge / ElasticNet / LogReg / HC / NM を横並びで比較する。"
+      - "weightがゼロ化したモデル、CV/LBを悪化させるモデルはpruneする。"
+      - "pruned stackを標準化し、以降の追加実験はそこを基準にする。"
+
+    phase_5_final_selection:
+      - "final_candidates.ymlを作る。"
+      - "候補に role を付ける。"
+      - "attack 1本、stable 1本、または intermediate + stable の組み合わせを基本にする。"
+      - "Publicだけでなく、CV、Private耐性仮説、OOF健全性、過去のshake傾向を見て選ぶ。"
+
+  reusable_rules:
+    - id: "R001"
+      rule: "CVだけ高い候補は採用しない。Public変換、OOF健全性、相関、weightを確認する。"
+
+    - id: "R002"
+      rule: "meta_oof_likeやholdout meta予測を通常OOFとして扱わない。nested OOFでないmeta-stacking素材は危険枠にする。"
+
+    - id: "R003"
+      rule: "終盤の新規モデル追加より、pruned stack固定のblend variantsの方が期待値が高い場合がある。"
+
+    - id: "R004"
+      rule: "共有コードは借り物のまま使わず、分解して自分の実験資産に変換する。"
+
+    - id: "R005"
+      rule: "最終提出2本は役割が重ならないようにする。attack + stable、または intermediate + stable を基本にする。"
+
+    - id: "R006"
+      rule: "oof/pred更新漏れを提出前・blend前に必ず確認する。"
+
+    - id: "R007"
+      rule: "パラメータ近傍variantは相関をあまり下げない。相関を下げたいなら特徴量・データ利用・model familyを変える。"
+
+    - id: "R008"
+      rule: "Public best同値なら、CVが高く、かつ構造的に安定寄りの候補を優先できる。今回の060 mixが該当。"
+
+  final_evaluation:
+    summary: >
+      S6E5では最終順位140/3023、上位約4.6%。
+      Private LB最高候補を最終提出に選べたため、S6E4のような最終選択ミスは改善された。
+      一方で、上位一桁〜金圏に近づくには、051級の強い素材をより早く発見し、
+      さらにその共有コードを自分の実験資産へ分解・再構成する力が必要。
+    main_success: >
+      最終選択力は改善した。
+      060 mix と 052 LogReg の2本選択は妥当で、Privateでも良かった。
+    main_remaining_gap: >
+      強い単体素材・低相関素材の発見力がまだ不足。
+      共有コードを見つけた後の分解・横展開・相関低下variant作成を次回の主課題にする。
