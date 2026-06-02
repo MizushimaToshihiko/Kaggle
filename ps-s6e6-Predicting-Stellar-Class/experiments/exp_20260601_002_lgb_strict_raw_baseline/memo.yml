@@ -1,1 +1,124 @@
-
+experiment:
+  id: exp_20260601_002_lgb_strict_raw_baseline
+  title: LightGBM strict raw baseline
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: LightGBM
+objective:
+  summary: Build the first strict raw LightGBM baseline using only competition train/test.
+    No original dataset, no feature engineering, no color indices, no bias search.
+  success_criteria:
+  - save oof proba
+  - save test pred proba
+  - save cv_result
+  - save submission
+  - save feature importance
+  - update oof_registry
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  train_shape:
+  - 577347
+  - 12
+  test_shape:
+  - 247435
+  - 11
+  target_col: class
+  id_col: id
+  use_original: false
+features:
+  feature_family: strict_raw
+  feature_cols:
+  - alpha
+  - delta
+  - u
+  - g
+  - r
+  - i
+  - z
+  - redshift
+  - spectral_type
+  - galaxy_population
+  numeric_cols:
+  - alpha
+  - delta
+  - u
+  - g
+  - r
+  - i
+  - z
+  - redshift
+  categorical_cols:
+  - spectral_type
+  - galaxy_population
+  notes: Raw competition columns only.
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  score: 0.9569063401002502
+  fold_scores:
+  - fold: 1
+    balanced_accuracy: 0.95602653803731
+    best_iteration: 837
+    n_train: 461877
+    n_valid: 115470
+  - fold: 2
+    balanced_accuracy: 0.9579558904746607
+    best_iteration: 834
+    n_train: 461877
+    n_valid: 115470
+  - fold: 3
+    balanced_accuracy: 0.9568711594269406
+    best_iteration: 749
+    n_train: 461878
+    n_valid: 115469
+  - fold: 4
+    balanced_accuracy: 0.9566454084536312
+    best_iteration: 837
+    n_train: 461878
+    n_valid: 115469
+  - fold: 5
+    balanced_accuracy: 0.9570327253446068
+    best_iteration: 730
+    n_train: 461878
+    n_valid: 115469
+  fold_std: 0.0006262433859549746
+params:
+  objective: multiclass
+  num_class: 3
+  boosting_type: gbdt
+  n_estimators: 5000
+  learning_rate: 0.03
+  num_leaves: 127
+  max_depth: -1
+  min_child_samples: 40
+  subsample: 0.85
+  subsample_freq: 1
+  colsample_bytree: 0.85
+  reg_alpha: 0.0
+  reg_lambda: 1.0
+  random_state: 42
+  n_jobs: -1
+  verbosity: -1
+  force_col_wise: true
+outputs:
+  oof_proba: oof_lgb_strict_raw_proba.npy
+  pred_proba: pred_lgb_strict_raw_proba.npy
+  oof_csv: oof_lgb_strict_raw.csv
+  pred_csv: pred_lgb_strict_raw.csv
+  submission: submission_lgb_strict_raw_baseline.csv
+  cv_result: cv_result.json
+  feature_importance: feature_importance.csv
+  registry: oof_registry.csv
+judgement:
+  status: keep_reference
+  reason: This is the first strict raw LightGBM baseline and should be kept as the
+    reference for CatBoost/XGBoost baselines and later FE/original/bias-search experiments.
+  next_action:
+  - Run exp_20260601_003_cat_strict_raw_baseline
+  - Run exp_20260601_004_xgb_strict_raw_baseline
+  - Compare OOF correlation and fold stability after 002/003/004
