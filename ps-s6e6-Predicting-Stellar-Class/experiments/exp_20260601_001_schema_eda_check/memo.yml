@@ -1,1 +1,395 @@
+experiment:
+  id: exp_20260601_001_schema_eda_check
+  title: schema / EDA / original dataset / dangerous column check
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  created_at: 2026-06-01
+  notebook: ps-s6e6-001-schema-eda-check.ipynb
+  metric: balanced_accuracy_score
 
+objective:
+  summary: >
+    S6E6の初動確認として、train/test/sample_submission/original datasetのschema、
+    target、提出形式、target distribution、missing、train/test drift、
+    original datasetとの列対応、危険列候補を確認する。
+    モデル作成前の確認実験であり、CV/LBは発生しない。
+  success_criteria:
+    - train/test/sample_submission の列構成を確認する
+    - target名とクラス数を確認する
+    - sample_submission形式を確認する
+    - target distributionを確認する
+    - missingを確認する
+    - train/test driftを確認する
+    - original dataset有無と列対応を確認する
+    - 数値列・カテゴリ列・二値列を分類する
+    - 危険列候補を洗い出す
+  result: success
+
+input_files:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  original_path: /kaggle/input/datasets/fedesoriano/stellar-classification-dataset-sdss17/star_classification.csv
+
+data_shape:
+  train:
+    rows: 577347
+    columns: 12
+  test:
+    rows: 247435
+    columns: 11
+  sample_submission:
+    rows: 247435
+    columns: 2
+  original:
+    rows: 100000
+    columns: 18
+
+schema:
+  id_col: id
+  target_col: class
+  original_target_col: class
+
+  train_columns:
+    - id
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+    - spectral_type
+    - galaxy_population
+    - class
+
+  test_columns:
+    - id
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+    - spectral_type
+    - galaxy_population
+
+  train_only_columns:
+    - class
+
+  test_only_columns: []
+
+  train_test_feature_columns_match: true
+
+features:
+  feature_cols:
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+    - spectral_type
+    - galaxy_population
+
+  numeric_cols:
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+
+  categorical_cols:
+    - spectral_type
+
+  binary_cols:
+    - galaxy_population
+
+  notes: >
+    competition train/testには、元SDSS17 originalにある観測ID系・観測メタ系の
+    obj_ID, spec_obj_ID, run_ID, rerun_ID, cam_col, field_ID, plate, MJD, fiber_ID
+    は含まれていない。
+    一方、competition側にはoriginalにない spectral_type と galaxy_population が追加されている。
+
+submission:
+  sample_submission_columns:
+    - id
+    - class
+  format_guess: single_column_class_label
+  submission_rule: >
+    predict_probaのargmaxを class label に戻し、id,class の2列で提出する。
+    probability multi-column形式ではない。
+
+target_distribution:
+  train:
+    GALAXY:
+      count: 377480
+      rate: 0.653818
+    QSO:
+      count: 117143
+      rate: 0.202899
+    STAR:
+      count: 82724
+      rate: 0.143283
+  original:
+    GALAXY:
+      count: 59445
+      rate: 0.59445
+    STAR:
+      count: 21594
+      rate: 0.21594
+    QSO:
+      count: 18961
+      rate: 0.18961
+  interpretation: >
+    trainとoriginalではclass分布が異なる。
+    trainはGALAXY比率が高く、STAR比率がoriginalより低い。
+    originalをそのままappendする場合は分布差を考慮する必要がある。
+    002 strict raw baselineではoriginalを使わず、competition trainのみで基準線を作る。
+
+original_dataset:
+  loaded: true
+  original_shape:
+    rows: 100000
+    columns: 18
+  original_columns:
+    - obj_ID
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - run_ID
+    - rerun_ID
+    - cam_col
+    - field_ID
+    - spec_obj_ID
+    - class
+    - redshift
+    - plate
+    - MJD
+    - fiber_ID
+
+  feature_overlap_train_original:
+    - alpha
+    - delta
+    - g
+    - i
+    - r
+    - redshift
+    - u
+    - z
+
+  n_feature_overlap_train_original: 8
+  n_train_features: 10
+  n_original_features: 17
+  train_original_feature_overlap_rate: 0.8
+
+  original_only_columns_vs_train:
+    - MJD
+    - cam_col
+    - fiber_ID
+    - field_ID
+    - obj_ID
+    - plate
+    - rerun_ID
+    - run_ID
+    - spec_obj_ID
+
+  train_only_columns_vs_original:
+    - galaxy_population
+    - id
+    - spectral_type
+
+  interpretation: >
+    originalはcompetitionの元データとして使える可能性はあるが、
+    feature spaceは完全一致ではない。
+    共通するのは測光・位置・redshiftの8列のみ。
+    competition側の spectral_type と galaxy_population はoriginalに存在しないため、
+    original rowsを単純appendする場合は欠損補完または除外設計が必要。
+    originalを使うなら、まずは共通8列ベースのoriginal prior、nearest/snap、
+    または共通列のみのappend ablationとして切り分けるのが妥当。
+
+missing:
+  summary: >
+    train/testの全特徴列でmissing rateは0。
+    classはtestに存在しないためtest_missing_rateはNaN。
+  decision: >
+    002 strict raw baselineでは欠損補完は不要。
+    ただしoriginalをappendする実験では、spectral_type / galaxy_population がoriginalにないため別途扱う。
+
+train_test_drift:
+  numeric:
+    summary: >
+      numeric driftは全体として小さい。
+      KS statは最大でも z の約0.00276で、train/testの分布差は大きくない。
+      redshift, u/g/r/i/z, alpha, delta のtrain/test平均・標準偏差もほぼ一致。
+    top_ks:
+      - column: z
+        ks_stat: 0.002757
+        ks_pvalue: 0.143438
+      - column: i
+        ks_stat: 0.002423
+        ks_pvalue: 0.260879
+      - column: redshift
+        ks_stat: 0.002268
+        ks_pvalue: 0.334345
+  categorical:
+    summary: >
+      categorical/binary driftも小さい。
+      spectral_type、galaxy_populationともにtrain/testでカテゴリ集合は一致し、
+      unseen categoryはない。
+    spectral_type:
+      n_train_unique: 4
+      n_test_unique: 4
+      total_variation_distance: 0.001463
+      unseen_categories_in_test: 0
+    galaxy_population:
+      n_train_unique: 2
+      n_test_unique: 2
+      total_variation_distance: 0.001490
+      unseen_categories_in_test: 0
+  decision: >
+    初期CVは通常のStratifiedKFold 5 foldsで開始してよい。
+    現時点でtrain/test drift由来の特殊splitは不要。
+
+decimal_artifact:
+  summary: >
+    redshiftはtop10 value rateがtrain/testともに約0.0058で、頻出値集中が少しある。
+    alphaはround2一致率が約34%と高く、座標値の丸め癖がある。
+    deltaはround2一致率が約4%、u/g/r/i/zはround2一致率が約4%前後。
+  notes:
+    - alpha の小数丸め・binning・座標系特徴は後続FE候補
+    - redshift の頻出値・binning・class別priorは後続FE候補
+    - ただし002 strict raw baselineではartifact FEを入れない
+
+danger_columns:
+  detected_by_script:
+    - g
+    - i
+    - r
+    - u
+    - z
+    - redshift
+    - delta
+    - alpha
+    - galaxy_population
+  interpretation: >
+    script上は連続値列がalmost_unique_id_likeとして検出されたが、
+    u/g/r/i/z/redshift/alpha/deltaは本来の物理・測光特徴であり、
+    直ちに危険列としてdropする対象ではない。
+    galaxy_populationは列名にgalaxyを含むためname_contains:galaxyで検出されたが、
+    competition側に用意された特徴量なので、まずは通常特徴として扱う。
+  true_high_risk_columns:
+    competition_train_test:
+      - none_confirmed
+    original_only:
+      - obj_ID
+      - spec_obj_ID
+      - run_ID
+      - rerun_ID
+      - cam_col
+      - field_ID
+      - plate
+      - MJD
+      - fiber_ID
+  decision: >
+    competition train/testには obj_ID と spec_obj_ID が存在しないため、
+    002 strict raw baselineではIDリーク列の直接リスクは低い。
+    original利用時は obj_ID/spec_obj_ID を直接使わない。
+    originalの観測メタ列も初期段階では使わず、共通8列のみから使い方を検討する。
+
+initial_decisions:
+  baseline_002:
+    id: exp_20260601_002_lgb_strict_raw_baseline
+    model: LightGBM
+    use_original: false
+    features:
+      numeric:
+        - alpha
+        - delta
+        - u
+        - g
+        - r
+        - i
+        - z
+        - redshift
+      categorical:
+        - spectral_type
+        - galaxy_population
+    categorical_handling: >
+      LightGBMでは spectral_type と galaxy_population をcategory型またはlabel encodingで扱う。
+      galaxy_populationはbinaryだが文字列値なので、明示的にencodingする。
+    cv:
+      scheme: StratifiedKFold
+      n_splits: 5
+      shuffle: true
+      random_state: 42
+    metric: balanced_accuracy_score
+    output:
+      - oof
+      - pred
+      - cv_result
+      - submission
+      - memo
+
+  baseline_003:
+    id: exp_20260601_003_cat_strict_raw_baseline
+    model: CatBoost
+    use_original: false
+    features: same_as_002
+    notes: >
+      categorical列が少ないためCatBoostの優位性は未知。
+      ただしspectral_type / galaxy_populationを自然に扱えるため、
+      LGB baselineとの比較価値はある。
+      GPU/CPU default差に注意し、bootstrap_type / subsample / border_count を明示する。
+
+  baseline_004:
+    id: exp_20260601_004_xgb_strict_raw_baseline
+    model: XGBoost
+    use_original: false
+    features: same_as_002
+    notes: >
+      LGB/Catとの相関確認用。
+      カテゴリ列はlabel encodingまたはone-hotで処理する。
+
+next_actions:
+  immediate:
+    - exp_20260601_002_lgb_strict_raw_baseline を実行する
+    - oof/pred/cv_result/submission/memo を保存する
+    - target label mapping を固定する
+    - oof_registry.csv を初期化する
+  after_002_003_004:
+    - LGB/Cat/XGB raw baselineのCV、fold別score、OOF相関を比較する
+    - redshift / u-g / g-r / r-i / i-z などの物理FE最小追加を検討する
+    - spectral_type / galaxy_population のablationを行う
+    - original共通8列を使ったoriginal priorまたはappend実験を別枠で行う
+  do_not_do_yet:
+    - original rowsをいきなり全部appendしない
+    - originalの obj_ID/spec_obj_ID/観測メタ列を使わない
+    - color indexやredshift binを002 strict raw baselineに混ぜない
+    - 共有コード確認に進まない
+    - Optunaを回さない
+
+judgement:
+  status: completed
+  keep_for_reference: true
+  model_artifact: false
+  cv_available: false
+  lb_available: false
+  decision: >
+    001はschema/EDA確認として完了。
+    train/testのfeature columnsは一致し、submission形式もsingle class labelで確定。
+    missingとtrain/test driftは大きな問題なし。
+    originalは読み込めたが、competitionと完全同一schemaではないため、
+    初期baselineには使わず、後続のoriginal ablationで扱う。
