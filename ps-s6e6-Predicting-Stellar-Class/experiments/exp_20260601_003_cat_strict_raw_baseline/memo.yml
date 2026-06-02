@@ -123,3 +123,161 @@ judgement:
   - Run exp_20260601_004_xgb_strict_raw_baseline
   - Compare 002/003/004 OOF correlation, fold stability, CV, and Public LB
   - Only after raw baselines, test FE such as color indices or redshift bins
+
+result:
+  status: completed
+  cv:
+    metric: balanced_accuracy_score
+    score: 0.9524581895303758
+    fold_scores:
+      - fold: 1
+        balanced_accuracy: 0.9521612100002829
+        best_iteration: 2948
+        n_train: 461877
+        n_valid: 115470
+      - fold: 2
+        balanced_accuracy: 0.9527751164058013
+        best_iteration: 2097
+        n_train: 461877
+        n_valid: 115470
+      - fold: 3
+        balanced_accuracy: 0.9520008117137116
+        best_iteration: 2526
+        n_train: 461878
+        n_valid: 115469
+      - fold: 4
+        balanced_accuracy: 0.9527844116663017
+        best_iteration: 3095
+        n_train: 461878
+        n_valid: 115469
+      - fold: 5
+        balanced_accuracy: 0.9525693869301138
+        best_iteration: 3327
+        n_train: 461878
+        n_valid: 115469
+    fold_score_min: 0.9520008117137116
+    fold_score_max: 0.9527844116663017
+    fold_score_range: 0.0007835999525901
+    interpretation: >
+      fold間のばらつきは小さく、CatBoost strict raw baselineとしては安定している。
+      ただしCV水準は002 LightGBM strict raw baselineより明確に低い。
+      fold安定性は良いが、単体主軸候補としては現時点では弱い。
+
+  public_lb:
+    score: 0.95351
+    submission: submission_cat_strict_raw_baseline.csv
+    interpretation: >
+      Public LBは0.95351で、002 LightGBMの0.95800を大きく下回った。
+      CV/LBともに002より低いため、003 CatBoost strict rawは現時点では主軸候補ではない。
+      ただしOOF相関次第では、後続blendの補助素材として確認する価値は残る。
+
+model:
+  family: CatBoost
+  estimator: CatBoostClassifier
+  role: strict_raw_baseline
+  use_original: false
+  use_fe: false
+  use_bias_search: false
+  params:
+    loss_function: MultiClass
+    eval_metric: TotalF1:average=Macro
+    iterations: 5000
+    learning_rate: 0.03
+    depth: 8
+    l2_leaf_reg: 3.0
+    random_seed: 42
+    task_type: CPU
+    bootstrap_type: Bernoulli
+    subsample: 0.8
+    border_count: 254
+    grow_policy: SymmetricTree
+    od_type: Iter
+    od_wait: 150
+    allow_writing_files: false
+    verbose: 200
+
+features:
+  feature_family: strict_raw
+  feature_cols:
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+    - spectral_type
+    - galaxy_population
+  numeric_cols:
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+  categorical_cols:
+    - spectral_type
+    - galaxy_population
+  notes: >
+    001で確定したcompetition train/testの10特徴のみを使用。
+    original datasetは使用していない。
+    color index、redshift bin、original prior、snap、bias searchは入れていない。
+    CatBoostのCPU/GPU default差を避けるため、bootstrap_type、subsample、border_countを明示した。
+
+target:
+  class_names:
+    - GALAXY
+    - QSO
+    - STAR
+  label_mapping:
+    GALAXY: 0
+    QSO: 1
+    STAR: 2
+  submission_format: single_column_class_label
+
+outputs:
+  oof_proba: oof_cat_strict_raw_proba.npy
+  pred_proba: pred_cat_strict_raw_proba.npy
+  oof_csv: oof_cat_strict_raw.csv
+  pred_csv: pred_cat_strict_raw.csv
+  submission: submission_cat_strict_raw_baseline.csv
+  cv_result: cv_result.json
+  fold_scores: fold_scores.csv
+  feature_importance: feature_importance.csv
+  feature_importance_by_fold: feature_importance_by_fold.csv
+  registry: oof_registry.csv
+
+comparison:
+  against_002_lgb_strict_raw:
+    lgb_cv: 0.9569063401002502
+    lgb_public_lb: 0.95800
+    cat_cv: 0.9524581895303758
+    cat_public_lb: 0.95351
+    cv_delta_cat_minus_lgb: -0.0044481505698744
+    lb_delta_cat_minus_lgb: -0.00449
+    interpretation: >
+      003 CatBoost strict rawは、002 LightGBM strict rawにCV/LBともに明確に負けている。
+      現時点ではLightGBMの方がraw特徴との相性が良い。
+      CatBoostを深掘りするなら、strict rawではなく、カテゴリ処理・loss/eval_metric・class weight・bias search・FE追加後に再評価する方が妥当。
+
+judgement:
+  status: keep_reference
+  decision: >
+    003はCatBoost strict raw baselineとして保存するが、単体主軸候補ではない。
+    CV 0.952458 / Public LB 0.95351 で、002 LightGBMのCV 0.956906 / Public LB 0.95800を大きく下回った。
+  reason: >
+    strict raw条件でのCatBoostの基準線として必要なOOF/predは取得できた。
+    fold安定性は悪くないため、完全dropではなくreferenceとして保持する。
+    ただし、この結果だけを見る限り、S6E6の初期主軸はCatBoostではなくLightGBM寄り。
+  caveat: >
+    まだ004 XGBoostが未実行のため、family間の最終比較は004完了後に行う。
+    また、CatBoostはraw条件では弱いが、後続のFEやbias searchで補助素材になる可能性はある。
+  next_action:
+    - exp_20260601_004_xgb_strict_raw_baseline を実行する
+    - 002/003/004のOOF相関、fold安定性、Public LBを比較する
+    - 003は単体主軸ではなく、相関が低い場合のみblend補助候補として見る
+    - CatBoostの深掘りは004完了後まで保留する
+    - raw baseline比較前にFE、original、bias searchへ進まない
