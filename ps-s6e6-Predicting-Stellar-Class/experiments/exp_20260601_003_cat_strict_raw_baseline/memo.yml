@@ -1,1 +1,125 @@
-
+experiment:
+  id: exp_20260601_003_cat_strict_raw_baseline
+  title: CatBoost strict raw baseline
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: CatBoost
+objective:
+  summary: Build the first strict raw CatBoost baseline using only competition train/test.
+    No original dataset, no feature engineering, no color indices, no bias search.
+    Explicitly set bootstrap_type, subsample, and border_count to avoid CPU/GPU default
+    ambiguity.
+  success_criteria:
+  - save oof proba
+  - save test pred proba
+  - save cv_result
+  - save submission
+  - save feature importance
+  - update oof_registry
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  train_shape:
+  - 577347
+  - 12
+  test_shape:
+  - 247435
+  - 11
+  target_col: class
+  id_col: id
+  use_original: false
+features:
+  feature_family: strict_raw
+  feature_cols:
+  - alpha
+  - delta
+  - u
+  - g
+  - r
+  - i
+  - z
+  - redshift
+  - spectral_type
+  - galaxy_population
+  numeric_cols:
+  - alpha
+  - delta
+  - u
+  - g
+  - r
+  - i
+  - z
+  - redshift
+  categorical_cols:
+  - spectral_type
+  - galaxy_population
+  notes: Raw competition columns only.
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  score: 0.9524581895303758
+  fold_scores:
+  - fold: 1
+    balanced_accuracy: 0.9521612100002829
+    best_iteration: 2948
+    n_train: 461877
+    n_valid: 115470
+  - fold: 2
+    balanced_accuracy: 0.9527751164058013
+    best_iteration: 2097
+    n_train: 461877
+    n_valid: 115470
+  - fold: 3
+    balanced_accuracy: 0.9520008117137116
+    best_iteration: 2526
+    n_train: 461878
+    n_valid: 115469
+  - fold: 4
+    balanced_accuracy: 0.9527844116663017
+    best_iteration: 3095
+    n_train: 461878
+    n_valid: 115469
+  - fold: 5
+    balanced_accuracy: 0.9525693869301138
+    best_iteration: 3327
+    n_train: 461878
+    n_valid: 115469
+  fold_std: 0.00032144041329311944
+params:
+  loss_function: MultiClass
+  eval_metric: TotalF1:average=Macro
+  iterations: 5000
+  learning_rate: 0.03
+  depth: 8
+  l2_leaf_reg: 3.0
+  random_seed: 42
+  task_type: CPU
+  bootstrap_type: Bernoulli
+  subsample: 0.8
+  border_count: 254
+  grow_policy: SymmetricTree
+  od_type: Iter
+  od_wait: 150
+  allow_writing_files: false
+  verbose: 200
+outputs:
+  oof_proba: oof_cat_strict_raw_proba.npy
+  pred_proba: pred_cat_strict_raw_proba.npy
+  oof_csv: oof_cat_strict_raw.csv
+  pred_csv: pred_cat_strict_raw.csv
+  submission: submission_cat_strict_raw_baseline.csv
+  cv_result: cv_result.json
+  feature_importance: feature_importance.csv
+  registry: oof_registry.csv
+judgement:
+  status: keep_reference
+  reason: This is the first strict raw CatBoost baseline and should be kept as the
+    reference for LightGBM/XGBoost baselines and later FE/original/bias-search experiments.
+  next_action:
+  - Run exp_20260601_004_xgb_strict_raw_baseline
+  - Compare 002/003/004 OOF correlation, fold stability, CV, and Public LB
+  - Only after raw baselines, test FE such as color indices or redshift bins
