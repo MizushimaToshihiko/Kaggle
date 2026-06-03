@@ -138,3 +138,187 @@ judgement:
   - Only after raw baselines, test FE such as color indices or redshift bins
 
 
+result:
+  status: completed
+  cv:
+    metric: balanced_accuracy_score
+    score: 0.9557836270283273
+    fold_scores:
+      - fold: 1
+        balanced_accuracy: 0.954939860808643
+        best_iteration: 2718
+        n_train: 461877
+        n_valid: 115470
+      - fold: 2
+        balanced_accuracy: 0.9569373797403102
+        best_iteration: 2906
+        n_train: 461877
+        n_valid: 115470
+      - fold: 3
+        balanced_accuracy: 0.9559590148402394
+        best_iteration: 3189
+        n_train: 461878
+        n_valid: 115469
+      - fold: 4
+        balanced_accuracy: 0.9550796948407984
+        best_iteration: 2865
+        n_train: 461878
+        n_valid: 115469
+      - fold: 5
+        balanced_accuracy: 0.9560022229454782
+        best_iteration: 2968
+        n_train: 461878
+        n_valid: 115469
+    fold_score_min: 0.954939860808643
+    fold_score_max: 0.9569373797403102
+    fold_score_range: 0.0019975189316672
+    interpretation: >
+      fold間のばらつきは大きすぎず、XGBoost strict raw baselineとしては安定。
+      fold2が最も高く、fold1が最も低い。
+      002 LightGBMよりは少し弱いが、003 CatBoostよりは明確に強い。
+
+  public_lb:
+    score: 0.95638
+    submission: submission_xgb_strict_raw_baseline.csv
+    interpretation: >
+      Public LBは0.95638。
+      002 LightGBMの0.95800には届かないが、003 CatBoostの0.95351は明確に上回った。
+      raw baseline family比較では、現時点で LightGBM > XGBoost > CatBoost の順。
+
+model:
+  family: XGBoost
+  estimator: XGBClassifier
+  role: strict_raw_baseline
+  use_original: false
+  use_fe: false
+  use_bias_search: false
+  params:
+    objective: multi:softprob
+    num_class: 3
+    n_estimators: 5000
+    learning_rate: 0.03
+    max_depth: 6
+    min_child_weight: 5.0
+    subsample: 0.85
+    colsample_bytree: 0.85
+    reg_alpha: 0.0
+    reg_lambda: 1.0
+    gamma: 0.0
+    tree_method: hist
+    max_bin: 256
+    random_state: 42
+    n_jobs: -1
+    eval_metric: mlogloss
+  early_stopping_rounds: 150
+
+features:
+  feature_family: strict_raw
+  feature_cols:
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+    - spectral_type
+    - galaxy_population
+  numeric_cols:
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+  categorical_cols:
+    - spectral_type
+    - galaxy_population
+  categorical_encoding: train+test fitted ordinal encoding
+  cat_maps:
+    spectral_type:
+      A/F: 0
+      G/K: 1
+      M: 2
+      O/B: 3
+    galaxy_population:
+      Blue_Cloud: 0
+      Red_Sequence: 1
+  notes: >
+    001で確定したcompetition train/testの10特徴のみを使用。
+    original datasetは使用していない。
+    color index、redshift bin、original prior、snap、bias searchは入れていない。
+    XGBoost入力のため、spectral_type と galaxy_population はtrain+testでfitしたordinal encodingに変換した。
+
+target:
+  class_names:
+    - GALAXY
+    - QSO
+    - STAR
+  label_mapping:
+    GALAXY: 0
+    QSO: 1
+    STAR: 2
+  submission_format: single_column_class_label
+
+outputs:
+  oof_proba: oof_xgb_strict_raw_proba.npy
+  pred_proba: pred_xgb_strict_raw_proba.npy
+  oof_csv: oof_xgb_strict_raw.csv
+  pred_csv: pred_xgb_strict_raw.csv
+  submission: submission_xgb_strict_raw_baseline.csv
+  cv_result: cv_result.json
+  fold_scores: fold_scores.csv
+  feature_importance: feature_importance.csv
+  feature_importance_by_fold: feature_importance_by_fold.csv
+  registry: oof_registry.csv
+
+comparison:
+  raw_baselines:
+    lgb_002:
+      exp_id: exp_20260601_002_lgb_strict_raw_baseline
+      cv: 0.9569063401002502
+      public_lb: 0.95800
+    cat_003:
+      exp_id: exp_20260601_003_cat_strict_raw_baseline
+      cv: 0.9524581895303758
+      public_lb: 0.95351
+    xgb_004:
+      exp_id: exp_20260603_004_xgb_strict_raw_baseline
+      cv: 0.9557836270283273
+      public_lb: 0.95638
+
+  deltas:
+    xgb_minus_lgb:
+      cv: -0.0011227130719229
+      public_lb: -0.00162
+    xgb_minus_cat:
+      cv: 0.0033254374979515
+      public_lb: 0.00287
+
+  interpretation: >
+    raw baseline比較では、002 LightGBMがCV/LBともに最良。
+    004 XGBoostはLightGBMには届かないが、CatBoostよりは明確に強い。
+    003 CatBoostはstrict raw条件では主軸候補から後退。
+    初期主軸familyはLightGBM、次点がXGBoostと見るのが妥当。
+
+judgement:
+  status: keep_reference
+  decision: >
+    004はXGBoost strict raw baselineとして保存する。
+    CV 0.955784 / Public LB 0.95638で、002 LightGBMには届かないが、
+    003 CatBoostよりは明確に強い。
+  reason: >
+    XGBoost raw baselineとしてOOF/predを取得できたため、002/003/004のfamily比較が可能になった。
+    単体主軸は現時点では002 LightGBMだが、004 XGBoostは後続blendやFE追加後の補助候補として残す価値がある。
+  caveat: >
+    XGBoostではカテゴリ列をordinal encodingしているため、カテゴリ扱いの差がLightGBM/CatBoostとの差に影響している可能性がある。
+    今回はstrict raw baselineなので、one-hotやnative categoricalなどの派生はまだ行わない。
+  next_action:
+    - 002/003/004のOOF相関を確認する
+    - 002/003/004のfold安定性を横比較する
+    - LightGBMを初期主軸、XGBoostを次点補助、CatBoostをreference/低相関候補として整理する
+    - 次の実験ではLightGBMまたはXGBoostに対して、color index最小追加を検討する
+    - bias searchはまだ実施せず、raw baseline比較と最小FE確認後に後付けで行う
