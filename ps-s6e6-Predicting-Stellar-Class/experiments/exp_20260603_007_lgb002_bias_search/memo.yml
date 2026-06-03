@@ -73,3 +73,147 @@ judgement:
     to blend notebook
   - Compare against raw 002 and other baseline OOFs
   - If blend does not improve, classify as risky_cv_only
+
+result:
+  status: completed
+  cv:
+    metric: balanced_accuracy_score
+    raw_score: 0.9569063401002502
+    biased_score: 0.9586098708578418
+    delta_biased_minus_raw: 0.0017035307575915537
+    reference_002_lgb_strict_raw_cv: 0.9569063401002502
+    interpretation: >
+      002 LightGBM strict raw baseline の OOF proba に class-wise bias を後付けした結果、
+      CV balanced accuracy は 0.956906 から 0.958610 へ +0.001704 改善した。
+      FEなし・再学習なしの後処理としては大きい改善であり、S6E6では bias search が有効であると判断できる。
+
+  public_lb:
+    score: 0.95921
+    reference_002_lgb_strict_raw_public_lb: 0.95800
+    delta_vs_002_lgb_strict_raw_public_lb: 0.00121
+    submission: submission_lgb002_bias_search.csv
+    interpretation: >
+      Public LB は 0.95921 で、002 raw の 0.95800 を +0.00121 上回った。
+      CV改善がPublicにも変換されており、006 color index min のような CV-only 改善ではない。
+      現時点では 007 が単体提出候補として最良。
+
+bias_search:
+  method: softmax(log(raw_proba) + class_bias)
+  reference_exp_id: exp_20260601_002_lgb_strict_raw_baseline
+  use_original: false
+  use_fe: false
+  use_bias_search: true
+  bias:
+    GALAXY: 0.0
+    QSO: 0.144
+    STAR: 0.1435
+  bias_space:
+    GALAXY: fixed_0
+    QSO: searched
+    STAR: searched
+  reason_for_fixing_galaxy: >
+    全クラスに同じ定数を足してもargmaxは変わらないため、
+    GALAXY biasを0に固定し、実質自由度をQSOとSTARの2次元にした。
+
+raw_eval:
+  balanced_accuracy: 0.9569063401002502
+  recall:
+    GALAXY: 0.978430645332203
+    QSO: 0.9650000426828748
+    STAR: 0.9272883322856729
+
+biased_eval:
+  balanced_accuracy: 0.9586098708578418
+  recall:
+    GALAXY: 0.9766928049168168
+    QSO: 0.9666988210989986
+    STAR: 0.9324379865577099
+
+recall_delta_biased_minus_raw:
+  GALAXY: -0.0017378404153862
+  QSO: 0.0016987784161238
+  STAR: 0.0051496542720370
+  interpretation: >
+    bias search により GALAXY recall は約 -0.00174 低下したが、
+    QSO recall は約 +0.00170、STAR recall は約 +0.00515 改善した。
+    Balanced Accuracy では3クラスを等重みで見るため、
+    多数派GALAXYを少し削って STAR/QSO を救う方向が有効だった。
+    特にSTAR recall改善がスコア上昇の主因。
+
+model:
+  family: LightGBM
+  estimator: LGBMClassifier
+  role: postprocess_bias_candidate
+  base_model: exp_20260601_002_lgb_strict_raw_baseline
+  use_original: false
+  use_fe: false
+  use_bias_search: true
+  retraining: false
+  notes: >
+    007はモデル再学習ではなく、002のOOF/pred probaに対する後処理。
+    raw 002の予測資産を保持したまま、log-proba空間でclass-wise biasを加えた。
+
+target:
+  class_names:
+    - GALAXY
+    - QSO
+    - STAR
+  label_mapping:
+    GALAXY: 0
+    QSO: 1
+    STAR: 2
+  submission_format: single_column_class_label
+
+outputs:
+  submission: submission_lgb002_bias_search.csv
+  oof_proba: oof_exp_20260603_007_lgb002_bias_search_proba.npy
+  pred_proba: pred_exp_20260603_007_lgb002_bias_search_proba.npy
+  bias_vector: bias_vector.npy
+  bias_search_results: bias_search_results.csv
+  raw_vs_biased_oof_eval: raw_vs_biased_oof_eval.csv
+  oof_csv: oof_lgb002_bias_search.csv
+  pred_csv: pred_lgb002_bias_search.csv
+  cv_result: cv_result.json
+  registry: oof_registry.csv
+
+comparison:
+  against_002_lgb_strict_raw:
+    exp_id: exp_20260601_002_lgb_strict_raw_baseline
+    raw_cv: 0.9569063401002502
+    raw_public_lb: 0.95800
+    biased_cv: 0.9586098708578418
+    biased_public_lb: 0.95921
+    cv_delta_007_minus_002: 0.0017035307575915537
+    lb_delta_007_minus_002: 0.00121
+    interpretation: >
+      007は002 rawをCV/LBともに明確に更新した。
+      002を直接提出候補に戻す理由は現時点では薄く、
+      raw 002は比較・blend用の基準資産、007はpostprocess済み主力候補として扱う。
+
+  against_006_lgb_color_index_min:
+    exp_id: exp_20260603_006_lgb_color_index_min
+    note: >
+      006はCV微増にもかかわらずPublic LBが002より悪化した。
+      一方007はCV改善がPublicにも変換された。
+      よって、現時点ではFE拡張よりbias searchの方が明確に有効。
+
+judgement:
+  status: adopt_mainline_candidate
+  decision: >
+    007を現時点の単体主力候補として採用する。
+    CV 0.958610 / Public LB 0.95921 で、002 rawを明確に上回った。
+    bias search はS6E6で有効な後処理として継続候補にする。
+  reason: >
+    改善幅がCVで +0.001704、Public LBで +0.00121 と大きく、
+    CVだけの上振れではなくPublicにも変換されている。
+    多数派GALAXYを少し下げ、QSO/STAR、特にSTAR recallを上げる方向がBalanced Accuracyに合っていた。
+  caveat: >
+    bias search はOOF上の閾値最適化であるため、過信は禁物。
+    ただし今回はPublic LBも改善しているため、006のようなrisky_cv_onlyとは扱いを分ける。
+    Private耐性を見るには、今後002/004/006/007を含むblend比較と、必要ならseed/fold違いbias確認が必要。
+  next_action:
+    - 007のOOF/pred probaをblend候補に追加する
+    - 002 raw、004 XGB raw、006 color index min、007 bias済みのOOF相関を確認する
+    - 007単体を現時点のattack寄り提出候補として管理する
+    - raw blend後bias と 単体bias後blend の両方を後で比較する
+    - color index拡張よりも、bias searchを他の強い単体やblend後出力に横展開する
