@@ -1,1 +1,90 @@
+experiment:
+  id: exp_20260603_005_oof_corr_raw_baselines
+  title: OOF correlation check for 002/003/004 raw baselines
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  created_at: '2026-06-03'
+objective:
+  summary: Compare OOF predictions from LightGBM/CatBoost/XGBoost strict raw baselines.
+    Compute individual CV, pairwise proba correlation, argmax disagreement, error
+    overlap, and simple average ensemble diagnostics before moving to FE/original/bias
+    experiments.
+  success_criteria:
+  - load OOF proba for 002/003/004
+  - recompute individual balanced accuracy
+  - compute pairwise OOF correlations
+  - compute argmax disagreement and error overlap
+  - compute simple average ensemble diagnostics
+  - save summary files
+inputs:
+  models:
+  - key: 002_lgb_raw
+    exp_id: exp_20260601_002_lgb_strict_raw_baseline
+    family: LightGBM
+    oof: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_lgb_strict_raw_proba.npy
+    pred: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_lgb_strict_raw_proba.npy
+    cv: 0.9569063401002502
+    public_lb: 0.958
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_lgb_strict_raw_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_lgb_strict_raw_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 003_cat_raw
+    exp_id: exp_20260601_003_cat_strict_raw_baseline
+    family: CatBoost
+    oof: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_cat_strict_raw_proba.npy
+    pred: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_cat_strict_raw_proba.npy
+    cv: 0.9524581895303758
+    public_lb: 0.95351
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_cat_strict_raw_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_cat_strict_raw_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 004_xgb_raw
+    exp_id: exp_20260603_004_xgb_strict_raw_baseline
+    family: XGBoost
+    oof: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_xgb_strict_raw_proba.npy
+    pred: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_xgb_strict_raw_proba.npy
+    cv: 0.9557836270283273
+    public_lb: 0.95638
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_xgb_strict_raw_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_xgb_strict_raw_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+outputs:
+  individual_scores: individual_scores.csv
+  pairwise_oof_correlation: pairwise_oof_correlation.csv
+  corr_matrix_pearson_flat_proba: corr_matrix_pearson_flat_proba.csv
+  corr_matrix_spearman_flat_proba: corr_matrix_spearman_flat_proba.csv
+  matrix_argmax_agreement: matrix_argmax_agreement.csv
+  matrix_error_jaccard: matrix_error_jaccard.csv
+  simple_average_ensemble_diagnostics: simple_average_ensemble_diagnostics.csv
+  role_judgement: role_judgement.csv
+  summary: oof_corr_summary.json
+judgement:
+  status: completed_pending_manual_review
+  initial_view: Based on prior CV/LB, 002 LightGBM is the main raw baseline, 004 XGBoost
+    is the next auxiliary candidate, and 003 CatBoost is reference/possible low-correlation
+    material. Use the generated correlation files to decide whether Cat/XGB should
+    be kept for later blend.
+  next_action:
+  - Review pairwise_oof_correlation.csv
+  - Review simple_average_ensemble_diagnostics.csv
+  - If 002+004 average improves OOF, keep XGB as early blend material
+  - Do not start Optuna yet
+  - Next FE candidate should likely be color index minimum on LGB/XGB after this review
+
 
