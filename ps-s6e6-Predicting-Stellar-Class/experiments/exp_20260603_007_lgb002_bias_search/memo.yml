@@ -1,1 +1,75 @@
-
+experiment:
+  id: exp_20260603_007_lgb002_bias_search
+  title: Bias search on 002 LightGBM strict raw baseline, blend-ready
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: LightGBM 002 postprocess
+  created_at: '2026-06-03'
+objective:
+  summary: Apply class-wise bias search to 002 LightGBM strict raw OOF/test probabilities.
+    Do not retrain. GALAXY bias is fixed to 0 and QSO/STAR biases are searched. Save
+    adjusted OOF/test probability matrices so 007 can be added to blend notebooks.
+  success_criteria:
+  - load 002 OOF and test predictions
+  - confirm raw 002 OOF score
+  - search class-wise bias on OOF
+  - save adjusted OOF proba as npy
+  - save adjusted test pred proba as npy
+  - save biased submission
+  - save bias vector and search results
+  - update oof_registry
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  target_col: class
+  id_col: id
+  raw_002_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_lgb_strict_raw_proba.npy
+  raw_002_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_lgb_strict_raw_proba.npy
+  use_original: false
+bias_search:
+  bias_space:
+    GALAXY: fixed_0
+    QSO: searched
+    STAR: searched
+  best_bias:
+    GALAXY: 0.0
+    QSO: 0.144
+    STAR: 0.1435
+  raw_cv: 0.9569063401002502
+  biased_cv: 0.9586098708578418
+  delta_biased_minus_raw: 0.0017035307575915537
+  raw_eval:
+    balanced_accuracy: 0.9569063401002502
+    recall_GALAXY: 0.978430645332203
+    recall_QSO: 0.9650000426828748
+    recall_STAR: 0.9272883322856729
+  biased_eval:
+    balanced_accuracy: 0.9586098708578418
+    recall_GALAXY: 0.9766928049168168
+    recall_QSO: 0.9666988210989986
+    recall_STAR: 0.9324379865577099
+  adjusted_probability_method: softmax(log(raw_proba) + class_bias)
+outputs:
+  submission: submission_lgb002_bias_search.csv
+  bias_vector: bias_vector.npy
+  oof_proba: oof_exp_20260603_007_lgb002_bias_search_proba.npy
+  pred_proba: pred_exp_20260603_007_lgb002_bias_search_proba.npy
+  bias_search_results: bias_search_results.csv
+  raw_vs_biased_oof_eval: raw_vs_biased_oof_eval.csv
+  oof_csv: oof_lgb002_bias_search.csv
+  pred_csv: pred_lgb002_bias_search.csv
+  cv_result: cv_result.json
+  registry: oof_registry.csv
+judgement:
+  status: pending_public_lb
+  reason: Bias search can improve OOF balanced accuracy, but may overfit class thresholds.
+    Adoption depends on Public LB and blend behavior against raw 002/004/006.
+  next_action:
+  - Submit submission_lgb002_bias_search.csv
+  - Record Public LB
+  - Add oof_exp_20260603_007_lgb002_bias_search_proba.npy and pred_exp_20260603_007_lgb002_bias_search_proba.npy
+    to blend notebook
+  - Compare against raw 002 and other baseline OOFs
+  - If blend does not improve, classify as risky_cv_only
