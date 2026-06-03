@@ -1,1 +1,149 @@
+experiment:
+  id: exp_20260603_006_lgb_color_index_min
+  title: LightGBM color index minimal FE
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: LightGBM
+  created_at: '2026-06-03'
+objective:
+  summary: Test minimal astronomical color-index features on top of the 002 LightGBM
+    strict raw baseline. Use only competition train/test. No original dataset, no
+    bias search, and no parameter tuning.
+  success_criteria:
+  - save oof proba
+  - save test pred proba
+  - save cv_result
+  - save submission
+  - save feature importance
+  - update oof_registry
+  - compare CV against 002 LightGBM strict raw baseline
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  train_shape:
+  - 577347
+  - 12
+  test_shape:
+  - 247435
+  - 11
+  target_col: class
+  id_col: id
+  use_original: false
+features:
+  feature_family: color_index_min
+  base_numeric_cols:
+  - alpha
+  - delta
+  - u
+  - g
+  - r
+  - i
+  - z
+  - redshift
+  color_features:
+  - u_g
+  - g_r
+  - r_i
+  - i_z
+  - u_r
+  - g_i
+  - r_z
+  categorical_cols:
+  - spectral_type
+  - galaxy_population
+  feature_cols:
+  - alpha
+  - delta
+  - u
+  - g
+  - r
+  - i
+  - z
+  - redshift
+  - u_g
+  - g_r
+  - r_i
+  - i_z
+  - u_r
+  - g_i
+  - r_z
+  - spectral_type
+  - galaxy_population
+  notes: 'Adds only color-index differences: u-g, g-r, r-i, i-z, u-r, g-i, r-z. No
+    redshift bin, no ratio, no original prior, no snap.'
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  score: 0.9570463209115138
+  delta_vs_002_lgb_strict_raw: 0.00013998081126354034
+  reference_002_cv: 0.9569063401002502
+  fold_scores:
+  - fold: 1
+    balanced_accuracy: 0.9562031819787622
+    best_iteration: 659
+    n_train: 461877
+    n_valid: 115470
+  - fold: 2
+    balanced_accuracy: 0.9579469637084644
+    best_iteration: 630
+    n_train: 461877
+    n_valid: 115470
+  - fold: 3
+    balanced_accuracy: 0.9571543542633482
+    best_iteration: 592
+    n_train: 461878
+    n_valid: 115469
+  - fold: 4
+    balanced_accuracy: 0.9567546148540185
+    best_iteration: 588
+    n_train: 461878
+    n_valid: 115469
+  - fold: 5
+    balanced_accuracy: 0.957172514282456
+    best_iteration: 717
+    n_train: 461878
+    n_valid: 115469
+  fold_std: 0.0005717917633995841
+params:
+  objective: multiclass
+  num_class: 3
+  boosting_type: gbdt
+  n_estimators: 5000
+  learning_rate: 0.03
+  num_leaves: 127
+  max_depth: -1
+  min_child_samples: 40
+  subsample: 0.85
+  subsample_freq: 1
+  colsample_bytree: 0.85
+  reg_alpha: 0.0
+  reg_lambda: 1.0
+  random_state: 42
+  n_jobs: -1
+  verbosity: -1
+  force_col_wise: true
+outputs:
+  oof_proba: oof_lgb_color_index_min_proba.npy
+  pred_proba: pred_lgb_color_index_min_proba.npy
+  oof_csv: oof_lgb_color_index_min.csv
+  pred_csv: pred_lgb_color_index_min.csv
+  submission: submission_lgb_color_index_min.csv
+  cv_result: cv_result.json
+  feature_importance: feature_importance.csv
+  registry: oof_registry.csv
+judgement:
+  status: pending_public_lb
+  reason: This is the first minimal FE experiment after raw baselines. Adoption depends
+    on CV delta vs 002, Public LB, and later OOF correlation.
+  next_action:
+  - Submit submission_lgb_color_index_min.csv
+  - Record Public LB
+  - If CV/LB improves, transfer same FE to XGBoost
+  - If it does not improve, do not expand color FE blindly
+  - Do not start Optuna yet
+
 
