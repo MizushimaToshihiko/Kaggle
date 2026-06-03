@@ -88,3 +88,182 @@ judgement:
   - Next FE candidate should likely be color index minimum on LGB/XGB after this review
 
 
+result:
+  status: completed
+  purpose: OOF correlation check for 002/003/004 strict raw baselines
+  model_keys:
+    - 002_lgb_raw
+    - 003_cat_raw
+    - 004_xgb_raw
+
+individual_scores:
+  ranking:
+    - key: 002_lgb_raw
+      exp_id: exp_20260601_002_lgb_strict_raw_baseline
+      family: LightGBM
+      cv: 0.9569063401002502
+      public_lb: 0.95800
+      recall:
+        GALAXY: 0.978430645332203
+        QSO: 0.9650000426828748
+        STAR: 0.9272883322856729
+      role: main_axis_candidate
+      judgement: keep_main_reference
+
+    - key: 004_xgb_raw
+      exp_id: exp_20260603_004_xgb_strict_raw_baseline
+      family: XGBoost
+      cv: 0.9557836270283273
+      public_lb: 0.95638
+      recall:
+        GALAXY: 0.9785816467097594
+        QSO: 0.9633183374166617
+        STAR: 0.925450896958561
+      role: auxiliary_candidate
+      judgement: keep_aux_reference
+
+    - key: 003_cat_raw
+      exp_id: exp_20260601_003_cat_strict_raw_baseline
+      family: CatBoost
+      cv: 0.9524581895303758
+      public_lb: 0.95351
+      recall:
+        GALAXY: 0.9774319169227509
+        QSO: 0.963497605490725
+        STAR: 0.916445046177651
+      role: reference_or_low_corr_candidate
+      judgement: keep_reference
+
+pairwise_oof_correlation:
+  summary: >
+    3モデルはいずれもOOF proba相関が非常に高い。
+    特に002 LightGBMと004 XGBoostはPearson 0.997944、argmax agreement 0.992682で、
+    予測の大部分は同じ方向を向いている。
+    したがって、004 XGBoostは低相関の別人格というより、LightGBMの微補正素材として見るべき。
+    003 CatBoostは002/004より少し相関が低いが、単体性能が大きく弱いため、
+    現時点では積極的なblend素材ではない。
+
+  pairs:
+    - pair: 002_lgb_raw__003_cat_raw
+      pearson_flat_proba: 0.9965188160409775
+      spearman_flat_proba: 0.9817959414749888
+      argmax_agreement: 0.9895383538842325
+      argmax_disagreement: 0.010461646115767467
+      error_jaccard: 0.7294884059951711
+      interpretation: >
+        CatBoostはLGBより弱いが、002/004よりはわずかにズレがある。
+        ただし誤りの重なりも大きく、単体性能差を補うほどの補助性はまだ見えない。
+
+    - pair: 003_cat_raw__004_xgb_raw
+      pearson_flat_proba: 0.9974187636929845
+      spearman_flat_proba: 0.9811252267074131
+      argmax_agreement: 0.9904251689192115
+      argmax_disagreement: 0.009574831080788503
+      error_jaccard: 0.7516483516483516
+      interpretation: >
+        CatBoostとXGBoostもかなり近い。
+        CatBoostはXGBoostより単体性能が低いため、この組み合わせを優先する理由は薄い。
+
+    - pair: 002_lgb_raw__004_xgb_raw
+      pearson_flat_proba: 0.9979441124476197
+      spearman_flat_proba: 0.9895428670095731
+      argmax_agreement: 0.9926820439008084
+      argmax_disagreement: 0.0073179560991916475
+      error_jaccard: 0.7982216142270862
+      interpretation: >
+        LGBとXGBは非常に高相関。
+        ただし単純平均では002単体をわずかに上回ったため、
+        XGBは低相関素材ではなく、近縁補正素材として保持する。
+
+simple_average_ensemble:
+  results:
+    - strategy: avg_002_lgb_raw_004_xgb_raw
+      keys:
+        - 002_lgb_raw
+        - 004_xgb_raw
+      balanced_accuracy: 0.9570379660995303
+      recall:
+        GALAXY: 0.9787247006463918
+        QSO: 0.9646415065347481
+        STAR: 0.9277476911174508
+      interpretation: >
+        002単体CV 0.956906をわずかに上回り、raw baseline段階の最良OOF。
+        ただし改善幅は約0.000132と小さく、Public提出価値は高くない。
+        XGBは補助候補として保持する。
+
+    - strategy: avg_002_lgb_raw_003_cat_raw_004_xgb_raw
+      keys:
+        - 002_lgb_raw
+        - 003_cat_raw
+        - 004_xgb_raw
+      balanced_accuracy: 0.9562130915340642
+      recall:
+        GALAXY: 0.978560453533962
+        QSO: 0.9644707750356402
+        STAR: 0.9256080460325903
+      interpretation: >
+        3本平均は002単体を下回る。
+        CatBoostを単純に混ぜると悪化するため、003は現時点のblend候補から外す。
+
+    - strategy: avg_002_lgb_raw_003_cat_raw
+      keys:
+        - 002_lgb_raw
+        - 003_cat_raw
+      balanced_accuracy: 0.9561279143582117
+      interpretation: >
+        002単体未満。
+        CatBoostをLGBに足す価値は現時点では薄い。
+
+    - strategy: avg_003_cat_raw_004_xgb_raw
+      keys:
+        - 003_cat_raw
+        - 004_xgb_raw
+      balanced_accuracy: 0.9549558459457909
+      interpretation: >
+        002 LightGBMを含まない平均は弱い。
+        raw段階ではLGBを外す理由はない。
+
+role_judgement:
+  main_axis:
+    key: 002_lgb_raw
+    reason: >
+      CV 0.956906 / Public LB 0.95800でraw baseline中の最良。
+      STAR recallも0.927288で、003/004より高い。
+      初期主軸はLightGBMで固定してよい。
+
+  auxiliary:
+    key: 004_xgb_raw
+    reason: >
+      CV 0.955784 / Public LB 0.95638で、002には届かないが003より明確に強い。
+      002との相関は非常に高いが、002+004平均で002単体をわずかに上回った。
+      低相関素材ではなく、近縁補正素材として保持する。
+
+  reference:
+    key: 003_cat_raw
+    reason: >
+      CV 0.952458 / Public LB 0.95351で単体性能が弱い。
+      002+003平均、003+004平均、002+003+004平均のいずれでも主軸更新に寄与していない。
+      CatBoostはreferenceとして残すが、raw条件での深掘り優先度は低い。
+
+judgement:
+  status: completed
+  decision: >
+    005により、raw baseline段階の主軸は002 LightGBMと判断する。
+    004 XGBoostは002と高相関だが、002+004平均でOOF CVがわずかに改善したため、
+    補助候補として保持する。
+    003 CatBoostは単体性能が弱く、単純平均でも悪化するため、現時点ではreference止まり。
+  key_findings:
+    - LightGBMがraw baselineの最良単体
+    - XGBoostはLightGBMに近いが、微補正素材として保持価値あり
+    - CatBoostはraw条件では弱く、単純blendでは悪化
+    - 3モデルともOOF相関は非常に高く、大きな別人格はまだ作れていない
+  caveat: >
+    今回は単純平均のみの確認であり、LogReg/Ridge/HC/NMなどの本格blendはまだ実施していない。
+    ただし3本しかなく、相関も高いため、現時点で複雑なblendを行う優先度は低い。
+  next_action:
+    - LightGBMを主軸にして、color index最小追加を試す
+    - XGBoostにも同じFEを後続でfamily transferする
+    - CatBoostの深掘りは後回しにする
+    - original利用はまだ入れない
+    - bias searchはraw baselineと最小FE比較後に後付けで実施する
+    - Optunaはまだ回さない
