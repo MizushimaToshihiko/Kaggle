@@ -1,1 +1,140 @@
+experiment:
+  id: exp_20260603_004_xgb_strict_raw_baseline
+  title: XGBoost strict raw baseline
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: XGBoost
+  created_at: '2026-06-03'
+objective:
+  summary: Build the first strict raw XGBoost baseline using only competition train/test.
+    No original dataset, no feature engineering, no color indices, no bias search.
+    Categorical columns are minimally ordinal-encoded for XGBoost input.
+  success_criteria:
+  - save oof proba
+  - save test pred proba
+  - save cv_result
+  - save submission
+  - save feature importance
+  - update oof_registry
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  train_shape:
+  - 577347
+  - 12
+  test_shape:
+  - 247435
+  - 11
+  target_col: class
+  id_col: id
+  use_original: false
+features:
+  feature_family: strict_raw
+  feature_cols:
+  - alpha
+  - delta
+  - u
+  - g
+  - r
+  - i
+  - z
+  - redshift
+  - spectral_type
+  - galaxy_population
+  numeric_cols:
+  - alpha
+  - delta
+  - u
+  - g
+  - r
+  - i
+  - z
+  - redshift
+  categorical_cols:
+  - spectral_type
+  - galaxy_population
+  categorical_encoding: train+test fitted ordinal encoding
+  cat_maps:
+    spectral_type:
+      A/F: 0
+      G/K: 1
+      M: 2
+      O/B: 3
+    galaxy_population:
+      Blue_Cloud: 0
+      Red_Sequence: 1
+  notes: Raw competition columns only. Categorical columns are encoded only because
+    XGBoost requires numeric input.
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  score: 0.9557836270283273
+  fold_scores:
+  - fold: 1
+    balanced_accuracy: 0.954939860808643
+    best_iteration: 2718
+    n_train: 461877
+    n_valid: 115470
+  - fold: 2
+    balanced_accuracy: 0.9569373797403102
+    best_iteration: 2906
+    n_train: 461877
+    n_valid: 115470
+  - fold: 3
+    balanced_accuracy: 0.9559590148402394
+    best_iteration: 3189
+    n_train: 461878
+    n_valid: 115469
+  - fold: 4
+    balanced_accuracy: 0.9550796948407984
+    best_iteration: 2865
+    n_train: 461878
+    n_valid: 115469
+  - fold: 5
+    balanced_accuracy: 0.9560022229454782
+    best_iteration: 2968
+    n_train: 461878
+    n_valid: 115469
+  fold_std: 0.0007234849463258526
+params:
+  objective: multi:softprob
+  num_class: 3
+  n_estimators: 5000
+  learning_rate: 0.03
+  max_depth: 6
+  min_child_weight: 5.0
+  subsample: 0.85
+  colsample_bytree: 0.85
+  reg_alpha: 0.0
+  reg_lambda: 1.0
+  gamma: 0.0
+  tree_method: hist
+  max_bin: 256
+  random_state: 42
+  n_jobs: -1
+  eval_metric: mlogloss
+early_stopping_rounds: 150
+outputs:
+  oof_proba: oof_xgb_strict_raw_proba.npy
+  pred_proba: pred_xgb_strict_raw_proba.npy
+  oof_csv: oof_xgb_strict_raw.csv
+  pred_csv: pred_xgb_strict_raw.csv
+  submission: submission_xgb_strict_raw_baseline.csv
+  cv_result: cv_result.json
+  feature_importance: feature_importance.csv
+  registry: oof_registry.csv
+judgement:
+  status: keep_reference
+  reason: This is the first strict raw XGBoost baseline and should be kept as the
+    reference for raw baseline family comparison and later FE/original/bias-search
+    experiments.
+  next_action:
+  - Compare 002/003/004 OOF correlation, fold stability, CV, and Public LB
+  - Decide first main raw family after 002/003/004 comparison
+  - Only after raw baselines, test FE such as color indices or redshift bins
+
 
