@@ -306,20 +306,20 @@ ranking:
       LGB FE部分は参考になるが、Hill ClimbはRealMLP 100%でblend効果がない。
       shared001の結果を見てから必要部分だけ抽出する。
 
-decision:
-  status: candidate_selected
-  next_experiment:
-  id: exp_20260603_010_shared001_realmlp_as_is
-  action: >
-    shared001をas-is再現候補としてNotebook化する。
-    OOF/predはnpyで保存し、ファイル名にはexp_idを含める。
-    007とのOOF相関、単体CV、Public LB、blend効果を見る。
-  do_not_do:
-    - shared001/002/003を同時に全部走らせない
-    - shared codeの提出をそのまま本命扱いしない
-    - CV 0.968台を見てリーク確認を省略しない
-    - shared003のoriginal target statisticsを無検証で採用しない
-    - shared002のLGB/HCを優先しない
+updated_009_decision:
+  shared002_lgb_only:
+    previous_view: >
+      shared002全体はshared001とRealMLP部分が重複し、Hill ClimbでもRealMLP 100%だったため優先度低め。
+    revised_view: >
+      LGB部分だけを抽出してas-is実行するなら、010候補として妥当。
+      007 raw/bias系とは異なるFEを持つLGB素材として、相関低下・blend補助の可能性がある。
+    decision: reproduce_lgb_part_as_is
+    recommended_next_exp:
+      id: exp_20260603_010_shared002_lgb_as_is
+      purpose: >
+        shared002のLGB部分だけを抽出してas-is再現し、
+        OOF/predをexp名入りnpyで保存する。
+        007とのOOF相関、CV、Public LB、blend効果を確認する。
 
 planned_follow_up:
   after_010:
