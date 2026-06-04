@@ -152,4 +152,304 @@ judgement:
   - If not, keep 007 as mainline and move to next single-model bias or raw-blend bias
     experiment
 
+result:
+  status: completed
+  purpose: >
+    005のraw baseline OOF相関・blend確認に、006 color index min と
+    007 lgb002 bias search を追加し、007を002 rawの置換にするか、
+    002 rawと007 biasedを両方残すか、004/006/003を残す価値があるかを確認した。
 
+  loaded_models:
+    - key: 002_lgb_raw
+      exp_id: exp_20260601_002_lgb_strict_raw_baseline
+      family: LightGBM
+      role: raw_main_reference
+      cv: 0.9569063401002502
+      public_lb: 0.95800
+      oof: oof_lgb_strict_raw_proba.npy
+      pred: pred_lgb_strict_raw_proba.npy
+
+    - key: 003_cat_raw
+      exp_id: exp_20260601_003_cat_strict_raw_baseline
+      family: CatBoost
+      role: weak_reference
+      cv: 0.9524581895303758
+      public_lb: 0.95351
+      oof: oof_cat_strict_raw_proba.npy
+      pred: pred_cat_strict_raw_proba.npy
+
+    - key: 004_xgb_raw
+      exp_id: exp_20260603_004_xgb_strict_raw_baseline
+      family: XGBoost
+      role: aux_reference
+      cv: 0.9557836270283273
+      public_lb: 0.95638
+      oof: oof_xgb_strict_raw_proba.npy
+      pred: pred_xgb_strict_raw_proba.npy
+
+    - key: 006_lgb_color_min
+      exp_id: exp_20260603_006_lgb_color_index_min
+      family: LightGBM
+      role: risky_cv_only_candidate
+      cv: 0.9570463209115138
+      public_lb: 0.95663
+      oof: oof_lgb_color_index_min_proba.npy
+      pred: pred_lgb_color_index_min_proba.npy
+
+    - key: 007_lgb002_bias
+      exp_id: exp_20260603_007_lgb002_bias_search
+      family: LightGBM
+      role: current_mainline_candidate
+      cv: 0.9586098708578418
+      public_lb: 0.95921
+      oof: oof_exp_20260603_007_lgb002_bias_search_proba.npy
+      pred: pred_exp_20260603_007_lgb002_bias_search_proba.npy
+
+individual_scores:
+  ranking:
+    - key: 007_lgb002_bias
+      cv: 0.9586098708578418
+      public_lb: 0.95921
+      recall:
+        GALAXY: 0.9766928049168168
+        QSO: 0.9666988210989986
+        STAR: 0.9324379865577099
+      judgement: current_mainline_single
+
+    - key: 006_lgb_color_min
+      cv: 0.9570463209115138
+      public_lb: 0.95663
+      recall:
+        GALAXY: 0.9781445374589383
+        QSO: 0.9648719940585438
+        STAR: 0.9281224312170592
+      judgement: hold_risky_cv_only
+
+    - key: 002_lgb_raw
+      cv: 0.9569063401002502
+      public_lb: 0.95800
+      recall:
+        GALAXY: 0.978430645332203
+        QSO: 0.9650000426828748
+        STAR: 0.9272883322856729
+      judgement: raw_reference
+
+    - key: 004_xgb_raw
+      cv: 0.9557836270283273
+      public_lb: 0.95638
+      recall:
+        GALAXY: 0.9785816467097594
+        QSO: 0.9633183374166617
+        STAR: 0.925450896958561
+      judgement: auxiliary_reference
+
+    - key: 003_cat_raw
+      cv: 0.9524581895303758
+      public_lb: 0.95351
+      recall:
+        GALAXY: 0.9774319169227509
+        QSO: 0.963497605490725
+        STAR: 0.916445046177651
+      judgement: weak_reference
+
+pairwise_correlation:
+  key_findings:
+    - finding: 002 raw and 007 biased are almost identical.
+      pair: 002_lgb_raw__007_lgb002_bias
+      pearson_flat_proba: 0.9999037242607912
+      spearman_flat_proba: 0.9998068686223168
+      argmax_agreement: 0.9977587135639399
+      argmax_disagreement: 0.0022412864360601163
+      error_jaccard: 0.9322688098133559
+      interpretation: >
+        007は002のclass bias後処理なので、予測確率・argmax・誤分類集合がほぼ同じ。
+        002 rawと007 biasedを両方blendに入れても、多様性はほぼ増えない。
+        007が002を置換する、という扱いが妥当。
+
+    - finding: 004 XGB is the most plausible auxiliary after 007, but still high correlation.
+      pair: 004_xgb_raw__007_lgb002_bias
+      pearson_flat_proba: 0.9978391462266669
+      spearman_flat_proba: 0.9896430665058789
+      argmax_agreement: 0.9922386363833189
+      argmax_disagreement: 0.007761363616681129
+      error_jaccard: 0.7870761170135352
+      interpretation: >
+        004は007より弱いが、002/007系以外では比較的使える補助候補。
+        ただし相関は依然として非常に高く、007を大きく押し上げるほどの多様性はない。
+
+    - finding: 006 color min is highly correlated with 007 and Public LBが悪い。
+      pair: 006_lgb_color_min__007_lgb002_bias
+      pearson_flat_proba: 0.9981717063124274
+      spearman_flat_proba: 0.9933310677278019
+      argmax_agreement: 0.9922317081408581
+      argmax_disagreement: 0.007768291859141903
+      error_jaccard: 0.7850558454860265
+      interpretation: >
+        006はCVだけなら002より高いが、Public LBが低く、007との相関も高い。
+        active blend素材としては優先度が低い。
+
+blend_diagnostics:
+  best_candidates:
+    - rank: 1
+      set_name: B_replace_002_with_007
+      method: hc_nonnegative_raw
+      keys:
+        - 007_lgb002_bias
+        - 003_cat_raw
+        - 004_xgb_raw
+      cv: 0.9586110604666821
+      weights:
+        007_lgb002_bias: 0.9803921568627451
+        003_cat_raw: 0.0
+        004_xgb_raw: 0.0196078431372549
+      recall:
+        GALAXY: 0.9767404895623609
+        QSO: 0.9666305284993555
+        STAR: 0.9324621633383299
+      interpretation: >
+        008内の最良CVだが、007単体との差は約 +0.00000119 にすぎない。
+        重みもほぼ007単体で、004がごく少量、003は0。
+        実質的には007単体と同等であり、提出候補としての優位性は非常に小さい。
+
+    - rank: 2
+      set_name: F_007_002_only
+      method: hc_nonnegative_raw
+      keys:
+        - 007_lgb002_bias
+        - 002_lgb_raw
+      cv: 0.9586098708578418
+      weights:
+        007_lgb002_bias: 1.0
+        002_lgb_raw: 0.0
+      interpretation: >
+        HCは002 rawを完全に捨て、007のみを選択した。
+        002と007を両方残す価値が薄いことを示している。
+
+    - rank: 3
+      set_name: H_007_only
+      method: avg
+      keys:
+        - 007_lgb002_bias
+      cv: 0.9586098708578418
+      weights:
+        007_lgb002_bias: 1.0
+      interpretation: >
+        007単体が依然として主力。
+        ほとんどのblendは007単体を明確には超えない。
+
+    - rank: 4
+      set_name: G_007_006_only
+      method: hc_nonnegative_raw
+      keys:
+        - 007_lgb002_bias
+        - 006_lgb_color_min
+      cv: 0.958504050005225
+      weights:
+        007_lgb002_bias: 0.7634928269848904
+        006_lgb_color_min: 0.23650717301510954
+      interpretation: >
+        006を混ぜると007単体より下がる。
+        006はactive blend素材ではなく、hold/risky_cv_only扱いが妥当。
+
+    - rank: 5
+      set_name: D_all_002_003_004_006_007
+      method: hc_nonnegative_raw
+      keys:
+        - 002_lgb_raw
+        - 003_cat_raw
+        - 004_xgb_raw
+        - 006_lgb_color_min
+        - 007_lgb002_bias
+      cv: 0.958336477083539
+      weights:
+        002_lgb_raw: 0.0
+        003_cat_raw: 0.004034138658399726
+        004_xgb_raw: 0.17057564356952123
+        006_lgb_color_min: 0.38996372442061145
+        007_lgb002_bias: 0.43542649335146766
+      interpretation: >
+        全部入りHCは007単体より悪い。
+        弱い素材を増やせばよいわけではない。
+        006や003を安易に混ぜるのは逆効果。
+
+submission_candidates_saved:
+  best_saved:
+    set_name: B_replace_002_with_007
+    method: hc_nonnegative_raw
+    cv: 0.9586110604666821
+    submission: submission_exp_20260603_008_blend_add007_bias_check_B_replace_002_with_007_hc_nonnegative_raw.csv
+    pred_proba: pred_exp_20260603_008_blend_add007_bias_check_B_replace_002_with_007_hc_nonnegative_raw_proba.npy
+    interpretation: >
+      008で保存された候補のうちCV最良。
+      ただし007単体との差が極小のため、Public提出優先度は高くない。
+      007単体Public LB 0.95921を超える保証は弱い。
+
+role_judgement:
+  current_mainline:
+    key: 007_lgb002_bias
+    cv: 0.9586098708578418
+    public_lb: 0.95921
+    status: current_mainline_single
+    reason: >
+      008でblend候補を比較しても、007単体を実質的に上回る候補はなかった。
+      最高CVの008 HCも007 98.0% + 004 2.0%で、改善幅は約0.000001。
+      現時点では007単体を主力候補として維持する。
+
+  replace_002_with_007:
+    decision: true
+    reason: >
+      007は002 rawをCV/LBともに明確に上回り、002との相関はほぼ1。
+      008のF_007_002_only HCでも002 weightは0となった。
+      active candidateとしては002 rawを007で置換する。
+
+  keep_002_and_007_together:
+    decision: false
+    reason: >
+      002 rawと007 biasedはOOF proba相関0.999904、argmax一致率0.997759で、
+      ほぼ同じ予測である。
+      両方入れても多様性は増えず、HCも002を0重みにした。
+
+  keep_004:
+    decision: hold_auxiliary
+    reason: >
+      004は007に対して小さな補助効果を持つ可能性がある。
+      ただしB_replace_002_with_007 HCで004 weightは約0.0196のみ。
+      active main素材ではなく、補助候補として保持する。
+
+  keep_006:
+    decision: hold_risky_cv_only
+    reason: >
+      006は007との組み合わせで007単体を下回った。
+      Public LBも002/007より悪く、active blend素材として採用しない。
+
+  keep_003:
+    decision: weak_reference
+    reason: >
+      003は単体性能が弱く、B_replace_002_with_007 HCでも重み0。
+      現時点ではactive blend素材から外す。
+
+judgement:
+  status: completed
+  decision: >
+    008では007をblend候補に追加して確認したが、007単体を実質的に超える候補はなかった。
+    最高CVはB_replace_002_with_007のHCで0.958611だが、
+    007単体0.958610との差は約0.000001にすぎない。
+    現時点では007単体をmainlineとして維持し、008のblend候補は参考扱いにする。
+  key_findings:
+    - 007は002 rawを置換するべき
+    - 002 rawと007 biasedを両方入れる価値はほぼない
+    - 004 XGBはごく小さい補助効果の可能性あり
+    - 006 color minはactive blend素材としては弱い
+    - 003 Catは重み0で、active候補から外してよい
+    - 008の最高CV候補は007単体との差が極小で、Public提出優先度は低い
+  caveat: >
+    008のHCやLogReg/RidgeはOOF上の後処理であり、特に微小改善は過信しない。
+    最高候補の改善幅が約0.000001しかないため、Public LB更新を狙って提出枠を使う根拠は弱い。
+  next_action:
+    - 007単体を現時点のmainline/attack候補として保持する
+    - 008のB_replace_002_with_007 HCは提出してもよいが、優先度は低い
+    - 次は007に近いbias系を深掘りするより、別family/別特徴/別splitで相関を下げる素材を作る
+    - 004 XGB rawに対するbias searchを検討する
+    - raw blend後bias searchを別実験で試す
+    - 006 color系の拡張は一旦止める
+    - 003 CatBoost rawの深掘りも一旦止める
