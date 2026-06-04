@@ -16,29 +16,56 @@ exp_20260603_009_shared_code_scout_and_candidate_selection:
 
 shared_code_candidate_checklist:
   candidate_id: 001
-  kaggle_notebook_title: PS|S6|E6: RealMLP · PyTorch
-  kaggle_notebook_url: https://www.kaggle.com/code/yekenot/ps-s6-e6-realmlp-pytorch
-  author: Vladimir Demidov
-  public_score: 0.96977
-  stated_cv: 0.96817
-  model_family: RealMLP
-  features: 32
-    - raw: 10
-    - 合成特徴量: 16
-    - TargetEncode: 6
-  uses_original: false
-  original_usage_method: none
-  uses_pseudo_label: false
-  fold_scheme: StratifiedKFold
-  metric: balanced_accuracy_score
-  oof_available_or_reproducible: true
-  dangerous_columns: original dataを使っていないのでdropなどはしていない
-  expected_correlation_vs_007:
-    high_or_medium_or_low: maybe low
-    reason: 007がGBDTなのに対してこれはRealMLPを使用しているため
-  reproduction_cost:
-    low_or_medium_or_high: unknown
-  risk:
-    low_or_medium_or_high: maybe low
-  decision:
-    - reproduce_as_is
+    kaggle_notebook_title: PS|S6|E6: RealMLP · PyTorch
+    kaggle_notebook_url: https://www.kaggle.com/code/yekenot/ps-s6-e6-realmlp-pytorch
+    author: Vladimir Demidov
+    public_score: 0.96977
+    stated_cv: 0.96817
+    model_family: RealMLP
+    features: 32
+      - raw: 10
+      - 合成特徴量: 16
+      - TargetEncode: 6
+    uses_original: false
+    original_usage_method: none
+    uses_pseudo_label: false
+    fold_scheme: StratifiedKFold
+    metric: balanced_accuracy_score
+    oof_available_or_reproducible: true
+    dangerous_columns: original dataを使っていないのでdropなどはしていない
+    expected_correlation_vs_007:
+      high_or_medium_or_low: maybe low
+      reason: 007がGBDTなのに対してこれはRealMLPを使用しているため
+    reproduction_cost:
+      low_or_medium_or_high: unknown
+    risk:
+      low_or_medium_or_high: maybe low
+    decision:
+      - reproduce_as_is
+
+  candidate_id: 002
+    kaggle_notebook_title: 🌟Stellar Classifier: RealMLP + LightGBM + Hill
+    kaggle_notebook_url: https://www.kaggle.com/code/amanatar/stellar-classifier-realmlp-lightgbm-hill
+    author: Aman Atar
+    public_score: 0.96889
+    stated_cv: 
+      - RealMLP: 0.96808
+      - LGB: 0.96251
+    model_family: RealMLP,LGB
+    features: unknown
+    uses_original: false
+    original_usage_method: none
+    uses_pseudo_label: false
+    fold_scheme: StratifiedKFold
+    metric: balanced_accuracy_score
+    oof_available_or_reproducible: true
+    dangerous_columns: none
+    expected_correlation_vs_007:
+      high_or_medium_or_low: RealMLPはlow,LightGBMはhighかmidium
+      reason: RealMLPは007のGBDTではないが、LightGBMは高相関の可能性がある
+    reproduction_cost:
+      low_or_medium_or_high: unknown
+    risk:
+      low_or_medium_or_high: unknown
+    decision:
+      - reproduce_as_is,LightGBMのみ取り出してみる。007の置き換え候補として価値がありそう
