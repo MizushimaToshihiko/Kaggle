@@ -1,1 +1,120 @@
+experiment:
+  id: exp_20260604_010_shared002_lgb_as_is
+  title: shared002 LightGBM part as-is
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: LightGBM
+  created_at: '2026-06-04'
+objective:
+  summary: Extract and reproduce only the LightGBM part from shared002. Do not run
+    RealMLP or Hill Climbing. Use shared002 feature engineering and fold-safe TargetEncoder.
+    Save OOF/pred npy files with exp_id in filename for later blend/correlation.
+  success_criteria:
+  - run shared002 LGB part only
+  - save OOF proba npy with exp_id in filename
+  - save test pred proba npy with exp_id in filename
+  - save submission
+  - save cv_result
+  - save fold_scores
+  - save feature_importance
+  - update oof_registry
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  target_col: class
+  id_col: id
+  use_original: false
+features:
+  feature_family: shared002_lgb_fe_as_is
+  ratio_features:
+  - _g_/_redshift
+  - _i_/_redshift
+  floor_category_features: all numeric columns converted by floor() to *_cat_
+  bin_features:
+  - delta_100_quantile_bin_
+  - delta_500_quantile_bin_
+  combo_features:
+  - alpha_cat__delta_cat__
+  - u_cat__z_cat__
+  target_encoded_combo_features:
+  - _alpha_cat__delta_cat__TE_class0
+  - _alpha_cat__delta_cat__TE_class1
+  - _alpha_cat__delta_cat__TE_class2
+  - _u_cat__z_cat__TE_class0
+  - _u_cat__z_cat__TE_class1
+  - _u_cat__z_cat__TE_class2
+  target_encoder_safety: TargetEncoder is fit inside each fold on X_tr[combo_names],
+    y_tr, then transforms X_val and X_tst.
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  score: 0.9625129421154345
+  fold_scores:
+  - fold: 1
+    balanced_accuracy: 0.9625975768367967
+    best_iteration: 413
+    n_train: 461877
+    n_valid: 115470
+  - fold: 2
+    balanced_accuracy: 0.9629007179742196
+    best_iteration: 401
+    n_train: 461877
+    n_valid: 115470
+  - fold: 3
+    balanced_accuracy: 0.9617818839111317
+    best_iteration: 395
+    n_train: 461878
+    n_valid: 115469
+  - fold: 4
+    balanced_accuracy: 0.9621612119629491
+    best_iteration: 409
+    n_train: 461878
+    n_valid: 115469
+  - fold: 5
+    balanced_accuracy: 0.963123304248518
+    best_iteration: 395
+    n_train: 461878
+    n_valid: 115469
+  fold_std: 0.0004874905710710015
+params:
+  objective: multiclass
+  num_class: 3
+  n_estimators: 3000
+  learning_rate: 0.03
+  max_depth: 10
+  num_leaves: 127
+  subsample: 0.8
+  colsample_bytree: 0.8
+  class_weight: balanced
+  random_state: 42
+  device: cpu
+  n_jobs: -1
+  verbose: -1
+outputs:
+  oof_proba: oof_exp_20260604_010_shared002_lgb_as_is_proba.npy
+  pred_proba: pred_exp_20260604_010_shared002_lgb_as_is_proba.npy
+  oof_csv: oof_shared002_lgb_as_is.csv
+  pred_csv: pred_shared002_lgb_as_is.csv
+  submission: submission_shared002_lgb_as_is.csv
+  cv_result: cv_result.json
+  fold_scores: fold_scores.csv
+  feature_importance: feature_importance.csv
+  feature_info: feature_info.json
+  registry: oof_registry.csv
+judgement:
+  status: pending_public_lb_and_corr
+  reason: This is a shared-code-derived LGB FE material. Its value depends on CV,
+    Public LB, and OOF correlation against 007.
+  next_action:
+  - Submit submission_shared002_lgb_as_is.csv
+  - Record Public LB
+  - Add OOF/pred npy to npy-files dataset
+  - Compare OOF correlation against 007_lgb002_bias
+  - Blend 007 + 010 if correlation is not too high
+  - If CV is high but Public LB drops, classify as risky_cv_only
+
 
