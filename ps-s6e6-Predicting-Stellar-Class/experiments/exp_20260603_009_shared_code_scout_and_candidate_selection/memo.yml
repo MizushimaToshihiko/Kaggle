@@ -1,0 +1,15 @@
+exp_20260603_009_shared_code_scout_and_candidate_selection:
+  purpose: >
+    shared codeを探索し、007と相関が下がりそうな別family・別特徴・別split・別original利用の候補を見つける。
+    すぐに採用せず、as-is再現候補を1〜2本に絞る。
+
+  primary_goal:
+    - 007と違う予測を作れそうな素材を探す
+    - Public LBだけでなく、特徴量・fold・original利用・危険列・OOF保存可否を見る
+    - そのままコピーではなく、010以降で自分の実験資産に変換する
+
+  do_not_do:
+    - LBが高いだけのNotebookを即採用しない
+    - 007のbias近傍だけを量産しない
+    - LGBのseed違いだけを009にしない
+    - originalや危険列を確認せずに使わない
