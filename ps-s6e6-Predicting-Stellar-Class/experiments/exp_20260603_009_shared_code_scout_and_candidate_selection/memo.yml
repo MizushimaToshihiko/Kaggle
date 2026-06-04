@@ -98,10 +98,10 @@ shared_code_candidate_checklist:
 result:
 status: completed
 purpose: >
-007 bias search後、既存の002/004/006/007が高相関であり、
-008でも007単体を実質的に超えるblend候補が出なかったため、
-次の素材探索としてshared codeを3本確認した。
-目的は、007と異なる予測方向を持つ別family・別特徴・別original利用候補を見つけること。
+  007 bias search後、既存の002/004/006/007が高相関であり、
+  008でも007単体を実質的に超えるblend候補が出なかったため、
+  次の素材探索としてshared codeを3本確認した。
+  目的は、007と異なる予測方向を持つ別family・別特徴・別original利用候補を見つけること。
 
 shared_code_candidates:
 shared001:
