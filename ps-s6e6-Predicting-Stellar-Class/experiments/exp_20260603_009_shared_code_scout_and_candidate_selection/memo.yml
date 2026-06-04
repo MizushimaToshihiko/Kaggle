@@ -69,3 +69,28 @@ shared_code_candidate_checklist:
       low_or_medium_or_high: unknown
     decision:
       - reproduce_as_is,LightGBMのみ取り出してみる。007の置き換え候補として価値がありそう
+
+  candidate_id: 003
+    kaggle_notebook_title: Stellar Class | XGB
+    kaggle_notebook_url: https://www.kaggle.com/code/mikhailnaumov/stellar-class-xgb
+    author: Mikhail Naumov
+    public_score: 0.96771
+    stated_cv: 0.9651018
+    model_family: XGB
+    features: unknown
+    uses_original: true
+    original_usage_method: unknown
+    uses_pseudo_label: false
+    fold_scheme: StratifiedKFold
+    metric: balanced_accuracy
+    oof_available_or_reproducible: true
+    dangerous_columns: unknown
+    expected_correlation_vs_007:
+      high_or_medium_or_low: high or medium
+      reason: 007と同じGBDTであるため
+    reproduction_cost:
+      low_or_medium_or_high: unknown
+    risk:
+      low_or_medium_or_high: unknown
+    decision:
+      - reproduce_as_is,Blend部分は省いてXBMのみ取り出して実施する価値がありそうに見える
