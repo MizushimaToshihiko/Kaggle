@@ -94,3 +94,243 @@ shared_code_candidate_checklist:
       low_or_medium_or_high: unknown
     decision:
       - reproduce_as_is,Blend部分は省いてXBMのみ取り出して実施する価値がありそうに見える
+
+result:
+status: completed
+purpose: >
+007 bias search後、既存の002/004/006/007が高相関であり、
+008でも007単体を実質的に超えるblend候補が出なかったため、
+次の素材探索としてshared codeを3本確認した。
+目的は、007と異なる予測方向を持つ別family・別特徴・別original利用候補を見つけること。
+
+shared_code_candidates:
+shared001:
+  file: shared001.ipynb
+  candidate_type: RealMLP + engineered features
+  model_family:
+    - RealMLP
+    - PyTorch NN
+  cv_reported:
+  overall_oof_balanced_accuracy: 0.96817
+  fold_scores:
+    - 0.96978
+    - 0.96782
+    - 0.96780
+    - 0.96775
+    - 0.96770
+  features:
+  base_features:
+    - competition train/test raw features
+  engineered_features:
+    - KBinsDiscretizerによる数値bin特徴
+    - alpha/delta系カテゴリ組み合わせ
+    - u/z系カテゴリ組み合わせ
+    - TargetEncoderによるcombo feature encoding
+  notes: >
+    feature_engineeringはCV前にtrain全体へfitされているが、
+    binningやカテゴリ組み合わせはtargetを使わないため、直ちにtarget leakとは判断しない。
+    TargetEncoderはfold内でtrain foldにfitし、validation/testへtransformしているため、
+    設計としては比較的健全に見える。
+  uses_original: false
+  uses_pseudo_label: false
+  fold_scheme:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  outputs_in_original_code:
+    - oof_preds.csv
+    - test_preds.csv
+    - submission.csv
+  strengths:
+    - 007とはfamilyが大きく異なる
+    - CVが0.96817と非常に高い
+    - RealMLP単体なので、007 LGB biasとは相関が下がる可能性がある
+    - originalを使っていないため、original由来リークの懸念は小さい
+  risks:
+    - CVが現行007より約+0.00956高く、強すぎるため検証必須
+    - GPU/実行時間が必要
+    - OOF/predを現在の命名規則に合わせてnpy保存する修正が必要
+    - Public LB未確認
+  expected_correlation_vs_007:
+  level: medium
+  reason: >
+    特徴量は同じ天体測光値由来だが、RealMLPとGBDT+biasでは学習familyが異なる。
+    007と完全同方向ではない可能性がある。
+  reproduction_cost: medium
+  risk_level: medium
+  decision: reproduce_as_is_first
+  recommended_next_exp:
+  id: exp_20260603_010_shared001_realmlp_as_is
+  purpose: >
+    shared001をas-isに近い形で再現し、OOF/predをnpy保存する。
+    007とのOOF相関、Public LB、blend効果を確認する。
+
+shared002:
+  file: shared002.ipynb
+  candidate_type: RealMLP + LightGBM + Hill Climbing
+  model_family:
+    - RealMLP
+    - LightGBM
+    - Hill Climb blend
+  cv_reported:
+    realmlp_oof_balanced_accuracy: 0.96808
+    lgb_oof_balanced_accuracy: 0.96251
+    hill_climb_blend_oof_balanced_accuracy: 0.96808
+  hill_climb_weights:
+  RealMLP: 1.0
+  LightGBM: 0.0
+  features:
+  engineered_features:
+    - KBinsDiscretizerによる数値bin特徴
+    - alpha_cat_ x delta_cat_ combo
+    - u_cat_ x z_cat_ combo
+    - TargetEncoderによるcombo encoding
+  notes: >
+    shared001とかなり近いRealMLP系構成。
+    LGBも含むが、Hill ClimbではRealMLP 100%、LGB 0%となっている。
+    したがって、blend notebookとしての価値よりRealMLP部分の価値が中心。
+  uses_original: false
+  uses_pseudo_label: false
+  fold_scheme:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  outputs_in_original_code:
+    - submission_realmlp.csv
+    - submission_lgbm.csv
+    - submission_hillclimbing_blend.csv
+  strengths:
+    - RealMLP CVが0.96808と高い
+    - LGB FE版も取得できる
+    - shared001と比較して、LGB FE素材の確認ができる
+  risks:
+    - shared001と重複が大きい
+    - Hill ClimbはRealMLP 100%で、実質blend効果なし
+    - shared001を先に再現するなら、shared002全体の優先度は下がる
+  expected_correlation_vs_007:
+  level: medium
+  reason: >
+    RealMLP部分は007と異なる可能性があるが、shared001とほぼ同種。
+    009の3候補の中では独立した新規性は低め。
+  reproduction_cost: medium
+  risk_level: medium
+  decision: hold_after_shared001
+  recommended_usage: >
+    shared001再現後、必要ならshared002のLGB FE部分だけを抽出して、
+    007やRealMLPとの相関確認素材にする。
+    ただし、010の最優先候補にはしない。
+
+shared003:
+  file: shared003.ipynb
+  candidate_type: XGBoost + original target statistics + calibration
+  model_family:
+    - XGBoost
+    - original-stat feature engineering
+    - class-wise probability calibration
+  cv_reported:
+  xgb_score_before_calibration: 0.9651018
+  calibrated_oof_balanced_accuracy: 0.966435
+  features:
+  base_features:
+    - competition train/test features
+  original_features:
+    - SDSS17 original dataset
+    - original側にspectral_typeを再作成
+    - original側にgalaxy_populationを再作成
+  engineered_features:
+    - original target statistics
+    - preprocessing classによる数値・カテゴリ変換
+    - XGB native categorical setting
+  calibration:
+  method: differential_evolution class-wise weight optimization
+  reported_calibrated_oof: 0.966435
+  uses_original: true
+  uses_pseudo_label: false
+  fold_scheme:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  outputs_in_original_code:
+    - XGB_32_oof.csv
+    - XGB_32_test.csv
+    - submission.csv
+  strengths:
+    - 007とは特徴設計・original利用が異なる
+    - XGB系だが004 rawよりかなり強い
+    - calibration込みで0.966435まで出ており、007とのblend候補になり得る
+    - original利用の方向性確認に使える
+  risks:
+    - original target statisticsの設計確認が必要
+    - targetを数値ラベル化して平均を取っているため、クラス順序依存の疑いがある
+    - mappingがGALAXY:0, STAR:1, QSO:2で、こちらの既存実験のGALAXY:0, QSO:1, STAR:2と異なる
+    - package installが多く、再現環境リスクがある
+    - GPU前提のXGB設定
+    - original由来特徴のablationが必須
+  expected_correlation_vs_007:
+  level: medium_low
+  reason: >
+    007と同じraw特徴だけではなく、original target statisticsとclass-wise calibrationを使うため、
+    予測方向が変わる可能性がある。
+    ただしXGB系なので、完全な別人格とは限らない。
+  reproduction_cost: high
+  risk_level: high
+  decision: inspect_and_reproduce_second
+  recommended_next_exp:
+  id: exp_20260603_011_shared003_xgb_orig_stats_as_is
+  purpose: >
+    shared003をas-isに近い形で再現し、OOF/predをnpy保存する。
+    その後、original statsなし / calibrationなし / class mapping修正版のablationを行う。
+
+ranking:
+  first_priority:
+    candidate: shared001
+    reason: >
+      RealMLPという別familyで、originalなし、CV 0.96817と最も強い。
+      007との相関を下げる素材として最も期待値が高い。
+      まず010でas-is再現し、OOF/predを保存する。
+  
+  second_priority:
+    candidate: shared003
+    reason: >
+      original利用とXGB + calibrationという別方向の素材。
+      CV 0.966435で十分強いが、target encoding/label mapping/original statsのリスクがある。
+      shared001再現後に、011で慎重に検証する。
+  
+  third_priority:
+    candidate: shared002
+    reason: >
+      RealMLP部分は強いがshared001と重複が大きい。
+      LGB FE部分は参考になるが、Hill ClimbはRealMLP 100%でblend効果がない。
+      shared001の結果を見てから必要部分だけ抽出する。
+
+decision:
+  status: candidate_selected
+  next_experiment:
+  id: exp_20260603_010_shared001_realmlp_as_is
+  action: >
+    shared001をas-is再現候補としてNotebook化する。
+    OOF/predはnpyで保存し、ファイル名にはexp_idを含める。
+    007とのOOF相関、単体CV、Public LB、blend効果を見る。
+  do_not_do:
+    - shared001/002/003を同時に全部走らせない
+    - shared codeの提出をそのまま本命扱いしない
+    - CV 0.968台を見てリーク確認を省略しない
+    - shared003のoriginal target statisticsを無検証で採用しない
+    - shared002のLGB/HCを優先しない
+
+planned_follow_up:
+  after_010:
+    - 010 shared001 RealMLPのOOF/predを保存
+    - 007との相関確認
+    - 007 + 010 blend確認
+    - Public LB確認
+  after_011:
+    - shared003 as-is再現
+    - original stats ablation
+    - calibration ablation
+    - class mapping確認
+    - 007/010/011 blend確認
+
