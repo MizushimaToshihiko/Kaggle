@@ -1,1 +1,75 @@
-
+experiment:
+  id: exp_20260605_012_lgb010_bias_search
+  title: Bias search on 010 shared002 LightGBM as-is
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: LightGBM 010 postprocess
+  created_at: '2026-06-05'
+objective:
+  summary: Apply class-wise bias search to 010 shared002 LGB as-is OOF/test probabilities.
+    Do not retrain. GALAXY bias is fixed to 0 and QSO/STAR biases are searched. Save
+    adjusted OOF/test probability matrices so 012 can be added to future blend notebooks.
+  success_criteria:
+  - load 010 OOF and test predictions
+  - confirm raw 010 OOF score
+  - search class-wise bias on OOF
+  - save adjusted OOF proba as npy
+  - save adjusted test pred proba as npy
+  - save biased submission
+  - save bias vector and search results
+  - update oof_registry
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  target_col: class
+  id_col: id
+  raw_010_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260604_010_shared002_lgb_as_is_proba.npy
+  raw_010_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260604_010_shared002_lgb_as_is_proba.npy
+  use_original: false
+bias_search:
+  bias_space:
+    GALAXY: fixed_0
+    QSO: searched
+    STAR: searched
+  best_bias:
+    GALAXY: 0.0
+    QSO: 0.214
+    STAR: 0.223
+  raw_cv: 0.9625129421154345
+  biased_cv: 0.9632282943283176
+  delta_biased_minus_raw: 0.0007153522128831025
+  raw_eval:
+    balanced_accuracy: 0.9625129421154345
+    recall_GALAXY: 0.9676751086150259
+    recall_QSO: 0.9674073568202965
+    recall_STAR: 0.9524563609109811
+  biased_eval:
+    balanced_accuracy: 0.9632282943283176
+    recall_GALAXY: 0.9646338878881
+    recall_QSO: 0.9689439403122679
+    recall_STAR: 0.9561070547845849
+  adjusted_probability_method: softmax(log(raw_proba) + class_bias)
+outputs:
+  submission: submission_lgb010_bias_search.csv
+  bias_vector: bias_vector.npy
+  oof_proba: oof_exp_20260605_012_lgb010_bias_search_proba.npy
+  pred_proba: pred_exp_20260605_012_lgb010_bias_search_proba.npy
+  bias_search_results: bias_search_results.csv
+  raw_vs_biased_oof_eval: raw_vs_biased_oof_eval.csv
+  oof_csv: oof_lgb010_bias_search.csv
+  pred_csv: pred_lgb010_bias_search.csv
+  cv_result: cv_result.json
+  registry: oof_registry.csv
+judgement:
+  status: pending_public_lb
+  reason: Bias search can improve OOF balanced accuracy, but may overfit class thresholds.
+    Adoption depends on Public LB and future blend behavior against 011 best blend.
+  next_action:
+  - Submit submission_lgb010_bias_search.csv
+  - Record Public LB
+  - Add oof_exp_20260605_012_lgb010_bias_search_proba.npy and pred_exp_20260605_012_lgb010_bias_search_proba.npy
+    to npy-files dataset
+  - Compare 012 against raw 010 and 011 best blend
+  - If useful, include 012 in next blend notebook
