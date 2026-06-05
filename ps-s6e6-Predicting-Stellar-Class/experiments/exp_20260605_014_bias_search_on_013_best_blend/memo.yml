@@ -1,1 +1,84 @@
+experiment:
+  id: exp_20260605_014_bias_search_on_013_best_blend
+  title: Bias search on 013 best blend
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: 013 best blend postprocess
+  created_at: '2026-06-05'
+objective:
+  summary: Apply class-wise bias search to 013 best blend OOF/test probabilities.
+    Do not retrain. GALAXY bias is fixed to 0 and QSO/STAR biases are searched. Input
+    npy files are read from /kaggle/input/datasets/mizushimatoshihiko/npy-files.
+  success_criteria:
+  - load 013 best blend OOF and test predictions from npy-files dataset
+  - confirm raw 013 best blend OOF score
+  - search class-wise bias on OOF
+  - save adjusted OOF proba as npy
+  - save adjusted test pred proba as npy
+  - save biased submission
+  - save bias vector and search results
+  - update oof_registry
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  target_col: class
+  id_col: id
+  npy_dir: /kaggle/input/datasets/mizushimatoshihiko/npy-files
+  raw_013_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend_proba.npy
+  raw_013_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend_proba.npy
+  use_original: false
+reference:
+  exp_id: exp_20260605_013_blend_add012_lgb010_bias_check
+  best_set: C_keep_010_012_007_004_006
+  best_method: hc_nonnegative_raw
+  cv: 0.9648069017992585
+  public_lb: 0.96562
+bias_search:
+  bias_space:
+    GALAXY: fixed_0
+    QSO: searched
+    STAR: searched
+  best_bias:
+    GALAXY: 0.0
+    QSO: 0.22
+    STAR: 0.215
+  raw_cv: 0.9648069017992585
+  biased_cv: 0.9660085788215015
+  delta_biased_minus_raw: 0.0012016770222429418
+  raw_eval:
+    balanced_accuracy: 0.9648069017992585
+    recall_GALAXY: 0.9717653915439228
+    recall_QSO: 0.9688329648378478
+    recall_STAR: 0.953822349016005
+  biased_eval:
+    balanced_accuracy: 0.9660085788215015
+    recall_GALAXY: 0.9680618840733284
+    recall_QSO: 0.9706171090035256
+    recall_STAR: 0.9593467433876505
+  adjusted_probability_method: softmax(log(raw_proba) + class_bias)
+outputs:
+  submission: submission_bias_search_on_013_best_blend.csv
+  bias_vector: bias_vector.npy
+  oof_proba: oof_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+  pred_proba: pred_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+  bias_search_results: bias_search_results.csv
+  raw_vs_biased_oof_eval: raw_vs_biased_oof_eval.csv
+  oof_csv: oof_bias_search_on_013_best_blend.csv
+  pred_csv: pred_bias_search_on_013_best_blend.csv
+  cv_result: cv_result.json
+  registry: oof_registry.csv
+judgement:
+  status: pending_public_lb
+  reason: This is final class-wise threshold tuning on the current best 013 blend.
+    Adoption depends on whether Public LB improves over 013 best blend LB 0.96562.
+  next_action:
+  - Submit submission_bias_search_on_013_best_blend.csv
+  - Record Public LB
+  - If LB improves over 0.96562, promote 014 to current best attack candidate
+  - If LB drops, keep 013 best blend as current best
+  - Add 014 OOF/pred to npy-files dataset only if it is useful for later blend/final
+    comparison
+
 
