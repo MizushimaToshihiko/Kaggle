@@ -176,4 +176,29 @@ judgement:
   - Review blend_diagnostics.csv
   - Review 010 vs 007 / 004 / 006 correlations
   - If a blend candidate meaningfully beats 010 single CV, submit one candidate
-  - If not, keep 010 as mainline and run bias search on 010 next
+oof_registry_update:
+  exp_id: exp_20260604_011_blend_add010_shared002_lgb_check
+  public_lb: 0.96523
+  cv_score: 0.9640545915420509
+  role: blend_add010_check
+  keep_hold_drop: keep_current_best
+  best_candidate:
+    set_name: F_010_007_004_006
+    method: hc_nonnegative_raw
+    keys:
+      - 010_shared002_lgb
+      - 007_lgb002_bias
+      - 004_xgb_raw
+      - 006_lgb_color_min
+    weights:
+      010_shared002_lgb: 0.548400250123365
+      007_lgb002_bias: 0.21337268183885552
+      004_xgb_raw: 0.0
+      006_lgb_color_min: 0.23822706803777954
+    submission: submission_exp_20260604_011_blend_add010_shared002_lgb_check_F_010_007_004_006_hc_nonnegative_raw.csv
+    pred_proba: pred_exp_20260604_011_blend_add010_shared002_lgb_check_F_010_007_004_006_hc_nonnegative_raw_proba.npy
+  notes: >
+    Add010 blend check. Best candidate was F_010_007_004_006 hc_nonnegative_raw.
+    CV improved from 010 single 0.962513 to 0.964055, and Public LB improved from 0.96357 to 0.96523.
+    Actual nonzero weights: 010 0.5484, 007 0.2134, 006 0.2382, 004 0.0.
+    Keep as current best mainline/attack blend.  - If not, keep 010 as mainline and run bias search on 010 next
