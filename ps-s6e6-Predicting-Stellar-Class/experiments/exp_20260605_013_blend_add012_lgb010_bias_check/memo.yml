@@ -1,1 +1,205 @@
-
+experiment:
+  id: exp_20260605_013_blend_add012_lgb010_bias_check
+  title: Blend check after adding 012 lgb010 bias search
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  created_at: '2026-06-05'
+objective:
+  summary: Load OOF/pred probabilities from the fixed npy-files Kaggle dataset folder,
+    add 012 bias-searched 010 to the 011 blend/correlation table, and decide whether
+    raw 010 should be replaced by 012 or both should remain. Save only the best blend
+    OOF/pred proba for the next bias-search experiment.
+  success_criteria:
+  - load 002/003/004/006/007/010/012 OOF and pred npy files
+  - recompute individual balanced accuracy
+  - compute pairwise OOF correlations
+  - evaluate predefined blend sets centered on 010/012
+  - save only best blend OOF/pred npy
+  - save best blend submission
+  - save memo and summary
+inputs:
+  npy_dir: /kaggle/input/datasets/mizushimatoshihiko/npy-files
+  models:
+  - key: 002_lgb_raw
+    exp_id: exp_20260601_002_lgb_strict_raw_baseline
+    family: LightGBM
+    role: raw_reference
+    oof: oof_lgb_strict_raw_proba.npy
+    pred: pred_lgb_strict_raw_proba.npy
+    cv: 0.9569063401002502
+    public_lb: 0.958
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_lgb_strict_raw_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_lgb_strict_raw_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 003_cat_raw
+    exp_id: exp_20260601_003_cat_strict_raw_baseline
+    family: CatBoost
+    role: weak_reference
+    oof: oof_cat_strict_raw_proba.npy
+    pred: pred_cat_strict_raw_proba.npy
+    cv: 0.9524581895303758
+    public_lb: 0.95351
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_cat_strict_raw_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_cat_strict_raw_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 004_xgb_raw
+    exp_id: exp_20260603_004_xgb_strict_raw_baseline
+    family: XGBoost
+    role: aux_reference
+    oof: oof_xgb_strict_raw_proba.npy
+    pred: pred_xgb_strict_raw_proba.npy
+    cv: 0.9557836270283273
+    public_lb: 0.95638
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_xgb_strict_raw_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_xgb_strict_raw_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 006_lgb_color_min
+    exp_id: exp_20260603_006_lgb_color_index_min
+    family: LightGBM
+    role: blend_auxiliary
+    oof: oof_lgb_color_index_min_proba.npy
+    pred: pred_lgb_color_index_min_proba.npy
+    cv: 0.9570463209115138
+    public_lb: 0.95663
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_lgb_color_index_min_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_lgb_color_index_min_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 007_lgb002_bias
+    exp_id: exp_20260603_007_lgb002_bias_search
+    family: LightGBM
+    role: old_mainline_auxiliary
+    oof: oof_exp_20260603_007_lgb002_bias_search_proba.npy
+    pred: pred_exp_20260603_007_lgb002_bias_search_proba.npy
+    cv: 0.9586098708578418
+    public_lb: 0.95921
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260603_007_lgb002_bias_search_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260603_007_lgb002_bias_search_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 010_shared002_lgb
+    exp_id: exp_20260604_010_shared002_lgb_as_is
+    family: LightGBM
+    role: mainline_single_raw
+    oof: oof_exp_20260604_010_shared002_lgb_as_is_proba.npy
+    pred: pred_exp_20260604_010_shared002_lgb_as_is_proba.npy
+    cv: 0.9625129421154345
+    public_lb: 0.96357
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260604_010_shared002_lgb_as_is_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260604_010_shared002_lgb_as_is_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 012_lgb010_bias
+    exp_id: exp_20260605_012_lgb010_bias_search
+    family: LightGBM
+    role: mainline_single_bias
+    oof: oof_exp_20260605_012_lgb010_bias_search_proba.npy
+    pred: pred_exp_20260605_012_lgb010_bias_search_proba.npy
+    cv: 0.9632282943283176
+    public_lb: 0.96466
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260605_012_lgb010_bias_search_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260605_012_lgb010_bias_search_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  blend_sets:
+    A_011_best_recheck_010_007_004_006:
+    - 010_shared002_lgb
+    - 007_lgb002_bias
+    - 004_xgb_raw
+    - 006_lgb_color_min
+    B_replace_010_with_012_012_007_004_006:
+    - 012_lgb010_bias
+    - 007_lgb002_bias
+    - 004_xgb_raw
+    - 006_lgb_color_min
+    C_keep_010_012_007_004_006:
+    - 010_shared002_lgb
+    - 012_lgb010_bias
+    - 007_lgb002_bias
+    - 004_xgb_raw
+    - 006_lgb_color_min
+    D_010_012_007_006:
+    - 010_shared002_lgb
+    - 012_lgb010_bias
+    - 007_lgb002_bias
+    - 006_lgb_color_min
+    E_012_007_006:
+    - 012_lgb010_bias
+    - 007_lgb002_bias
+    - 006_lgb_color_min
+    F_010_012:
+    - 010_shared002_lgb
+    - 012_lgb010_bias
+    G_012_010_007:
+    - 012_lgb010_bias
+    - 010_shared002_lgb
+    - 007_lgb002_bias
+    H_012_only:
+    - 012_lgb010_bias
+    I_010_only:
+    - 010_shared002_lgb
+    J_all_002_003_004_006_007_010_012:
+    - 002_lgb_raw
+    - 003_cat_raw
+    - 004_xgb_raw
+    - 006_lgb_color_min
+    - 007_lgb002_bias
+    - 010_shared002_lgb
+    - 012_lgb010_bias
+outputs:
+  individual_scores: individual_scores.csv
+  pairwise_oof_correlation: pairwise_oof_correlation.csv
+  corr_matrix_pearson_flat_proba: corr_matrix_pearson_flat_proba.csv
+  corr_matrix_spearman_flat_proba: corr_matrix_spearman_flat_proba.csv
+  matrix_argmax_agreement: matrix_argmax_agreement.csv
+  matrix_error_jaccard: matrix_error_jaccard.csv
+  blend_diagnostics: blend_diagnostics.csv
+  best_blend_info: best_blend_info.json
+  saved_submission_candidates: saved_submission_candidates.csv
+  best_oof_proba: oof_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend_proba.npy
+  best_pred_proba: pred_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend_proba.npy
+  best_submission: submission_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend.csv
+  role_judgement: role_judgement.json
+  summary: blend_add012_summary.json
+judgement:
+  status: completed_pending_manual_review
+  initial_view: 012 improves raw 010 as a single model, but must be checked inside
+    the 011 blend structure. The best 013 blend should be the sole input to 014 bias
+    search.
+  next_action:
+  - Review blend_diagnostics.csv
+  - Review best_blend_info.json
+  - Submit best blend if it improves enough over 011 best candidate
+  - Use best blend OOF/pred npy as input to 014 bias search
