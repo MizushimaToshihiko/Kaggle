@@ -203,3 +203,351 @@ judgement:
   - Review best_blend_info.json
   - Submit best blend if it improves enough over 011 best candidate
   - Use best blend OOF/pred npy as input to 014 bias search
+
+result:
+  status: completed
+  purpose: >
+    012 lgb010 bias search を、011のblend/correlation確認に追加した。
+    raw 010を012で置換すべきか、raw 010と012を両方残すべきか、
+    007/006/004が引き続き補助として効くかを確認した。
+  
+  loaded_models:
+  
+  - key: 002_lgb_raw
+      exp_id: exp_20260601_002_lgb_strict_raw_baseline
+      family: LightGBM
+      role: raw_reference
+      cv: 0.9569063401002502
+      public_lb: 0.95800
+  
+  - key: 003_cat_raw
+      exp_id: exp_20260601_003_cat_strict_raw_baseline
+      family: CatBoost
+      role: weak_reference
+      cv: 0.9524581895303758
+      public_lb: 0.95351
+  
+  - key: 004_xgb_raw
+      exp_id: exp_20260603_004_xgb_strict_raw_baseline
+      family: XGBoost
+      role: aux_reference
+      cv: 0.9557836270283273
+      public_lb: 0.95638
+  
+  - key: 006_lgb_color_min
+      exp_id: exp_20260603_006_lgb_color_index_min
+      family: LightGBM
+      role: blend_auxiliary
+      cv: 0.9570463209115138
+      public_lb: 0.95663
+  
+  - key: 007_lgb002_bias
+      exp_id: exp_20260603_007_lgb002_bias_search
+      family: LightGBM
+      role: old_mainline_auxiliary
+      cv: 0.9586098708578418
+      public_lb: 0.95921
+  
+  - key: 010_shared002_lgb
+      exp_id: exp_20260604_010_shared002_lgb_as_is
+      family: LightGBM
+      role: mainline_single_raw
+      cv: 0.9625129421154345
+      public_lb: 0.96357
+  
+  - key: 012_lgb010_bias
+      exp_id: exp_20260605_012_lgb010_bias_search
+      family: LightGBM
+      role: mainline_single_bias
+      cv: 0.9632282943283176
+      public_lb: 0.96466
+  
+  individual_scores:
+    ranking:
+      - key: 012_lgb010_bias
+        cv: 0.9632282943283176
+        public_lb: 0.96466
+        recall:
+        GALAXY: 0.9646338878881
+        QSO: 0.9689439403122679
+        STAR: 0.9561070547845849
+        judgement: strongest_single_bias_candidate
+  
+  - key: 010_shared002_lgb
+      cv: 0.9625129421154345
+      public_lb: 0.96357
+      recall:
+        GALAXY: 0.9676751086150259
+        QSO: 0.9674073568202965
+        STAR: 0.9524563609109811
+      judgement: raw_single_reference
+  
+  - key: 007_lgb002_bias
+      cv: 0.9586098708578418
+      public_lb: 0.95921
+      judgement: blend_auxiliary
+  
+  - key: 006_lgb_color_min
+      cv: 0.9570463209115138
+      public_lb: 0.95663
+      judgement: blend_auxiliary
+  
+  - key: 004_xgb_raw
+      cv: 0.9557836270283273
+      public_lb: 0.95638
+      judgement: weak_auxiliary_but_nonzero_in_013_best
+  
+  - key: 002_lgb_raw
+      cv: 0.9569063401002502
+      public_lb: 0.95800
+      judgement: drop_active_reference
+  
+  - key: 003_cat_raw
+      cv: 0.9524581895303758
+      public_lb: 0.95351
+      judgement: drop_active_reference
+
+pairwise_correlation:
+  key_findings:
+  - pair: 010_shared002_lgb__012_lgb010_bias
+      pearson_flat_proba: 0.9998115474220978
+      spearman_flat_proba: 0.9992131701918003
+      argmax_agreement: 0.9971386358637007
+      argmax_disagreement: 0.0028613641362993138
+      error_jaccard: 0.9223880597014925
+      interpretation: >
+        012は010のbias後処理であるため、010と012はほぼ同一方向の予測。
+        raw 010とbias済み012を両方入れても多様性はほぼ増えない。
+        実際に013 best blendではraw 010の重みは0となり、012が採用された。
+      
+  - pair: 007_lgb002_bias__012_lgb010_bias
+      pearson_flat_proba: 0.9860562613239593
+      spearman_flat_proba: 0.9699325690783986
+      argmax_agreement: 0.9768510098779417
+      error_jaccard: 0.494985590778098
+      interpretation: >
+        012と007は相関が一定程度下がっており、007は012の補助として引き続き有効。
+        013 best blendでも007には約17.3%の重みが入った。
+  
+  - pair: 006_lgb_color_min__012_lgb010_bias
+      pearson_flat_proba: 0.9839239455547801
+      spearman_flat_proba: 0.9674040787901154
+      argmax_agreement: 0.9750323462319888
+      error_jaccard: 0.4662347934164438
+      interpretation: >
+        006は単体では弱いが、012との相関が比較的低く、
+        013 best blendでも約17.3%の重みが入った。
+        単体候補ではなく、blend補助素材として保持する価値がある。
+  
+  - pair: 004_xgb_raw__012_lgb010_bias
+      pearson_flat_proba: 0.9841305626029867
+      spearman_flat_proba: 0.9599222741096646
+      argmax_agreement: 0.9749907767772241
+      error_jaccard: 0.4681760251892946
+      interpretation: >
+        004は011 best blendでは重み0だったが、013 best blendでは約7.8%の重みが入った。
+        004は主力ではないが、012中心blendでは少量補助として残す価値がある。
+
+best_blend:
+  set_name: C_keep_010_012_007_004_006
+  method: hc_nonnegative_raw
+  cv: 0.9648069017992585
+  public_lb: 0.96562
+  submission: submission_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend.csv
+  oof_proba: oof_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend_proba.npy
+  pred_proba: pred_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend_proba.npy
+  keys:
+    - 010_shared002_lgb
+    - 012_lgb010_bias
+    - 007_lgb002_bias
+    - 004_xgb_raw
+    - 006_lgb_color_min
+  effective_keys:
+    - 012_lgb010_bias
+    - 007_lgb002_bias
+    - 004_xgb_raw
+    - 006_lgb_color_min
+  weights:
+    010_shared002_lgb: 0.0
+    012_lgb010_bias: 0.5771029948987743
+    007_lgb002_bias: 0.17261102249029628
+    004_xgb_raw: 0.07767496012063332
+    006_lgb_color_min: 0.17261102249029628
+  recall:
+    GALAXY: 0.9717653915439228
+    QSO: 0.9688329648378478
+    STAR: 0.953822349016005
+  interpretation: >
+    013の最良blend。
+    raw 010を含むセットだが、HCではraw 010の重みが0となり、実質的には012+007+004+006。
+    CVは0.964807で、011 best blendの0.964055を+0.000752改善。
+    Public LBも0.96562で、011 best blendの0.96523を+0.00039更新した。
+    現時点のcurrent bestとして採用する。
+
+notable_blend_candidates:
+
+- set_name: B_replace_010_with_012_012_007_004_006
+    method: hc_nonnegative_raw
+    cv: 0.9647871915872698
+    weights:
+    012_lgb010_bias: 0.5631927848235014
+    007_lgb002_bias: 0.2431999969189043
+    004_xgb_raw: 0.004995084736717376
+    006_lgb_color_min: 0.1886121335208768
+    interpretation: >
+      raw 010を完全に012へ置換した構成。
+      best Cとの差はわずかだが、こちらでもraw 010は不要という結論は同じ。
+      004の重みはほぼ0。
+
+- set_name: E_012_007_006
+    method: hc_nonnegative_raw
+    cv: 0.9647823886966881
+    weights:
+    012_lgb010_bias: 0.5600779963930564
+    007_lgb002_bias: 0.21114390694205817
+    006_lgb_color_min: 0.22877809666488536
+    interpretation: >
+      004なしの軽量構成でもbestとほぼ同等。
+      004を入れるかどうかは、Public/Private耐性を考えて慎重に扱う。
+      013 bestでは004に少量重みが入ったが、必須素材とまでは言えない。
+
+* set_name: A_011_best_recheck_010_007_004_006
+    method: hc_nonnegative_raw
+    cv: 0.9640623495794642
+    weights:
+    010_shared002_lgb: 0.5485964415036134
+    007_lgb002_bias: 0.2122207158192693
+    004_xgb_raw: 0.0
+    006_lgb_color_min: 0.23918284267711723
+    interpretation: >
+      011 best構成の再確認。
+      012追加後のbestには届かない。
+      raw 010中心のblendから、bias済み012中心のblendへ主軸を移すべき。
+
+comparison:
+  against_011_best_blend:
+    exp_id: exp_20260604_011_blend_add010_shared002_lgb_check
+    candidate: F_010_007_004_006__hc_nonnegative_raw
+    cv_011_best: 0.9640545915420509
+    public_lb_011_best: 0.96523
+    cv_013_best: 0.9648069017992585
+    public_lb_013_best: 0.96562
+    cv_delta_013_minus_011: 0.0007523102572076
+    lb_delta_013_minus_011: 0.00039
+    interpretation: >
+      013 best blendは011 best blendをCV/LBともに更新。
+      改善幅は巨大ではないが、Publicにも変換されているため有効。
+      現時点では013 best blendをcurrent bestとして扱う。
+  
+  against_012_single:
+    exp_id: exp_20260605_012_lgb010_bias_search
+    cv_012_single: 0.9632282943283176
+    public_lb_012_single: 0.96466
+    cv_013_best: 0.9648069017992585
+    public_lb_013_best: 0.96562
+    cv_delta_013_minus_012: 0.0015786074709409
+    lb_delta_013_minus_012: 0.00096
+    interpretation: >
+      012単体より、007/006/004を混ぜた013 best blendの方が明確に強い。
+      012は単体候補ではなく、blend中心素材として最も有効。
+  
+  against_010_raw:
+  exp_id: exp_20260604_010_shared002_lgb_as_is
+  cv_010_raw: 0.9625129421154345
+  public_lb_010_raw: 0.96357
+  cv_013_best: 0.9648069017992585
+  public_lb_013_best: 0.96562
+  cv_delta_013_minus_010: 0.002293959683824
+  lb_delta_013_minus_010: 0.00205
+  interpretation: >
+    raw 010単体からは大きく改善。
+    raw 010をそのまま使う局面は減り、bias済み012とblend版013を中心に管理する。
+
+role_judgement:
+  current_best:
+    exp_id: exp_20260605_013_blend_add012_lgb010_bias_check
+    candidate: C_keep_010_012_007_004_006__hc_nonnegative_raw
+    cv: 0.9648069017992585
+    public_lb: 0.96562
+    status: current_best_mainline_blend
+    reason: >
+      013 best blendは011 best blendをCV/LBともに更新。
+      実質構成は012+007+004+006で、raw 010は重み0。
+      現時点の最良提出候補として採用する。
+  
+  replace_010_with_012:
+    decision: true
+    reason: >
+      010と012は高相関で、013 bestではraw 010の重みが0。
+      active blend素材としてはraw 010より012を優先する。
+      raw 010はreference/stable候補として残す。
+  
+  keep_010_and_012_together:
+    decision: false
+    reason: >
+      010と012を両方入れたbest setでも、010の重みは0。
+      両方入れるより、012をraw 010の置換として扱う方がよい。
+  
+  keep_012:
+    decision: keep_mainline_material
+    reason: >
+      012は単体でも010を上回り、013 best blendの中心重みを持つ。
+      今後のblendでは012を主素材にする。
+  
+  keep_007:
+    decision: keep_blend_auxiliary
+    reason: >
+      013 bestで約17.3%の重みを持つ。
+      007は旧主力単体ではなく、012系blendの補助素材として有効。
+  
+  keep_006:
+    decision: keep_blend_auxiliary
+    reason: >
+      013 bestで約17.3%の重みを持つ。
+      006は単体では弱いが、blend補助素材として引き続き有効。
+  
+  keep_004:
+    decision: hold_light_auxiliary
+    reason: >
+      013 bestで約7.8%の重みが入った。
+      ただしB/E構成との差は小さく、004がPrivateで効くかは不明。
+      active主力ではなく、軽い補助候補として扱う。
+  
+  drop_002_active:
+    decision: true
+    reason: >
+      012/013導入後、002 rawをactive blend素材として使う理由は薄い。
+      reference扱いで十分。
+  
+  drop_003_active:
+    decision: true
+    reason: >
+      003 Cat rawは単体性能が低く、013でも有効な役割がない。
+      active候補から外す。
+
+judgement:
+  status: completed
+  decision: >
+    013 best blendである C_keep_010_012_007_004_006 / hc_nonnegative_raw を
+    現時点のcurrent bestとして採用する。
+    Public LBは0.96562で、011 best blendの0.96523を更新した。
+    raw 010は重み0となったため、今後の主素材は012 bias済み010へ移行する。
+  key_findings:
+    - 012はraw 010を置換する
+    - raw 010と012を両方入れる価値は低い
+    - 013 bestは実質012+007+004+006
+    - 007と006はblend補助として継続
+    - 004は少量補助として復活したが、必須ではない
+    - 002/003はactive候補から外す
+    - 013 bestは011 bestをPublicでも更新した
+  caveat: >
+    HC blendはOOF上の重み最適化であり、過信は禁物。
+    ただし今回もPublic LBで改善しているため、単なるCV-onlyではない。
+    次は013 best blendに対するbias searchを実施し、最終class thresholdを調整する。
+  next_action:
+    - 013 best blendのOOF/pred probaをnpy-files datasetへ追加する
+    - 014で013 best blendにbias searchを実施する
+    - 014でPublic LBが改善するか確認する
+    - 013 bestはcurrent best mainline/attack候補として管理する
+    - 012単体はsingle postprocess referenceとして保持する
+
