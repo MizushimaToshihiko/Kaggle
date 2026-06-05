@@ -81,4 +81,239 @@ judgement:
   - Add 014 OOF/pred to npy-files dataset only if it is useful for later blend/final
     comparison
 
+result:
+  status: completed
+  purpose: >
+    013 best blendである C_keep_010_012_007_004_006 / hc_nonnegative_raw の
+    OOF/pred probaに対してclass-wise bias searchを実施した。
+    目的は、現current best blendをBalanced Accuracy向けに最終補正すること。
 
+reference:
+  exp_id: exp_20260605_013_blend_add012_lgb010_bias_check
+  best_set: C_keep_010_012_007_004_006
+  best_method: hc_nonnegative_raw
+  raw_cv: 0.9648069017992585
+  raw_public_lb: 0.96562
+  raw_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend_proba.npy
+  raw_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend_proba.npy
+
+cv:
+  metric: balanced_accuracy_score
+  raw_score: 0.9648069017992585
+  biased_score: 0.9660085788215015
+  delta_biased_minus_raw: 0.0012016770222429418
+  interpretation: >
+    013 best blendに対してclass-wise biasを後付けした結果、
+    CV balanced accuracy は 0.964807 から 0.966009 へ +0.001202 改善した。
+    blend後の最終threshold調整として明確に有効。
+
+public_lb:
+  score: 0.96703
+  reference_013_public_lb: 0.96562
+  delta_vs_013_public_lb: 0.00141
+  submission: submission_bias_search_on_013_best_blend.csv
+  interpretation: >
+    Public LBは0.96703で、013 best blendの0.96562を+0.00141更新した。
+    OOF上のbias改善がPublicにも強く変換されており、
+    014を現時点のcurrent best mainline/attack候補として採用する。
+
+bias_search:
+  method: softmax(log(raw_proba) + class_bias)
+  use_original: false
+  use_fe: true
+  use_bias_search: true
+  bias:
+    GALAXY: 0.0
+    QSO: 0.22
+    STAR: 0.215
+  bias_space:
+    GALAXY: fixed_0
+    QSO: searched
+    STAR: searched
+  search_ranges:
+    coarse:
+      min: -0.2
+      max: 0.2
+      step: 0.01
+    local:
+      around_best: 0.02
+      step: 0.002
+    ultra_local:
+      around_best: 0.004
+      step: 0.0005
+  adjusted_probability_method: softmax(log(raw_proba) + class_bias)
+  reason_for_fixing_galaxy: >
+    全クラスに同じ定数を足してもargmaxは変わらないため、
+    GALAXY biasを0に固定し、QSO/STARの2次元だけを探索した。
+
+raw_eval:
+  balanced_accuracy: 0.9648069017992585
+  recall:
+    GALAXY: 0.9717653915439228
+    QSO: 0.9688329648378478
+    STAR: 0.953822349016005
+
+biased_eval:
+  balanced_accuracy: 0.9660085788215015
+  recall:
+    GALAXY: 0.9680618840733284
+    QSO: 0.9706171090035256
+    STAR: 0.9593467433876505
+
+recall_delta_biased_minus_raw:
+  GALAXY: -0.0037035074705944
+  QSO: 0.0017841441656778
+  STAR: 0.0055243943716455
+  interpretation: >
+    bias searchにより、GALAXY recallは約-0.00370低下した一方、
+    QSO recallは約+0.00178、STAR recallは約+0.00552改善した。
+    Balanced Accuracyでは3クラスが等重みであるため、
+    多数派GALAXYを少し削ってQSO/STAR、特にSTARを救う方向が有効だった。
+    013 best blendの時点でも、まだSTAR側に改善余地が残っていた。
+
+model:
+  family: Blend
+  estimator: postprocess_only
+  role: final_blend_bias_candidate
+  base_model: exp_20260605_013_blend_add012_lgb010_bias_check
+  base_candidate: C_keep_010_012_007_004_006__hc_nonnegative_raw
+  use_original: false
+  use_fe: true
+  use_bias_search: true
+  retraining: false
+  notes: >
+    014はモデル再学習ではなく、013 best blendのOOF/pred probaに対する後処理。
+    013 best blendの確率出力をlog-proba空間に変換し、class-wise biasを加えた。
+
+target:
+  class_names:
+    - GALAXY
+    - QSO
+    - STAR
+  label_mapping:
+    GALAXY: 0
+    QSO: 1
+    STAR: 2
+  submission_format: single_column_class_label
+
+outputs:
+  submission: submission_bias_search_on_013_best_blend.csv
+  oof_proba: oof_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+  pred_proba: pred_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+  bias_vector: bias_vector.npy
+  bias_search_results: bias_search_results.csv
+  raw_vs_biased_oof_eval: raw_vs_biased_oof_eval.csv
+  oof_csv: oof_bias_search_on_013_best_blend.csv
+  pred_csv: pred_bias_search_on_013_best_blend.csv
+  cv_result: cv_result.json
+  registry: oof_registry.csv
+
+comparison:
+  against_013_best_blend:
+    exp_id: exp_20260605_013_blend_add012_lgb010_bias_check
+    candidate: C_keep_010_012_007_004_006__hc_nonnegative_raw
+    cv_013_best: 0.9648069017992585
+    public_lb_013_best: 0.96562
+    cv_014: 0.9660085788215015
+    public_lb_014: 0.96703
+    cv_delta_014_minus_013: 0.0012016770222429418
+    lb_delta_014_minus_013: 0.00141
+    interpretation: >
+      014は013 best blendをCV/LBともに明確に更新。
+      改善幅は十分大きく、現時点のcurrent bestとして昇格させる。
+
+  against_012_single:
+    exp_id: exp_20260605_012_lgb010_bias_search
+    cv_012_single: 0.9632282943283176
+    public_lb_012_single: 0.96466
+    cv_014: 0.9660085788215015
+    public_lb_014: 0.96703
+    cv_delta_014_minus_012: 0.0027802844931839
+    lb_delta_014_minus_012: 0.00237
+    interpretation: >
+      012単体bias済み010より、013 blend後にさらにbias searchをかけた014の方が明確に強い。
+      010/012単体ではなく、blend後biasが現時点の最良ルート。
+
+  against_011_best_blend:
+    exp_id: exp_20260604_011_blend_add010_shared002_lgb_check
+    best_blend_cv: 0.9640545915420509
+    best_blend_public_lb: 0.96523
+    cv_014: 0.9660085788215015
+    public_lb_014: 0.96703
+    cv_delta_014_minus_011_best: 0.0019539872794506
+    lb_delta_014_minus_011_best: 0.00180
+    interpretation: >
+      011 best blendからもCV/LBともに大きく改善。
+      012追加と013 blend、さらに014 bias searchの流れが正しかった。
+
+role_judgement:
+  current_best:
+    exp_id: exp_20260605_014_bias_search_on_013_best_blend
+    cv: 0.9660085788215015
+    public_lb: 0.96703
+    status: current_best_mainline_attack
+    reason: >
+      014は013 best blendに対する最終bias補正として、CV/LBともに明確に改善した。
+      Public LB 0.96703で現時点の最高スコア。
+      current bestとして採用する。
+
+  previous_best:
+    exp_id: exp_20260605_013_blend_add012_lgb010_bias_check
+    cv: 0.9648069017992585
+    public_lb: 0.96562
+    status: previous_best_reference
+    reason: >
+      013 best blendは014のベースとして保持する。
+      014がPrivateで崩れる可能性を考慮し、stable/reference候補として残す。
+
+  stable_candidate:
+    exp_id: exp_20260605_012_lgb010_bias_search
+    cv: 0.9632282943283176
+    public_lb: 0.96466
+    status: single_postprocess_reference
+    reason: >
+      012は単体bias済み010としては有効だが、014には届かない。
+      final候補ではなく、single/reference素材として保持する。
+
+judgement:
+  status: completed
+  decision: >
+    014を現時点のcurrent bestとして採用する。
+    013 best blendに対するbias searchにより、CVは0.964807から0.966009、
+    Public LBは0.96562から0.96703へ改善した。
+    final候補のattack枠として最有力。
+  key_findings:
+    - 013 best blendにもclass-wise biasの改善余地が残っていた
+    - bias方向はQSO/STARを上げ、GALAXYを少し削る方向
+    - STAR recallの改善がスコア上昇の主因
+    - CV改善がPublic LBにも変換された
+    - 014が現時点の最高LB
+  caveat: >
+    014はOOF上でclass-wise thresholdを最適化したpostprocessであり、
+    Privateでの過適合リスクは残る。
+    ただし、Public LBでも+0.00141改善しているため、単なるCV-onlyとは扱わない。
+    final提出では、014をattack/mainline候補、013または012をstable寄り候補として分けるのが妥当。
+  next_action:
+    - 014をcurrent bestとして記録する
+    - 014のOOF/pred probaをnpy-files datasetへ追加する
+    - final_candidates.ymlに014をattack/mainline候補として追加する
+    - 013 best blendをprevious best/stable referenceとして保持する
+    - 次に進むなら、shared001 RealMLP as-isなど、014と異なるfamily素材の追加を検討する
+    - 014近傍のbiasだけを細かく詰めすぎない
+
+oof_registry_update:
+  exp_id: exp_20260605_014_bias_search_on_013_best_blend
+  public_lb: 0.96703
+  cv_score: 0.9660085788215015
+  raw_cv_score: 0.9648069017992585
+  cv_delta_vs_raw: 0.0012016770222429418
+  role: final_blend_bias_candidate
+  keep_hold_drop: keep_current_best
+  oof_path: /kaggle/working/exp_20260605_014_bias_search_on_013_best_blend/oof_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+  pred_path: /kaggle/working/exp_20260605_014_bias_search_on_013_best_blend/pred_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+  submission_path: /kaggle/working/exp_20260605_014_bias_search_on_013_best_blend/submission_bias_search_on_013_best_blend.csv
+  notes: >
+    Bias search on 013 best blend.
+    CV improved from 0.964807 to 0.966009 and Public LB improved from 0.96562 to 0.96703.
+    Bias: GALAXY 0.0, QSO 0.22, STAR 0.215.
+    Keep as current best mainline/attack candidate.
