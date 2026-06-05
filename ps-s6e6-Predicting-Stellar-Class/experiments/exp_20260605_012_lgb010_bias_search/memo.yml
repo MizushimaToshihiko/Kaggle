@@ -72,4 +72,188 @@ judgement:
   - Add oof_exp_20260605_012_lgb010_bias_search_proba.npy and pred_exp_20260605_012_lgb010_bias_search_proba.npy
     to npy-files dataset
   - Compare 012 against raw 010 and 011 best blend
-  - If useful, include 012 in next blend notebook
+
+  result:
+  status: completed
+  cv:
+    metric: balanced_accuracy_score
+    raw_score: 0.9625129421154345
+    biased_score: 0.9632282943283176
+    delta_biased_minus_raw: 0.0007153522128831025
+    reference_exp_id: exp_20260604_010_shared002_lgb_as_is
+    interpretation: >
+      010 shared002 LGB as-is のOOF probaにclass-wise biasを後付けした結果、
+      CV balanced accuracy は 0.962513 から 0.963228 へ +0.000715 改善した。
+      010単体に対するbias searchとしては有効。
+      ただし、011 best blend のCV 0.964055 には届かない。
+
+  public_lb:
+    score: 0.96466
+    reference_010_public_lb: 0.96357
+    delta_vs_010_public_lb: 0.00109
+    reference_011_best_blend_public_lb: 0.96523
+    delta_vs_011_best_blend_public_lb: -0.00057
+    submission: submission_lgb010_bias_search.csv
+    interpretation: >
+      Public LBは0.96466で、010単体の0.96357を+0.00109上回った。
+      CV改善がPublicにも変換されているため、012は有効なpostprocess候補。
+      ただし011 best blendの0.96523には届かないため、現時点のcurrent bestではない。
+
+bias_search:
+  method: softmax(log(raw_proba) + class_bias)
+  reference_exp_id: exp_20260604_010_shared002_lgb_as_is
+  use_original: false
+  use_fe: true
+  base_fe_family: shared002_lgb_fe_as_is
+  use_bias_search: true
+  bias:
+    GALAXY: 0.0
+    QSO: 0.214
+    STAR: 0.223
+  bias_space:
+    GALAXY: fixed_0
+    QSO: searched
+    STAR: searched
+  search_ranges:
+    coarse:
+      min: -0.2
+      max: 0.2
+      step: 0.01
+    local:
+      around_best: 0.02
+      step: 0.002
+    ultra_local:
+      around_best: 0.004
+      step: 0.0005
+  adjusted_probability_method: softmax(log(raw_proba) + class_bias)
+  reason_for_fixing_galaxy: >
+    全クラスに同じ定数を足してもargmaxは変わらないため、
+    GALAXY biasを0に固定し、QSO/STARの2次元だけを探索した。
+
+raw_eval:
+  balanced_accuracy: 0.9625129421154345
+  recall:
+    GALAXY: 0.9676751086150259
+    QSO: 0.9674073568202965
+    STAR: 0.9524563609109811
+
+biased_eval:
+  balanced_accuracy: 0.9632282943283176
+  recall:
+    GALAXY: 0.9646338878881
+    QSO: 0.9689439403122679
+    STAR: 0.9561070547845849
+
+recall_delta_biased_minus_raw:
+  GALAXY: -0.0030412207269259
+  QSO: 0.0015365834919714
+  STAR: 0.0036506938736038
+  interpretation: >
+    bias searchにより、GALAXY recallは約-0.00304低下した一方、
+    QSO recallは約+0.00154、STAR recallは約+0.00365改善した。
+    Balanced Accuracyでは3クラスが等重みなので、
+    GALAXYを少し削ってQSO/STARを上げる方向がOOF上では有効だった。
+    007と同様、STAR側の改善がスコア上昇に寄与している。
+
+model:
+  family: LightGBM
+  estimator: LGBMClassifier
+  role: postprocess_bias_candidate
+  base_model: exp_20260604_010_shared002_lgb_as_is
+  use_original: false
+  use_fe: true
+  fe_family: shared002_lgb_fe_as_is
+  use_bias_search: true
+  retraining: false
+  notes: >
+    012はモデル再学習ではなく、010 shared002 LGB as-is のOOF/pred probaに対する後処理。
+    raw 010の予測資産を保持したまま、log-proba空間でclass-wise biasを加えた。
+
+target:
+  class_names:
+    - GALAXY
+    - QSO
+    - STAR
+  label_mapping:
+    GALAXY: 0
+    QSO: 1
+    STAR: 2
+  submission_format: single_column_class_label
+
+outputs:
+  submission: submission_lgb010_bias_search.csv
+  oof_proba: oof_exp_20260605_012_lgb010_bias_search_proba.npy
+  pred_proba: pred_exp_20260605_012_lgb010_bias_search_proba.npy
+  bias_vector: bias_vector.npy
+  bias_search_results: bias_search_results.csv
+  raw_vs_biased_oof_eval: raw_vs_biased_oof_eval.csv
+  oof_csv: oof_lgb010_bias_search.csv
+  pred_csv: pred_lgb010_bias_search.csv
+  cv_result: cv_result.json
+  registry: oof_registry.csv
+
+comparison:
+  against_010_shared002_lgb_as_is:
+    exp_id: exp_20260604_010_shared002_lgb_as_is
+    raw_cv: 0.9625129421154345
+    raw_public_lb: 0.96357
+    biased_cv: 0.9632282943283176
+    biased_public_lb: 0.96466
+    cv_delta_012_minus_010: 0.0007153522128831025
+    lb_delta_012_minus_010: 0.00109
+    interpretation: >
+      012は010単体をCV/LBともに明確に更新した。
+      010を単体で使う場合は、raw 010より012 bias済み版の方が有力。
+
+  against_011_best_blend:
+    exp_id: exp_20260604_011_blend_add010_shared002_lgb_check
+    best_candidate: F_010_007_004_006__hc_nonnegative_raw
+    best_blend_cv: 0.9640545915420509
+    best_blend_public_lb: 0.96523
+    biased_012_cv: 0.9632282943283176
+    biased_012_public_lb: 0.96466
+    cv_delta_012_minus_011_best: -0.0008262972137333
+    lb_delta_012_minus_011_best: -0.00057
+    interpretation: >
+      012は010単体より強いが、011 best blendには届かない。
+      現時点のcurrent bestは引き続き011 best blend。
+      012は今後のblend素材として保持する。
+
+judgement:
+  status: keep_postprocess_candidate
+  decision: >
+    012は010単体のbias済み改善版として保持する。
+    CV 0.963228 / Public LB 0.96466 で010単体を上回ったが、
+    011 best blendのPublic LB 0.96523には届かない。
+    現時点の最良候補は011 best blendのまま。
+  reason: >
+    010単体に対するbias searchは有効で、CVで+0.000715、Public LBで+0.00109改善した。
+    ただし、011 best blendと比較するとまだ劣るため、012単体をcurrent bestへ昇格させるべきではない。
+    012の価値は、今後のblendでraw 010の代替または追加素材として使える点にある。
+  caveat: >
+    bias searchはOOF上の閾値最適化であり、過信は禁物。
+    ただし今回もPublic LBで改善しているため、完全なCV-onlyではない。
+    次は012を011のblend候補に追加し、raw 010を012で置換すべきか、raw 010と012を両方使うべきかを確認する。
+  next_action:
+    - 012のOOF/pred probaをnpy-files datasetへ追加する
+    - 011 Add010 blend notebookに012を追加する
+    - raw 010を012で置換したblendを確認する
+    - raw 010と012を両方入れる価値があるか確認する
+    - 011 best blendのpred probaに対するbias searchも検討する
+    - current bestは引き続き011 best blendとして管理する
+    - If useful, include 012 in next blend notebook
+
+oof_registry_update:
+  exp_id: exp_20260605_012_lgb010_bias_search
+  public_lb: 0.96466
+  cv_score: 0.9632282943283176
+  raw_cv_score: 0.9625129421154345
+  cv_delta_vs_raw: 0.0007153522128831025
+  role: postprocess_bias_candidate
+  keep_hold_drop: keep_blend_candidate
+  oof_path: /kaggle/working/exp_20260605_012_lgb010_bias_search/oof_exp_20260605_012_lgb010_bias_search_proba.npy
+  pred_path: /kaggle/working/exp_20260605_012_lgb010_bias_search/pred_exp_20260605_012_lgb010_bias_search_proba.npy
+  notes: >
+    Bias search on 010 shared002 LGB as-is.
+    CV improved from 0.962513 to 0.963228 and Public LB improved from 0.96357 to 0.96466.
+    Does not beat 011 best blend LB 0.96523, but should be kept as a blend candidate.
