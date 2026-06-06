@@ -79,4 +79,238 @@ judgement:
   - If LB drops, keep 015 as current best
   - Add 017 OOF/pred to npy-files dataset if useful for later blend/final comparison
 
+result:
+  status: completed
+  purpose: >
+    015 shared001 RealMLP as-is のOOF/pred probaに対してclass-wise bias searchを実施した。
+    目的は、現current best単体RealMLPをBalanced Accuracy向けに後処理し、
+    015単体のPublic LB 0.96977を更新できるか確認すること。
 
+reference:
+  exp_id: exp_20260605_015_shared001_realmlp_as_is
+  model: shared001 RealMLP as-is
+  raw_cv: 0.9681693449222352
+  raw_public_lb: 0.96977
+  raw_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+  raw_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+
+cv:
+  metric: balanced_accuracy_score
+  raw_score: 0.9681693449222352
+  biased_score: 0.9683022653955233
+  delta_biased_minus_raw: 0.00013292047328816725
+  interpretation: >
+    015 RealMLP単体に対してclass-wise biasを後付けした結果、
+    CV balanced accuracy は 0.968169 から 0.968302 へ +0.000133 改善した。
+    改善幅は小さいが、OOF上では015単体を上回った。
+
+public_lb:
+  score: 0.96985
+  reference_015_public_lb: 0.96977
+  delta_vs_015_public_lb: 0.00008
+  submission: submission_bias_search_on_015_realmlp.csv
+  interpretation: >
+    Public LBは0.96985で、015単体の0.96977を+0.00008更新した。
+    改善幅は小さいが、CV改善がPublicにも変換されたため、
+    017を現時点のcurrent bestとして採用する。
+
+bias_search:
+  method: softmax(log(raw_proba) + class_bias)
+  use_original: false
+  use_fe: true
+  use_bias_search: true
+  bias:
+    GALAXY: 0.0
+    QSO: 0.0285
+    STAR: 0.178
+  bias_space:
+    GALAXY: fixed_0
+    QSO: searched
+    STAR: searched
+  search_ranges:
+    coarse:
+      min: -0.2
+      max: 0.2
+      step: 0.01
+    local:
+      around_best: 0.02
+      step: 0.002
+    ultra_local:
+      around_best: 0.004
+      step: 0.0005
+  adjusted_probability_method: softmax(log(raw_proba) + class_bias)
+  reason_for_fixing_galaxy: >
+    全クラスに同じ定数を足してもargmaxは変わらないため、
+    GALAXY biasを0に固定し、QSO/STARの2次元だけを探索した。
+
+raw_eval:
+  balanced_accuracy: 0.9681693449222352
+  recall:
+    GALAXY: 0.9622337607290452
+    QSO: 0.9760975901248901
+    STAR: 0.9661766839127702
+
+biased_eval:
+  balanced_accuracy: 0.9683022653955233
+  recall:
+    GALAXY: 0.9598892656564586
+    QSO: 0.9758671026010944
+    STAR: 0.969150427929017
+
+recall_delta_biased_minus_raw:
+  GALAXY: -0.0023444950725866
+  QSO: -0.0002304875237957
+  STAR: 0.0029737440162468
+  interpretation: >
+    bias searchにより、GALAXY recallは約-0.00234、QSO recallは約-0.00023低下した一方、
+    STAR recallは約+0.00297改善した。
+    015はもともとQSO/STARが強くGALAXYが相対的に低いモデルだったが、
+    OOF上ではSTARをさらに救う方向がBalanced Accuracyをわずかに押し上げた。
+    改善の主因はSTAR recallの上昇。
+
+model:
+  family: RealMLP
+  estimator: postprocess_only
+  role: realmlp_bias_candidate
+  base_model: exp_20260605_015_shared001_realmlp_as_is
+  use_original: false
+  use_fe: true
+  fe_family: shared001_realmlp_fe_as_is
+  use_bias_search: true
+  retraining: false
+  notes: >
+    017はモデル再学習ではなく、015 shared001 RealMLP as-is のOOF/pred probaに対する後処理。
+    015の確率出力をlog-proba空間に変換し、class-wise biasを加えた。
+
+target:
+  class_names:
+    - GALAXY
+    - QSO
+    - STAR
+  label_mapping:
+    GALAXY: 0
+    QSO: 1
+    STAR: 2
+  submission_format: single_column_class_label
+
+outputs:
+  submission: submission_bias_search_on_015_realmlp.csv
+  oof_proba: oof_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+  pred_proba: pred_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+  bias_vector: bias_vector.npy
+  bias_search_results: bias_search_results.csv
+  raw_vs_biased_oof_eval: raw_vs_biased_oof_eval.csv
+  oof_csv: oof_bias_search_on_015_realmlp.csv
+  pred_csv: pred_bias_search_on_015_realmlp.csv
+  cv_result: cv_result.json
+  registry: oof_registry.csv
+
+comparison:
+  against_015_single:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv_015: 0.9681693449222352
+    public_lb_015: 0.96977
+    cv_017: 0.9683022653955233
+    public_lb_017: 0.96985
+    cv_delta_017_minus_015: 0.00013292047328816725
+    lb_delta_017_minus_015: 0.00008
+    interpretation: >
+      017は015単体をCV/LBともに更新した。
+      ただし改善幅は小さく、Public LB差も+0.00008に留まる。
+      current bestには昇格するが、015との差は非常に小さいため、015もbackupとして保持する。
+
+  against_016_blend_add015:
+    exp_id: exp_20260605_016_blend_add015_realmlp_check
+    cv_016_best: 0.968246781866073
+    public_lb_016_best: 0.96948
+    cv_017: 0.9683022653955233
+    public_lb_017: 0.96985
+    cv_delta_017_minus_016: 0.0000554835294503
+    lb_delta_017_minus_016: 0.00037
+    interpretation: >
+      017は016 best safe blendもCV/LBともに上回った。
+      016はCV微改善がPublicに変換されなかったが、
+      017は015単体への直接bias searchとしてPublic更新に成功した。
+      当面は016 blendより017 bias済みRealMLPを優先する。
+
+  against_014_previous_blend_bias:
+    exp_id: exp_20260605_014_bias_search_on_013_best_blend
+    cv_014: 0.9660085788215015
+    public_lb_014: 0.96703
+    cv_017: 0.9683022653955233
+    public_lb_017: 0.96985
+    cv_delta_017_minus_014: 0.0022936865740218
+    lb_delta_017_minus_014: 0.00282
+    interpretation: >
+      014以前のblend+bias branchより、015/017 RealMLP branchが明確に強い。
+      014はreference/backupとして残すが、主力ではない。
+
+role_judgement:
+  current_best:
+    exp_id: exp_20260606_017_bias_search_on_015_realmlp
+    cv: 0.9683022653955233
+    public_lb: 0.96985
+    status: current_best_realmlp_bias
+    reason: >
+      017は015単体をCV/LBともに更新した。
+      改善幅は小さいが、現時点の最高Public LBであるためcurrent bestとして採用する。
+
+  previous_best:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv: 0.9681693449222352
+    public_lb: 0.96977
+    status: previous_best_single_realmlp_backup
+    reason: >
+      015は017にわずかに抜かれたが、bias searchなしの素直なRealMLP単体として非常に強い。
+      017のpostprocessがPrivateで崩れる可能性を考慮し、stable backupとして保持する。
+
+  hold_candidate:
+    exp_id: exp_20260605_016_blend_add015_realmlp_check
+    cv: 0.968246781866073
+    public_lb: 0.96948
+    status: hold_cv_up_lb_down
+    reason: >
+      016はCV上は015単体をわずかに上回ったが、Public LBで負けた。
+      017よりも明確に下なので、現時点ではhold/reference扱い。
+
+judgement:
+  status: completed
+  decision: >
+    017を現時点のcurrent bestとして採用する。
+    015 RealMLP単体に対するbias searchにより、
+    CVは0.968169から0.968302、Public LBは0.96977から0.96985へ改善した。
+    改善幅は小さいが、Public最高値を更新しているため採用する。
+  key_findings:
+    - 015 RealMLPにはまだわずかなclass-wise bias改善余地があった
+    - bias方向はSTARを強く上げる方向
+    - GALAXYとQSOを少し削り、STAR recallを上げることでBalanced Accuracyが改善した
+    - CV改善幅は小さいがPublicにも変換された
+    - 016 blendより、015単体へのbias searchの方が有効だった
+  caveat: >
+    017の改善幅はPublic LBで+0.00008と小さい。
+    OOF上でclass-wise thresholdを最適化したpostprocessであるため、Private過適合リスクは残る。
+    そのため、017をattack/current best、015をstable backupとして分けて管理するのが妥当。
+  next_action:
+    - 017をcurrent bestとして記録する
+    - 017のOOF/pred probaをnpy-files datasetへ追加する
+    - final_candidates.ymlに017をattack/current best、015をstable backupとして追加する
+    - 次に進むなら017と015/014/016の相関・最終候補比較を整理する
+    - 017近傍のbiasをさらに刻みすぎない
+    - 新規改善を狙うなら、RealMLPの別seed/別fold/別特徴ではなく、まずPrivate耐性を考えたfinal候補管理を優先する
+
+oof_registry_update:
+  exp_id: exp_20260606_017_bias_search_on_015_realmlp
+  public_lb: 0.96985
+  cv_score: 0.9683022653955233
+  raw_cv_score: 0.9681693449222352
+  cv_delta_vs_raw: 0.00013292047328816725
+  role: realmlp_bias_candidate
+  keep_hold_drop: keep_current_best
+  oof_path: /kaggle/working/exp_20260606_017_bias_search_on_015_realmlp/oof_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+  pred_path: /kaggle/working/exp_20260606_017_bias_search_on_015_realmlp/pred_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+  submission_path: /kaggle/working/exp_20260606_017_bias_search_on_015_realmlp/submission_bias_search_on_015_realmlp.csv
+  notes: >
+    Bias search on 015 shared001 RealMLP as-is.
+    CV improved from 0.968169 to 0.968302 and Public LB improved from 0.96977 to 0.96985.
+    Bias: GALAXY 0.0, QSO 0.0285, STAR 0.178.
+    Keep as current best RealMLP bias candidate. 015 remains stable backup.
