@@ -1,1 +1,243 @@
-
+experiment:
+  id: exp_20260606_018_shared003_xgb_as_is
+  title: shared003 XGBoost as-is
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: XGBClassifier
+  created_at: '2026-06-06'
+objective:
+  summary: Extract and run only the XGBoost part from shared003. Omit external submission/blending.
+    Save OOF/pred probabilities with exp_id filenames for later correlation and blend
+    checks against 017 current best.
+  success_criteria:
+  - run shared003 XGB-only
+  - omit external submission blend
+  - save OOF proba npy with exp_id in filename
+  - save test pred proba npy with exp_id in filename
+  - save probabilities in standard class order GALAXY,QSO,STAR
+  - save submission
+  - save cv_result
+  - save fold_scores
+  - update oof_registry
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  original_path: /kaggle/input/datasets/fedesoriano/stellar-classification-dataset-sdss17/star_classification.csv
+  target_col: class
+  id_col: id
+  use_original: true
+  original_usage: original target mean features only, no original row concat
+features:
+  feature_family: shared003_xgb_fe_as_is
+  feature_info:
+    n_features: 120
+    n_num_features: 102
+    n_cat_features: 18
+    num_features:
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+    - spectral_type_org_mean
+    - galaxy_population_org_mean
+    - alpha_org_mean
+    - delta_org_mean
+    - Log_alpha
+    - alpha_sq
+    - alpha_sqrt
+    - Log_delta
+    - delta_sq
+    - delta_sqrt
+    - Log_u
+    - u_sq
+    - u_sqrt
+    - Log_g
+    - g_sq
+    - g_sqrt
+    - Log_r
+    - r_sq
+    - r_sqrt
+    - Log_i
+    - i_sq
+    - i_sqrt
+    - Log_z
+    - z_sq
+    - z_sqrt
+    - Log_redshift
+    - redshift_sq
+    - redshift_sqrt
+    - alpha_delta_ratio
+    - alpha_-_delta
+    - alpha_u_ratio
+    - alpha_-_u
+    - alpha_g_ratio
+    - alpha_-_g
+    - alpha_r_ratio
+    - alpha_-_r
+    - alpha_i_ratio
+    - alpha_-_i
+    - alpha_z_ratio
+    - alpha_-_z
+    - alpha_redshift_ratio
+    - alpha_-_redshift
+    - delta_u_ratio
+    - delta_-_u
+    - delta_g_ratio
+    - delta_-_g
+    - delta_r_ratio
+    - delta_-_r
+    - delta_i_ratio
+    - delta_-_i
+    - delta_z_ratio
+    - delta_-_z
+    - delta_redshift_ratio
+    - delta_-_redshift
+    - u_g_ratio
+    - u_-_g
+    - u_r_ratio
+    - u_-_r
+    - u_i_ratio
+    - u_-_i
+    - u_z_ratio
+    - u_-_z
+    - u_redshift_ratio
+    - u_-_redshift
+    - g_r_ratio
+    - g_-_r
+    - g_i_ratio
+    - g_-_i
+    - g_z_ratio
+    - g_-_z
+    - g_redshift_ratio
+    - g_-_redshift
+    - r_i_ratio
+    - r_-_i
+    - r_z_ratio
+    - r_-_z
+    - r_redshift_ratio
+    - r_-_redshift
+    - i_z_ratio
+    - i_-_z
+    - i_redshift_ratio
+    - i_-_redshift
+    - z_redshift_ratio
+    - z_-_redshift
+    - spectral_type_fe
+    - galaxy_population_fe
+    - alpha_cat_fe
+    - delta_cat_fe
+    - u_cat_fe
+    - g_cat_fe
+    - r_cat_fe
+    - i_cat_fe
+    - z_cat_fe
+    - redshift_cat_fe
+    cat_features:
+    - spectral_type
+    - galaxy_population
+    - alpha_bin
+    - delta_bin
+    - u_bin
+    - g_bin
+    - r_bin
+    - i_bin
+    - z_bin
+    - redshift_bin
+    - alpha_cat
+    - delta_cat
+    - u_cat
+    - g_cat
+    - r_cat
+    - i_cat
+    - z_cat
+    - redshift_cat
+    standard_class_order:
+    - GALAXY
+    - QSO
+    - STAR
+    shared_internal_class_order:
+    - GALAXY
+    - STAR
+    - QSO
+    standard_reorder_idx:
+    - 0
+    - 2
+    - 1
+  target_encoder_safety: TargetEncoder is fit inside each outer fold on train fold
+    categorical features and labels, then transforms validation and test.
+  class_order_note: shared003 internal order is GALAXY,STAR,QSO. Saved npy order is
+    converted to GALAXY,QSO,STAR for compatibility with previous assets.
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  score: 0.965207986418628
+  fold_scores:
+  - fold: 1
+    balanced_accuracy: 0.9651789760708297
+    best_iteration: 13962
+    n_train: 461877
+    n_valid: 115470
+    recall_GALAXY: 0.9687533114337183
+    recall_STAR: 0.9541855545482019
+    recall_QSO: 0.972598062230569
+  - fold: 2
+    balanced_accuracy: 0.9652197518595599
+    best_iteration: 12457
+    n_train: 461877
+    n_valid: 115470
+    recall_GALAXY: 0.9658392497615768
+    recall_STAR: 0.9569658507101844
+    recall_QSO: 0.9728541551069187
+  - fold: 3
+    balanced_accuracy: 0.965524100885473
+    best_iteration: 11633
+    n_train: 461878
+    n_valid: 115469
+    recall_GALAXY: 0.9659054784359437
+    recall_STAR: 0.9588370406189555
+    recall_QSO: 0.9718297836015195
+  - fold: 4
+    balanced_accuracy: 0.9650506306430566
+    best_iteration: 11684
+    n_train: 461878
+    n_valid: 115469
+    recall_GALAXY: 0.9674419836812547
+    recall_STAR: 0.9561801148383198
+    recall_QSO: 0.9715297934095953
+  - fold: 5
+    balanced_accuracy: 0.9650664990411985
+    best_iteration: 13686
+    n_train: 461878
+    n_valid: 115469
+    recall_GALAXY: 0.9664088163611317
+    recall_STAR: 0.957388939256573
+    recall_QSO: 0.9714017415058904
+  fold_std: 0.00017069733446454675
+outputs:
+  oof_proba: oof_exp_20260606_018_shared003_xgb_as_is_proba.npy
+  pred_proba: pred_exp_20260606_018_shared003_xgb_as_is_proba.npy
+  oof_csv: oof_shared003_xgb_as_is.csv
+  pred_csv: pred_shared003_xgb_as_is.csv
+  submission: submission_shared003_xgb_as_is.csv
+  cv_result: cv_result.json
+  fold_scores: fold_scores.csv
+  feature_info: feature_info.json
+  registry: oof_registry.csv
+judgement:
+  status: pending_public_lb_and_corr
+  reason: shared003 XGB is a different family from 017 RealMLP. Adoption depends on
+    reproduced CV, Public LB, and OOF correlation/blend behavior against 017.
+  next_action:
+  - Submit submission_shared003_xgb_as_is.csv
+  - Record Public LB
+  - Add OOF/pred npy to npy-files dataset
+  - Compare OOF correlation against 017 current best
+  - Blend with 017 if correlation and Public LB are favorable
