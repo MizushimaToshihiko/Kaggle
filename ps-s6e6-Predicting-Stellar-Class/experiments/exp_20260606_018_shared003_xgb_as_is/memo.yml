@@ -241,3 +241,283 @@ judgement:
   - Add OOF/pred npy to npy-files dataset
   - Compare OOF correlation against 017 current best
   - Blend with 017 if correlation and Public LB are favorable
+
+result:
+  status: completed
+  purpose: >
+    shared003.ipynb からXGBoost部分のみを抜き出し、他submissionのblend部分を除外してas-is実行した。
+    目的は、017 current best RealMLPとは異なるmodel family素材として、
+    XGBoost単体のCV/LBと、後続blend用OOF/pred probaを作成すること。
+
+cv:
+  metric: balanced_accuracy_score
+  score: 0.965207986418628
+  score_shared_order: 0.965207986418628
+  fold_scores:
+    - fold: 1
+      balanced_accuracy: 0.9651789760708297
+      best_iteration: 13962
+      n_train: 461877
+      n_valid: 115470
+      recall:
+        GALAXY: 0.9687533114337183
+        STAR: 0.9541855545482019
+        QSO: 0.972598062230569
+
+    - fold: 2
+      balanced_accuracy: 0.9652197518595599
+      best_iteration: 12457
+      n_train: 461877
+      n_valid: 115470
+      recall:
+        GALAXY: 0.9658392497615768
+        STAR: 0.9569658507101844
+        QSO: 0.9728541551069187
+
+    - fold: 3
+      balanced_accuracy: 0.965524100885473
+      best_iteration: 11633
+      n_train: 461878
+      n_valid: 115469
+      recall:
+        GALAXY: 0.9659054784359437
+        STAR: 0.9588370406189555
+        QSO: 0.9718297836015195
+
+    - fold: 4
+      balanced_accuracy: 0.9650506306430566
+      best_iteration: 11684
+      n_train: 461878
+      n_valid: 115469
+      recall:
+        GALAXY: 0.9674419836812547
+        STAR: 0.9561801148383198
+        QSO: 0.9715297934095953
+
+    - fold: 5
+      balanced_accuracy: 0.9650664990411985
+      best_iteration: 13686
+      n_train: 461878
+      n_valid: 115469
+      recall:
+        GALAXY: 0.9664088163611317
+        STAR: 0.957388939256573
+        QSO: 0.9714017415058904
+
+  fold_score_min: 0.9650506306430566
+  fold_score_max: 0.965524100885473
+  fold_score_range: 0.0004734702424164
+  interpretation: >
+    OOF CVは0.965208で、fold間のばらつきは小さい。
+    XGBoost単体としては安定しているが、017 current best RealMLPのCV 0.968302には大きく届かない。
+    単体主力ではなく、017との相関差・誤分類差を確認するための別family素材として扱う。
+
+public_lb:
+  score: 0.96578
+  reference_017_public_lb: 0.96985
+  delta_vs_017_public_lb: -0.00407
+  reference_015_public_lb: 0.96977
+  delta_vs_015_public_lb: -0.00399
+  reference_014_public_lb: 0.96703
+  delta_vs_014_public_lb: -0.00125
+  submission: submission_shared003_xgb_as_is.csv
+  interpretation: >
+    Public LBは0.96578で、017 current bestの0.96985には大きく届かない。
+    また、014 blend+biasの0.96703にも届いていない。
+    したがって018単体を提出候補へ昇格させる理由はない。
+    ただしXGBoost familyであり、017 RealMLPとは異なる誤分類構造を持つ可能性があるため、
+    後続の019で017との相関・blend weightを確認する価値はある。
+
+model:
+  family: XGBoost
+  estimator: XGBClassifier
+  source: shared003_xgb_only_as_is
+  role: shared_code_xgb_material_candidate
+  use_original: true
+  original_usage: original target mean features only, no original row concat
+  use_fe: true
+  fe_family: shared003_xgb_fe_as_is
+  use_bias_search: false
+  external_submission_blend: false
+  params:
+    n_estimators: 50000
+    learning_rate: 0.01
+    max_depth: 6
+    random_state: 42
+    objective: multi:softprob
+    num_class: 3
+    eval_metric: mlogloss
+    enable_categorical: true
+    device: cuda
+    early_stopping_rounds: 100
+
+features:
+  feature_family: shared003_xgb_fe_as_is
+  n_features: 120
+  n_num_features: 102
+  n_cat_features: 18
+  use_original: true
+  original_usage: >
+    original datasetは行追加ではなく、target mean featuresの作成にのみ使用した。
+    original row concatは行っていない。
+  categorical_features:
+    - spectral_type
+    - galaxy_population
+    - alpha_bin
+    - delta_bin
+    - u_bin
+    - g_bin
+    - r_bin
+    - i_bin
+    - z_bin
+    - redshift_bin
+    - alpha_cat
+    - delta_cat
+    - u_cat
+    - g_cat
+    - r_cat
+    - i_cat
+    - z_cat
+    - redshift_cat
+  class_order_note: >
+    shared003内部のclass orderは GALAXY, STAR, QSO。
+    これまでのS6E6資産では GALAXY, QSO, STAR を標準順としているため、
+    保存するOOF/pred npyは GALAXY, QSO, STAR に並べ替えた。
+    standard_reorder_idxは [0, 2, 1]。
+    この処理をしないと、後続blendでQSOとSTARが入れ替わる。
+
+target:
+  class_order_saved_npy:
+    - GALAXY
+    - QSO
+    - STAR
+  class_order_shared_internal:
+    - GALAXY
+    - STAR
+    - QSO
+  standard_reorder_idx:
+    - 0
+    - 2
+    - 1
+  label_mapping_saved_npy:
+    GALAXY: 0
+    QSO: 1
+    STAR: 2
+  label_mapping_shared_internal:
+    GALAXY: 0
+    STAR: 1
+    QSO: 2
+  submission_format: single_column_class_label
+
+outputs:
+  submission: submission_shared003_xgb_as_is.csv
+  oof_proba: oof_exp_20260606_018_shared003_xgb_as_is_proba.npy
+  pred_proba: pred_exp_20260606_018_shared003_xgb_as_is_proba.npy
+  oof_shared_order_proba: oof_exp_20260606_018_shared003_xgb_as_is_shared_order_proba.npy
+  pred_shared_order_proba: pred_exp_20260606_018_shared003_xgb_as_is_shared_order_proba.npy
+  oof_csv: oof_shared003_xgb_as_is.csv
+  pred_csv: pred_shared003_xgb_as_is.csv
+  cv_result: cv_result.json
+  fold_scores: fold_scores.csv
+  feature_info: feature_info.json
+  registry: oof_registry.csv
+
+comparison:
+  against_017_current_best:
+    exp_id: exp_20260606_017_bias_search_on_015_realmlp
+    cv_017: 0.9683022653955233
+    public_lb_017: 0.96985
+    cv_018: 0.965207986418628
+    public_lb_018: 0.96578
+    cv_delta_018_minus_017: -0.0030942789768953
+    lb_delta_018_minus_017: -0.00407
+    interpretation: >
+      018 XGBは017 RealMLPに単体性能で大きく劣る。
+      current bestを置換する候補ではない。
+      価値があるとすれば、017とのOOF相関が低く、blendで補助重みを持つ場合に限られる。
+
+  against_015_realmlp_as_is:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv_015: 0.9681693449222352
+    public_lb_015: 0.96977
+    cv_018: 0.965207986418628
+    public_lb_018: 0.96578
+    cv_delta_018_minus_015: -0.0029613585036072
+    lb_delta_018_minus_015: -0.00399
+    interpretation: >
+      015 RealMLP as-isにも大きく劣る。
+      018は単体候補ではなく、RealMLP branchの補助候補としてのみ評価する。
+
+  against_014_blend_bias:
+    exp_id: exp_20260605_014_bias_search_on_013_best_blend
+    cv_014: 0.9660085788215015
+    public_lb_014: 0.96703
+    cv_018: 0.965207986418628
+    public_lb_018: 0.96578
+    cv_delta_018_minus_014: -0.0008005924028735
+    lb_delta_018_minus_014: -0.00125
+    interpretation: >
+      018は014 blend+biasにも届かない。
+      XGB as-is単体としては主力候補にはならない。
+
+role_judgement:
+  current_best:
+    exp_id: exp_20260606_017_bias_search_on_015_realmlp
+    public_lb: 0.96985
+    status: keep_current_best
+    reason: >
+      018 XGB単体はPublic LB 0.96578で、017 current bestに大きく届かない。
+      current bestは017のまま維持する。
+
+  new_candidate:
+    exp_id: exp_20260606_018_shared003_xgb_as_is
+    cv: 0.965207986418628
+    public_lb: 0.96578
+    status: hold_for_blend_check
+    reason: >
+      単体性能は弱いが、XGBoost familyであり、017 RealMLPとは異なる誤分類構造を持つ可能性がある。
+      019で017/015/014とのOOF相関・blend weightを確認するまではdropしない。
+
+  drop_as_single:
+    decision: true
+    reason: >
+      018単体は017/015/014より明確に低い。
+      単体提出候補として保持する価値はない。
+
+judgement:
+  status: completed
+  decision: >
+    018 shared003 XGBoost as-is は単体候補としては不採用。
+    CV 0.965208 / Public LB 0.96578で、017 current best 0.96985には大きく届かない。
+    ただし、別family素材としての価値確認は未完了のため、次の019で017との相関・blend確認を行う。
+  key_findings:
+    - shared003 XGB単体は安定しているが、RealMLP branchには届かない
+    - fold scoreはかなり安定している
+    - STAR recallが相対的に低く、QSO recallは高い
+    - class orderの変換は正常に実施済み
+    - 他submission blendは除外済み
+    - originalはtarget mean featureとしてのみ使用し、row concatはしていない
+  caveat: >
+    単体LBだけでdropすると、別family補助素材を見落とす可能性がある。
+    ただし017との差が大きいため、019のblendで重み0またはPublic悪化なら、018はactive候補から外す。
+  next_action:
+    - 018のOOF/pred probaをnpy-files datasetへ追加する
+    - 019で017 current bestに018を追加したblend/correlation checkを行う
+    - 017 + 018、015 + 018、014 + 017 + 018を確認する
+    - 018がHC/NMで有効重みを持つか確認する
+    - 018がPublicで改善しなければhold/dropへ移行する
+
+oof_registry_update:
+  exp_id: exp_20260606_018_shared003_xgb_as_is
+  public_lb: 0.96578
+  cv_score: 0.965207986418628
+  role: shared_code_xgb_material_candidate
+  keep_hold_drop: hold_for_blend_check
+  oof_path: /kaggle/working/exp_20260606_018_shared003_xgb_as_is/oof_exp_20260606_018_shared003_xgb_as_is_proba.npy
+  pred_path: /kaggle/working/exp_20260606_018_shared003_xgb_as_is/pred_exp_20260606_018_shared003_xgb_as_is_proba.npy
+  submission_path: /kaggle/working/exp_20260606_018_shared003_xgb_as_is/submission_shared003_xgb_as_is.csv
+  notes: >
+    shared003 XGBoost-only as-is. External submission/blend part omitted.
+    CV 0.965208 and Public LB 0.96578, clearly below 017 current best LB 0.96985.
+    Saved npy class order is GALAXY,QSO,STAR after reordering from shared internal GALAXY,STAR,QSO.
+    Keep only as different-family blend material candidate and check correlation/blend against 017 in 019.
