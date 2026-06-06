@@ -1,1 +1,82 @@
+experiment:
+  id: exp_20260606_017_bias_search_on_015_realmlp
+  title: Bias search on 015 shared001 RealMLP
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: 015 RealMLP postprocess
+  created_at: '2026-06-06'
+objective:
+  summary: Apply class-wise bias search to 015 shared001 RealMLP as-is OOF/test probabilities.
+    Do not retrain. GALAXY bias is fixed to 0 and QSO/STAR biases are searched. Input
+    npy files are read from /kaggle/input/datasets/mizushimatoshihiko/npy-files.
+  success_criteria:
+  - load 015 OOF and test predictions from npy-files dataset
+  - confirm raw 015 OOF score
+  - search class-wise bias on OOF
+  - save adjusted OOF proba as npy
+  - save adjusted test pred proba as npy
+  - save biased submission
+  - save bias vector and search results
+  - update oof_registry
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  target_col: class
+  id_col: id
+  npy_dir: /kaggle/input/datasets/mizushimatoshihiko/npy-files
+  raw_015_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+  raw_015_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+  use_original: false
+reference:
+  exp_id: exp_20260605_015_shared001_realmlp_as_is
+  model: shared001 RealMLP as-is
+  cv: 0.9681693449222352
+  public_lb: 0.96977
+bias_search:
+  bias_space:
+    GALAXY: fixed_0
+    QSO: searched
+    STAR: searched
+  best_bias:
+    GALAXY: 0.0
+    QSO: 0.0285
+    STAR: 0.178
+  raw_cv: 0.9681693449222352
+  biased_cv: 0.9683022653955233
+  delta_biased_minus_raw: 0.00013292047328816725
+  raw_eval:
+    balanced_accuracy: 0.9681693449222352
+    recall_GALAXY: 0.9622337607290452
+    recall_QSO: 0.9760975901248901
+    recall_STAR: 0.9661766839127702
+  biased_eval:
+    balanced_accuracy: 0.9683022653955233
+    recall_GALAXY: 0.9598892656564586
+    recall_QSO: 0.9758671026010944
+    recall_STAR: 0.969150427929017
+  adjusted_probability_method: softmax(log(raw_proba) + class_bias)
+outputs:
+  submission: submission_bias_search_on_015_realmlp.csv
+  bias_vector: bias_vector.npy
+  oof_proba: oof_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+  pred_proba: pred_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+  bias_search_results: bias_search_results.csv
+  raw_vs_biased_oof_eval: raw_vs_biased_oof_eval.csv
+  oof_csv: oof_bias_search_on_015_realmlp.csv
+  pred_csv: pred_bias_search_on_015_realmlp.csv
+  cv_result: cv_result.json
+  registry: oof_registry.csv
+judgement:
+  status: pending_public_lb
+  reason: This is class-wise threshold tuning on the current best single RealMLP 015.
+    Adoption depends on whether Public LB improves over 015 single LB 0.96977.
+  next_action:
+  - Submit submission_bias_search_on_015_realmlp.csv
+  - Record Public LB
+  - If LB improves over 0.96977, promote 017 to current best
+  - If LB drops, keep 015 as current best
+  - Add 017 OOF/pred to npy-files dataset if useful for later blend/final comparison
+
 
