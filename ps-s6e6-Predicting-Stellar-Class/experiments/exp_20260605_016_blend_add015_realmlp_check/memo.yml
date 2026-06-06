@@ -1,1 +1,453 @@
+experiment:
+  id: exp_20260605_016_blend_add015_realmlp_check
+  title: Blend check after adding 015 shared001 RealMLP
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  created_at: '2026-06-05'
+objective:
+  summary: Load OOF/pred probabilities from the fixed npy-files Kaggle dataset folder,
+    add 015 shared001 RealMLP as-is to the current 014 branch, and decide whether
+    014 adds complementary signal to 015. Save only the best safe blend OOF/pred proba
+    for the next experiment.
+  success_criteria:
+  - load 012/013/014/015 OOF and pred npy files
+  - recompute individual balanced accuracy
+  - compute pairwise OOF correlations
+  - evaluate predefined blend sets centered on 014/015
+  - separate safe blends from in-sample meta screening
+  - save only best safe blend OOF/pred npy
+  - save best safe blend submission
+  - save memo and summary
+inputs:
+  npy_dir: /kaggle/input/datasets/mizushimatoshihiko/npy-files
+  models:
+  - key: 012_lgb010_bias
+    exp_id: exp_20260605_012_lgb010_bias_search
+    family: LightGBM
+    role: single_lgb_bias_reference
+    oof: oof_exp_20260605_012_lgb010_bias_search_proba.npy
+    pred: pred_exp_20260605_012_lgb010_bias_search_proba.npy
+    cv: 0.9632282943283176
+    public_lb: 0.96466
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260605_012_lgb010_bias_search_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260605_012_lgb010_bias_search_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 013_blend_best
+    exp_id: exp_20260605_013_blend_add012_lgb010_bias_check
+    family: Blend
+    role: previous_blend_reference
+    oof: oof_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend_proba.npy
+    pred: pred_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend_proba.npy
+    cv: 0.9648069017992585
+    public_lb: 0.96562
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 014_blend_bias
+    exp_id: exp_20260605_014_bias_search_on_013_best_blend
+    family: Blend
+    role: previous_current_best_blend_bias
+    oof: oof_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+    pred: pred_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+    cv: 0.9660085788215015
+    public_lb: 0.96703
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 015_realmlp_shared001
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    family: RealMLP
+    role: current_best_single_realmlp
+    oof: oof_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+    pred: pred_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+    cv: 0.9681693449222352
+    public_lb: 0.96977
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  blend_sets:
+    A_015_only:
+    - 015_realmlp_shared001
+    B_014_only:
+    - 014_blend_bias
+    C_014_015:
+    - 014_blend_bias
+    - 015_realmlp_shared001
+    D_013_014_015:
+    - 013_blend_best
+    - 014_blend_bias
+    - 015_realmlp_shared001
+    E_012_014_015:
+    - 012_lgb010_bias
+    - 014_blend_bias
+    - 015_realmlp_shared001
+    F_012_013_014_015:
+    - 012_lgb010_bias
+    - 013_blend_best
+    - 014_blend_bias
+    - 015_realmlp_shared001
+    G_013_015:
+    - 013_blend_best
+    - 015_realmlp_shared001
+    H_012_015:
+    - 012_lgb010_bias
+    - 015_realmlp_shared001
+outputs:
+  individual_scores: individual_scores.csv
+  pairwise_oof_correlation: pairwise_oof_correlation.csv
+  corr_matrix_pearson_flat_proba: corr_matrix_pearson_flat_proba.csv
+  corr_matrix_spearman_flat_proba: corr_matrix_spearman_flat_proba.csv
+  matrix_argmax_agreement: matrix_argmax_agreement.csv
+  matrix_error_jaccard: matrix_error_jaccard.csv
+  blend_diagnostics: blend_diagnostics.csv
+  best_blend_info: best_blend_info.json
+  saved_submission_candidates: saved_submission_candidates.csv
+  best_oof_proba: oof_exp_20260605_016_blend_add015_realmlp_check_best_blend_proba.npy
+  best_pred_proba: pred_exp_20260605_016_blend_add015_realmlp_check_best_blend_proba.npy
+  best_submission: submission_exp_20260605_016_blend_add015_realmlp_check_best_blend.csv
+  role_judgement: role_judgement.json
+  summary: blend_add015_summary.json
+judgement:
+  status: completed_pending_manual_review
+  initial_view: 015 is currently stronger than 014 as a single model. The key question
+    is whether 014 contributes enough complementary error structure to improve a safe
+    blend. In-sample meta rows are diagnostic only.
+  next_action:
+  - Review individual_scores.csv
+  - Review pairwise_oof_correlation.csv, especially 014 vs 015
+  - Review safe rows in blend_diagnostics.csv
+  - Submit best safe blend if it improves over 015 enough
+  - If best safe blend beats 015, run bias search on 016 best blend
+  - If not, run bias search on 015 single RealMLP
 
+result:
+  status: completed
+  purpose: >
+    015 shared001 RealMLP as-is を、既存の013/014 blend branchに追加し、
+    015単体を超える安全なblend候補が作れるかを確認した。
+    あわせて、012/013/014/015間のOOF相関、誤分類重なり、blend weightを確認した。
+
+inputs:
+  npy_dir: /kaggle/input/datasets/mizushimatoshihiko/npy-files
+  loaded_models:
+    - key: 012_lgb010_bias
+      exp_id: exp_20260605_012_lgb010_bias_search
+      family: LightGBM
+      role: single_lgb_bias_reference
+      cv: 0.9632282943283176
+      public_lb: 0.96466
+      oof: oof_exp_20260605_012_lgb010_bias_search_proba.npy
+      pred: pred_exp_20260605_012_lgb010_bias_search_proba.npy
+
+    - key: 013_blend_best
+      exp_id: exp_20260605_013_blend_add012_lgb010_bias_check
+      family: Blend
+      role: previous_blend_reference
+      cv: 0.9648069017992585
+      public_lb: 0.96562
+      oof: oof_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend_proba.npy
+      pred: pred_exp_20260605_013_blend_add012_lgb010_bias_check_best_blend_proba.npy
+
+    - key: 014_blend_bias
+      exp_id: exp_20260605_014_bias_search_on_013_best_blend
+      family: Blend
+      role: previous_current_best_blend_bias
+      cv: 0.9660085788215015
+      public_lb: 0.96703
+      oof: oof_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+      pred: pred_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+
+    - key: 015_realmlp_shared001
+      exp_id: exp_20260605_015_shared001_realmlp_as_is
+      family: RealMLP
+      role: current_best_single_realmlp
+      cv: 0.9681693449222352
+      public_lb: 0.96977
+      oof: oof_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+      pred: pred_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+
+individual_scores:
+  ranking:
+    - key: 015_realmlp_shared001
+      cv: 0.9681693449222352
+      public_lb: 0.96977
+      recall:
+        GALAXY: 0.9622337607290452
+        QSO: 0.9760975901248901
+        STAR: 0.9661766839127702
+      judgement: current_best_single
+
+    - key: 014_blend_bias
+      cv: 0.9660085788215015
+      public_lb: 0.96703
+      recall:
+        GALAXY: 0.9680618840733284
+        QSO: 0.9706171090035256
+        STAR: 0.9593467433876505
+      judgement: previous_best_blend_bias_reference
+
+    - key: 013_blend_best
+      cv: 0.9648069017992585
+      public_lb: 0.96562
+      recall:
+        GALAXY: 0.9717653915439228
+        QSO: 0.9688329648378478
+        STAR: 0.953822349016005
+      judgement: previous_blend_reference
+
+    - key: 012_lgb010_bias
+      cv: 0.9632282943283176
+      public_lb: 0.96466
+      recall:
+        GALAXY: 0.9646338878881
+        QSO: 0.9689439403122679
+        STAR: 0.9561070547845849
+      judgement: old_lgb_bias_reference
+
+pairwise_correlation:
+  key_findings:
+    - pair: 014_blend_bias__015_realmlp_shared001
+      pearson_flat_proba: 0.9941667754729456
+      spearman_flat_proba: 0.9163080998783079
+      argmax_agreement: 0.9859373998652456
+      argmax_disagreement: 0.014062600134754315
+      error_jaccard: 0.6594513501928847
+      interpretation: >
+        014と015は確率のPearson相関はかなり高いが、
+        rank相関と誤分類重なりは完全一致ではない。
+        014はGALAXY recall寄り、015はQSO/STAR recall寄りで、
+        OOF上は補完余地が残っていた。
+
+    - pair: 013_blend_best__015_realmlp_shared001
+      pearson_flat_proba: 0.9933102136251177
+      spearman_flat_proba: 0.9134634812196795
+      argmax_agreement: 0.9850107474361173
+      argmax_disagreement: 0.014989252563882725
+      error_jaccard: 0.6349431818181818
+      interpretation: >
+        013と015も高相関だが、014よりわずかに誤差重なりが低い。
+        016のbest safe blendでは014ではなく013が採用された。
+
+    - pair: 013_blend_best__014_blend_bias
+      pearson_flat_proba: 0.9997693987999815
+      spearman_flat_proba: 0.9993859818340733
+      argmax_agreement: 0.9964007780416283
+      error_jaccard: 0.8943001997234599
+      interpretation: >
+        014は013のbias後処理なので、両者はほぼ同一系統。
+        013と014を同時に入れる価値は限定的。
+
+best_safe_blend:
+  set_name: G_013_015
+  method: hc_nonnegative_raw
+  cv: 0.968246781866073
+  public_lb: 0.96948
+  submission: submission_exp_20260605_016_blend_add015_realmlp_check_best_blend.csv
+  oof_proba: oof_exp_20260605_016_blend_add015_realmlp_check_best_blend_proba.npy
+  pred_proba: pred_exp_20260605_016_blend_add015_realmlp_check_best_blend_proba.npy
+  keys:
+    - 013_blend_best
+    - 015_realmlp_shared001
+  weights:
+    013_blend_best: 0.1520544869757452
+    015_realmlp_shared001: 0.8479455130242548
+  recall:
+    GALAXY: 0.9640563738476211
+    QSO: 0.9753292983789044
+    STAR: 0.9653546733716938
+  interpretation: >
+    OOF上のbest safe blendは013+015のHCだった。
+    015単体CV 0.968169から0.968247へ+0.000077改善したが、
+    Public LBは015単体0.96977に対して016は0.96948で-0.00029悪化。
+    CV改善はPublicに変換されなかったため、016をcurrent bestには昇格しない。
+
+notable_blend_candidates:
+  - set_name: C_014_015
+    method: hc_nonnegative_raw
+    cv: 0.9682436072354875
+    public_lb: not_submitted
+    weights:
+      014_blend_bias: 0.3927248436266472
+      015_realmlp_shared001: 0.6072751563733528
+    recall:
+      GALAXY: 0.9655028080957931
+      QSO: 0.9744414945835432
+      STAR: 0.9647865190271263
+    interpretation: >
+      013+015 bestとほぼ同等のCV。
+      ただし今回提出したbest safe blendが015単体Publicを下回ったため、
+      014+015を追加提出する優先度は低い。
+
+  - set_name: E_012_014_015
+    method: hc_nonnegative_raw
+    cv: 0.9682436072354875
+    weights:
+      012_lgb010_bias: 0.0
+      014_blend_bias: 0.3927248436266472
+      015_realmlp_shared001: 0.6072751563733528
+    interpretation: >
+      012の重みは0。
+      015導入後、012をactive blend素材として使う価値はほぼない。
+
+  - set_name: D_013_014_015
+    method: hc_nonnegative_raw
+    cv: 0.9682323493724319
+    weights:
+      013_blend_best: 0.0
+      014_blend_bias: 0.3427610086716697
+      015_realmlp_shared001: 0.6572389913283303
+    interpretation: >
+      013/014を同時に入れると013が0化。
+      013と014は近すぎるため、どちらか一方で十分。
+
+comparison:
+  against_015_single:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv_015: 0.9681693449222352
+    public_lb_015: 0.96977
+    cv_016_best: 0.968246781866073
+    public_lb_016: 0.96948
+    cv_delta_016_minus_015: 0.0000774369438378
+    lb_delta_016_minus_015: -0.00029
+    interpretation: >
+      016 best safe blendはCVでは015単体をわずかに上回ったが、
+      Public LBでは015単体に明確に負けた。
+      したがって、016はcurrent bestではなくhold/reference扱いとする。
+
+  against_014_previous_best:
+    exp_id: exp_20260605_014_bias_search_on_013_best_blend
+    cv_014: 0.9660085788215015
+    public_lb_014: 0.96703
+    cv_016_best: 0.968246781866073
+    public_lb_016: 0.96948
+    cv_delta_016_minus_014: 0.0022382030445715
+    lb_delta_016_minus_014: 0.00245
+    interpretation: >
+      014からは大きく改善している。
+      ただし015単体が既にさらに強いため、014基準での改善は採用理由にならない。
+
+  against_013_previous_blend:
+    exp_id: exp_20260605_013_blend_add012_lgb010_bias_check
+    cv_013: 0.9648069017992585
+    public_lb_013: 0.96562
+    cv_016_best: 0.968246781866073
+    public_lb_016: 0.96948
+    cv_delta_016_minus_013: 0.0034398800668145
+    lb_delta_016_minus_013: 0.00386
+    interpretation: >
+      013からは大幅改善。
+      ただし主因は015 RealMLPの追加であり、013自体の価値は補助に限定される。
+
+role_judgement:
+  current_best:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv: 0.9681693449222352
+    public_lb: 0.96977
+    status: keep_current_best_single
+    reason: >
+      016 best safe blendはCVで015をわずかに上回ったが、Public LBで015に負けた。
+      現時点のcurrent bestは015単体のまま維持する。
+
+  hold_candidate:
+    exp_id: exp_20260605_016_blend_add015_realmlp_check
+    candidate: G_013_015__hc_nonnegative_raw
+    cv: 0.968246781866073
+    public_lb: 0.96948
+    status: hold_cv_up_lb_down
+    reason: >
+      OOF上は015単体より改善しているため、完全dropではなくhold。
+      ただしPublic変換が悪いため、提出候補としては015単体より下。
+
+  previous_best_blend_reference:
+    exp_id: exp_20260605_014_bias_search_on_013_best_blend
+    cv: 0.9660085788215015
+    public_lb: 0.96703
+    status: reference_only
+    reason: >
+      015導入後は主力ではない。
+      ただし014/013系は015とはrecallバランスが違うため、後続のbias探索やfinal候補比較の参考には残す。
+
+  drop_active_012:
+    exp_id: exp_20260605_012_lgb010_bias_search
+    decision: drop_active_blend_material
+    reason: >
+      016のE_012_014_015では012の重みが0。
+      015導入後、012をactive blend素材として使う理由は薄い。
+
+  use_meta_rows:
+    decision: do_not_use_as_final
+    reason: >
+      LogReg/Ridge/ElasticNet rowsはin-sample meta screeningであり、
+      nested OOFではない。
+      final OOF資産として使うべきではない。
+
+judgement:
+  status: completed
+  decision: >
+    016 best safe blendはCV上では015単体をわずかに上回ったが、
+    Public LBは0.96948で、015単体の0.96977を下回った。
+    よって016はcurrent bestには昇格せず、hold/reference扱いとする。
+    現時点のcurrent bestは015 shared001 RealMLP as-isのまま。
+  key_findings:
+    - 015単体が依然としてPublic最強
+    - 013+015のHCがOOF上のbest safe blend
+    - 014+015もOOF上は近いが、追加提出優先度は低い
+    - 012は015導入後のblendではほぼ不要
+    - CV微改善がPublic LBに変換されなかった
+    - 016はCV-only寄りのhold候補
+  caveat: >
+    016のbest safe blendはCV差が+0.000077と非常に小さく、
+    Public LBでは-0.00029悪化した。
+    これはOOF上のHC重み最適化がPublicに対して少し過適合した可能性を示す。
+    この結果を理由に013/014系を完全に捨てる必要はないが、
+    015単体より優先する根拠はない。
+  next_action:
+    - 015単体へのbias searchを優先する
+    - 016 best blendへのbias searchは優先度を下げる
+    - 016のOOF/predはnpy-filesへ追加してもよいが、current best素材ではなくhold扱い
+    - 014/013系はfinal候補比較用のreferenceとして保持する
+    - 次にshared001 RealMLPの安全な派生、または015のbias/postprocessを検討する
+
+oof_registry_update:
+  exp_id: exp_20260605_016_blend_add015_realmlp_check
+  public_lb: 0.96948
+  cv_score: 0.968246781866073
+  role: blend_add015_check
+  keep_hold_drop: hold_cv_up_lb_down
+  best_candidate:
+    set_name: G_013_015
+    method: hc_nonnegative_raw
+    keys:
+      - 013_blend_best
+      - 015_realmlp_shared001
+    weights:
+      013_blend_best: 0.1520544869757452
+      015_realmlp_shared001: 0.8479455130242548
+    oof_path: /kaggle/working/exp_20260605_016_blend_add015_realmlp_check/oof_exp_20260605_016_blend_add015_realmlp_check_best_blend_proba.npy
+    pred_path: /kaggle/working/exp_20260605_016_blend_add015_realmlp_check/pred_exp_20260605_016_blend_add015_realmlp_check_best_blend_proba.npy
+    submission_path: /kaggle/working/exp_20260605_016_blend_add015_realmlp_check/submission_exp_20260605_016_blend_add015_realmlp_check_best_blend.csv
+  notes: >
+    Add015 blend check. Best safe blend was G_013_015 hc_nonnegative_raw with CV 0.968247,
+    slightly above 015 single CV 0.968169. However Public LB was 0.96948, below 015 single LB 0.96977.
+    Do not promote to current best. Keep 015 as current best single. Use 016 only as hold/reference.
