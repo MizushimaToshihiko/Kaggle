@@ -167,3 +167,362 @@ judgement:
   - Review safe rows in blend_diagnostics.csv
   - Submit best safe blend only if it improves over 017 enough
   - If best safe blend does not improve Public over 017, drop 018 from active candidates
+
+result:
+  status: completed
+  purpose: >
+    018 shared003 XGBoost as-is を、017 current best RealMLP branchへ追加し、
+    XGBが弱い単体性能にもかかわらずblend補助素材として有効かを確認した。
+    014/015/016/017/018のOOF相関、誤分類重なり、safe blend weightを比較した。
+
+inputs:
+  npy_dir: /kaggle/input/datasets/mizushimatoshihiko/npy-files
+  loaded_models:
+    - key: 014_blend_bias
+      exp_id: exp_20260605_014_bias_search_on_013_best_blend
+      family: Blend
+      role: old_blend_bias_reference
+      cv: 0.9660085788215015
+      public_lb: 0.96703
+      oof: oof_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+      pred: pred_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+
+    - key: 015_realmlp_shared001
+      exp_id: exp_20260605_015_shared001_realmlp_as_is
+      family: RealMLP
+      role: previous_best_single_realmlp
+      cv: 0.9681693449222352
+      public_lb: 0.96977
+      oof: oof_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+      pred: pred_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+
+    - key: 016_blend_best
+      exp_id: exp_20260605_016_blend_add015_realmlp_check
+      family: Blend
+      role: hold_cv_up_lb_down
+      cv: 0.968246781866073
+      public_lb: 0.96948
+      oof: oof_exp_20260605_016_blend_add015_realmlp_check_best_blend_proba.npy
+      pred: pred_exp_20260605_016_blend_add015_realmlp_check_best_blend_proba.npy
+
+    - key: 017_realmlp_bias
+      exp_id: exp_20260606_017_bias_search_on_015_realmlp
+      family: RealMLP
+      role: current_best_realmlp_bias
+      cv: 0.9683022653955233
+      public_lb: 0.96985
+      oof: oof_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+      pred: pred_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+
+    - key: 018_xgb_shared003
+      exp_id: exp_20260606_018_shared003_xgb_as_is
+      family: XGBoost
+      role: xgb_hold_for_blend_check
+      cv: 0.965207986418628
+      public_lb: 0.96578
+      oof: oof_exp_20260606_018_shared003_xgb_as_is_proba.npy
+      pred: pred_exp_20260606_018_shared003_xgb_as_is_proba.npy
+
+individual_scores:
+  ranking:
+    - key: 017_realmlp_bias
+      cv: 0.9683022653955233
+      public_lb: 0.96985
+      recall:
+        GALAXY: 0.9598892656564586
+        QSO: 0.9758671026010944
+        STAR: 0.969150427929017
+      judgement: previous_current_best_single_bias
+
+    - key: 016_blend_best
+      cv: 0.968246781866073
+      public_lb: 0.96948
+      recall:
+        GALAXY: 0.9640563738476211
+        QSO: 0.9753292983789044
+        STAR: 0.9653546733716938
+      judgement: hold_cv_up_lb_down
+
+    - key: 015_realmlp_shared001
+      cv: 0.9681693449222352
+      public_lb: 0.96977
+      recall:
+        GALAXY: 0.9622337607290452
+        QSO: 0.9760975901248901
+        STAR: 0.9661766839127702
+      judgement: stable_backup_single
+
+    - key: 014_blend_bias
+      cv: 0.9660085788215015
+      public_lb: 0.96703
+      recall:
+        GALAXY: 0.9680618840733284
+        QSO: 0.9706171090035256
+        STAR: 0.9593467433876505
+      judgement: old_blend_bias_reference
+
+    - key: 018_xgb_shared003
+      cv: 0.965207986418628
+      public_lb: 0.96578
+      recall:
+        GALAXY: 0.966869767934725
+        QSO: 0.9720427170210768
+        STAR: 0.9567114743000822
+      judgement: weak_single_but_effective_blend_material
+
+pairwise_correlation:
+  key_findings:
+    - pair: 017_realmlp_bias__018_xgb_shared003
+      pearson_flat_proba: 0.9906696421622411
+      spearman_flat_proba: 0.9086501209307843
+      argmax_agreement: 0.9815241094177332
+      argmax_disagreement: 0.018475890582266816
+      error_jaccard: 0.5829331216511212
+      interpretation: >
+        017と018はPearson相関は高いが、Spearmanは0.9087まで下がり、
+        argmax disagreementも約1.85%ある。
+        error_jaccardも0.583で、015/017間の0.941よりかなり低い。
+        018は単体では弱いが、017とは異なる誤分類構造を持っていた。
+
+    - pair: 015_realmlp_shared001__017_realmlp_bias
+      pearson_flat_proba: 0.999895266864765
+      spearman_flat_proba: 0.9978106612784386
+      argmax_agreement: 0.9978245318673172
+      error_jaccard: 0.9412443504183095
+      interpretation: >
+        015と017はほぼ同一系統。
+        017は015のbias後処理であるため、両方を混ぜても多様性はほぼ増えない。
+
+    - pair: 014_blend_bias__017_realmlp_bias
+      pearson_flat_proba: 0.993650666528413
+      spearman_flat_proba: 0.9043243275129144
+      argmax_agreement: 0.9852064702856341
+      error_jaccard: 0.6494659685863874
+      interpretation: >
+        014と017は確率Pearsonは高いが、rank相関と誤分類重なりは完全一致ではない。
+        019 best blendでは014にも約19.3%の重みが入り、017/018の補助として効いた。
+
+best_safe_blend:
+  set_name: F_014_017_018
+  method: hc_nonnegative_raw
+  cv: 0.968872315017554
+  public_lb: 0.97000
+  submission: submission_exp_20260607_019_blend_add018_xgb_check_best_blend.csv
+  oof_proba: oof_exp_20260607_019_blend_add018_xgb_check_best_blend_proba.npy
+  pred_proba: pred_exp_20260607_019_blend_add018_xgb_check_best_blend_proba.npy
+  keys:
+    - 014_blend_bias
+    - 017_realmlp_bias
+    - 018_xgb_shared003
+  weights:
+    014_blend_bias: 0.19335207956110856
+    017_realmlp_bias: 0.5031124737181557
+    018_xgb_shared003: 0.3035354467207357
+  recall:
+    GALAXY: 0.9654789657730211
+    QSO: 0.9744414945835432
+    STAR: 0.9666964846960978
+  interpretation: >
+    019のbest safe blend。
+    017 RealMLP biasを主軸にしつつ、014 blend biasと018 XGBを加えたHC blend。
+    017単体CV 0.968302から0.968872へ+0.000570改善し、
+    Public LBも017の0.96985から0.97000へ+0.00015更新した。
+    018 XGBは単体では弱かったが、約30.4%の重みが入り、補助素材として有効だった。
+    現時点のcurrent bestとして採用する。
+
+notable_blend_candidates:
+  - set_name: D_017_018
+    method: hc_nonnegative_raw
+    cv: 0.9688608863063263
+    weights:
+      017_realmlp_bias: 0.7052217729557467
+      018_xgb_shared003: 0.2947782270442533
+    recall:
+      GALAXY: 0.9632086468157254
+      QSO: 0.9753719812536814
+      STAR: 0.968002030849572
+    interpretation: >
+      017+018だけでも017単体をOOF上で大きく上回る。
+      018は017に対して明確な補完効果を持つ。
+      ただしbestは014も加えたF構成。
+
+  - set_name: J_014_015_017_018
+    method: hc_nonnegative_raw
+    cv: 0.9688443320355704
+    weights:
+      014_blend_bias: 0.15250454053143744
+      015_realmlp_shared001: 0.23560861392564428
+      017_realmlp_bias: 0.35601412544118854
+      018_xgb_shared003: 0.25587272010172973
+    interpretation: >
+      015も含めた広い構成だが、019 bestには届かない。
+      015と017は近すぎるため、両方を入れる価値は限定的。
+
+  - set_name: G_015_017_018
+    method: hc_nonnegative_raw
+    cv: 0.9687803649686013
+    weights:
+      015_realmlp_shared001: 0.2823767221502488
+      017_realmlp_bias: 0.3537510126217643
+      018_xgb_shared003: 0.3638722652279868
+    interpretation: >
+      015/017/018構成でも018は約36.4%の重みを持つ。
+      ただし014を入れたF構成の方が強い。
+
+comparison:
+  against_017_current_best:
+    exp_id: exp_20260606_017_bias_search_on_015_realmlp
+    cv_017: 0.9683022653955233
+    public_lb_017: 0.96985
+    cv_019_best: 0.968872315017554
+    public_lb_019_best: 0.97000
+    cv_delta_019_minus_017: 0.0005700496220307
+    lb_delta_019_minus_017: 0.00015
+    interpretation: >
+      019 best blendは017 current bestをCV/LBともに更新した。
+      改善幅はPublicで+0.00015と小さいが、018の追加効果がPublicにも出たため、
+      019をcurrent bestへ昇格させる。
+
+  against_018_single:
+    exp_id: exp_20260606_018_shared003_xgb_as_is
+    cv_018: 0.965207986418628
+    public_lb_018: 0.96578
+    cv_019_best: 0.968872315017554
+    public_lb_019_best: 0.97000
+    cv_delta_019_minus_018: 0.003664328598926
+    lb_delta_019_minus_018: 0.00422
+    interpretation: >
+      018単体は弱いが、017/014と混ぜると有効。
+      単体性能だけでdropしていたら、この改善を逃していた。
+
+  against_016_hold_blend:
+    exp_id: exp_20260605_016_blend_add015_realmlp_check
+    cv_016: 0.968246781866073
+    public_lb_016: 0.96948
+    cv_019_best: 0.968872315017554
+    public_lb_019_best: 0.97000
+    cv_delta_019_minus_016: 0.000625533151481
+    lb_delta_019_minus_016: 0.00052
+    interpretation: >
+      016よりも明確に強い。
+      016はholdのままでよく、activeな提出候補は019へ移す。
+
+  against_015_single:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv_015: 0.9681693449222352
+    public_lb_015: 0.96977
+    cv_019_best: 0.968872315017554
+    public_lb_019_best: 0.97000
+    cv_delta_019_minus_015: 0.0007029700953188
+    lb_delta_019_minus_015: 0.00023
+    interpretation: >
+      019は015単体もCV/LBともに更新。
+      015は安定backupとして保持するが、current bestではない。
+
+role_judgement:
+  current_best:
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    candidate: F_014_017_018__hc_nonnegative_raw
+    cv: 0.968872315017554
+    public_lb: 0.97000
+    status: current_best_blend
+    reason: >
+      019 best blendは017 current bestをCV/LBともに更新した。
+      018 XGBは単体では弱いが、約30%の重みで補助素材として効いた。
+      現時点の最高Public LBであるため、current bestとして採用する。
+
+  previous_best:
+    exp_id: exp_20260606_017_bias_search_on_015_realmlp
+    cv: 0.9683022653955233
+    public_lb: 0.96985
+    status: previous_best_realmlp_bias_backup
+    reason: >
+      017は019に抜かれたが、単体RealMLP biasとして非常に強い。
+      019のHC blendがPrivateで崩れる可能性を考慮し、backup候補として保持する。
+
+  stable_backup:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv: 0.9681693449222352
+    public_lb: 0.96977
+    status: stable_single_realmlp_backup
+    reason: >
+      015はbiasなしの強い単体RealMLP。
+      017/019より素直な候補として、Private耐性を考えたbackupに残す。
+
+  recovered_material:
+    exp_id: exp_20260606_018_shared003_xgb_as_is
+    cv: 0.965207986418628
+    public_lb: 0.96578
+    status: keep_blend_material
+    reason: >
+      018単体では弱いが、019 best blendで約30.4%の重みを持った。
+      active単体候補ではないが、blend補助素材として保持する。
+
+  old_reference:
+    exp_id: exp_20260605_014_bias_search_on_013_best_blend
+    cv: 0.9660085788215015
+    public_lb: 0.96703
+    status: keep_as_blend_auxiliary_reference
+    reason: >
+      014は単体では古いが、019 best blendで約19.3%の重みを持った。
+      017/018とはrecallバランスが異なり、補助として有効。
+
+  meta_rows:
+    decision: do_not_use_as_final
+    reason: >
+      LogReg/Ridge/ElasticNet rowsはin-sample meta screeningであり、
+      nested OOFではない。
+      final候補には使わない。
+
+judgement:
+  status: completed
+  decision: >
+    019 best blendである F_014_017_018 / hc_nonnegative_raw を
+    現時点のcurrent bestとして採用する。
+    Public LBは0.97000で、017の0.96985を+0.00015更新した。
+    018 XGBは単体では弱かったが、017/014とのblendで有効な補助素材になった。
+  key_findings:
+    - 018 XGBは単体では弱いが、blend素材として有効
+    - 017+018だけでも017単体をOOF上で改善
+    - bestは014+017+018のHC blend
+    - 014も古いbranchだが補助としてまだ有効
+    - 015と017は近すぎるため、両方を入れる価値は限定的
+    - 019はPublic LB 0.97000で現時点最高
+  caveat: >
+    019はHCでOOF最適化されたblendであり、Public改善幅は+0.00015と小さい。
+    Private過適合リスクは残る。
+    017/015はbackupとして必ず保持する。
+    019をattack/current best、017をprevious best backup、015をstable single backupとして管理するのが妥当。
+  next_action:
+    - 019をcurrent bestとして記録する
+    - 019 best blendのOOF/pred probaをnpy-files datasetへ追加する
+    - final_candidates.ymlに019をcurrent best/attack候補として追加する
+    - 017をprevious best RealMLP bias backup、015をstable single backupとして残す
+    - 次に進むなら019 best blendへのbias searchを検討する
+    - ただし019のPublic改善幅は小さいため、bias searchの過最適化に注意する
+
+oof_registry_update:
+  exp_id: exp_20260607_019_blend_add018_xgb_check
+  public_lb: 0.97000
+  cv_score: 0.968872315017554
+  role: blend_add018_xgb_check
+  keep_hold_drop: keep_current_best
+  best_candidate:
+    set_name: F_014_017_018
+    method: hc_nonnegative_raw
+    keys:
+      - 014_blend_bias
+      - 017_realmlp_bias
+      - 018_xgb_shared003
+    weights:
+      014_blend_bias: 0.19335207956110856
+      017_realmlp_bias: 0.5031124737181557
+      018_xgb_shared003: 0.3035354467207357
+    oof_path: /kaggle/working/exp_20260607_019_blend_add018_xgb_check/oof_exp_20260607_019_blend_add018_xgb_check_best_blend_proba.npy
+    pred_path: /kaggle/working/exp_20260607_019_blend_add018_xgb_check/pred_exp_20260607_019_blend_add018_xgb_check_best_blend_proba.npy
+    submission_path: /kaggle/working/exp_20260607_019_blend_add018_xgb_check/submission_exp_20260607_019_blend_add018_xgb_check_best_blend.csv
+  notes: >
+    Add018 XGB blend check. Best safe blend was F_014_017_018 hc_nonnegative_raw.
+    CV improved from 017 current best 0.968302 to 0.968872, and Public LB improved from 0.96985 to 0.97000.
+    018 XGB single was weak, but retained 0.3035 weight in the best blend.
+    Keep 019 as current best blend/attack candidate. Keep 017 and 015 as backup candidates.
