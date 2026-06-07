@@ -85,3 +85,263 @@ judgement:
   - Keep 017 as previous best RealMLP bias backup
   - Keep 015 as stable RealMLP single backup
   - Add 020 OOF/pred to npy-files dataset if useful for final comparison
+
+result:
+  status: completed
+  purpose: >
+    019 best blendである F_014_017_018 / hc_nonnegative_raw の
+    OOF/pred probaに対してclass-wise bias searchを実施した。
+    目的は、019 current best blendをBalanced Accuracy向けに後処理し、
+    OOF CV上でさらに改善できるかを確認すること。
+
+reference:
+  exp_id: exp_20260607_019_blend_add018_xgb_check
+  model: F_014_017_018 / hc_nonnegative_raw
+  raw_cv: 0.968872315017554
+  raw_public_lb: 0.97000
+  weights:
+    014_blend_bias: 0.19335207956110856
+    017_realmlp_bias: 0.5031124737181557
+    018_xgb_shared003: 0.3035354467207357
+  raw_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260607_019_blend_add018_xgb_check_best_blend_proba.npy
+  raw_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260607_019_blend_add018_xgb_check_best_blend_proba.npy
+
+cv:
+  metric: balanced_accuracy_score
+  raw_score: 0.968872315017554
+  biased_score: 0.9692240443617589
+  delta_biased_minus_raw: 0.00035172934420490964
+  interpretation: >
+    019 best blendに対してclass-wise biasを後付けした結果、
+    CV balanced accuracy は 0.968872 から 0.969224 へ +0.000352 改善した。
+    OOF上では明確に019を上回っており、CV基準では020の方が強い。
+
+public_lb:
+  score: 0.96969
+  reference_019_public_lb: 0.97000
+  delta_vs_019_public_lb: -0.00031
+  submission: submission_bias_search_on_019_best_blend.csv
+  interpretation: >
+    Public LBは0.96969で、019 best blendの0.97000を-0.00031下回った。
+    したがってPublic LB基準では020をcurrent bestへ昇格させない。
+    ただしCVは020の方が高いため、Trust your CVの原則では020を完全に失敗扱いにはしない。
+    020はCV-trusted attack候補、019はPublic-confirmed current LB候補として分けて管理する。
+
+bias_search:
+  method: softmax(log(raw_proba) + class_bias)
+  use_original: false
+  use_fe: true
+  use_bias_search: true
+  bias:
+    GALAXY: 0.0
+    QSO: 0.215
+    STAR: 0.216
+  bias_space:
+    GALAXY: fixed_0
+    QSO: searched
+    STAR: searched
+  search_ranges:
+    coarse:
+      min: -0.2
+      max: 0.2
+      step: 0.01
+    local:
+      around_best: 0.02
+      step: 0.002
+    ultra_local:
+      around_best: 0.004
+      step: 0.0005
+  adjusted_probability_method: softmax(log(raw_proba) + class_bias)
+  reason_for_fixing_galaxy: >
+    全クラスに同じ定数を足してもargmaxは変わらないため、
+    GALAXY biasを0に固定し、QSO/STARの2次元だけを探索した。
+
+raw_eval:
+  balanced_accuracy: 0.968872315017554
+  recall:
+    GALAXY: 0.9654789657730211
+    QSO: 0.9744414945835432
+    STAR: 0.9666964846960978
+
+biased_eval:
+  balanced_accuracy: 0.9692240443617589
+  recall:
+    GALAXY: 0.9611370138815302
+    QSO: 0.9762000290243549
+    STAR: 0.9703350901793917
+
+recall_delta_biased_minus_raw:
+  GALAXY: -0.0043419518914909
+  QSO: 0.0017585344408117
+  STAR: 0.0036386054832939
+  interpretation: >
+    bias searchにより、GALAXY recallは約-0.00434低下した一方、
+    QSO recallは約+0.00176、STAR recallは約+0.00364改善した。
+    Balanced Accuracyでは3クラスが等重みであるため、
+    GALAXYを削ってQSO/STARを救う方向がOOF上では有効だった。
+    特にSTAR recallの改善がCV上昇の主因。
+
+model:
+  family: Blend
+  estimator: postprocess_only
+  role: blend_bias_candidate
+  base_model: exp_20260607_019_blend_add018_xgb_check
+  base_candidate: F_014_017_018__hc_nonnegative_raw
+  use_original: false
+  use_fe: true
+  use_bias_search: true
+  retraining: false
+  notes: >
+    020はモデル再学習ではなく、019 best blendのOOF/pred probaに対する後処理。
+    019 best blendの確率出力をlog-proba空間に変換し、class-wise biasを加えた。
+    OOF CVは改善したが、Public LBは019より低下した。
+
+target:
+  class_names:
+    - GALAXY
+    - QSO
+    - STAR
+  label_mapping:
+    GALAXY: 0
+    QSO: 1
+    STAR: 2
+  submission_format: single_column_class_label
+
+outputs:
+  submission: submission_bias_search_on_019_best_blend.csv
+  oof_proba: oof_exp_20260607_020_bias_search_on_019_best_blend_proba.npy
+  pred_proba: pred_exp_20260607_020_bias_search_on_019_best_blend_proba.npy
+  bias_vector: bias_vector.npy
+  bias_search_results: bias_search_results.csv
+  raw_vs_biased_oof_eval: raw_vs_biased_oof_eval.csv
+  oof_csv: oof_bias_search_on_019_best_blend.csv
+  pred_csv: pred_bias_search_on_019_best_blend.csv
+  cv_result: cv_result.json
+  registry: oof_registry.csv
+
+comparison:
+  against_019_current_best:
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    candidate: F_014_017_018__hc_nonnegative_raw
+    cv_019: 0.968872315017554
+    public_lb_019: 0.97000
+    cv_020: 0.9692240443617589
+    public_lb_020: 0.96969
+    cv_delta_020_minus_019: 0.00035172934420490964
+    lb_delta_020_minus_019: -0.00031
+    interpretation: >
+      020は019をCVでは上回ったが、Public LBでは下回った。
+      CV重視なら020の方が理論上は信用しやすいが、
+      bias postprocessはOOF最適化の過適合リスクもある。
+      019をPublic-confirmed候補、020をCV-trusted attack候補として併存させる。
+
+  against_017_realmlp_bias:
+    exp_id: exp_20260606_017_bias_search_on_015_realmlp
+    cv_017: 0.9683022653955233
+    public_lb_017: 0.96985
+    cv_020: 0.9692240443617589
+    public_lb_020: 0.96969
+    cv_delta_020_minus_017: 0.0009217789662356
+    lb_delta_020_minus_017: -0.00016
+    interpretation: >
+      020は017をCVでは大きく上回るが、Public LBでは017を下回った。
+      017はRealMLP bias単体としてbackup候補に残す。
+      Private耐性を考えると、020/019/017を役割分けして管理するべき。
+
+  against_015_realmlp_as_is:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv_015: 0.9681693449222352
+    public_lb_015: 0.96977
+    cv_020: 0.9692240443617589
+    public_lb_020: 0.96969
+    cv_delta_020_minus_015: 0.0010546994395237
+    lb_delta_020_minus_015: -0.00008
+    interpretation: >
+      020は015をCVでは上回るが、Public LBではわずかに下回った。
+      015はbiasやHC blendを含まない素直なRealMLP単体として、stable backupに残す。
+
+role_judgement:
+  public_current_best:
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    candidate: F_014_017_018__hc_nonnegative_raw
+    cv: 0.968872315017554
+    public_lb: 0.97000
+    status: keep_public_current_best
+    reason: >
+      019はPublic LB 0.97000で現時点の最高LB。
+      020にPublicでは勝っているため、Public-confirmed current bestとして維持する。
+
+  cv_current_best:
+    exp_id: exp_20260607_020_bias_search_on_019_best_blend
+    cv: 0.9692240443617589
+    public_lb: 0.96969
+    status: keep_cv_trusted_attack_candidate
+    reason: >
+      020はPublic LBでは019を下回ったが、CVでは全候補中で最も高い。
+      Trust your CVの原則では、020を失敗扱いせず、CV-trusted attack候補として保持する。
+
+  previous_best_backup:
+    exp_id: exp_20260606_017_bias_search_on_015_realmlp
+    cv: 0.9683022653955233
+    public_lb: 0.96985
+    status: previous_best_realmlp_bias_backup
+    reason: >
+      017はPublic LBで020を上回っており、RealMLP bias単体として強い。
+      019/020のblend・postprocessがPrivateで崩れる可能性を考慮し、backup候補として残す。
+
+  stable_backup:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv: 0.9681693449222352
+    public_lb: 0.96977
+    status: stable_single_realmlp_backup
+    reason: >
+      015はbias searchやHC blendを含まない素直な単体RealMLP。
+      Public LBは020よりわずかに高く、Private耐性候補として価値がある。
+
+judgement:
+  status: completed
+  decision: >
+    020はPublic LBでは019を下回ったため、Public current bestには昇格しない。
+    ただしOOF CVは0.969224で019の0.968872を上回り、
+    現時点の最高CVであるため、CV-trusted attack候補として保持する。
+    019をPublic-confirmed current best、020をCV-trusted attack、
+    017をprevious best backup、015をstable single backupとして管理する。
+  key_findings:
+    - 019 best blendにはOOF上でまだbias改善余地があった
+    - bias方向はQSO/STARを上げ、GALAXYを削る方向
+    - CVは0.969224まで伸び、現時点最高CV
+    - Public LBは0.96969で019の0.97000を下回った
+    - Publicだけ見れば019、CVだけ見れば020
+    - 020を単純失敗扱いするのは早いが、Public current bestにはしない
+  caveat: >
+    Trust your CVの原則から020を評価するのは妥当。
+    ただし、020は019 best blendにさらにclass-wise bias searchをかけたpostprocessであり、
+    OOF最適化の過適合リスクもある。
+    Public LB低下を「019のpublic過適合」とだけ解釈するのはやや単純化しすぎ。
+    019がPublicに寄った可能性と、020がOOF biasに寄った可能性の両方を残して考えるべき。
+  next_action:
+    - 020のOOF/pred probaをnpy-files datasetへ追加する
+    - final_candidates.ymlで019/020/017/015を役割分けして管理する
+    - 最終提出候補は、019 Public-confirmed と 020 CV-trusted を両方候補に残す
+    - 017 RealMLP bias、015 RealMLP as-isもbackupとして保持する
+    - 020近傍のbiasをさらに細かく刻むのは優先度を下げる
+    - 次にやるなら、最終候補管理または別seed RealMLPの検証へ移る
+
+oof_registry_update:
+  exp_id: exp_20260607_020_bias_search_on_019_best_blend
+  public_lb: 0.96969
+  cv_score: 0.9692240443617589
+  raw_cv_score: 0.968872315017554
+  cv_delta_vs_raw: 0.00035172934420490964
+  role: blend_bias_candidate
+  keep_hold_drop: keep_cv_trusted_attack_candidate
+  oof_path: /kaggle/working/exp_20260607_020_bias_search_on_019_best_blend/oof_exp_20260607_020_bias_search_on_019_best_blend_proba.npy
+  pred_path: /kaggle/working/exp_20260607_020_bias_search_on_019_best_blend/pred_exp_20260607_020_bias_search_on_019_best_blend_proba.npy
+  submission_path: /kaggle/working/exp_20260607_020_bias_search_on_019_best_blend/submission_bias_search_on_019_best_blend.csv
+  notes: >
+    Bias search on 019 best blend.
+    CV improved from 0.968872 to 0.969224, which is the current highest CV.
+    Public LB decreased from 019's 0.97000 to 0.96969.
+    Bias: GALAXY 0.0, QSO 0.215, STAR 0.216.
+    Do not promote to Public current best, but keep as CV-trusted attack candidate.
+    Keep 019 as Public-confirmed current best, 017 as previous best backup, and 015 as stable single backup.
