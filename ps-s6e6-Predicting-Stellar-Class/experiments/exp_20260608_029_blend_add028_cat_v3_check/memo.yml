@@ -231,3 +231,206 @@ judgement:
   - Submit best safe blend only if it improves over 027 CV enough and/or has credible
     Public LB upside
   - Do not bias-search 028 unless it receives useful safe blend weight
+
+result:
+  status: completed
+  cv_balanced_accuracy: 0.9700023026377228
+  public_lb: 0.970036
+  submitted: true
+  submission: submission_exp_20260608_029_blend_add028_cat_v3_check_best_blend.csv
+
+best_blend:
+  set_name: T_027_026_028
+  method: hc_nonnegative_raw
+  cv_balanced_accuracy: 0.9700023026377228
+  includes_028: true
+  n_models: 3
+  keys:
+    - 027_blend_add026
+    - 026_realmlp_v5
+    - 028_cat_v3
+  weights:
+    027_blend_add026: 0.28409019375958683
+    026_realmlp_v5: 0.26906331793767624
+    028_cat_v3: 0.4468464883027371
+  recalls:
+    GALAXY: 0.9613145067288333
+    QSO: 0.9758671026010944
+    STAR: 0.9728252985832406
+  oof_path: oof_exp_20260608_029_blend_add028_cat_v3_check_best_blend_proba.npy
+  pred_path: pred_exp_20260608_029_blend_add028_cat_v3_check_best_blend_proba.npy
+  submission_path: submission_exp_20260608_029_blend_add028_cat_v3_check_best_blend.csv
+  note: >
+    Best safe blend excludes in-sample meta screening methods.
+    028 CatBoost v3 receives a large non-zero weight, so 028 is not just a weak single model;
+    it is a meaningful complementary blend component.
+
+submitted_candidate:
+  set_name: T_027_026_028
+  method: hc_nonnegative_raw
+  cv_balanced_accuracy: 0.9700023026377228
+  public_lb: 0.970036
+  public_lb_source: user_reported_after_submission
+  weights:
+    027_blend_add026: 0.28409019375958683
+    026_realmlp_v5: 0.26906331793767624
+    028_cat_v3: 0.4468464883027371
+  judgement: public_confirmed_best_update
+
+safe_blend_top_results:
+  - set_name: T_027_026_028
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700023026377228
+    weight_028: 0.4468464883027371
+    weights:
+      027_blend_add026: 0.28409019375958683
+      026_realmlp_v5: 0.26906331793767624
+      028_cat_v3: 0.4468464883027371
+  - set_name: T_027_026_028
+    method: nm_softmax_raw
+    cv_balanced_accuracy: 0.969977163026447
+    weight_028: 0.40682208830241295
+    weights:
+      027_blend_add026: 0.3395752468613964
+      026_realmlp_v5: 0.25360266483619065
+      028_cat_v3: 0.40682208830241295
+  - set_name: R_019_027_028
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9699722980034394
+    weight_028: 0.3887645195576552
+    weights:
+      019_blend_best: 0.10440266632584404
+      027_blend_add026: 0.5068328141165007
+      028_cat_v3: 0.3887645195576552
+  - set_name: V_020_024_026_028
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.969965557394616
+    weight_028: 0.350293897236715
+    weights:
+      020_blend_bias: 0.3070045562504073
+      024_seed_ensemble_blend: 0.15874345796225758
+      026_realmlp_v5: 0.1839580885506202
+      028_cat_v3: 0.350293897236715
+  - set_name: S_019_026_028
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9699510350826442
+    weight_028: 0.39991817058971013
+    weights:
+      019_blend_best: 0.2924524674182052
+      026_realmlp_v5: 0.30762936199208474
+      028_cat_v3: 0.39991817058971013
+  - set_name: K_027_028
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9699465052114902
+    weight_028: 0.4345886502749248
+    weights:
+      027_blend_add026: 0.5654113497250752
+      028_cat_v3: 0.4345886502749248
+
+individual_scores:
+  best_individual_or_prior_blend:
+    key: 027_blend_add026
+    cv_balanced_accuracy: 0.9695425457477898
+    public_lb: 0.96975
+  added_model:
+    key: 028_cat_v3
+    cv_balanced_accuracy: 0.9688146470512534
+    public_lb: 0.96969
+  public_reference:
+    key: 019_blend_best
+    cv_balanced_accuracy: 0.968872315017554
+    public_lb: 0.97000
+
+comparison_to_previous_slots:
+  previous_public_confirmed_slot:
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    cv: 0.968872315017554
+    public_lb: 0.97000
+    comparison: >
+      029 improves Public LB from 0.97000 to 0.970036 and also improves CV.
+      Therefore 029 should replace 019 as the public-confirmed current best.
+  previous_cv_trusted_slot:
+    exp_id: exp_20260608_027_blend_add026_realmlp_v5_check
+    cv: 0.9695425457477898
+    public_lb: 0.96975
+    comparison: >
+      029 improves CV from 0.9695425457477898 to 0.9700023026377228
+      and improves Public LB from 0.96975 to 0.970036.
+      Therefore 029 also becomes the strongest CV-trusted candidate.
+  backup_comparison:
+    exp_026_realmlp_v5_as_is:
+      cv: 0.9690389777981231
+      public_lb: 0.96979
+      comparison: >
+        026 remains a useful single RealMLP backup, but 029 clearly exceeds it as a blend.
+    exp_017_bias_search_on_015_realmlp:
+      cv: 0.9683022653955233
+      public_lb: 0.96985
+      comparison: >
+        017 remains a Public backup, but 029 exceeds it on both CV and Public LB.
+    exp_028_cat_v3_as_is:
+      cv: 0.9688146470512534
+      public_lb: 0.96969
+      comparison: >
+        028 single was not enough to update a slot, but it became highly valuable after blending.
+
+correlation_focus_028:
+  vs_027_blend_add026:
+    pearson_flat_proba: 0.9959859996221714
+    spearman_flat_proba: 0.87153458811133
+    disagreement_rate: 0.012578224187533666
+    error_overlap_jaccard: 0.6987711864406779
+    note: >
+      Pearson is high, but rank correlation is meaningfully lower than many RealMLP/blend pairs.
+      This explains why 028 can receive a large safe-blend weight despite high probability correlation.
+  vs_026_realmlp_v5:
+    pearson_flat_proba: 0.994790593528207
+    spearman_flat_proba: 0.8049266890034653
+    disagreement_rate: 0.013787202496938582
+    error_overlap_jaccard: 0.6794829573522148
+    note: >
+      028 and 026 have especially useful rank-level diversity.
+      This is consistent with T_027_026_028 becoming the best blend.
+  vs_019_blend_best:
+    pearson_flat_proba: 0.9956537305860579
+    spearman_flat_proba: 0.9269252110960225
+    disagreement_rate: 0.012702932551827584
+    error_overlap_jaccard: 0.6895554596460941
+  vs_018_xgb_shared003:
+    pearson_flat_proba: 0.9923562636436413
+    spearman_flat_proba: 0.9698015664209695
+    disagreement_rate: 0.016440719359414702
+    error_overlap_jaccard: 0.6182892057026477
+
+role_judgement:
+  decision: promote_to_current_best
+  role: public_confirmed_and_cv_trusted_best_blend
+  priority: highest
+  reason: >
+    028 CatBoost v3 receives a large non-zero weight in multiple safe blends.
+    The best safe blend T_027_026_028 improves the previous CV-trusted slot 027
+    and also slightly improves the previous Public best 019.
+    This confirms that 028 is a valuable complementary family, not merely a standalone CatBoost backup.
+  current_submission_slots_after_029:
+    slot_1:
+      exp_id: exp_20260608_029_blend_add028_cat_v3_check
+      candidate: T_027_026_028 / hc_nonnegative_raw
+      role: public_confirmed_current_best
+      cv: 0.9700023026377228
+      public_lb: 0.970036
+    slot_2:
+      exp_id: exp_20260608_027_blend_add026_realmlp_v5_check
+      candidate: M_020_024_026 / hc_nonnegative_raw
+      role: previous_cv_trusted_backup
+      cv: 0.9695425457477898
+      public_lb: 0.96975
+      note: >
+        027 is no longer the best CV candidate, but can remain as a fallback if avoiding 028-heavy blend risk.
+  do_not_use_in_sample_meta_as_final: true
+  next_action: >
+    030 should not be another broad blend sweep.
+    Since 028 received a large weight, the next useful step is either:
+    1. bias search on 029 best blend,
+    2. 028 CatBoost v3 small ablation/refinement,
+    3. or a safer variant check around T_027_026_028.
+    Avoid 025-style bias over-exploration and avoid in-sample LogReg/Ridge/ElasticNet as final candidates.
