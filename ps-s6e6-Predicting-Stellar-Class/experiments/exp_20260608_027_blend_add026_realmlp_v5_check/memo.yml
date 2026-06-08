@@ -1,1 +1,244 @@
-
+experiment:
+  id: exp_20260608_027_blend_add026_realmlp_v5_check
+  title: Blend check after adding 026 RealMLP v5
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  created_at: '2026-06-08'
+objective:
+  summary: Load OOF/pred probabilities from npy-files, add 026 RealMLP v5 as-is, and
+    decide whether this separate RealMLP recipe adds complementary signal to 019/024/020/017/015/018.
+  success_criteria:
+  - load 014/015/017/018/019/020/024/026 OOF and pred npy files
+  - recompute individual balanced accuracy
+  - compute pairwise OOF correlations
+  - evaluate add026 blend sets
+  - separate safe blends from in-sample meta screening
+  - save best safe blend OOF/pred npy
+  - save best safe blend submission
+inputs:
+  npy_dir: /kaggle/input/datasets/mizushimatoshihiko/npy-files
+  models:
+  - key: 014_blend_bias
+    exp_id: exp_20260605_014_bias_search_on_013_best_blend
+    family: Blend
+    role: old_blend_bias_reference
+    oof: oof_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+    pred: pred_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+    cv: 0.9660085788215015
+    public_lb: 0.96703
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260605_014_bias_search_on_013_best_blend_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 015_realmlp_seed42
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    family: RealMLP
+    role: stable_single_realmlp_backup
+    oof: oof_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+    pred: pred_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+    cv: 0.9681693449222352
+    public_lb: 0.96977
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 017_realmlp_bias
+    exp_id: exp_20260606_017_bias_search_on_015_realmlp
+    family: RealMLP
+    role: previous_best_realmlp_bias_backup
+    oof: oof_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+    pred: pred_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+    cv: 0.9683022653955233
+    public_lb: 0.96985
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 018_xgb_shared003
+    exp_id: exp_20260606_018_shared003_xgb_as_is
+    family: XGBoost
+    role: effective_blend_material
+    oof: oof_exp_20260606_018_shared003_xgb_as_is_proba.npy
+    pred: pred_exp_20260606_018_shared003_xgb_as_is_proba.npy
+    cv: 0.965207986418628
+    public_lb: 0.96578
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260606_018_shared003_xgb_as_is_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260606_018_shared003_xgb_as_is_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 019_blend_best
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    family: Blend
+    role: public_confirmed_current_best
+    oof: oof_exp_20260607_019_blend_add018_xgb_check_best_blend_proba.npy
+    pred: pred_exp_20260607_019_blend_add018_xgb_check_best_blend_proba.npy
+    cv: 0.968872315017554
+    public_lb: 0.97
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260607_019_blend_add018_xgb_check_best_blend_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260607_019_blend_add018_xgb_check_best_blend_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 020_blend_bias
+    exp_id: exp_20260607_020_bias_search_on_019_best_blend
+    family: Blend
+    role: cv_trusted_attack_reference
+    oof: oof_exp_20260607_020_bias_search_on_019_best_blend_proba.npy
+    pred: pred_exp_20260607_020_bias_search_on_019_best_blend_proba.npy
+    cv: 0.9692240443617589
+    public_lb: 0.96969
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260607_020_bias_search_on_019_best_blend_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260607_020_bias_search_on_019_best_blend_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 024_seed_ensemble_blend
+    exp_id: exp_20260608_024_seed_ensemble_and_blend_check
+    family: Blend
+    role: cv_trusted_slot
+    oof: oof_exp_20260608_024_seed_ensemble_and_blend_check_best_blend_proba.npy
+    pred: pred_exp_20260608_024_seed_ensemble_and_blend_check_best_blend_proba.npy
+    cv: 0.9694803109983217
+    public_lb: 0.96958
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260608_024_seed_ensemble_and_blend_check_best_blend_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260608_024_seed_ensemble_and_blend_check_best_blend_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  - key: 026_realmlp_v5
+    exp_id: exp_20260608_026_realmlp_v5_as_is
+    family: RealMLP
+    role: realmlp_v5_single_model_candidate
+    oof: oof_exp_20260608_026_realmlp_v5_as_is_proba.npy
+    pred: pred_exp_20260608_026_realmlp_v5_as_is_proba.npy
+    cv: 0.9690389777981231
+    public_lb: 0.96979
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260608_026_realmlp_v5_as_is_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260608_026_realmlp_v5_as_is_proba.npy
+    oof_shape:
+    - 577347
+    - 3
+    pred_shape:
+    - 247435
+    - 3
+  blend_sets:
+    A_019_only:
+    - 019_blend_best
+    B_024_only:
+    - 024_seed_ensemble_blend
+    C_020_only:
+    - 020_blend_bias
+    D_026_only:
+    - 026_realmlp_v5
+    E_017_only:
+    - 017_realmlp_bias
+    F_019_026:
+    - 019_blend_best
+    - 026_realmlp_v5
+    G_024_026:
+    - 024_seed_ensemble_blend
+    - 026_realmlp_v5
+    H_020_026:
+    - 020_blend_bias
+    - 026_realmlp_v5
+    I_017_026:
+    - 017_realmlp_bias
+    - 026_realmlp_v5
+    J_015_026:
+    - 015_realmlp_seed42
+    - 026_realmlp_v5
+    K_019_024_026:
+    - 019_blend_best
+    - 024_seed_ensemble_blend
+    - 026_realmlp_v5
+    L_019_020_026:
+    - 019_blend_best
+    - 020_blend_bias
+    - 026_realmlp_v5
+    M_020_024_026:
+    - 020_blend_bias
+    - 024_seed_ensemble_blend
+    - 026_realmlp_v5
+    N_019_020_024_026:
+    - 019_blend_best
+    - 020_blend_bias
+    - 024_seed_ensemble_blend
+    - 026_realmlp_v5
+    O_014_017_018_026:
+    - 014_blend_bias
+    - 017_realmlp_bias
+    - 018_xgb_shared003
+    - 026_realmlp_v5
+    P_014_018_019_026:
+    - 014_blend_bias
+    - 018_xgb_shared003
+    - 019_blend_best
+    - 026_realmlp_v5
+    Q_014_018_024_026:
+    - 014_blend_bias
+    - 018_xgb_shared003
+    - 024_seed_ensemble_blend
+    - 026_realmlp_v5
+    R_014_018_019_024_026:
+    - 014_blend_bias
+    - 018_xgb_shared003
+    - 019_blend_best
+    - 024_seed_ensemble_blend
+    - 026_realmlp_v5
+    S_014_015_017_018_019_020_024_026:
+    - 014_blend_bias
+    - 015_realmlp_seed42
+    - 017_realmlp_bias
+    - 018_xgb_shared003
+    - 019_blend_best
+    - 020_blend_bias
+    - 024_seed_ensemble_blend
+    - 026_realmlp_v5
+outputs:
+  individual_scores: individual_scores.csv
+  pairwise_oof_correlation: pairwise_oof_correlation.csv
+  blend_diagnostics: blend_diagnostics.csv
+  safe_blend_diagnostics: safe_blend_diagnostics.csv
+  best_blend_info: best_blend_info.json
+  best_oof_proba: oof_exp_20260608_027_blend_add026_realmlp_v5_check_best_blend_proba.npy
+  best_pred_proba: pred_exp_20260608_027_blend_add026_realmlp_v5_check_best_blend_proba.npy
+  best_submission: submission_exp_20260608_027_blend_add026_realmlp_v5_check_best_blend.csv
+  summary: blend_add026_realmlp_v5_summary.json
+judgement:
+  status: completed_pending_manual_review
+  initial_view: 026 is a strong RealMLP single model and a separate recipe from 015.
+    Its value depends on whether it keeps nonzero weight in safe blends with 019/024/020.
+  next_action:
+  - Review individual_scores.csv
+  - Review pairwise_oof_correlation.csv, especially 026 vs 019/024/017/015
+  - Review safe rows in blend_diagnostics.csv
+  - Submit best safe blend only if it improves over 019/024 enough
+  - If best safe blend improves, consider bias search on 027 best
+  - If 026 gets near-zero weight, keep it as a single backup and move to CatBoost
+    v3
