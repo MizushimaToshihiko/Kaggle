@@ -241,4 +241,394 @@ judgement:
   - Submit best safe blend only if it improves over 019/024 enough
   - If best safe blend improves, consider bias search on 027 best
   - If 026 gets near-zero weight, keep it as a single backup and move to CatBoost
-    v3
+
+    result:
+  status: completed
+  purpose: >
+    026 RealMLP v5 as-is を既存候補群へ追加し、
+    019/020/024/017/015/018との相関・blend確認を実施した。
+    目的は、026が単なる高相関RealMLP素材に留まるのか、
+    024 CV-trusted branchに補完的に効くのかを確認すること。
+
+inputs:
+  npy_dir: /kaggle/input/datasets/mizushimatoshihiko/npy-files
+  loaded_models:
+    - key: 014_blend_bias
+      exp_id: exp_20260605_014_bias_search_on_013_best_blend
+      family: Blend
+      role: old_blend_bias_reference
+      cv: 0.9660085788215015
+      public_lb: 0.96703
+
+    - key: 015_realmlp_seed42
+      exp_id: exp_20260605_015_shared001_realmlp_as_is
+      family: RealMLP
+      role: stable_single_realmlp_backup
+      cv: 0.9681693449222352
+      public_lb: 0.96977
+
+    - key: 017_realmlp_bias
+      exp_id: exp_20260606_017_bias_search_on_015_realmlp
+      family: RealMLP
+      role: previous_best_realmlp_bias_backup
+      cv: 0.9683022653955233
+      public_lb: 0.96985
+
+    - key: 018_xgb_shared003
+      exp_id: exp_20260606_018_shared003_xgb_as_is
+      family: XGBoost
+      role: effective_blend_material
+      cv: 0.965207986418628
+      public_lb: 0.96578
+
+    - key: 019_blend_best
+      exp_id: exp_20260607_019_blend_add018_xgb_check
+      family: Blend
+      role: public_confirmed_current_best
+      cv: 0.968872315017554
+      public_lb: 0.97000
+
+    - key: 020_blend_bias
+      exp_id: exp_20260607_020_bias_search_on_019_best_blend
+      family: Blend
+      role: cv_trusted_attack_reference
+      cv: 0.9692240443617589
+      public_lb: 0.96969
+
+    - key: 024_seed_ensemble_blend
+      exp_id: exp_20260608_024_seed_ensemble_and_blend_check
+      family: Blend
+      role: cv_trusted_slot
+      cv: 0.9694803109983217
+      public_lb: 0.96958
+
+    - key: 026_realmlp_v5
+      exp_id: exp_20260608_026_realmlp_v5_as_is
+      family: RealMLP
+      role: realmlp_v5_single_model_candidate
+      cv: 0.9690389777981231
+      public_lb: 0.96979
+
+individual_scores:
+  ranking:
+    - key: 024_seed_ensemble_blend
+      cv: 0.9694803109983217
+      public_lb: 0.96958
+      recall:
+        GALAXY: 0.9619556002967045
+        QSO: 0.9761744192994887
+        STAR: 0.9703109133987718
+      judgement: cv_best_before_027
+
+    - key: 020_blend_bias
+      cv: 0.9692240443617589
+      public_lb: 0.96969
+      recall:
+        GALAXY: 0.9611370138815302
+        QSO: 0.9762000290243549
+        STAR: 0.9703350901793917
+      judgement: cv_trusted_reference
+
+    - key: 026_realmlp_v5
+      cv: 0.9690389777981231
+      public_lb: 0.96979
+      recall:
+        GALAXY: 0.9595051393451308
+        QSO: 0.9764305165481505
+        STAR: 0.971181277501088
+      judgement: strong_realmlp_v5_material
+
+    - key: 019_blend_best
+      cv: 0.968872315017554
+      public_lb: 0.97000
+      recall:
+        GALAXY: 0.9654789657730211
+        QSO: 0.9744414945835432
+        STAR: 0.9666964846960978
+      judgement: public_confirmed_current_best
+
+    - key: 017_realmlp_bias
+      cv: 0.9683022653955233
+      public_lb: 0.96985
+      judgement: previous_best_backup
+
+    - key: 015_realmlp_seed42
+      cv: 0.9681693449222352
+      public_lb: 0.96977
+      judgement: stable_single_backup
+
+    - key: 014_blend_bias
+      cv: 0.9660085788215015
+      public_lb: 0.96703
+      judgement: old_auxiliary_reference
+
+    - key: 018_xgb_shared003
+      cv: 0.965207986418628
+      public_lb: 0.96578
+      judgement: xgb_auxiliary_material
+
+best_safe_blend:
+  set_name: M_020_024_026
+  method: hc_nonnegative_raw
+  cv: 0.9695425457477898
+  public_lb: 0.96975
+  submission: submission_exp_20260608_027_blend_add026_realmlp_v5_check_best_blend.csv
+  oof_proba: oof_exp_20260608_027_blend_add026_realmlp_v5_check_best_blend_proba.npy
+  pred_proba: pred_exp_20260608_027_blend_add026_realmlp_v5_check_best_blend_proba.npy
+  keys:
+    - 020_blend_bias
+    - 024_seed_ensemble_blend
+    - 026_realmlp_v5
+  weights:
+    020_blend_bias: 0.04898792747788589
+    024_seed_ensemble_blend: 0.6890973266133963
+    026_realmlp_v5: 0.2619147459087178
+  recall:
+    GALAXY: 0.9614787538412631
+    QSO: 0.976439053123106
+    STAR: 0.970709830279
+  interpretation: >
+    027のbest safe blend。
+    024を主軸に、026 RealMLP v5を約26.2%、020を約4.9%加えたHC blend。
+    024単体CV 0.969480から0.969543へ改善し、Public LBも0.96958から0.96975へ改善した。
+    026は非ゼロかつ大きめの重みを持っており、024に対して補完的に効いている。
+    ただしPublic LBは019の0.97000には届かないため、Public current bestには昇格しない。
+
+notable_safe_blends:
+  - set_name: G_024_026
+    method: hc_nonnegative_raw
+    cv: 0.9695262441609213
+    weights:
+      024_seed_ensemble_blend: 0.7255189856779073
+      026_realmlp_v5: 0.27448101432209265
+    interpretation: >
+      024に026だけを追加した構成。
+      024単体CV 0.969480を上回っており、026単体が024に補完的であることを示す。
+      020を少量加えたM構成がさらにわずかに上回った。
+
+  - set_name: Q_014_018_024_026
+    method: hc_nonnegative_raw
+    cv: 0.9695098627644215
+    weights:
+      014_blend_bias: 0.0
+      018_xgb_shared003: 0.16453089886112723
+      024_seed_ensemble_blend: 0.41888331813610413
+      026_realmlp_v5: 0.4165857830027686
+    interpretation: >
+      018 XGBと026が比較的大きい重みを持つ構成。
+      014は0重み。
+      018は単体では弱いが、異質性素材としてはまだ機能している。
+
+  - set_name: R_014_018_019_024_026
+    method: hc_nonnegative_raw
+    cv: 0.9694933229525438
+    weights:
+      014_blend_bias: 0.0
+      018_xgb_shared003: 0.13048825814070308
+      019_blend_best: 0.1547900812657192
+      024_seed_ensemble_blend: 0.25638858236159784
+      026_realmlp_v5: 0.45833307823197994
+    interpretation: >
+      026が最大重みを持つが、027 bestには届かない。
+      019を入れてもCV上の改善は限定的。
+      019はPublic-confirmed bestとしては重要だが、027 CV最適化上では024/026主導の方が強い。
+
+  - set_name: N_019_020_024_026
+    method: hc_nonnegative_raw
+    cv: 0.9694819852297437
+    weights:
+      019_blend_best: 0.180116094643635
+      020_blend_bias: 0.0979044021916712
+      024_seed_ensemble_blend: 0.4184593188118089
+      026_realmlp_v5: 0.30352018435288475
+    interpretation: >
+      019/020/024/026を含む広めの上位候補blend。
+      CVは024単体をわずかに上回る程度で、027 bestには届かない。
+      019を入れるとPublicには効く可能性があるが、CV最適化ではM構成に劣る。
+
+pairwise_correlation_findings:
+  key_findings:
+    - finding: >
+        026と024のPearson相関は0.998117と高いが、
+        Spearman相関は0.844631まで下がっており、完全な重複素材ではない。
+        Argmax disagreementも約0.00749あり、024に対して補完余地がある。
+    - finding: >
+        026と020のPearson相関は0.997709、Spearman相関は0.847534。
+        020とも高相関ではあるが、rank構造には差がある。
+    - finding: >
+        026と019のPearson相関は0.997262、Spearman相関は0.821950。
+        019に対しても一定の違いはあるが、027 bestでは019より024/026/020構成が選ばれた。
+    - finding: >
+        026と015/017はPearson相関が0.9973〜0.9975程度、Spearman相関が0.817〜0.835程度。
+        同じRealMLP系だが、v5 recipeはseed42/shared001系とはかなりrank構造が異なる。
+    - finding: >
+        026はbest blendで0.2619の重みを持ち、G_024_026でも0.2745の重みを持った。
+        したがって026は単なる高相関重複素材ではなく、blend素材として有効。
+
+comparison:
+  against_024_cv_trusted_slot:
+    exp_id: exp_20260608_024_seed_ensemble_and_blend_check
+    cv_024: 0.9694803109983217
+    public_lb_024: 0.96958
+    cv_027: 0.9695425457477898
+    public_lb_027: 0.96975
+    cv_delta_027_minus_024: 0.0000622347494681
+    lb_delta_027_minus_024: 0.00017
+    interpretation: >
+      027は024をCV/Public LBともに上回った。
+      024の提出slot 2候補は027へ入れ替えるのが合理的。
+
+  against_025_bias_on_024:
+    exp_id: exp_20260608_025_bias_search_on_024_best_blend
+    cv_025: 0.9694982932369408
+    public_lb_025: 0.96952
+    cv_027: 0.9695425457477898
+    public_lb_027: 0.96975
+    cv_delta_027_minus_025: 0.0000442525108489
+    lb_delta_027_minus_025: 0.00023
+    interpretation: >
+      027は025をCV/Public LBともに上回った。
+      025は完全に優先度を下げてよい。
+      027の方がCV最高かつPublicも改善している。
+
+  against_020_cv_trusted_attack:
+    exp_id: exp_20260607_020_bias_search_on_019_best_blend
+    cv_020: 0.9692240443617589
+    public_lb_020: 0.96969
+    cv_027: 0.9695425457477898
+    public_lb_027: 0.96975
+    cv_delta_027_minus_020: 0.0003185013860308
+    lb_delta_027_minus_020: 0.00006
+    interpretation: >
+      027は020をCV/Public LBともに上回った。
+      020はCV-trusted referenceとして保持するが、提出slotからは外して問題ない。
+
+  against_019_public_current_best:
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    cv_019: 0.968872315017554
+    public_lb_019: 0.97000
+    cv_027: 0.9695425457477898
+    public_lb_027: 0.96975
+    cv_delta_027_minus_019: 0.0006702307302358
+    lb_delta_027_minus_019: -0.00025
+    interpretation: >
+      027は019をCVでは大きく上回るが、Public LBでは下回る。
+      019は引き続きPublic-confirmed current bestとして残す。
+
+  against_026_realmlp_v5:
+    exp_id: exp_20260608_026_realmlp_v5_as_is
+    cv_026: 0.9690389777981231
+    public_lb_026: 0.96979
+    cv_027: 0.9695425457477898
+    public_lb_027: 0.96975
+    cv_delta_027_minus_026: 0.0005035679496667
+    lb_delta_027_minus_026: -0.00004
+    interpretation: >
+      027は026をCVでは大きく上回るが、Public LBではわずかに下回る。
+      026はPublicの強い単体backupとして残す価値がある。
+
+role_judgement:
+  public_current_best:
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    candidate: F_014_017_018__hc_nonnegative_raw
+    cv: 0.968872315017554
+    public_lb: 0.97000
+    status: keep_public_current_best
+    reason: >
+      027はPublic LB 0.96975で、019の0.97000を下回った。
+      Public-confirmed current bestは019のまま。
+
+  cv_trusted_submission_slot:
+    exp_id: exp_20260608_027_blend_add026_realmlp_v5_check
+    candidate: M_020_024_026__hc_nonnegative_raw
+    cv: 0.9695425457477898
+    public_lb: 0.96975
+    status: promote_to_cv_trusted_slot
+    reason: >
+      027は024/025/020をCV/Public LBともに上回った。
+      これまでのslot 2候補だった024よりも明確に良い。
+      提出2枠のうちCV-trusted枠は024から027へ入れ替える。
+
+  strong_single_backup:
+    exp_id: exp_20260608_026_realmlp_v5_as_is
+    cv: 0.9690389777981231
+    public_lb: 0.96979
+    status: keep_single_backup
+    reason: >
+      026は027よりCVでは低いが、Public LBではわずかに高い。
+      単体RealMLP v5として強く、019/027とは別のbackupとして保持する。
+
+  previous_cv_trusted_slot:
+    exp_id: exp_20260608_024_seed_ensemble_and_blend_check
+    cv: 0.9694803109983217
+    public_lb: 0.96958
+    status: demote_to_reference
+    reason: >
+      027がCV/Public LBともに024を上回ったため、024は提出slotから外す。
+
+  bias_on_024:
+    exp_id: exp_20260608_025_bias_search_on_024_best_blend
+    cv: 0.9694982932369408
+    public_lb: 0.96952
+    status: demote_to_reference
+    reason: >
+      027がCV/Public LBともに025を上回った。
+      025のbias searchは深掘り停止でよい。
+
+judgement:
+  status: completed
+  decision: >
+    027 blend add026 RealMLP v5 check は成功。
+    best safe blendは M_020_024_026 / hc_nonnegative_raw で、
+    CV 0.969542546、Public LB 0.96975となった。
+    024/025/020をCV/Public LBともに上回ったため、
+    提出2枠のうちCV-trusted slotは024から027へ入れ替える。
+    一方で019のPublic LB 0.97000には届かないため、
+    019はPublic-confirmed current bestとして維持する。
+  key_findings:
+    - 026 RealMLP v5はbest blendで約26.2%の非ゼロ重みを持った
+    - 027は024/025/020をCV/Public LBともに上回った
+    - 027は現時点の最高CV候補
+    - Public LBは0.96975で、019には届かない
+    - 026単体はPublic LB 0.96979で027よりわずかに高く、backup価値がある
+    - 025は027に抜かれたため、優先度を下げてよい
+  caveat: >
+    027は024と026を中心にしたHC blendであり、OOF最適化色はある。
+    ただし、024からCVだけでなくPublic LBも改善しているため、
+    024/025よりは採用根拠が強い。
+    ここからさらに027へのbias searchを行う場合は攻め候補扱いにする。
+    追加のbias深掘りより、次の別family素材追加の方が期待値は高い。
+  next_action:
+    - 027のOOF/pred probaをnpy-files datasetへ追加する
+    - 提出slotは019 + 027へ更新する
+    - 028はCatBoost v3 as-isを優先する
+    - 027へのbias searchは可能だが、優先度はCatBoost v3より低い
+    - 026は単体backupとして保持するv3
+
+oof_registry_update:
+  exp_id: exp_20260608_027_blend_add026_realmlp_v5_check
+  public_lb: 0.96975
+  cv_score: 0.9695425457477898
+  role: blend_add026_realmlp_v5_cv_trusted_candidate
+  keep_hold_drop: promote_to_cv_trusted_slot
+  best_candidate:
+    set_name: M_020_024_026
+    method: hc_nonnegative_raw
+    keys:
+      - 020_blend_bias
+      - 024_seed_ensemble_blend
+      - 026_realmlp_v5
+    weights:
+      020_blend_bias: 0.04898792747788589
+      024_seed_ensemble_blend: 0.6890973266133963
+      026_realmlp_v5: 0.2619147459087178
+    oof_path: /kaggle/working/exp_20260608_027_blend_add026_realmlp_v5_check/oof_exp_20260608_027_blend_add026_realmlp_v5_check_best_blend_proba.npy
+    pred_path: /kaggle/working/exp_20260608_027_blend_add026_realmlp_v5_check/pred_exp_20260608_027_blend_add026_realmlp_v5_check_best_blend_proba.npy
+    submission_path: /kaggle/working/exp_20260608_027_blend_add026_realmlp_v5_check/submission_exp_20260608_027_blend_add026_realmlp_v5_check_best_blend.csv
+  notes: >
+    Blend/correlation check after adding 026 RealMLP v5.
+    Best safe blend was M_020_024_026 hc_nonnegative_raw.
+    CV improved to 0.969542546 and Public LB was 0.96975.
+    This beats 024, 025, and 020 on both CV and Public LB.
+    026 retained meaningful weight 0.2619, so RealMLP v5 is useful as blend material.
+    Keep 019 as Public-confirmed best and promote 027 to CV-trusted submission slot.
