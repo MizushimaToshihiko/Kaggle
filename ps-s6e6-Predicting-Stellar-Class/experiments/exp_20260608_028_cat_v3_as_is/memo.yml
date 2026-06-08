@@ -1,1 +1,155 @@
+result:
+  status: completed
+  cv_balanced_accuracy: 0.9688146470512534
+  mean_fold_balanced_accuracy: 0.968814645948413
+  std_fold_balanced_accuracy: 0.0005053736252754303
+  public_lb: 0.96969
+  submission: submission_cat_v3_as_is.csv
 
+fold_scores:
+  - fold: 1
+    balanced_accuracy: 0.9697023892293984
+    best_iteration: 1296
+    n_train: 561877
+    n_valid: 115470
+  - fold: 2
+    balanced_accuracy: 0.9689751374372958
+    best_iteration: 1846
+    n_train: 561877
+    n_valid: 115470
+  - fold: 3
+    balanced_accuracy: 0.9685096449956947
+    best_iteration: 1850
+    n_train: 561878
+    n_valid: 115469
+  - fold: 4
+    balanced_accuracy: 0.9682262999231451
+    best_iteration: 1177
+    n_train: 561878
+    n_valid: 115469
+  - fold: 5
+    balanced_accuracy: 0.9686597581565314
+    best_iteration: 1504
+    n_train: 561878
+    n_valid: 115469
+
+model_summary:
+  n_splits: 5
+  seed: 42
+  n_features: 241
+  n_cat_features: 153
+  original_weight: 0.06
+  classes:
+    - GALAXY
+    - QSO
+    - STAR
+  oof_path: oof_exp_20260608_028_cat_v3_as_is_proba.npy
+  pred_path: pred_exp_20260608_028_cat_v3_as_is_proba.npy
+  feature_importance_path: feature_importance_exp_20260608_028_cat_v3_as_is.csv
+  fold_scores_path: fold_scores_exp_20260608_028_cat_v3_as_is.csv
+  feature_columns_path: feature_columns_exp_20260608_028_cat_v3_as_is.csv
+
+submission_distribution:
+  total_rows: 247435
+  class_counts:
+    GALAXY: 157166
+    QSO: 51314
+    STAR: 38955
+  class_ratio:
+    GALAXY: 0.635181
+    QSO: 0.207384
+    STAR: 0.157435
+
+top_feature_importance_mean:
+  - feature: z_over_redshift
+    importance: 11.336972
+  - feature: redshift_x_u
+    importance: 8.660205
+  - feature: redshift_x_g
+    importance: 5.202429
+  - feature: log_z_over_log_g
+    importance: 4.056881
+  - feature: redshift_q100_cat
+    importance: 2.822935
+  - feature: PAIR_delta_floor_cat__alpha_q100_cat
+    importance: 2.679950
+  - feature: flux_std
+    importance: 2.107645
+  - feature: redshift
+    importance: 1.973863
+  - feature: PAIR_alpha_floor_cat__delta_q100_cat
+    importance: 1.617411
+  - feature: i_over_redshift
+    importance: 1.513693
+  - feature: redshift_q32_cat
+    importance: 1.464361
+  - feature: sky_x
+    importance: 1.319532
+  - feature: g_over_redshift
+    importance: 1.236109
+  - feature: redshift_q500_cat
+    importance: 1.152793
+  - feature: TRIO_z_floor_cat__alpha_q100_cat__delta_q100_cat
+    importance: 1.066343
+
+low_or_zero_importance_notes:
+  zero_mean_importance_features:
+    - galaxy_population
+    - galaxy_population_calc
+    - redshift_lt_002
+    - redshift_gt_07
+    - PAIR_spectral_type__galaxy_population
+    - PAIR_spectral_type__spectral_x_pop
+    - PAIR_galaxy_population__spectral_x_pop
+    - COMBO_spectral_type__galaxy_population
+    - TRIO_spectral_type__galaxy_population__spectral_x_pop
+  note: >
+    spectral_type / galaxy_population 系は特徴量として生成されているが、
+    今回のCatBoost feature importance上ではほぼ効いていない。
+    一方で redshift 系、redshift×photometry、z/redshift 比、sky座標、
+    alpha/deltaのpair/trio categorical interaction が上位を占めた。
+
+comparison_to_current_slots:
+  public_confirmed_slot:
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    cv: 0.968872315017554
+    public_lb: 0.97000
+    comparison: >
+      028はCVでもPublic LBでも019を上回っていない。
+      したがってPublic-confirmed枠の019は維持。
+  cv_trusted_slot:
+    exp_id: exp_20260608_027_blend_add026_realmlp_v5_check
+    cv: 0.9695425457477898
+    public_lb: 0.96975
+    comparison: >
+      028は単体CatBoostとしては強いが、CVは027より明確に低く、
+      Public LBも027を下回る。
+      したがってCV-trusted枠の027も維持。
+  backup_comparison:
+    exp_026_realmlp_v5_as_is:
+      cv: 0.9690389777981231
+      public_lb: 0.96979
+      comparison: >
+        028は026よりCV/Public LBともに下。
+    exp_017_bias_search_on_015_realmlp:
+      cv: 0.9683022653955233
+      public_lb: 0.96985
+      comparison: >
+        028は017よりCVは高いがPublic LBは低い。
+        017はPublic backupとして引き続き保持。
+
+judgement:
+  decision: keep_for_blend_check
+  role: catboost_v3_family_aux_material
+  priority: medium_high
+  reason: >
+    028単体は提出枠を更新しないが、Public LB 0.96969 はCatBoost familyとして十分強い。
+    RealMLP偏重の027や、019のXGB補完構成と誤差構造が違う可能性があるため、
+    029で相関とblend weightを確認する価値がある。
+  not_for_submission_slot: true
+  do_not_bias_yet: true
+  next_action: >
+    029で 019 / 027 / 026 / 024 / 020 / 017 / 015 / 018 / 028 の
+    OOF相関、rank相関、error overlap、hc_nonnegative_raw、nm_softmax_raw、
+    logreg_meta_all を確認する。
+    028に非ゼロ重みが入るかを最優先で見る。
