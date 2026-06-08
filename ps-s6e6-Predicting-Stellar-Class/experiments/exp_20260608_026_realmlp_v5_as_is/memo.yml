@@ -1,1 +1,223 @@
-
+experiment:
+  id: exp_20260608_026_realmlp_v5_as_is
+  title: RealMLP v5 as-is
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: RealMLP
+  created_at: '2026-06-08'
+objective:
+  summary: Reproduce realmlp-v5-for-s6e6.ipynb as-is and save blend-ready OOF/test
+    predictions. This is a separate RealMLP recipe branch, not another seed variant
+    of 015.
+  success_criteria:
+  - run RealMLP v5 5-fold CV
+  - save OOF proba npy with exp_id in filename
+  - save test pred proba npy with exp_id in filename
+  - save submission
+  - save cv_result.json
+  - save fold_scores.csv
+  - save feature_info.json
+  - save oof_registry.csv
+data:
+  data_dir: /kaggle/input/competitions/playground-series-s6e6
+  target_col: class
+  id_col: id
+  use_original: false
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  score: 0.9690389777981231
+  fold_scores:
+  - fold: 1
+    balanced_accuracy: 0.9704509516424428
+    n_train: 461877
+    n_valid: 115470
+    n_features: 40
+  - fold: 2
+    balanced_accuracy: 0.9684287932722381
+    n_train: 461877
+    n_valid: 115470
+    n_features: 40
+  - fold: 3
+    balanced_accuracy: 0.9686423628741219
+    n_train: 461878
+    n_valid: 115469
+    n_features: 40
+  - fold: 4
+    balanced_accuracy: 0.9687221539319107
+    n_train: 461878
+    n_valid: 115469
+    n_features: 40
+  - fold: 5
+    balanced_accuracy: 0.968950640622891
+    n_train: 461878
+    n_valid: 115469
+    n_features: 40
+  per_class_recall:
+    recall_GALAXY: 0.9595051393451308
+    recall_QSO: 0.9764305165481505
+    recall_STAR: 0.971181277501088
+model:
+  family: RealMLP
+  source: realmlp-v5-for-s6e6.ipynb
+  role: realmlp_v5_single_model_candidate
+  use_original: false
+  use_fe: true
+  use_bias_search: false
+  config:
+    n_ens: 8
+    embed_dim: 7
+    onehot_thresh: 10
+    hidden_dims:
+    - 512
+    - 512
+    - 512
+    dropout: 0.044
+    p_drop_sched: expm4t
+    activation: <class 'torch.nn.modules.activation.GELU'>
+    add_front_scale: true
+    pbld_hidden_dim: 16
+    pbld_out_dim: 5
+    pbld_freq_scale: 2.33
+    pbld_activation: <class 'torch.nn.modules.activation.PReLU'>
+    pbld_lr_factor: 0.115
+    lr: 0.01
+    mom: 0.9
+    sq_mom: 0.98
+    lr_sched: flat_cos
+    flat_ratio: 0.2
+    first_layer_lr_factor: 1.0
+    first_layer_wd_factor: 0.1
+    lr_scale_mult: 10.0
+    lr_bias_mult: 0.1
+    weight_decay: 0.0125
+    wd_scale_mult: 0.1
+    wd_bias_mult: 0.5
+    grad_clip: 1.0
+    class_weight_power: 0.0
+    class_weight_multipliers: null
+    sample_weight_power: 0.0
+    loss_prior_power: 1.075
+    focal_gamma: 0.0
+    eval_class_multipliers: null
+    ls_eps: 0.04
+    ls_eps_sched: cos
+    tfms:
+    - median_center
+    - robust_scale
+    epochs: 6
+    train_bs: 256
+    eval_bs: 10240
+    numeric_noise_std: 0.0
+    ema_decay: 0.997875
+    verbosity: 2
+    use_early_stopping: false
+    early_stopping_additive_patience: 10
+    early_stopping_multiplicative_patience: 1
+    device: cuda
+    random_state: 542
+features:
+  base_cat_cols:
+  - spectral_type
+  - galaxy_population
+  base_num_cols:
+  - alpha
+  - delta
+  - u
+  - g
+  - r
+  - i
+  - z
+  - redshift
+  new_cat_cols:
+  - alpha_cat_
+  - delta_cat_
+  - u_cat_
+  - g_cat_
+  - r_cat_
+  - i_cat_
+  - z_cat_
+  - redshift_cat_
+  - delta_100_quantile_bin_
+  - delta_500_quantile_bin_
+  - alpha_cat___delta_cat___
+  - u_cat___z_cat___
+  new_num_cols:
+  - _g_div_redshift
+  - _i_div_redshift
+  - _u-g
+  - _g-r
+  - _r-i
+  - _i-z
+  - _u-r
+  - _g-i
+  - _r-z
+  - _mag_mean
+  - _mag_range
+  - _log1p_redshift
+  cat_cols:
+  - alpha_cat_
+  - alpha_cat___delta_cat___
+  - delta_100_quantile_bin_
+  - delta_500_quantile_bin_
+  - delta_cat_
+  - g_cat_
+  - galaxy_population
+  - i_cat_
+  - r_cat_
+  - redshift_cat_
+  - spectral_type
+  - u_cat_
+  - u_cat___z_cat___
+  - z_cat_
+  num_cols:
+  - _g-i
+  - _g-r
+  - _g_div_redshift
+  - _i-z
+  - _i_div_redshift
+  - _log1p_redshift
+  - _mag_mean
+  - _mag_range
+  - _r-i
+  - _r-z
+  - _u-g
+  - _u-r
+  - alpha
+  - delta
+  - g
+  - i
+  - r
+  - redshift
+  - u
+  - z
+  combo_names:
+  - alpha_cat___delta_cat___
+  - u_cat___z_cat___
+  n_features_before_te: 34
+  n_cat_cols: 14
+  n_num_cols: 20
+  class_order:
+  - GALAXY
+  - QSO
+  - STAR
+outputs:
+  submission: submission_realmlp_v5_as_is.csv
+  oof_proba: oof_exp_20260608_026_realmlp_v5_as_is_proba.npy
+  pred_proba: pred_exp_20260608_026_realmlp_v5_as_is_proba.npy
+  cv_result: cv_result.json
+  fold_scores: fold_scores.csv
+  feature_info: feature_info.json
+  registry: oof_registry.csv
+judgement:
+  status: pending_public_lb_and_blend_check
+  reason: Adoption depends on Public LB and whether this RealMLP v5 recipe adds complementary
+    signal to 019/024/020/017/015/018.
+  next_action:
+  - Submit submission_realmlp_v5_as_is.csv
+  - Record Public LB
+  - Add OOF/pred npy to npy-files dataset
+  - Run add026 correlation/blend check
