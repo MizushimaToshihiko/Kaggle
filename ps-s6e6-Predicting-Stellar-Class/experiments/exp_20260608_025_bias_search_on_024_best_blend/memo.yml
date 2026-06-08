@@ -87,3 +87,266 @@ judgement:
   - Keep 017 as previous best RealMLP bias backup
   - Keep 015 as stable RealMLP single backup
   - Add 020 OOF/pred to npy-files dataset if useful for final comparison
+result:
+  status: completed
+  purpose: >
+    024 best blendである N_019_020_021_022_023 / hc_nonnegative_raw の
+    OOF/pred probaに対してclass-wise bias searchを実施した。
+    目的は、024 CV最高候補をBalanced Accuracy向けに後処理し、
+    020/024のCV-trusted提出枠を置き換えられる候補になるか確認すること。
+
+reference:
+  exp_id: exp_20260608_024_seed_ensemble_and_blend_check
+  model: N_019_020_021_022_023 / hc_nonnegative_raw
+  raw_cv: 0.9694803109983217
+  raw_public_lb: 0.96958
+  weights:
+    019_blend_best: 0.1720919461492222
+    020_blend_bias: 0.4147680653120452
+    021_realmlp_seed777: 0.1520334427906098
+    022_realmlp_seed2026: 0.12458465124038007
+    023_realmlp_seed3407: 0.1365218945077428
+  raw_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260608_024_seed_ensemble_and_blend_check_best_blend_proba.npy
+  raw_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260608_024_seed_ensemble_and_blend_check_best_blend_proba.npy
+
+cv:
+  metric: balanced_accuracy_score
+  raw_score: 0.9694803109983217
+  biased_score: 0.9694982932369408
+  delta_biased_minus_raw: 0.000017982238619151936
+  interpretation: >
+    024 best blendに対してclass-wise biasを後付けした結果、
+    CV balanced accuracy は 0.969480311 から 0.969498293 へ +0.000017982 改善した。
+    現時点の最高CVではあるが、改善幅は極小。
+    020や024のときのような明確なCV改善ではなく、OOF上の細かい閾値合わせに近い。
+
+public_lb:
+  score: 0.96952
+  reference_024_public_lb: 0.96958
+  delta_vs_024_public_lb: -0.00006
+  reference_020_public_lb: 0.96969
+  delta_vs_020_public_lb: -0.00017
+  reference_019_public_lb: 0.97000
+  delta_vs_019_public_lb: -0.00048
+  submission: submission_bias_search_on_024_best_blend.csv
+  interpretation: >
+    Public LBは0.96952で、024の0.96958を-0.00006下回った。
+    020の0.96969、019の0.97000にも届かない。
+    したがって025をPublic-confirmed候補へ昇格させない。
+    また、CV改善幅も極小のため、CV-trusted提出枠としても024を置換する根拠は弱い。
+
+bias_search:
+  method: softmax(log(raw_proba) + class_bias)
+  use_original: false
+  use_fe: true
+  use_bias_search: true
+  bias:
+    GALAXY: 0.0
+    QSO: 0.1555
+    STAR: 0.1735
+  bias_space:
+    GALAXY: fixed_0
+    QSO: searched
+    STAR: searched
+  search_ranges:
+    coarse:
+      min: -0.2
+      max: 0.2
+      step: 0.01
+    local:
+      around_best: 0.02
+      step: 0.002
+    ultra_local:
+      around_best: 0.004
+      step: 0.0005
+  adjusted_probability_method: softmax(log(raw_proba) + class_bias)
+  reason_for_fixing_galaxy: >
+    全クラスに同じ定数を足してもargmaxは変わらないため、
+    GALAXY biasを0に固定し、QSO/STARの2次元だけを探索した。
+
+raw_eval:
+  balanced_accuracy: 0.9694803109983217
+  recall:
+    GALAXY: 0.9619556002967045
+    QSO: 0.9761744192994887
+    STAR: 0.9703109133987718
+
+biased_eval:
+  balanced_accuracy: 0.9694982932369408
+  recall:
+    GALAXY: 0.9585170075235774
+    QSO: 0.9771646619943146
+    STAR: 0.9728132101929307
+
+recall_delta_biased_minus_raw:
+  GALAXY: -0.0034385927731271
+  QSO: 0.0009902426948259
+  STAR: 0.0025022967941589
+  interpretation: >
+    bias searchにより、GALAXY recallは約-0.00344低下した一方、
+    QSO recallは約+0.00099、STAR recallは約+0.00250改善した。
+    Balanced Accuracy上ではQSO/STAR改善がGALAXY低下をわずかに上回った。
+    ただし差し引きのCV改善は+0.000018に留まり、実質的にはほぼ横ばい。
+
+model:
+  family: Blend
+  estimator: postprocess_only
+  role: blend_bias_candidate
+  base_model: exp_20260608_024_seed_ensemble_and_blend_check
+  base_candidate: N_019_020_021_022_023__hc_nonnegative_raw
+  use_original: false
+  use_fe: true
+  use_bias_search: true
+  retraining: false
+  notes: >
+    025はモデル再学習ではなく、024 best blendのOOF/pred probaに対する後処理。
+    024 best blendの確率出力をlog-proba空間に変換し、class-wise biasを加えた。
+    OOF CVはわずかに改善したが、Public LBは低下した。
+
+target:
+  class_names:
+    - GALAXY
+    - QSO
+    - STAR
+  label_mapping:
+    GALAXY: 0
+    QSO: 1
+    STAR: 2
+  submission_format: single_column_class_label
+
+outputs:
+  submission: submission_bias_search_on_024_best_blend.csv
+  oof_proba: oof_exp_20260608_025_bias_search_on_024_best_blend_proba.npy
+  pred_proba: pred_exp_20260608_025_bias_search_on_024_best_blend_proba.npy
+  bias_vector: bias_vector.npy
+  bias_search_results: bias_search_results.csv
+  raw_vs_biased_oof_eval: raw_vs_biased_oof_eval.csv
+  oof_csv: oof_bias_search_on_024_best_blend.csv
+  pred_csv: pred_bias_search_on_024_best_blend.csv
+  cv_result: cv_result.json
+  registry: oof_registry.csv
+
+comparison:
+  against_024_cv_best:
+    exp_id: exp_20260608_024_seed_ensemble_and_blend_check
+    candidate: N_019_020_021_022_023__hc_nonnegative_raw
+    cv_024: 0.9694803109983217
+    public_lb_024: 0.96958
+    cv_025: 0.9694982932369408
+    public_lb_025: 0.96952
+    cv_delta_025_minus_024: 0.000017982238619151936
+    lb_delta_025_minus_024: -0.00006
+    interpretation: >
+      025は024をCVではごくわずかに上回ったが、Public LBでは下回った。
+      CV改善幅が+0.000018と極小であるため、
+      025を024の明確な上位互換とは見なさない。
+      提出slot 2は025ではなく024のままが妥当。
+
+  against_020_cv_trusted_attack:
+    exp_id: exp_20260607_020_bias_search_on_019_best_blend
+    cv_020: 0.9692240443617589
+    public_lb_020: 0.96969
+    cv_025: 0.9694982932369408
+    public_lb_025: 0.96952
+    cv_delta_025_minus_020: 0.0002742488751819
+    lb_delta_025_minus_020: -0.00017
+    interpretation: >
+      025は020をCVでは上回ったが、Public LBでは下回った。
+      ただし024も020をCVで上回っており、025の追加改善は極小。
+      020の提出枠を025へ直接置き換えるより、すでに020から024へ入れ替えた判断を維持する方が自然。
+
+  against_019_public_current_best:
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    candidate: F_014_017_018__hc_nonnegative_raw
+    cv_019: 0.968872315017554
+    public_lb_019: 0.97000
+    cv_025: 0.9694982932369408
+    public_lb_025: 0.96952
+    cv_delta_025_minus_019: 0.0006259782193868
+    lb_delta_025_minus_019: -0.00048
+    interpretation: >
+      025は019をCVでは大きく上回るが、Public LBでは大きく下回る。
+      019は引き続きPublic-confirmed current bestとして残す。
+
+role_judgement:
+  public_current_best:
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    candidate: F_014_017_018__hc_nonnegative_raw
+    cv: 0.968872315017554
+    public_lb: 0.97000
+    status: keep_public_current_best
+    reason: >
+      025はPublic LB 0.96952で、019の0.97000を下回った。
+      Public-confirmed current bestは019のまま。
+
+  cv_trusted_submission_slot:
+    exp_id: exp_20260608_024_seed_ensemble_and_blend_check
+    candidate: N_019_020_021_022_023__hc_nonnegative_raw
+    cv: 0.9694803109983217
+    public_lb: 0.96958
+    status: keep_cv_trusted_slot
+    reason: >
+      025はCVでは024をわずかに上回ったが、改善幅が+0.000018と極小で、
+      Public LBも024より低い。
+      025よりも、bias search前の024をCV-trusted提出枠として保持する方が堅い。
+
+  cv_highest_but_not_slot:
+    exp_id: exp_20260608_025_bias_search_on_024_best_blend
+    cv: 0.9694982932369408
+    public_lb: 0.96952
+    status: hold_cv_highest_not_submission
+    reason: >
+      025は現時点の最高CVだが、024からのCV改善が極小で、Public LBも低下している。
+      OOF bias searchの深追いに近いため、提出slot 2には入れず、hold扱いとする。
+
+  previous_cv_trusted_attack:
+    exp_id: exp_20260607_020_bias_search_on_019_best_blend
+    cv: 0.9692240443617589
+    public_lb: 0.96969
+    status: keep_reference
+    reason: >
+      020は024/025にCVで抜かれたが、Public LBは024/025より高い。
+      参考候補として保持するが、2枠提出では019/024を優先する。
+
+judgement:
+  status: completed
+  decision: >
+    025 bias searchはCVを0.969480から0.969498へ微増させたが、
+    改善幅は+0.000018に過ぎず、Public LBは0.96958から0.96952へ低下した。
+    したがって025はPublic current bestにもCV-trusted提出枠にも昇格しない。
+    提出2枠は、019 Public-confirmed best と 024 CV-trusted best の組み合わせを維持する。
+  key_findings:
+    - 025は現時点の最高CVだが、024からの改善幅は極小
+    - bias方向はQSO/STARを上げ、GALAXYを削る方向
+    - Public LBは024よりさらに低下
+    - 020/024/025と進むにつれ、CV改善に対してPublicが伸びにくくなっている
+    - bias searchの追加深掘りは優先度が低い
+  caveat: >
+    025を完全に無価値とはしないが、提出枠に入れるには根拠が弱い。
+    CV最高という事実はあるものの、024との差が小さすぎる。
+    ここからさらにbias searchを細かく刻むのは、CVへの過適合リスクが高い。
+  next_action:
+    - 025のOOF/pred probaは保存するが、提出slotには入れない
+    - 提出slotは019 + 024を維持する
+    - 024/025系のbias深掘りは停止する
+    - 次は予定通り、別family・別特徴・別shared codeへ戻る
+    - 追加RealMLP seedや追加bias searchより、多様性のある素材追加を優先する
+
+oof_registry_update:
+  exp_id: exp_20260608_025_bias_search_on_024_best_blend
+  public_lb: 0.96952
+  cv_score: 0.9694982932369408
+  raw_cv_score: 0.9694803109983217
+  cv_delta_vs_raw: 0.000017982238619151936
+  role: blend_bias_candidate
+  keep_hold_drop: hold_cv_highest_not_submission
+  oof_path: /kaggle/working/exp_20260608_025_bias_search_on_024_best_blend/oof_exp_20260608_025_bias_search_on_024_best_blend_proba.npy
+  pred_path: /kaggle/working/exp_20260608_025_bias_search_on_024_best_blend/pred_exp_20260608_025_bias_search_on_024_best_blend_proba.npy
+  submission_path: /kaggle/working/exp_20260608_025_bias_search_on_024_best_blend/submission_bias_search_on_024_best_blend.csv
+  notes: >
+    Bias search on 024 best blend.
+    CV improved only slightly from 0.969480 to 0.969498, while Public LB decreased from 0.96958 to 0.96952.
+    Bias: GALAXY 0.0, QSO 0.1555, STAR 0.1735.
+    Do not promote to submission slot.
+    Keep 019 as Public-confirmed best and 024 as CV-trusted slot.
+    Stop further bias-search deepening and move to different family/features/shared code.
