@@ -462,6 +462,22 @@ judgement:
     - 019/020/017/015/021の相関・blend checkを実施する
     - 021がblendで重みを持たなければactive候補から外す
 
+seed_audit:
+  status: partially_seed_changed
+  finding: >
+    Notebook内ではセル2で一度seed_everything(42)が実行されているが、
+    セル3でSEED=777としてrandom/np/torch/cuda seedを再設定している。
+    StratifiedKFold(random_state=SEED) と TargetEncoder(random_state=SEED) も777を参照している。
+    一方で、CONFIG["random_state"] は42のまま残っており、
+    RealMLP_TD_Classifier(**CONFIG) に渡されるrandom_stateは42である。
+  interpretation: >
+    021は完全なseed777版ではなく、fold/TargetEncoder/global seedは777、
+    RealMLP CONFIG random_stateは42の混合seed実験。
+    ただし015とはCV/LBが一致していないため、seed差素材としては有効。
+  action: >
+    022以降ではCONFIG["random_state"]をSEEDに変更し、
+    seed variantとしての実験定義を明確化する。
+
 oof_registry_update:
   exp_id: exp_20260607_021_shared001_realmlp_seed777
   public_lb: 0.96926
