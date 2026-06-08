@@ -160,3 +160,358 @@ judgement:
   - Add OOF/pred npy to npy-files dataset
   - Compare OOF correlation against 015/017/019/020/021/022
   - Blend with current top candidates if correlation and Public LB are favorable
+
+result:
+  status: completed
+  purpose: >
+    015 shared001 RealMLP as-is を元に、seed3407 variantとして023を実行した。
+    目的は、RealMLP seed ensembleおよび後続blend確認用のOOF/pred proba素材を増やすこと。
+    021 seed777、022 seed2026に続く3本目のseed variantとして実行した。
+
+cv:
+  metric: balanced_accuracy_score
+  score: 0.9680674611199329
+  fold_scores:
+    - fold: 1
+      balanced_accuracy: 0.9687007633834913
+      n_train: 461877
+      n_valid: 115470
+      checkpoint: /kaggle/working/exp_20260608_023_shared001_realmlp_seed3407/model_fold1.pth
+
+    - fold: 2
+      balanced_accuracy: 0.9677247297714918
+      n_train: 461877
+      n_valid: 115470
+      checkpoint: /kaggle/working/exp_20260608_023_shared001_realmlp_seed3407/model_fold2.pth
+
+    - fold: 3
+      balanced_accuracy: 0.9680252264541084
+      n_train: 461878
+      n_valid: 115469
+      checkpoint: /kaggle/working/exp_20260608_023_shared001_realmlp_seed3407/model_fold3.pth
+
+    - fold: 4
+      balanced_accuracy: 0.9678136055249621
+      n_train: 461878
+      n_valid: 115469
+      checkpoint: /kaggle/working/exp_20260608_023_shared001_realmlp_seed3407/model_fold4.pth
+
+    - fold: 5
+      balanced_accuracy: 0.9680731117493201
+      n_train: 461878
+      n_valid: 115469
+      checkpoint: /kaggle/working/exp_20260608_023_shared001_realmlp_seed3407/model_fold5.pth
+
+  fold_score_min: 0.9677247297714918
+  fold_score_max: 0.9687007633834913
+  fold_score_range: 0.000976033612
+  interpretation: >
+    OOF CVは0.968067で、015/021/022より低い。
+    fold間のばらつきは大きすぎず、seed3407 RealMLP variantとしては正常に完了している。
+    ただし単体CVとしては既存RealMLP seed群の中でも弱め。
+    023の価値は単体性能ではなく、seed ensembleやblendにおける補完性確認にある。
+
+public_lb:
+  score: 0.96925
+  reference_015_public_lb: 0.96977
+  delta_vs_015_public_lb: -0.00052
+  reference_017_public_lb: 0.96985
+  delta_vs_017_public_lb: -0.00060
+  reference_019_public_lb: 0.97000
+  delta_vs_019_public_lb: -0.00075
+  reference_020_public_lb: 0.96969
+  delta_vs_020_public_lb: -0.00044
+  reference_021_public_lb: 0.96926
+  delta_vs_021_public_lb: -0.00001
+  reference_022_public_lb: 0.96956
+  delta_vs_022_public_lb: -0.00031
+  submission: submission_shared001_realmlp_seed3407.csv
+  interpretation: >
+    Public LBは0.96925で、015/017/019/020/022には届かなかった。
+    021 seed777の0.96926ともほぼ同等だが、わずかに下回った。
+    023単体を提出候補へ昇格させる理由はない。
+    ただしseed3407として実験定義は明確であり、RealMLP seed ensemble素材としては保持する。
+
+model:
+  family: RealMLP
+  estimator: RealMLP_TD_Classifier
+  source: shared001_as_is_seed_variant
+  role: realmlp_seed_variant_material
+  seed: 3407
+  use_original: false
+  use_fe: true
+  fe_family: shared001_realmlp_fe_seed3407
+  use_bias_search: false
+  params:
+    n_ens: 8
+    embed_dim: 8
+    onehot_thresh: 8
+    hidden_dims:
+      - 512
+      - 512
+      - 512
+    dropout: 0.06
+    p_drop_sched: expm4t
+    activation: torch.nn.SiLU
+    add_front_scale: true
+    pbld_hidden_dim: 20
+    pbld_out_dim: 5
+    pbld_freq_scale: 5.0
+    pbld_activation: torch.nn.PReLU
+    pbld_lr_factor: 0.093
+    lr: 0.01
+    mom: 0.9
+    sq_mom: 0.98
+    lr_sched: flat_cos
+    flat_ratio: 0.3
+    first_layer_lr_factor: 1.0
+    first_layer_wd_factor: 0.1
+    lr_scale_mult: 10.0
+    lr_bias_mult: 0.1
+    weight_decay: 0.013
+    wd_scale_mult: 0.1
+    wd_bias_mult: 0.5
+    grad_clip: 1.0
+    ls_eps: 0.04
+    ls_eps_sched: cos
+    tfms:
+      - median_center
+      - robust_scale
+    epochs: 6
+    train_bs: 256
+    eval_bs: 10240
+    verbosity: 2
+    use_early_stopping: false
+    early_stopping_additive_patience: 10
+    early_stopping_multiplicative_patience: 1
+    device: cuda
+    random_state: 3407
+
+seed_audit:
+  status: clean
+  finding: >
+    cv_result.json上で seed は3407、params.random_state も3407と記録されている。
+    021で懸念されたCONFIG random_state=42残りは、023では発生していない。
+  interpretation: >
+    023はseed3407 RealMLP variantとして実験定義が明確。
+    022と同様、後続seed variantやseed ensemble検証に使える正常な素材。
+
+features:
+  feature_family: shared001_realmlp_fe_seed3407
+  use_original: false
+  use_fe: true
+  n_features_before_te: 26
+  n_features_after_te: 32
+  categorical_features:
+    - alpha_cat_
+    - alpha_cat__delta_cat__
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    - delta_cat_
+    - g_cat_
+    - galaxy_population
+    - i_cat_
+    - r_cat_
+    - redshift_cat_
+    - spectral_type
+    - u_cat_
+    - u_cat__z_cat__
+    - z_cat_
+  numeric_features:
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+    - _g_/_redshift
+    - _i_/_redshift
+    - _u-g
+    - _u-r
+  engineered_numeric_features:
+    - _g_/_redshift
+    - _i_/_redshift
+    - _u-g
+    - _u-r
+  combo_features:
+    - alpha_cat__delta_cat__
+    - u_cat__z_cat__
+  target_encoded_combo_features:
+    - _alpha_cat__delta_cat__TE_class0
+    - _alpha_cat__delta_cat__TE_class1
+    - _alpha_cat__delta_cat__TE_class2
+    - _u_cat__z_cat__TE_class0
+    - _u_cat__z_cat__TE_class1
+    - _u_cat__z_cat__TE_class2
+
+target:
+  class_names:
+    - GALAXY
+    - QSO
+    - STAR
+  label_mapping:
+    GALAXY: 0
+    QSO: 1
+    STAR: 2
+  submission_format: single_column_class_label
+
+outputs:
+  submission: submission_shared001_realmlp_seed3407.csv
+  oof_proba: oof_exp_20260608_023_shared001_realmlp_seed3407_proba.npy
+  pred_proba: pred_exp_20260608_023_shared001_realmlp_seed3407_proba.npy
+  cv_result: cv_result.json
+  fold_scores: fold_scores.csv
+  feature_info: feature_info.json
+  registry: oof_registry.csv
+
+comparison:
+  against_015_realmlp_as_is:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv_015: 0.9681693449222352
+    public_lb_015: 0.96977
+    cv_023: 0.9680674611199329
+    public_lb_023: 0.96925
+    cv_delta_023_minus_015: -0.0001018838023023
+    lb_delta_023_minus_015: -0.00052
+    interpretation: >
+      023は015をCV/LBともに下回った。
+      単体としては015の方が明確に優先される。
+
+  against_017_realmlp_bias:
+    exp_id: exp_20260606_017_bias_search_on_015_realmlp
+    cv_017: 0.9683022653955233
+    public_lb_017: 0.96985
+    cv_023: 0.9680674611199329
+    public_lb_023: 0.96925
+    cv_delta_023_minus_017: -0.0002348042755904
+    lb_delta_023_minus_017: -0.00060
+    interpretation: >
+      023は017にCV/LBともに届かない。
+      017はRealMLP bias backupとして引き続き優位。
+
+  against_019_public_current_best:
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    cv_019: 0.968872315017554
+    public_lb_019: 0.97000
+    cv_023: 0.9680674611199329
+    public_lb_023: 0.96925
+    cv_delta_023_minus_019: -0.0008048538976211
+    lb_delta_023_minus_019: -0.00075
+    interpretation: >
+      023単体は019 current best blendには届かない。
+      019を置換する候補ではない。
+
+  against_020_cv_trusted_attack:
+    exp_id: exp_20260607_020_bias_search_on_019_best_blend
+    cv_020: 0.9692240443617589
+    public_lb_020: 0.96969
+    cv_023: 0.9680674611199329
+    public_lb_023: 0.96925
+    cv_delta_023_minus_020: -0.001156583241826
+    lb_delta_023_minus_020: -0.00044
+    interpretation: >
+      023単体は020 CV-trusted attackにCV/LBともに届かない。
+      ただし020はpostprocess/HC系、023はseed3407単体RealMLPなので、役割は異なる。
+
+  against_021_seed777:
+    exp_id: exp_20260607_021_shared001_realmlp_seed777
+    cv_021: 0.9682532829014837
+    public_lb_021: 0.96926
+    cv_023: 0.9680674611199329
+    public_lb_023: 0.96925
+    cv_delta_023_minus_021: -0.0001858217815508
+    lb_delta_023_minus_021: -0.00001
+    interpretation: >
+      023は021よりCVで低く、Public LBもほぼ同等だがわずかに下回った。
+      021にはseed監査上の混合seed問題があるものの、単体結果だけなら021の方がやや良い。
+
+  against_022_seed2026:
+    exp_id: exp_20260608_022_shared001_realmlp_seed2026
+    cv_022: 0.9681106610656959
+    public_lb_022: 0.96956
+    cv_023: 0.9680674611199329
+    public_lb_023: 0.96925
+    cv_delta_023_minus_022: -0.000043199945763
+    lb_delta_023_minus_022: -0.00031
+    interpretation: >
+      023は022よりCV/LBともに下回った。
+      seed variant群の中では023は弱め。
+
+role_judgement:
+  current_public_best:
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    public_lb: 0.97000
+    status: keep_public_current_best
+    reason: >
+      023はPublic LBで019に届かない。
+      current public bestは019のまま。
+
+  cv_trusted_attack:
+    exp_id: exp_20260607_020_bias_search_on_019_best_blend
+    cv: 0.9692240443617589
+    public_lb: 0.96969
+    status: keep_cv_trusted_attack
+    reason: >
+      020はCV最高候補。
+      023は020にCV/LBともに届かない。
+
+  seed_variant_material:
+    exp_id: exp_20260608_023_shared001_realmlp_seed3407
+    cv: 0.9680674611199329
+    public_lb: 0.96925
+    status: hold_for_seed_ensemble_and_blend_check
+    reason: >
+      023単体は提出候補として弱いが、seed3407のRealMLP素材として実験定義は明確。
+      015/017/019/020/021/022との相関・blendで有効か確認するまではdropしない。
+
+  stable_single_backup:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv: 0.9681693449222352
+    public_lb: 0.96977
+    status: keep_stable_single_backup
+    reason: >
+      015は023よりCV/LBともに強く、biasやHC blendを含まない素直な単体RealMLP。
+      Private耐性候補として引き続き保持する。
+
+judgement:
+  status: completed
+  decision: >
+    023 shared001 RealMLP seed3407 は単体提出候補としては不採用。
+    CVは0.968067、Public LBは0.96925で、015/017/019/020/021/022には届かなかった。
+    ただしseed3407として実験定義が明確であり、後続のseed ensembleおよびblend確認用素材として保持する。
+  key_findings:
+    - 023はseed3407 RealMLP variantとして正常に実行できた
+    - params.random_stateも3407になっており、seed定義は明確
+    - CV/LBともに015/017/019/020/022には届かなかった
+    - 021とはPublic LBがほぼ同等だが、CVでは021を下回った
+    - seed variant群では弱め
+    - 単体提出候補ではないが、seed ensemble素材としては保持対象
+  caveat: >
+    RealMLP seed variantは単体LBだけでは価値を判断しない。
+    023が単体で弱くても、015/021/022とのseed ensembleや019/020とのblendで補助重みを持つ可能性はある。
+    ただし、024の相関・blend確認で重みが入らなければactive候補から外す。
+  next_action:
+    - 023のOOF/pred probaをnpy-files datasetへ追加する
+    - 次は024として015/021/022/023 seed ensemble + 014/018/019/020 blend checkを実施する
+    - seed ensembleとして015+021+022+023、017+021+022+023を確認する
+    - 019/020に021/022/023を追加して有効か確認する
+    - 023がblendで重みを持たなければdropまたはlow-priority referenceへ移す
+    - 追加seedを作るかどうかは024の結果を見て判断する
+
+oof_registry_update:
+  exp_id: exp_20260608_023_shared001_realmlp_seed3407
+  public_lb: 0.96925
+  cv_score: 0.9680674611199329
+  role: realmlp_seed_variant_material
+  keep_hold_drop: hold_for_seed_ensemble_and_blend_check
+  oof_path: /kaggle/working/exp_20260608_023_shared001_realmlp_seed3407/oof_exp_20260608_023_shared001_realmlp_seed3407_proba.npy
+  pred_path: /kaggle/working/exp_20260608_023_shared001_realmlp_seed3407/pred_exp_20260608_023_shared001_realmlp_seed3407_proba.npy
+  submission_path: /kaggle/working/exp_20260608_023_shared001_realmlp_seed3407/submission_shared001_realmlp_seed3407.csv
+  notes: >
+    shared001 RealMLP seed3407 variant.
+    CV 0.968067 and Public LB 0.96925, below 015/017/019/020/022.
+    params.random_state is correctly recorded as 3407.
+    Do not use as single submission candidate.
+    Keep as seed ensemble/blend material candidate and evaluate in 024.
