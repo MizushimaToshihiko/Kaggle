@@ -221,3 +221,409 @@ judgement:
   - Record Public LB
   - Add OOF/pred npy to npy-files dataset
   - Run add026 correlation/blend check
+
+result:
+  status: completed
+  purpose: >
+    公開Notebook realmlp-v5-for-s6e6.ipynb を元に、
+    RealMLP v5 as-is を026として実行した。
+    目的は、015/021/022/023のseed variantとは別のRealMLP recipeを取り込み、
+    後続の相関確認・blend確認用OOF/pred probaを作成すること。
+
+cv:
+  metric: balanced_accuracy_score
+  score: 0.9690389777981231
+  fold_scores:
+    - fold: 1
+      balanced_accuracy: 0.9704509516424428
+      n_train: 461877
+      n_valid: 115470
+      n_features: 40
+
+    - fold: 2
+      balanced_accuracy: 0.9684287932722381
+      n_train: 461877
+      n_valid: 115470
+      n_features: 40
+
+    - fold: 3
+      balanced_accuracy: 0.9686423628741219
+      n_train: 461878
+      n_valid: 115469
+      n_features: 40
+
+    - fold: 4
+      balanced_accuracy: 0.9687221539319107
+      n_train: 461878
+      n_valid: 115469
+      n_features: 40
+
+    - fold: 5
+      balanced_accuracy: 0.968950640622891
+      n_train: 461878
+      n_valid: 115469
+      n_features: 40
+
+  fold_score_min: 0.9684287932722381
+  fold_score_max: 0.9704509516424428
+  fold_score_range: 0.0020221583702047
+  interpretation: >
+    OOF CVは0.969039で、RealMLP v5 as-isとして強い単体性能を示した。
+    fold1がかなり高く、fold2が低めで、fold間レンジは約0.00202。
+    015/017/021/022/023のRealMLP系よりCVは高く、
+    024/025のCV-trusted blend候補には届かないが、
+    単体RealMLP recipeとしては現時点で最強クラス。
+
+public_lb:
+  score: 0.96979
+  reference_015_public_lb: 0.96977
+  delta_vs_015_public_lb: 0.00002
+  reference_017_public_lb: 0.96985
+  delta_vs_017_public_lb: -0.00006
+  reference_019_public_lb: 0.97000
+  delta_vs_019_public_lb: -0.00021
+  reference_020_public_lb: 0.96969
+  delta_vs_020_public_lb: 0.00010
+  reference_024_public_lb: 0.96958
+  delta_vs_024_public_lb: 0.00021
+  reference_025_public_lb: 0.96952
+  delta_vs_025_public_lb: 0.00027
+  submission: submission_realmlp_v5_as_is.csv
+  interpretation: >
+    Public LBは0.96979で、015 as-isの0.96977をわずかに上回り、
+    020/024/025よりもPublicでは高い。
+    一方で、017の0.96985および019の0.97000には届かない。
+    単体提出候補としては019/017に劣るが、
+    CVが高く別RealMLP recipeであるため、blend素材としては重要。
+
+model:
+  family: RealMLP
+  estimator: RealMLP_TD_Classifier
+  source: realmlp-v5-for-s6e6.ipynb
+  role: realmlp_v5_single_model_candidate
+  use_original: false
+  use_fe: true
+  fe_family: realmlp_v5_as_is
+  use_bias_search: false
+  params:
+    n_ens: 8
+    embed_dim: 7
+    onehot_thresh: 10
+    hidden_dims:
+      - 512
+      - 512
+      - 512
+    dropout: 0.044
+    p_drop_sched: expm4t
+    activation: torch.nn.GELU
+    add_front_scale: true
+    pbld_hidden_dim: 16
+    pbld_out_dim: 5
+    pbld_freq_scale: 2.33
+    pbld_activation: torch.nn.PReLU
+    pbld_lr_factor: 0.115
+    lr: 0.01
+    mom: 0.9
+    sq_mom: 0.98
+    lr_sched: flat_cos
+    flat_ratio: 0.2
+    first_layer_lr_factor: 1.0
+    first_layer_wd_factor: 0.1
+    lr_scale_mult: 10.0
+    lr_bias_mult: 0.1
+    weight_decay: 0.0125
+    wd_scale_mult: 0.1
+    wd_bias_mult: 0.5
+    grad_clip: 1.0
+    class_weight_power: 0.0
+    class_weight_multipliers: null
+    sample_weight_power: 0.0
+    loss_prior_power: 1.075
+    focal_gamma: 0.0
+    eval_class_multipliers: null
+    ls_eps: 0.04
+    ls_eps_sched: cos
+    tfms:
+      - median_center
+      - robust_scale
+    epochs: 6
+    train_bs: 256
+    eval_bs: 10240
+    numeric_noise_std: 0.0
+    ema_decay: 0.997875
+    verbosity: 2
+    use_early_stopping: false
+    early_stopping_additive_patience: 10
+    early_stopping_multiplicative_patience: 1
+    device: cuda
+    random_state: 542
+
+features:
+  feature_family: realmlp_v5_as_is
+  use_original: false
+  use_fe: true
+  n_features_before_te: 34
+  n_features_after_te: 40
+  n_cat_cols: 14
+  n_num_cols: 20
+  base_cat_cols:
+    - spectral_type
+    - galaxy_population
+  base_num_cols:
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+  new_cat_cols:
+    - alpha_cat_
+    - delta_cat_
+    - u_cat_
+    - g_cat_
+    - r_cat_
+    - i_cat_
+    - z_cat_
+    - redshift_cat_
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    - alpha_cat___delta_cat___
+    - u_cat___z_cat___
+  new_num_cols:
+    - _g_div_redshift
+    - _i_div_redshift
+    - _u-g
+    - _g-r
+    - _r-i
+    - _i-z
+    - _u-r
+    - _g-i
+    - _r-z
+    - _mag_mean
+    - _mag_range
+    - _log1p_redshift
+  cat_cols:
+    - alpha_cat_
+    - alpha_cat___delta_cat___
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    - delta_cat_
+    - g_cat_
+    - galaxy_population
+    - i_cat_
+    - r_cat_
+    - redshift_cat_
+    - spectral_type
+    - u_cat_
+    - u_cat___z_cat___
+    - z_cat_
+  num_cols:
+    - _g-i
+    - _g-r
+    - _g_div_redshift
+    - _i-z
+    - _i_div_redshift
+    - _log1p_redshift
+    - _mag_mean
+    - _mag_range
+    - _r-i
+    - _r-z
+    - _u-g
+    - _u-r
+    - alpha
+    - delta
+    - g
+    - i
+    - r
+    - redshift
+    - u
+    - z
+  combo_names:
+    - alpha_cat___delta_cat___
+    - u_cat___z_cat___
+
+target:
+  class_names:
+    - GALAXY
+    - QSO
+    - STAR
+  label_mapping:
+    GALAXY: 0
+    QSO: 1
+    STAR: 2
+  submission_format: single_column_class_label
+
+oof_eval:
+  balanced_accuracy: 0.9690389777981231
+  recall:
+    GALAXY: 0.9595051393451308
+    QSO: 0.9764305165481505
+    STAR: 0.971181277501088
+  interpretation: >
+    GALAXY recallは低めだが、QSO/STAR recallが高い。
+    020/024/025系と同じく、GALAXYを犠牲にしてQSO/STARを強く取る傾向がある。
+    017や019とはrecallバランスが異なる可能性があるため、blend確認が必要。
+
+outputs:
+  submission: submission_realmlp_v5_as_is.csv
+  oof_proba: oof_exp_20260608_026_realmlp_v5_as_is_proba.npy
+  pred_proba: pred_exp_20260608_026_realmlp_v5_as_is_proba.npy
+  cv_result: cv_result.json
+  fold_scores: fold_scores.csv
+  feature_info: feature_info.json
+  registry: oof_registry.csv
+
+comparison:
+  against_015_realmlp_as_is:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv_015: 0.9681693449222352
+    public_lb_015: 0.96977
+    cv_026: 0.9690389777981231
+    public_lb_026: 0.96979
+    cv_delta_026_minus_015: 0.0008696328758879
+    lb_delta_026_minus_015: 0.00002
+    interpretation: >
+      026は015をCVで大きく上回り、Public LBでもわずかに上回った。
+      同じRealMLP familyだが、単なるseed variantではなく別recipeとして価値がある。
+
+  against_017_realmlp_bias:
+    exp_id: exp_20260606_017_bias_search_on_015_realmlp
+    cv_017: 0.9683022653955233
+    public_lb_017: 0.96985
+    cv_026: 0.9690389777981231
+    public_lb_026: 0.96979
+    cv_delta_026_minus_017: 0.0007367124025998
+    lb_delta_026_minus_017: -0.00006
+    interpretation: >
+      026は017をCVでは上回るが、Public LBではわずかに下回る。
+      017はbias済みRealMLP backup、026は別RealMLP recipe素材として併存させる。
+
+  against_019_public_current_best:
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    cv_019: 0.968872315017554
+    public_lb_019: 0.97000
+    cv_026: 0.9690389777981231
+    public_lb_026: 0.96979
+    cv_delta_026_minus_019: 0.0001666627805691
+    lb_delta_026_minus_019: -0.00021
+    interpretation: >
+      026は019をCVでは上回るが、Public LBでは下回る。
+      019はPublic-confirmed bestとして維持する。
+      026が019に対して補完的かどうかは027の相関・blend確認で判断する。
+
+  against_020_cv_trusted_attack:
+    exp_id: exp_20260607_020_bias_search_on_019_best_blend
+    cv_020: 0.9692240443617589
+    public_lb_020: 0.96969
+    cv_026: 0.9690389777981231
+    public_lb_026: 0.96979
+    cv_delta_026_minus_020: -0.0001850665636358
+    lb_delta_026_minus_020: 0.00010
+    interpretation: >
+      026は020をCVでは下回るが、Public LBでは上回る。
+      020はCV-trusted attack、026はPublicも悪くない別RealMLP recipeとして比較対象にする。
+
+  against_024_cv_best:
+    exp_id: exp_20260608_024_seed_ensemble_and_blend_check
+    cv_024: 0.9694803109983217
+    public_lb_024: 0.96958
+    cv_026: 0.9690389777981231
+    public_lb_026: 0.96979
+    cv_delta_026_minus_024: -0.0004413332001986
+    lb_delta_026_minus_024: 0.00021
+    interpretation: >
+      026は024をCVでは下回るが、Public LBでは上回る。
+      024はCV-trusted候補、026はPublicも安定した強RealMLP単体として扱う。
+
+  against_025_bias_on_024:
+    exp_id: exp_20260608_025_bias_search_on_024_best_blend
+    cv_025: 0.9694982932369408
+    public_lb_025: 0.96952
+    cv_026: 0.9690389777981231
+    public_lb_026: 0.96979
+    cv_delta_026_minus_025: -0.0004593154388177
+    lb_delta_026_minus_025: 0.00027
+    interpretation: >
+      026は025をCVでは下回るが、Public LBでは大きく上回る。
+      025はCV過適合寄りの可能性があり、026の方が単体としては扱いやすい。
+
+role_judgement:
+  public_current_best:
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    public_lb: 0.97000
+    status: keep_public_current_best
+    reason: >
+      026はPublic LBで019に届かない。
+      current public bestは019のまま。
+
+  cv_trusted_slot:
+    exp_id: exp_20260608_024_seed_ensemble_and_blend_check
+    cv: 0.9694803109983217
+    public_lb: 0.96958
+    status: keep_cv_trusted_slot_pending_027
+    reason: >
+      024は現時点の提出slot 2候補。
+      026はPublicでは024を上回るが、CVでは024を下回る。
+      027のblend結果次第でslot 2候補が変わる可能性はある。
+
+  new_material:
+    exp_id: exp_20260608_026_realmlp_v5_as_is
+    cv: 0.9690389777981231
+    public_lb: 0.96979
+    status: keep_for_blend_check
+    reason: >
+      026は単体CVが高く、Public LBも0.96979と悪くない。
+      015/017とは別RealMLP recipeであり、027で相関・blend確認を行う価値が高い。
+
+  stable_backup:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv: 0.9681693449222352
+    public_lb: 0.96977
+    status: keep_but_lower_priority_after_026
+    reason: >
+      026が015をCV/Publicともに上回ったため、
+      015の単体backupとしての相対優先度は下がった。
+      ただし015は019/017/024の構成要素でもあるため、完全に捨てない。
+
+judgement:
+  status: completed
+  decision: >
+    026 RealMLP v5 as-is は、単体提出候補としては019には届かないが、
+    強い別RealMLP recipe素材として採用する。
+    CV 0.969039、Public LB 0.96979で、015をCV/LBともに上回った。
+    020/024/025よりPublic LBが高く、CVも017/015より高いため、
+    027で既存上位候補との相関・blend確認を必ず実施する。
+  key_findings:
+    - 公開RealMLP v5の再現は成功
+    - CVは0.969039で、RealMLP単体として強い
+    - Public LBは0.96979で、015と同等以上
+    - 019にはPublicで届かない
+    - 024/025にはCVで届かないが、Publicでは上回る
+    - 単なるseed variantではなく別RealMLP recipeとして価値がある
+  caveat: >
+    026はRealMLP系であるため、015/017/021/022/023との相関が高い可能性はある。
+    ただしfeature setとconfigが異なり、Public LBも高いため、
+    単体結果だけで判断せず、027のOOF相関・blend weightを見る必要がある。
+  next_action:
+    - 026のOOF/pred probaをnpy-files datasetへ追加する
+    - 027として019/024/020/017/015/018/026の相関・blend確認を行う
+    - 026がblendで重みを持てば、024/025に代わるslot 2候補または新current blend候補になり得る
+    - 026が高相関で重みを持たなければ、Publicの良い単体backupとして保持する
+
+oof_registry_update:
+  exp_id: exp_20260608_026_realmlp_v5_as_is
+  public_lb: 0.96979
+  cv_score: 0.9690389777981231
+  role: realmlp_v5_single_model_candidate
+  keep_hold_drop: keep_for_blend_check
+  oof_path: /kaggle/working/exp_20260608_026_realmlp_v5_as_is/oof_exp_20260608_026_realmlp_v5_as_is_proba.npy
+  pred_path: /kaggle/working/exp_20260608_026_realmlp_v5_as_is/pred_exp_20260608_026_realmlp_v5_as_is_proba.npy
+  submission_path: /kaggle/working/exp_20260608_026_realmlp_v5_as_is/submission_realmlp_v5_as_is.csv
+  notes: >
+    RealMLP v5 as-is from public notebook.
+    CV 0.969039 and Public LB 0.96979.
+    Strong separate RealMLP recipe, not just a seed variant of 015.
+    Public LB is below 019 but above 020/024/025.
+    Keep for 027 correlation/blend check against 019/024/020/017/015/018.
