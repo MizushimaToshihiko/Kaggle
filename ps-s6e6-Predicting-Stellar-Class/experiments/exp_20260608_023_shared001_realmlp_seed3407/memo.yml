@@ -1,1 +1,162 @@
-
+experiment:
+  id: exp_20260608_023_shared001_realmlp_seed3407
+  title: shared001 RealMLP seed3407
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: RealMLP_TD_Classifier
+  created_at: '2026-06-08'
+objective:
+  summary: Run shared001 RealMLP with seed3407 and save OOF/pred probabilities with
+    exp_id in filenames for later correlation and blend checks.
+  success_criteria:
+  - run shared001 RealMLP seed3407
+  - ensure CONFIG random_state uses SEED=3407
+  - save OOF proba npy with exp_id in filename
+  - save test pred proba npy with exp_id in filename
+  - save submission
+  - save cv_result
+  - save fold_scores
+  - update oof_registry
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  target_col: class
+  id_col: id
+  use_original: false
+seed:
+  seed: 3407
+  random_seed: 3407
+  numpy_seed: 3407
+  torch_seed: 3407
+  stratified_kfold_random_state: 3407
+  target_encoder_random_state: 3407
+  config_random_state: 3407
+  audit: CONFIG random_state is asserted to equal SEED before training.
+features:
+  feature_family: shared001_realmlp_fe_seed3407
+  feature_info:
+    cat_cols:
+    - alpha_cat_
+    - alpha_cat__delta_cat__
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    - delta_cat_
+    - g_cat_
+    - galaxy_population
+    - i_cat_
+    - r_cat_
+    - redshift_cat_
+    - spectral_type
+    - u_cat_
+    - u_cat__z_cat__
+    - z_cat_
+    num_cols:
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+    - _g_/_redshift
+    - _i_/_redshift
+    - _u-g
+    - _u-r
+    new_cat_cols:
+    - alpha_cat_
+    - delta_cat_
+    - u_cat_
+    - g_cat_
+    - r_cat_
+    - i_cat_
+    - z_cat_
+    - redshift_cat_
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    - alpha_cat__delta_cat__
+    - u_cat__z_cat__
+    new_num_cols:
+    - _g_/_redshift
+    - _i_/_redshift
+    - _u-g
+    - _u-r
+    combo_names:
+    - alpha_cat__delta_cat__
+    - u_cat__z_cat__
+    color_pairs:
+    - - u
+      - g
+    - - u
+      - r
+    important_combos:
+    - - alpha_cat_
+      - delta_cat_
+    - - u_cat_
+      - z_cat_
+    n_features_before_te: 26
+    te_names:
+    - _alpha_cat__delta_cat__TE_class0
+    - _alpha_cat__delta_cat__TE_class1
+    - _alpha_cat__delta_cat__TE_class2
+    - _u_cat__z_cat__TE_class0
+    - _u_cat__z_cat__TE_class1
+    - _u_cat__z_cat__TE_class2
+    n_features_after_te: 32
+  target_encoder_safety: TargetEncoder is fit inside each fold on train fold combo
+    features and labels, then transforms validation and test.
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 3407
+  score: 0.9680674611199329
+  fold_scores:
+  - fold: 1
+    balanced_accuracy: 0.9687007633834913
+    n_train: 461877
+    n_valid: 115470
+    checkpoint: /kaggle/working/exp_20260608_023_shared001_realmlp_seed3407/model_fold1.pth
+  - fold: 2
+    balanced_accuracy: 0.9677247297714918
+    n_train: 461877
+    n_valid: 115470
+    checkpoint: /kaggle/working/exp_20260608_023_shared001_realmlp_seed3407/model_fold2.pth
+  - fold: 3
+    balanced_accuracy: 0.9680252264541084
+    n_train: 461878
+    n_valid: 115469
+    checkpoint: /kaggle/working/exp_20260608_023_shared001_realmlp_seed3407/model_fold3.pth
+  - fold: 4
+    balanced_accuracy: 0.9678136055249621
+    n_train: 461878
+    n_valid: 115469
+    checkpoint: /kaggle/working/exp_20260608_023_shared001_realmlp_seed3407/model_fold4.pth
+  - fold: 5
+    balanced_accuracy: 0.9680731117493201
+    n_train: 461878
+    n_valid: 115469
+    checkpoint: /kaggle/working/exp_20260608_023_shared001_realmlp_seed3407/model_fold5.pth
+  fold_std: 0.00034199265796011803
+outputs:
+  oof_proba: oof_exp_20260608_023_shared001_realmlp_seed3407_proba.npy
+  pred_proba: pred_exp_20260608_023_shared001_realmlp_seed3407_proba.npy
+  oof_csv: oof_shared001_realmlp_seed3407.csv
+  pred_csv: pred_shared001_realmlp_seed3407.csv
+  submission: submission_shared001_realmlp_seed3407.csv
+  cv_result: cv_result.json
+  fold_scores: fold_scores.csv
+  feature_info: feature_info.json
+  registry: oof_registry.csv
+judgement:
+  status: pending_public_lb_and_corr
+  reason: This is a RealMLP seed variant material candidate. Adoption depends on CV,
+    Public LB, and OOF correlation/blend behavior against 015/017/019/020/021/022.
+  next_action:
+  - Submit submission_shared001_realmlp_seed3407.csv
+  - Record Public LB
+  - Add OOF/pred npy to npy-files dataset
+  - Compare OOF correlation against 015/017/019/020/021/022
+  - Blend with current top candidates if correlation and Public LB are favorable
