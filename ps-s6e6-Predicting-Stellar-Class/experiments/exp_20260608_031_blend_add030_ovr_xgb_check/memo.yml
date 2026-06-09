@@ -258,3 +258,233 @@ judgement:
     030 and proceed to 032 TabM
   - Do not bias-search 030
   - Do not treat in-sample LogReg/Ridge/ElasticNet rows as final candidates
+
+result:
+  status: completed
+  cv_balanced_accuracy: 0.9700333620193362
+  public_lb: 0.97043
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260608_031_blend_add030_ovr_xgb_check_best_blend.csv
+
+best_blend:
+  set_name: W_018_019_027_026_028_030
+  method: hc_nonnegative_raw
+  cv_balanced_accuracy: 0.9700333620193362
+  includes_030: true
+  weight_030: 0.024493364050814405
+  includes_029: false
+  includes_028: true
+  weight_028: 0.45360011102950976
+  n_models: 6
+  keys:
+    - 018_xgb_shared003
+    - 019_blend_best
+    - 027_blend_add026
+    - 026_realmlp_v5
+    - 028_cat_v3
+    - 030_ovr_xgb
+  weights:
+    018_xgb_shared003: 0.0
+    019_blend_best: 0.0
+    027_blend_add026: 0.20898708434879643
+    026_realmlp_v5: 0.31291944057087945
+    028_cat_v3: 0.45360011102950976
+    030_ovr_xgb: 0.024493364050814405
+  recalls:
+    GALAXY: 0.9617383702447811
+    QSO: 0.9757902734264958
+    STAR: 0.9725714423867318
+  oof_path: oof_exp_20260608_031_blend_add030_ovr_xgb_check_best_blend_proba.npy
+  pred_path: pred_exp_20260608_031_blend_add030_ovr_xgb_check_best_blend_proba.npy
+  submission_path: submission_exp_20260608_031_blend_add030_ovr_xgb_check_best_blend.csv
+  note: >
+    Best safe blend excludes in-sample meta screening methods.
+    030 OVR XGB receives only a small weight, but the resulting blend improves both CV and Public LB.
+
+submitted_candidate:
+  set_name: W_018_019_027_026_028_030
+  method: hc_nonnegative_raw
+  cv_balanced_accuracy: 0.9700333620193362
+  public_lb: 0.97043
+  public_lb_source: user_reported_after_submission
+  weights:
+    018_xgb_shared003: 0.0
+    019_blend_best: 0.0
+    027_blend_add026: 0.20898708434879643
+    026_realmlp_v5: 0.31291944057087945
+    028_cat_v3: 0.45360011102950976
+    030_ovr_xgb: 0.024493364050814405
+  judgement: public_confirmed_best_update
+
+safe_blend_top_results:
+  - set_name: W_018_019_027_026_028_030
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700333620193362
+    includes_030: true
+    weight_030: 0.024493364050814405
+    weights:
+      018_xgb_shared003: 0.0
+      019_blend_best: 0.0
+      027_blend_add026: 0.20898708434879643
+      026_realmlp_v5: 0.31291944057087945
+      028_cat_v3: 0.45360011102950976
+      030_ovr_xgb: 0.024493364050814405
+  - set_name: Q_027_026_028_030
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700204063931372
+    includes_030: true
+    weight_030: 0.010031698099363865
+    weights:
+      027_blend_add026: 0.2631538115059539
+      026_realmlp_v5: 0.2763553195417043
+      028_cat_v3: 0.4504591708529778
+      030_ovr_xgb: 0.010031698099363865
+  - set_name: U_029_027_026_028_030
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700158726877303
+    includes_030: true
+    weight_030: 0.012161990895732692
+    weights:
+      029_blend_add028: 0.3776045761109309
+      027_blend_add026: 0.1533279224143282
+      026_realmlp_v5: 0.1735855323437131
+      028_cat_v3: 0.2833199782352951
+      030_ovr_xgb: 0.012161990895732692
+  - set_name: A_029_only
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700023026377228
+    includes_030: false
+    weights:
+      029_blend_add028: 1.0
+  - set_name: H_029_030
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700023026377228
+    includes_030: true
+    weight_030: 0.0
+    weights:
+      029_blend_add028: 1.0
+      030_ovr_xgb: 0.0
+  - set_name: V_019_027_026_028_030
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9699954574894831
+    includes_030: true
+    weight_030: 0.006707446960114047
+    weights:
+      019_blend_best: 0.0
+      027_blend_add026: 0.33647967476891216
+      026_realmlp_v5: 0.24290162876187577
+      028_cat_v3: 0.41391124950909813
+      030_ovr_xgb: 0.006707446960114047
+
+individual_scores:
+  current_best_before_031:
+    key: 029_blend_add028
+    cv_balanced_accuracy: 0.9700023026377228
+    public_lb: 0.970036
+  added_model:
+    key: 030_ovr_xgb
+    cv_balanced_accuracy: 0.9609971296999271
+    public_lb: 0.96118
+    recalls:
+      GALAXY: 0.98016318745364
+      QSO: 0.9654097982807338
+      STAR: 0.9374184033654078
+  important_components:
+    027_blend_add026:
+      cv_balanced_accuracy: 0.9695425457477898
+      public_lb: 0.96975
+    026_realmlp_v5:
+      cv_balanced_accuracy: 0.9690389777981231
+      public_lb: 0.96979
+    028_cat_v3:
+      cv_balanced_accuracy: 0.9688146470512534
+      public_lb: 0.96969
+    018_xgb_shared003:
+      cv_balanced_accuracy: 0.965207986418628
+      public_lb: 0.96578
+
+comparison_to_previous_best:
+  previous_best:
+    exp_id: exp_20260608_029_blend_add028_cat_v3_check
+    candidate: T_027_026_028 / hc_nonnegative_raw
+    cv: 0.9700023026377228
+    public_lb: 0.970036
+  exp_031:
+    exp_id: exp_20260608_031_blend_add030_ovr_xgb_check
+    candidate: W_018_019_027_026_028_030 / hc_nonnegative_raw
+    cv: 0.9700333620193362
+    public_lb: 0.97043
+  delta:
+    cv: 0.0000310593816134
+    public_lb: 0.000394
+  judgement: >
+    031 updates both CV and Public LB.
+    Despite 030 being weak as a standalone model, a small 030 weight improves the final blend.
+
+correlation_focus_030:
+  vs_029_blend_add028:
+    pearson_flat_proba: 0.9901838099739644
+    spearman_flat_proba: 0.8227197241684927
+    disagreement_rate: 0.020717177018326934
+    error_overlap_jaccard: 0.5098527276498652
+    note: >
+      030 has low rank correlation and low error overlap against 029.
+      This explains why even a weak OVR XGB can contribute a small positive blend weight.
+  vs_026_realmlp_v5:
+    pearson_flat_proba: 0.9875811881083444
+    spearman_flat_proba: 0.7514351493280136
+    disagreement_rate: 0.02254276890674066
+    error_overlap_jaccard: 0.4858605655773769
+    note: >
+      This is the most useful diversity signal for 030.
+      The standalone score is weak, but its mistakes are not fully overlapping with RealMLP v5.
+  vs_028_cat_v3:
+    pearson_flat_proba: 0.9889411864591346
+    spearman_flat_proba: 0.9651606183292318
+    disagreement_rate: 0.0218620690849697
+    error_overlap_jaccard: 0.49719407323670717
+  vs_018_xgb_shared003:
+    pearson_flat_proba: 0.9913389932133241
+    spearman_flat_proba: 0.9695671864531624
+    disagreement_rate: 0.017706855669120995
+    error_overlap_jaccard: 0.5631471773320047
+  vs_019_blend_best:
+    pearson_flat_proba: 0.9926691094200122
+    spearman_flat_proba: 0.9206818357426911
+    disagreement_rate: 0.017268644333477093
+    error_overlap_jaccard: 0.5658829238166659
+
+role_judgement:
+  decision: promote_to_current_best
+  role: public_confirmed_current_best_blend
+  priority: highest
+  reason: >
+    031 is a small but meaningful improvement over 029.
+    030 OVR XGB is weak as a standalone model, but its probability/rank behavior differs enough
+    from 029, 026, and 028 to receive a small positive HC weight.
+    The useful effect is not from 030's standalone accuracy; it is from error diversity.
+  current_submission_slots_after_031:
+    slot_1:
+      exp_id: exp_20260608_031_blend_add030_ovr_xgb_check
+      candidate: W_018_019_027_026_028_030 / hc_nonnegative_raw
+      role: public_confirmed_current_best
+      cv: 0.9700333620193362
+      public_lb: 0.97043
+    slot_2:
+      exp_id: exp_20260608_029_blend_add028_cat_v3_check
+      candidate: T_027_026_028 / hc_nonnegative_raw
+      role: previous_best_backup
+      cv: 0.9700023026377228
+      public_lb: 0.970036
+  keep_030: true
+  keep_030_reason: >
+    030 should be kept as a low-weight auxiliary diversity material.
+    However, its weight is only about 2.45%, so it should not be deepened or bias-searched directly.
+  do_not_bias_search_030: true
+  do_not_use_in_sample_meta_as_final: true
+  next_action: >
+    Proceed to 032 TabM as planned.
+    Do not spend additional experiments trying to improve 030 directly.
+    If 032 produces usable OOF/pred, run 033 add032 blend/corr check against
+    031 / 029 / 027 / 026 / 028 / 030 / 018.
