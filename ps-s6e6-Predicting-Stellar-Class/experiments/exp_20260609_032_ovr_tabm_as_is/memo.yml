@@ -1,1 +1,169 @@
-
+experiment:
+  id: exp_20260609_032_ovr_tabm_as_is
+  title: ps6e6-one-vs-rest-tabm as-is
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: TabM_D_Classifier
+  created_at: '2026-06-09'
+objective:
+  summary: Run ps6e6-one-vs-rest-tabm as-is to obtain a TabM/NN-family OOF/pred material
+    distinct from RealMLP, CatBoost, and XGB. Save exp_id-named OOF/pred probability
+    files for the next add032 blend/corr check.
+  success_criteria:
+  - run TabM one-vs-rest training body
+  - use SEED_LIST=[60,0,2809]
+  - keep source notebook's class-wise LogisticRegressionCV over TabM seed outputs
+  - save raw OOF proba npy with exp_id in filename
+  - save raw test pred proba npy with exp_id in filename
+  - save bias-tuned submission
+  - save cv_result
+  - save feature_info
+  - update oof_registry
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  target_col: class
+  id_col: id
+  use_original: false
+  use_external_stacking_files: false
+seed:
+  seed: 42
+  seed_list: &id001
+  - 60
+  - 0
+  - 2809
+  random_seed: 42
+  numpy_seed: 42
+  torch_seed: 42
+  stratified_kfold_random_state_per_seed: *id001
+  target_encoder_random_state_per_seed: *id001
+  tabm_random_state: 42
+features:
+  feature_family: ps6e6_one_vs_rest_tabm_fe
+  feature_info:
+    feature_family: ps6e6_one_vs_rest_tabm_fe
+    n_features: 26
+    n_cat_features: 12
+    cat_cols:
+    - spectral_type
+    - galaxy_population
+    - alpha_cat_
+    - delta_cat_
+    - u_cat_
+    - g_cat_
+    - r_cat_
+    - i_cat_
+    - z_cat_
+    - redshift_cat_
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    feature_cols:
+    - spectral_type
+    - galaxy_population
+    - alpha_cat_
+    - delta_cat_
+    - u_cat_
+    - g_cat_
+    - r_cat_
+    - i_cat_
+    - z_cat_
+    - redshift_cat_
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+    - _g_/_redshift
+    - _i_/_redshift
+    - _u-g
+    - _u-r
+    - alpha_cat_-delta_cat_
+    - u_cat_-z_cat_
+    te_columns:
+    - alpha_cat_-delta_cat_
+    - u_cat_-z_cat_
+    seed_list:
+    - 60
+    - 0
+    - 2809
+    model_types:
+      qso:
+      - t
+      star:
+      - t
+      galaxy:
+      - t
+    add_external: false
+  target_encoder_safety: TargetEncoder is fit inside each OVR fold on train fold combo
+    features and binary labels, then transforms validation and test.
+model:
+  family: TabM
+  type: binary_one_vs_rest
+  base_model: TabM_D_Classifier
+  classwise_blender: LogisticRegressionCV
+  params_t:
+    device: cuda
+    val_metric_name: 1-auc_ovr
+    random_state: 42
+    verbosity: 0
+    tabm_k: 32
+    num_emb_type: pwl
+    d_embedding: 12
+    batch_size: 64
+    lr: 0.003
+    weight_decay: 0.02
+    n_epochs: 3
+    dropout: 0.1
+    d_block: 512
+    n_blocks: 3
+  probability_postprocess: Build independent class probabilities from class-wise OVR
+    outputs, then normalize each row to sum to 1.
+  bias_tuning: Applied only to submission labels. OOF/pred npy store raw normalized
+    probabilities.
+cv:
+  scheme: StratifiedKFold OVR per class and seed
+  n_splits: 5
+  shuffle: true
+  raw_score: 0.9610105651284856
+  tuned_score: 0.9686168281485955
+  best_bias:
+  - -1.42
+  - -0.21299999999999997
+  - 0.0
+  raw_recalls:
+    GALAXY: 0.9798797287273497
+    QSO: 0.9659390659279684
+    STAR: 0.9372129007301387
+  tuned_recalls:
+    GALAXY: 0.9574441029988344
+    QSO: 0.9771646619943146
+    STAR: 0.9712417194526377
+outputs:
+  oof_proba: oof_exp_20260609_032_ovr_tabm_as_is_proba.npy
+  pred_proba: pred_exp_20260609_032_ovr_tabm_as_is_proba.npy
+  oof_csv: oof_exp_20260609_032_ovr_tabm_as_is.csv
+  pred_csv: pred_exp_20260609_032_ovr_tabm_as_is.csv
+  submission: submission_exp_20260609_032_ovr_tabm_as_is.csv
+  submission_raw: submission_raw_exp_20260609_032_ovr_tabm_as_is.csv
+  cv_result: cv_result_exp_20260609_032_ovr_tabm_as_is.json
+  feature_info: feature_info_exp_20260609_032_ovr_tabm_as_is.json
+  feature_columns: feature_columns_exp_20260609_032_ovr_tabm_as_is.csv
+  class_distribution: class_distribution_exp_20260609_032_ovr_tabm_as_is.csv
+  registry: oof_registry.csv
+judgement:
+  status: pending_public_lb_and_corr
+  reason: This is a TabM/NN-family OVR material candidate. Adoption depends on CV,
+    Public LB, and OOF correlation/blend behavior against 031/029/027/026/028/030/018.
+  next_action:
+  - Submit submission_exp_20260609_032_ovr_tabm_as_is.csv
+  - Record Public LB
+  - Add OOF/pred npy to npy-files dataset
+  - Run 033 add032 blend/corr check
+  - Compare against current best 031 and backup 029
