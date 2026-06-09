@@ -1,1 +1,199 @@
-
+experiment:
+  id: exp_20260608_030_ovr_xgb_as_is
+  title: ps6e6 one-vs-rest XGB body only
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: XGBClassifier binary one-vs-rest
+  created_at: '2026-06-08'
+objective:
+  summary: Run only the XGB body from ps6e6-one-vs-rest-xgb.ipynb and save OOF/pred
+    probabilities with exp_id in filenames as a new XGB-family material distinct from
+    018.
+  success_criteria:
+  - run one-vs-rest XGB for GALAXY/QSO/STAR
+  - use the original notebook feature engineering
+  - exclude external stacking inputs
+  - exclude LogisticRegressionCV second-stage blend
+  - exclude final bias search
+  - save OOF proba npy with exp_id in filename
+  - save test pred proba npy with exp_id in filename
+  - save submission
+  - save cv_result
+  - save fold_scores
+  - update oof_registry
+  - write memo.yml
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  target_col: class
+  id_col: id
+  use_original: false
+seed:
+  base_seed: 42
+  seed_list:
+  - 60
+  - 0
+  - 2809
+  numpy_seed: 42
+  xgb_random_state: each seed in seed_list
+  stratified_kfold_random_state: each seed in seed_list for binary model training;
+    SEED=42 for final fold diagnostics
+  target_encoder_random_state: each seed in seed_list
+features:
+  feature_family: ps6e6_one_vs_rest_xgb_fe
+  source_notebook: ps6e6-one-vs-rest-xgb.ipynb
+  feature_info:
+    n_features: 26
+    n_cat_cols_final: 12
+    n_te_columns: 2
+    feature_cols:
+    - spectral_type
+    - galaxy_population
+    - alpha_cat_
+    - delta_cat_
+    - u_cat_
+    - g_cat_
+    - r_cat_
+    - i_cat_
+    - z_cat_
+    - redshift_cat_
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+    - _g_/_redshift
+    - _i_/_redshift
+    - _u-g
+    - _u-r
+    - alpha_cat_-delta_cat_
+    - u_cat_-z_cat_
+    cat_cols_final:
+    - spectral_type
+    - galaxy_population
+    - alpha_cat_
+    - delta_cat_
+    - u_cat_
+    - g_cat_
+    - r_cat_
+    - i_cat_
+    - z_cat_
+    - redshift_cat_
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    te_columns:
+    - alpha_cat_-delta_cat_
+    - u_cat_-z_cat_
+    source: ps6e6-one-vs-rest-xgb.ipynb XGB body only
+  target_encoder_safety: TargetEncoder is fit inside each binary fold on train fold
+    combo features and binary labels, then transforms validation and test.
+model:
+  family: XGBoost
+  type: binary one-vs-rest
+  class_order:
+  - GALAXY
+  - QSO
+  - STAR
+  xgb_params_base:
+    subsample: 0.8747340624732572
+    colsample_bytree: 0.5
+    max_depth: 4
+    learning_rate: 0.02
+    max_bin: 1024
+    tree_method: hist
+    device: cuda
+    objective: binary:logistic
+    eval_metric: auc
+    random_state: 60
+    n_estimators: 20000
+    early_stopping_rounds: 500
+  n_binary_models: 45
+  probability_postprocess: Average across seeds for each class, then normalize independent
+    one-vs-rest probabilities so each row sums to 1.
+  excluded_from_original_notebook:
+  - external stacking files
+  - RealMLP / TabM / CatBoost / LightGBM branches
+  - LogisticRegressionCV second-stage blend
+  - final bias search as submitted output
+cv:
+  scheme: StratifiedKFold binary one-vs-rest per class and seed
+  n_splits: 5
+  shuffle: true
+  score: 0.9609971296999271
+  fold_scores:
+  - fold: 1
+    balanced_accuracy: 0.9613065002157581
+    recall_GALAXY: 0.9808599131079793
+    recall_QSO: 0.96628110461394
+    recall_STAR: 0.936778482925355
+    n_valid: 115470
+  - fold: 2
+    balanced_accuracy: 0.9618982919189478
+    recall_GALAXY: 0.9804095581222846
+    recall_QSO: 0.9664518331981732
+    recall_STAR: 0.9388334844363856
+    n_valid: 115470
+  - fold: 3
+    balanced_accuracy: 0.9608229438431133
+    recall_GALAXY: 0.9796413054996291
+    recall_QSO: 0.9643604080413163
+    recall_STAR: 0.9384671179883946
+    n_valid: 115469
+  - fold: 4
+    balanced_accuracy: 0.9600683708091758
+    recall_GALAXY: 0.9804360495920313
+    recall_QSO: 0.9654686699675602
+    recall_STAR: 0.934300392867936
+    n_valid: 115469
+  - fold: 5
+    balanced_accuracy: 0.9608895505488859
+    recall_GALAXY: 0.9794691109462753
+    recall_QSO: 0.9644869387058221
+    recall_STAR: 0.9387126019945603
+    n_valid: 115469
+  fold_std: 0.0006020482579731486
+  recalls:
+    GALAXY: 0.98016318745364
+    QSO: 0.9654097982807338
+    STAR: 0.9374184033654078
+  binary_model_log_path: binary_model_log_exp_20260608_030_ovr_xgb_as_is.csv
+submission_distribution:
+  total_rows: 247435
+  class_counts:
+    GALAXY: 162020
+    QSO: 49993
+    STAR: 35422
+  class_ratio:
+    GALAXY: 0.65479823
+    QSO: 0.20204498
+    STAR: 0.14315679
+outputs:
+  oof_proba: oof_exp_20260608_030_ovr_xgb_as_is_proba.npy
+  pred_proba: pred_exp_20260608_030_ovr_xgb_as_is_proba.npy
+  oof_csv: oof_exp_20260608_030_ovr_xgb_as_is.csv
+  pred_csv: pred_exp_20260608_030_ovr_xgb_as_is.csv
+  submission: submission_exp_20260608_030_ovr_xgb_as_is.csv
+  cv_result: cv_result_exp_20260608_030_ovr_xgb_as_is.json
+  fold_scores: fold_scores_exp_20260608_030_ovr_xgb_as_is.csv
+  feature_info: feature_info_exp_20260608_030_ovr_xgb_as_is.json
+  feature_columns: feature_columns_exp_20260608_030_ovr_xgb_as_is.csv
+  binary_model_log: binary_model_log_exp_20260608_030_ovr_xgb_as_is.csv
+  registry: oof_registry.csv
+judgement:
+  status: pending_public_lb_and_corr
+  reason: This is an XGB one-vs-rest material candidate. The purpose is not to replace
+    029 directly, but to obtain an XGB-family OOF/pred source with a different error
+    structure from 018 and test whether it receives non-zero blend weight.
+  next_action:
+  - Submit submission_exp_20260608_030_ovr_xgb_as_is.csv
+  - Record Public LB
+  - Add OOF/pred npy to npy-files dataset
+  - Compare OOF correlation against 018, 019, 027, 028, 029
+  - Run blend check if Public LB/CV/correlation are favorable
