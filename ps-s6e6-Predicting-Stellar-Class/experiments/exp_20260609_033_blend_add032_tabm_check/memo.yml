@@ -300,3 +300,226 @@ judgement:
   - If 032 weight is near zero or no CV improvement, proceed to 034 GPU logistic regression
     stacker
   - Do not treat in-sample LogReg/Ridge/ElasticNet rows as final candidates
+
+result:
+  status: completed
+  cv_balanced_accuracy: 0.9700400336552478
+  public_lb: 0.97043
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260609_033_blend_add032_tabm_check_best_blend.csv
+  public_update: false
+  public_tie_with_031: true
+
+best_blend:
+  set_name: V_031_027_026_028_030_032
+  method: nm_softmax_raw
+  cv_balanced_accuracy: 0.9700400336552478
+  includes_032: true
+  weight_032: 0.001303523571311227
+  includes_031: true
+  weight_031: 0.996491852378833
+  includes_030: true
+  weight_030: 0.000000000001487009143685007
+  includes_028: true
+  weight_028: 0.00007505743518983776
+  n_models: 6
+  keys:
+    - 031_blend_add030
+    - 027_blend_add026
+    - 026_realmlp_v5
+    - 028_cat_v3
+    - 030_ovr_xgb
+    - 032_ovr_tabm
+  weights:
+    031_blend_add030: 0.996491852378833
+    027_blend_add026: 0.0010151681622706588
+    026_realmlp_v5: 0.0011143984509084026
+    028_cat_v3: 0.00007505743518983776
+    030_ovr_xgb: 0.000000000001487009143685007
+    032_ovr_tabm: 0.001303523571311227
+  recalls:
+    GALAXY: 0.9617754583024266
+    QSO: 0.975773200276585
+    STAR: 0.9725714423867318
+  note: >
+    Best CV is achieved by nm_softmax_raw, but the blend is almost entirely 031.
+    032 receives only about 0.13% weight, and 030 is effectively zero.
+    This is a tiny CV improvement over 031, not a material family-level update.
+
+submitted_candidate:
+  set_name: V_031_027_026_028_030_032
+  method: nm_softmax_raw
+  cv_balanced_accuracy: 0.9700400336552478
+  public_lb: 0.97043
+  public_lb_source: user_reported_after_submission
+  weights:
+    031_blend_add030: 0.996491852378833
+    027_blend_add026: 0.0010151681622706588
+    026_realmlp_v5: 0.0011143984509084026
+    028_cat_v3: 0.00007505743518983776
+    030_ovr_xgb: 0.000000000001487009143685007
+    032_ovr_tabm: 0.001303523571311227
+  judgement: public_tie_with_current_best_not_replacement
+
+safe_blend_top_results:
+  - set_name: V_031_027_026_028_030_032
+    method: nm_softmax_raw
+    cv_balanced_accuracy: 0.9700400336552478
+    public_lb: 0.97043
+    includes_032: true
+    weight_032: 0.001303523571311227
+    weights:
+      031_blend_add030: 0.996491852378833
+      027_blend_add026: 0.0010151681622706588
+      026_realmlp_v5: 0.0011143984509084026
+      028_cat_v3: 0.00007505743518983776
+      030_ovr_xgb: 0.000000000001487009143685007
+      032_ovr_tabm: 0.001303523571311227
+  - set_name: R_031_026_032
+    method: nm_softmax_raw
+    cv_balanced_accuracy: 0.9700342450683278
+    includes_032: true
+    weight_032: 0.0000000000000000009492013444670097
+    weights:
+      031_blend_add030: 0.9987285432057755
+      026_realmlp_v5: 0.001271456794224496
+      032_ovr_tabm: 0.0000000000000000009492013444670097
+  - set_name: A_031_only
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700333620193362
+    public_lb: 0.97043
+    includes_032: false
+    weights:
+      031_blend_add030: 1.0
+  - set_name: I_031_032
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700333620193362
+    includes_032: true
+    weight_032: 0.0
+    weights:
+      031_blend_add030: 1.0
+      032_ovr_tabm: 0.0
+  - set_name: X_018_019_027_026_028_032
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700274815658553
+    includes_032: true
+    weight_032: 0.02156471370983523
+    weights:
+      018_xgb_shared003: 0.0029038903430924677
+      019_blend_best: 0.0
+      027_blend_add026: 0.20742073879231815
+      026_realmlp_v5: 0.3135689841590652
+      028_cat_v3: 0.45454167299568893
+      032_ovr_tabm: 0.02156471370983523
+
+individual_scores:
+  current_best_before_033:
+    key: 031_blend_add030
+    cv_balanced_accuracy: 0.9700333620193362
+    public_lb: 0.97043
+  exp_033_best:
+    key: 033_blend_add032
+    cv_balanced_accuracy: 0.9700400336552478
+    public_lb: 0.97043
+  added_model:
+    key: 032_ovr_tabm
+    raw_cv_balanced_accuracy: 0.9610105651284856
+    tuned_cv_balanced_accuracy: 0.9686168281485955
+    public_lb_raw: 0.96106
+    public_lb_biased: 0.96895
+    note: >
+      033 uses the saved raw probability npy from 032, so the blend input corresponds to raw_cv.
+      The 032 biased score was produced by label-level bias tuning and is not directly the same
+      as the raw probability material used in 033.
+
+comparison_to_previous_best:
+  previous_best:
+    exp_id: exp_20260608_031_blend_add030_ovr_xgb_check
+    candidate: W_018_019_027_026_028_030 / hc_nonnegative_raw
+    cv: 0.9700333620193362
+    public_lb: 0.97043
+  exp_033:
+    exp_id: exp_20260609_033_blend_add032_tabm_check
+    candidate: V_031_027_026_028_030_032 / nm_softmax_raw
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+  delta:
+    cv: 0.0000066716359116
+    public_lb: 0.0
+  judgement: >
+    033 slightly improves CV over 031, but Public LB is tied with 031.
+    Since the best blend is almost entirely 031, 033 should not replace 031 as a materially stronger slot.
+    It can be kept as an equivalent backup or diagnostic result.
+
+correlation_focus_032:
+  vs_031_blend_add030:
+    pearson_flat_proba: 0.9907774437676089
+    spearman_flat_proba: 0.8305732660784627
+    disagreement_rate: 0.0202616450765311
+    error_overlap_jaccard: 0.5169116418907633
+    note: >
+      032 appears diverse against 031 by rank/error metrics, but the optimizer assigns
+      only a tiny weight when 031 is present.
+  vs_029_blend_add028:
+    pearson_flat_proba: 0.9904602518859099
+    spearman_flat_proba: 0.8317127188254855
+    disagreement_rate: 0.020576880108496277
+    error_overlap_jaccard: 0.5124875539329572
+  vs_026_realmlp_v5:
+    pearson_flat_proba: 0.9880729750397755
+    spearman_flat_proba: 0.761653072162067
+    disagreement_rate: 0.022149591147091783
+    error_overlap_jaccard: 0.492698973042362
+    note: >
+      032 is diverse against RealMLP v5, but that diversity is not adding meaningful
+      value after 031 already captures the stronger complementarity structure.
+  vs_028_cat_v3:
+    pearson_flat_proba: 0.989125936309112
+    spearman_flat_proba: 0.9637616454439049
+    disagreement_rate: 0.021803179024053126
+    error_overlap_jaccard: 0.4986081413644249
+  vs_030_ovr_xgb:
+    pearson_flat_proba: 0.9983508760390472
+    spearman_flat_proba: 0.9840103812864998
+    disagreement_rate: 0.006651112762342231
+    error_overlap_jaccard: 0.7982498523648467
+    note: >
+      032 raw probability material is very similar to 030 OVR XGB.
+      This likely limits its incremental value after 031 already includes 030-derived information.
+
+judgement:
+  status: completed
+  keep_hold_drop: hold_as_equivalent_backup_and_future_stacker_material
+  role: marginal_tabm_aux_material
+  priority: low_to_medium
+  public_result: tied_with_031
+  reason: >
+    033 technically has the best CV so far, but the gain over 031 is only about 0.0000067
+    and the Public LB is identical to 031 at 0.97043.
+    The 032 contribution is extremely small, so this is not a strong new family breakthrough.
+  not_for_primary_replacement: true
+  current_submission_slots_after_033:
+    slot_1:
+      exp_id: exp_20260608_031_blend_add030_ovr_xgb_check
+      candidate: W_018_019_027_026_028_030 / hc_nonnegative_raw
+      role: public_confirmed_current_best
+      cv: 0.9700333620193362
+      public_lb: 0.97043
+    slot_2:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      candidate: V_031_027_026_028_030_032 / nm_softmax_raw
+      role: cv_slightly_higher_public_tie_backup
+      cv: 0.9700400336552478
+      public_lb: 0.97043
+  keep_032: true
+  keep_032_reason: >
+    032 should be retained as a TabM-family material for later stacker diagnostics,
+    but it should not be deepened directly because its current blend weight is tiny.
+  do_not_bias_search_032_again: true
+  do_not_deepen_032_directly: true
+  do_not_use_in_sample_meta_as_final: true
+  next_action: >
+    Proceed to 034 self-owned GPU/logistic regression stacker using existing OOF/pred assets.
+    Treat 031 as the main public-confirmed best and 033 as a near-equivalent backup,
+    not as a decisive replacement.
