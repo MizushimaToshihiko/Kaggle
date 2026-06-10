@@ -1,1 +1,60 @@
-
+exp_id: exp_20260610_037_tabicl_v2_as_is
+created_at: '2026-06-10'
+competition: PS S6E6 Predicting Stellar Class
+status: completed
+purpose: Run TabICL v2 as-is using raw S6E6 features and save OOF/pred probabilities
+  for blend/correlation check.
+result:
+  cv_balanced_accuracy: 0.9580770153777599
+  fold_mean: 0.9580770095023634
+  fold_std: 0.000473255845089214
+  public_lb: null
+  submitted: false
+model_summary:
+  model_family: TabICL
+  model_type: tabicl_v2_as_is_raw_features_balanced_context
+  use_original: false
+  use_fe: false
+  use_bias_search: false
+  use_external_stacking_files: false
+  source_public_lb_available: false
+  source_public_lb_note: No source LB is assumed for this notebook. Treat as diversity
+    material.
+  seed: 42
+  n_splits: 5
+  samples_per_class: 10000
+  max_context_size_per_fold: 30000
+  tabicl_params:
+    n_estimators: 8
+    batch_size: 1
+    device: cuda
+    use_amp: auto
+    random_state: 42
+    verbose: false
+cv:
+  score: 0.9580770153777599
+  fold_std: 0.000473255845089214
+  recalls:
+    GALAXY: 0.9414220620960051
+    QSO: 0.9708390599523659
+    STAR: 0.9619699240849089
+outputs:
+  oof_proba: oof_exp_20260610_037_tabicl_v2_as_is_proba.npy
+  pred_proba: pred_exp_20260610_037_tabicl_v2_as_is_proba.npy
+  oof_csv: oof_exp_20260610_037_tabicl_v2_as_is.csv
+  pred_csv: pred_exp_20260610_037_tabicl_v2_as_is.csv
+  submission: submission_exp_20260610_037_tabicl_v2_as_is.csv
+  cv_result: cv_result_exp_20260610_037_tabicl_v2_as_is.json
+  fold_scores: fold_scores_exp_20260610_037_tabicl_v2_as_is.csv
+  feature_info: feature_info_exp_20260610_037_tabicl_v2_as_is.json
+  feature_columns: feature_columns_exp_20260610_037_tabicl_v2_as_is.csv
+  class_distribution: class_distribution_exp_20260610_037_tabicl_v2_as_is.csv
+judgement:
+  keep_hold_drop: keep_for_038_blend_corr_check
+  role: tabicl_v2_raw_feature_aux_material
+  not_for_submission_slot_until_lb_checked: true
+  next_action:
+  - Submit 037 only if a standalone LB check is desired.
+  - Add OOF/pred npy to npy-files dataset.
+  - Run 038 add037 blend/corr check against 033, 036 GPU LogReg add035, 036 blend
+    add035, 034, 031, 029, 028, 030, 032, and 035.
