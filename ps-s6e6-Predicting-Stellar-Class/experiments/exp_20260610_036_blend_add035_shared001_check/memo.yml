@@ -333,3 +333,243 @@ judgement:
   - Review safe_blend_diagnostics_focus_035.csv
   - If best safe blend improves over 033/034/031, submit best_submission
   - Do not treat in-sample LogReg/Ridge/ElasticNet rows as final candidates
+
+result:
+  status: completed
+  cv_balanced_accuracy: 0.9700727843277738
+  public_lb: 0.97023
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260610_036_blend_add035_shared001_check_best_blend.csv
+
+best_blend:
+  set_name: S_034_031_035
+  method: hc_nonnegative_raw
+  cv_balanced_accuracy: 0.9700727843277738
+  includes_035: true
+  weight_035: 0.06310176096662955
+  includes_034: true
+  weight_034: 0.5104585097804375
+  includes_031: true
+  weight_031: 0.42643972925293294
+  includes_033: false
+  includes_032: false
+  includes_030: false
+  includes_029: false
+  includes_028: false
+  n_models: 3
+  keys:
+    - 034_gpu_logreg_default
+    - 031_blend_add030
+    - 035_shared001_updated
+  weights:
+    034_gpu_logreg_default: 0.5104585097804375
+    031_blend_add030: 0.42643972925293294
+    035_shared001_updated: 0.06310176096662955
+  recalls:
+    GALAXY: 0.9607767298929745
+    QSO: 0.9769427110454744
+    STAR: 0.9724989120448722
+  oof_path: oof_exp_20260610_036_blend_add035_shared001_check_best_blend_proba.npy
+  pred_path: pred_exp_20260610_036_blend_add035_shared001_check_best_blend_proba.npy
+  submission_path: submission_exp_20260610_036_blend_add035_shared001_check_best_blend.csv
+  note: >
+    Best safe blend excludes in-sample meta screening methods.
+    035 receives a non-trivial 6.31% weight in the best CV blend,
+    but the submitted Public LB does not improve over current best slots.
+
+submitted_candidate:
+  set_name: S_034_031_035
+  method: hc_nonnegative_raw
+  cv_balanced_accuracy: 0.9700727843277738
+  public_lb: 0.97023
+  public_lb_source: user_reported_after_submission
+  weights:
+    034_gpu_logreg_default: 0.5104585097804375
+    031_blend_add030: 0.42643972925293294
+    035_shared001_updated: 0.06310176096662955
+  judgement: cv_improved_but_public_lb_not_improved
+
+safe_blend_top_results:
+  - set_name: S_034_031_035
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700727843277738
+    includes_035: true
+    weight_035: 0.06310176096662955
+    weights:
+      034_gpu_logreg_default: 0.5104585097804375
+      031_blend_add030: 0.42643972925293294
+      035_shared001_updated: 0.06310176096662955
+  - set_name: P_033_034_035
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700719931453431
+    includes_035: true
+    weight_035: 0.06113544119487048
+    weights:
+      033_blend_add032: 0.41745958091735397
+      034_gpu_logreg_default: 0.5214049778877755
+      035_shared001_updated: 0.06113544119487048
+  - set_name: J_034_035
+    method: nm_softmax_raw
+    cv_balanced_accuracy: 0.9700532670837309
+    includes_035: true
+    weight_035: 0.02739718078634761
+    weights:
+      034_gpu_logreg_default: 0.9726028192136523
+      035_shared001_updated: 0.02739718078634761
+  - set_name: A_033_only
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700400336552478
+    includes_035: false
+    weights:
+      033_blend_add032: 1.0
+  - set_name: I_033_035
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700400336552478
+    includes_035: true
+    weight_035: 0.0
+    weights:
+      033_blend_add032: 1.0
+      035_shared001_updated: 0.0
+  - set_name: B_034_default_only
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700373069292101
+    includes_035: false
+    weights:
+      034_gpu_logreg_default: 1.0
+  - set_name: K_031_035
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9700333620193362
+    includes_035: true
+    weight_035: 0.0
+    weights:
+      031_blend_add030: 1.0
+      035_shared001_updated: 0.0
+
+individual_scores:
+  current_best_reference:
+    key: 033_blend_add032
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+  previous_public_tied_best:
+    key: 031_blend_add030
+    cv: 0.9700333620193362
+    public_lb: 0.97043
+  stacker_reference:
+    key: 034_gpu_logreg_default
+    cv: 0.9700373069292101
+    public_lb: 0.97022
+    raw_cv: 0.9699389938897909
+    public_lb_raw: 0.97027
+  added_model:
+    key: 035_shared001_updated
+    cv: 0.9687410900866934
+    public_lb: 0.97012
+  gpu_logreg_add035_reference:
+    exp_id: exp_20260610_036_gpu_logreg_stacker_add035_own
+    cv: 0.9700674063284508
+    public_lb: 0.97037
+
+correlation_focus_035:
+  vs_033_blend_add032:
+    pearson_flat_proba: 0.9981267391750135
+    spearman_flat_proba: 0.8420314649017391
+    disagreement_rate: 0.007886071980975046
+    error_overlap_jaccard: 0.7984068072779941
+  vs_031_blend_add030:
+    pearson_flat_proba: 0.9981227172960295
+    spearman_flat_proba: 0.841979414197058
+    disagreement_rate: 0.007882607859744659
+    error_overlap_jaccard: 0.79854292049414
+  vs_034_gpu_logreg_default:
+    pearson_flat_proba: 0.9978822569138117
+    spearman_flat_proba: 0.9006311055650218
+    disagreement_rate: 0.008431671074760932
+    error_overlap_jaccard: 0.7888093862495
+  vs_026_realmlp_v5:
+    pearson_flat_proba: 0.9981825345491542
+    spearman_flat_proba: 0.7957894134516951
+    disagreement_rate: 0.0070131134309176285
+    error_overlap_jaccard: 0.8219282511210763
+  vs_030_ovr_xgb:
+    pearson_flat_proba: 0.9891014844453974
+    spearman_flat_proba: 0.8857611261546318
+    disagreement_rate: 0.021524317265007007
+    error_overlap_jaccard: 0.5010368804131257
+  vs_032_ovr_tabm:
+    pearson_flat_proba: 0.9895712463762583
+    spearman_flat_proba: 0.8909002561563885
+    disagreement_rate: 0.021146728050894868
+    error_overlap_jaccard: 0.5081572722081736
+  note: >
+    035 is highly correlated with existing RealMLP-heavy blends and stackers,
+    but still receives a small non-trivial weight when combined with 034 and 031.
+    Its strongest diversity is against weaker OVR XGB/TabM materials, not against the current best blends.
+
+comparison_to_current_best:
+  current_best_public:
+    exp_id: exp_20260609_033_blend_add032_tabm_check
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+  exp_036_blend_add035:
+    exp_id: exp_20260610_036_blend_add035_shared001_check
+    candidate: S_034_031_035 / hc_nonnegative_raw
+    cv: 0.9700727843277738
+    public_lb: 0.97023
+  exp_036_gpu_logreg_add035:
+    exp_id: exp_20260610_036_gpu_logreg_stacker_add035_own
+    cv: 0.9700674063284508
+    public_lb: 0.97037
+  judgement: >
+    The blend version has the highest CV among the compared candidates,
+    but its Public LB is weaker than both 033/031 and the 036 GPU LogReg add035 stacker.
+    Therefore it should not be promoted to a submission slot.
+
+submission_slot_decision:
+  recommended_slots_after_036_blend:
+    slot_1:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      role: current_public_confirmed_best
+      cv: 0.9700400336552478
+      public_lb: 0.97043
+      reason: >
+        033 remains tied for best Public LB and has strong CV.
+    slot_2:
+      exp_id: exp_20260610_036_gpu_logreg_stacker_add035_own
+      candidate: default
+      role: improved_stacker_backup
+      cv: 0.9700674063284508
+      public_lb: 0.97037
+      reason: >
+        036 GPU LogReg add035 has better Public LB than this 036 blend and improves over 034.
+        It is a better second slot than 034default and safer than the 036 blend result.
+  not_selected:
+    exp_id: exp_20260610_036_blend_add035_shared001_check
+    candidate: S_034_031_035 / hc_nonnegative_raw
+    cv: 0.9700727843277738
+    public_lb: 0.97023
+    reason: >
+      CV is best, but Public LB is clearly below 033/031 and below 036 GPU LogReg add035.
+      This suggests the CV gain from this probability blend does not transfer well enough to Public.
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_for_reference_not_submission_slot
+  role: add035_blend_corr_check_reference
+  priority: medium
+  decision: do_not_promote_to_submission_slot
+  keep_035: true
+  keep_035_reason: >
+    035 receives non-trivial weight in the best CV blend and also improved the GPU stacker,
+    so it should remain in the asset pool. However, the direct blend submission did not
+    improve Public LB.
+  reason: >
+    The experiment confirms that 035 has some blend utility, especially with 034 and 031,
+    but the selected blend underperforms on Public LB. The result is useful diagnostically,
+    not as a final submission candidate.
+  next_action:
+    - Keep 033 as slot_1.
+    - Use exp_20260610_036_gpu_logreg_stacker_add035_own default as slot_2 unless a later experiment improves.
+    - Do not replace either slot with exp_20260610_036_blend_add035_shared001_check.
+    - Keep 035 in future stacker/blend pools, but do not deepen 035 alone.
+    - Future improvement should come from new genuinely diverse base models or a safer meta-stacker, not from further hill-climbing this exact blend.
