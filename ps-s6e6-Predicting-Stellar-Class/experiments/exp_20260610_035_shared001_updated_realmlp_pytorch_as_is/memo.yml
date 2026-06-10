@@ -201,3 +201,178 @@ judgement:
   - Add OOF/pred npy to npy-files dataset
   - Run 036 add035 blend/corr check
   - Check whether 035 receives non-zero safe-blend weight against 031/033/034/029/027/026/028/030/032
+
+result:
+  status: completed
+  cv_balanced_accuracy: 0.9687410900866934
+  fold_std: 0.0006480743761126547
+  public_lb: 0.97012
+  public_lb_source: user_reported_after_submission
+  public_lb_reference_from_source: 0.97012
+  submitted: true
+  submission: submission_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is.csv
+
+model_summary:
+  model_family: RealMLP
+  model_type: updated_shared001_realmlp_pytorch_as_is
+  feature_family: shared001_updated_realmlp_pytorch_fe
+  purpose: >
+    Run the updated shared001 RealMLP PyTorch notebook as-is and save OOF/pred
+    probabilities for later correlation and blend checks.
+  use_original: false
+  use_fe: true
+  use_bias_search: false
+  use_external_stacking_files: false
+  seed: 42
+  n_splits: 5
+  metric: balanced_accuracy_score
+  class_order:
+    - GALAXY
+    - QSO
+    - STAR
+
+cv:
+  score: 0.9687410900866934
+  fold_std: 0.0006480743761126547
+  recalls:
+    GALAXY: 0.9605912896047473
+    QSO: 0.9760463706751578
+    STAR: 0.9695856099801751
+  note: >
+    CV is below the current best blend/stacker candidates, but the Public LB is high
+    for a single RealMLP-family model. This makes 035 a possible blend material rather
+    than a standalone slot candidate.
+
+public_lb:
+  score: 0.97012
+  comparison_to_cv: >
+    Public LB is relatively strong compared with CV. This may indicate useful test-side
+    behavior, but it should not override the current CV/LB-trusted slots without a
+    follow-up blend/correlation check.
+
+config:
+  n_ens: 8
+  embed_dim: 8
+  onehot_thresh: 8
+  hidden_dims:
+    - 512
+    - 512
+    - 512
+  dropout: 0.06
+  p_drop_sched: expm4t
+  activation: torch.nn.SiLU
+  add_front_scale: true
+  pbld_hidden_dim: 20
+  pbld_out_dim: 5
+  pbld_freq_scale: 5.0
+  pbld_activation: torch.nn.PReLU
+  pbld_lr_factor: 0.093
+  lr: 0.01
+  mom: 0.9
+  sq_mom: 0.98
+  lr_sched: flat_cos
+  flat_ratio: 0.3
+  first_layer_lr_factor: 1.0
+  first_layer_wd_factor: 0.1
+  lr_scale_mult: 10.0
+  lr_bias_mult: 0.1
+  weight_decay: 0.013
+  wd_scale_mult: 0.1
+  wd_bias_mult: 0.5
+  ema_decay: 0.997875
+  grad_clip: 1.2
+  ls_eps: 0.04
+  ls_eps_sched: cos
+  tfms:
+    - median_center
+    - robust_scale
+  epochs: 6
+  train_bs: 256
+  eval_bs: 10240
+  verbosity: 2
+  use_early_stopping: false
+  early_stopping_additive_patience: 10
+  early_stopping_multiplicative_patience: 1
+  device: cuda
+  random_state: 42
+
+outputs:
+  oof_proba: oof_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is_proba.npy
+  pred_proba: pred_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is_proba.npy
+  oof_csv: oof_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is.csv
+  pred_csv: pred_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is.csv
+  submission: submission_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is.csv
+  cv_result: cv_result_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is.json
+  fold_scores: fold_scores_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is.csv
+  feature_info: feature_info_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is.json
+  feature_columns: feature_columns_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is.csv
+  class_distribution: class_distribution_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is.csv
+  registry: oof_registry.csv
+  memo: memo.yml
+
+comparison_to_current_slots:
+  slot_1:
+    exp_id: exp_20260609_033_blend_add032_tabm_check
+    role: current_best_cv_public_balanced
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+  slot_2:
+    exp_id: exp_20260609_034_gpu_logreg_stacker_own
+    candidate: default
+    role: stacker_backup
+    cv: 0.9700373069292101
+    public_lb: 0.97022
+  exp_035:
+    cv: 0.9687410900866934
+    public_lb: 0.97012
+  judgement: >
+    035 does not update the current submission slots. It is below 033 and 034default
+    on CV and also below them on Public LB. However, Public LB 0.97012 is strong enough
+    to justify testing it as an additional RealMLP-family material.
+
+comparison_to_related_models:
+  vs_015_shared001_old:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv: 0.9681693449222352
+    public_lb: 0.96977
+    comparison: >
+      035 appears stronger than the older shared001 baseline on both CV and Public LB.
+  vs_026_realmlp_v5:
+    exp_id: exp_20260608_026_realmlp_v5_as_is
+    cv: 0.9690389777981231
+    public_lb: 0.96979
+    comparison: >
+      035 is below 026 on CV but above 026 on Public LB.
+      This makes correlation and blend behavior important before deciding whether it is useful.
+  vs_031_best_blend:
+    exp_id: exp_20260608_031_blend_add030_ovr_xgb_check
+    cv: 0.9700333620193362
+    public_lb: 0.97043
+    comparison: >
+      035 is not a direct replacement for 031, but could still add value if its OOF errors
+      differ from the existing RealMLP-heavy blends.
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_for_036_blend_corr_check
+  role: updated_shared001_realmlp_aux_material
+  priority: medium
+  not_for_submission_slot: true
+  use_in_next_blend_check: true
+  reason: >
+    The updated shared001 RealMLP has a solid Public LB but insufficient CV to replace
+    the current best slots. Its main value is as a candidate material for 036 add035
+    blend/correlation check.
+  risk:
+    family_correlation: high
+    public_cv_mismatch: moderate
+    note: >
+      Because 035 is another RealMLP-family model, correlation with 015/017/026/027/031/033
+      may be high. Also, Public LB is relatively better than CV, so it should not be
+      promoted without blend validation.
+  next_action:
+    - Add oof_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is_proba.npy and pred_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is_proba.npy to npy-files dataset.
+    - Run 036 add035 blend/corr check.
+    - Include at least 033, 034default, 031, 029, 027, 026, 028, 030, 032, and 035.
+    - Check OOF correlation against 015/017/026/031/033 to see whether 035 is redundant.
+    - Promote 035 only if it receives non-zero weight in safe blends and improves CV without relying only on Public LB.
