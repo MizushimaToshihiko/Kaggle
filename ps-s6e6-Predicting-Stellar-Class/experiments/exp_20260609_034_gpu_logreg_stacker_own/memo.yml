@@ -429,3 +429,234 @@ judgement:
   - If Public LB improves 031, promote 034 to current best.
   - If Public LB does not improve, keep 031 as primary and use 034 only as diagnostic/backup
     material.
+
+result:
+  status: completed
+  raw_cv_balanced_accuracy: 0.9699389938897909
+  tuned_cv_balanced_accuracy: 0.9700373069292101
+  best_cv: 0.9700373069292101
+  best_kind: tuned
+  public_lb_default: 0.97022
+  public_lb_raw: 0.97027
+  public_lb_tuned: null
+  public_lb_source: user_reported_after_submission
+  submitted:
+    default: true
+    raw: true
+    tuned: false
+  current_submission_slot_used: default
+  current_submission_slot_reason: >
+    Default uses the CV-best tuned stacker output. Raw has slightly higher Public LB,
+    but lower CV and therefore has a stronger public-overfit smell.
+
+model_summary:
+  model_family: GPU_LogisticRegression_Stacker
+  model_type: pytorch_multinomial_logistic_regression_on_own_oof_pred_assets
+  purpose: >
+    Train a GPU logistic regression stacker using only own OOF/pred assets.
+    No external stacking files, external submissions, or other Kaggler predictions are used.
+  use_external_stacking_files: false
+  input_transform: prob_to_logit
+  use_logit_input: true
+  n_models_loaded: 14
+  n_splits: 5
+  n_seeds: 5
+  stacker_seeds:
+    - 42
+    - 43
+    - 44
+    - 45
+    - 46
+  epochs: 1000
+  lr: 0.01
+  C_REG: 0.1
+  boost_star_weight: 1.0
+  best_bias:
+    - -0.003999999999999726
+    - 0.11900000000000038
+    - 0.0
+
+loaded_models:
+  - key: 015_realmlp_seed42
+    family: RealMLP
+    cv: 0.9681693449222352
+    public_lb: 0.96977
+  - key: 017_realmlp_bias
+    family: RealMLP
+    cv: 0.9683022653955233
+    public_lb: 0.96985
+  - key: 018_xgb_shared003
+    family: XGBoost
+    cv: 0.965207986418628
+    public_lb: 0.96578
+  - key: 019_blend_best
+    family: Blend
+    cv: 0.968872315017554
+    public_lb: 0.97000
+  - key: 020_blend_bias
+    family: Blend
+    cv: 0.9692240443617589
+    public_lb: 0.96969
+  - key: 024_seed_ensemble_blend
+    family: Blend
+    cv: 0.9694803109983217
+    public_lb: 0.96958
+  - key: 026_realmlp_v5
+    family: RealMLP
+    cv: 0.9690389777981231
+    public_lb: 0.96979
+  - key: 027_blend_add026
+    family: Blend
+    cv: 0.9695425457477898
+    public_lb: 0.96975
+  - key: 028_cat_v3
+    family: CatBoost
+    cv: 0.9688146470512534
+    public_lb: 0.96969
+  - key: 029_blend_add028
+    family: Blend
+    cv: 0.9700023026377228
+    public_lb: 0.970036
+  - key: 030_ovr_xgb
+    family: XGBoost
+    cv: 0.9609971296999271
+    public_lb: 0.96118
+  - key: 031_blend_add030
+    family: Blend
+    cv: 0.9700333620193362
+    public_lb: 0.97043
+  - key: 032_ovr_tabm
+    family: TabM
+    cv: 0.9610105651284856
+    tuned_cv: 0.9686168281485955
+    public_lb: 0.96106
+    public_lb_biased: 0.96895
+  - key: 033_blend_add032
+    family: Blend
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+    optional: true
+
+cv:
+  raw:
+    score: 0.9699389938897909
+    recalls:
+      GALAXY: 0.9606045353396206
+      QSO: 0.9764475896980613
+      STAR: 0.9727648566316909
+  tuned:
+    score: 0.9700373069292101
+    recalls:
+      GALAXY: 0.9597938963653704
+      QSO: 0.9777707588161478
+      STAR: 0.9725472656061119
+  best:
+    kind: tuned
+    score: 0.9700373069292101
+    recalls:
+      GALAXY: 0.9597938963653704
+      QSO: 0.9777707588161478
+      STAR: 0.9725472656061119
+  fold_std: 0.0004804442267987582
+  seed_std: 0.00003160046812977218
+
+public_lb:
+  default:
+    score: 0.97022
+    interpretation: >
+      Default corresponds to the CV-best output, i.e. tuned stacker proba.
+      It is slightly below 033/031 Public LB 0.97043, but more defensible than raw
+      because it is aligned with CV.
+  raw:
+    score: 0.97027
+    interpretation: >
+      Raw is slightly better than default on Public LB, but its CV is lower than tuned
+      and below 033/031. This looks like a possible Public-specific gain and should not
+      replace the current submission slot without stronger evidence.
+  tuned:
+    score: null
+    interpretation: >
+      Tuned was not separately submitted, but default is expected to correspond to the
+      best_kind=tuned output based on CV selection.
+
+outputs:
+  oof_proba: oof_exp_20260609_034_gpu_logreg_stacker_own_proba.npy
+  pred_proba: pred_exp_20260609_034_gpu_logreg_stacker_own_proba.npy
+  oof_raw_proba: oof_raw_exp_20260609_034_gpu_logreg_stacker_own_proba.npy
+  pred_raw_proba: pred_raw_exp_20260609_034_gpu_logreg_stacker_own_proba.npy
+  oof_tuned_proba: oof_tuned_exp_20260609_034_gpu_logreg_stacker_own_proba.npy
+  pred_tuned_proba: pred_tuned_exp_20260609_034_gpu_logreg_stacker_own_proba.npy
+  submission: submission_exp_20260609_034_gpu_logreg_stacker_own.csv
+  submission_raw: submission_raw_exp_20260609_034_gpu_logreg_stacker_own.csv
+  submission_tuned: submission_tuned_exp_20260609_034_gpu_logreg_stacker_own.csv
+  cv_result: cv_result_exp_20260609_034_gpu_logreg_stacker_own.json
+  summary: gpu_logreg_stacker_summary.json
+  fold_scores: fold_scores_exp_20260609_034_gpu_logreg_stacker_own.csv
+  seed_scores: seed_scores_exp_20260609_034_gpu_logreg_stacker_own.csv
+  base_model_scores: base_model_scores_exp_20260609_034_gpu_logreg_stacker_own.csv
+  loaded_model_specs: loaded_model_specs_exp_20260609_034_gpu_logreg_stacker_own.csv
+  feature_importance: stacker_importance_exp_20260609_034_gpu_logreg_stacker_own.csv
+
+comparison_to_current_best:
+  current_best_before_034:
+    exp_id: exp_20260609_033_blend_add032_tabm_check
+    candidate: best_blend
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+  exp_034_default:
+    cv: 0.9700373069292101
+    public_lb: 0.97022
+  exp_034_raw:
+    cv: 0.9699389938897909
+    public_lb: 0.97027
+  judgement: >
+    034 does not update the current best. CV is slightly below 033, and Public LB is
+    below 033/031. Raw has a slightly higher Public LB than default, but because raw CV is
+    lower, it should be treated as possible Public overfit rather than a superior candidate.
+
+submission_slot_decision:
+  current_slots:
+    slot_1:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      role: current_best_cv_public_balanced
+      public_lb: 0.97043
+      reason: >
+        033 matches the best observed Public LB and has the highest CV among the current
+        own-asset blend/stacker candidates.
+    slot_2:
+      exp_id: exp_20260609_034_gpu_logreg_stacker_own
+      candidate: default
+      role: stacker_backup
+      cv: 0.9700373069292101
+      public_lb: 0.97022
+      reason: >
+        034default is CV-aligned and uses a different meta-learning mechanism.
+        It is safer than 034raw despite slightly lower Public LB.
+  not_selected:
+    exp_id: exp_20260609_034_gpu_logreg_stacker_own
+    candidate: raw
+    cv: 0.9699389938897909
+    public_lb: 0.97027
+    reason: >
+      Raw improves Public LB over default by 0.00005, but lowers CV by about 0.0000983.
+      This mismatch suggests possible Public overfit, so it is not selected for the
+      current submission slots.
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_as_meta_stacker_reference
+  role: own_asset_gpu_logreg_stacker_reference
+  priority: medium
+  public_overfit_risk:
+    raw: elevated
+    default: moderate
+  decision: do_not_promote_over_033
+  reason: >
+    034 is a useful own-asset meta-stacker experiment and confirms that the current
+    OOF/pred asset set is already close to saturation. It does not beat 033 on CV or LB.
+    The raw output's Public LB improvement over default is too small and not supported by CV.
+  next_action:
+    - Keep 033 as the main submission slot.
+    - Keep 034default as the second slot / stacker backup.
+    - Do not select 034raw unless later evidence suggests Public LB is more reliable than CV.
+    - If continuing experiments, prefer new genuinely diverse base-model material or a safer fold-aware stacker variant rather than further Public-chasing on 034raw.
