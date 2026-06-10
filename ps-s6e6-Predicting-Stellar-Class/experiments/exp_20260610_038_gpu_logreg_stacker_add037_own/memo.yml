@@ -444,4 +444,264 @@ judgement:
   - If Public LB does not improve, keep 033 as primary and 036 GPU LogReg add035 as
     stacker backup.
 
+result:
+  status: completed
+  raw_cv_balanced_accuracy: 0.9700341769455824
+  tuned_cv_balanced_accuracy: 0.9701353365798572
+  best_cv: 0.9701353365798572
+  best_kind: tuned
+  public_lb_default: 0.97060
+  public_lb_source: user_reported_after_submission
+  submitted:
+    default: true
+    raw: false
+    tuned: false
+  submission: submission_exp_20260610_038_gpu_logreg_stacker_add037_own.csv
 
+model_summary:
+  model_family: GPU_LogisticRegression_Stacker
+  model_type: pytorch_multinomial_logistic_regression_on_own_oof_pred_assets
+  purpose: >
+    Add 037 TabICL v2 to the own-asset GPU logistic regression stacker and check
+    whether the weak but different-family TabICL material improves the meta-stacker.
+  use_external_stacking_files: false
+  input_transform: prob_to_logit
+  use_logit_input: true
+  n_models_loaded: 16
+  n_splits: 5
+  n_seeds: 5
+  stacker_seeds:
+    - 42
+    - 43
+    - 44
+    - 45
+    - 46
+  epochs: 1000
+  lr: 0.01
+  C_REG: 0.1
+  boost_star_weight: 1.0
+  best_bias:
+    - -0.10400000000000009
+    - 0.06899999999999845
+    - 0.0
+
+loaded_models:
+  - key: 015_realmlp_seed42
+    family: RealMLP
+    cv: 0.9681693449222352
+    public_lb: 0.96977
+  - key: 017_realmlp_bias
+    family: RealMLP
+    cv: 0.9683022653955233
+    public_lb: 0.96985
+  - key: 018_xgb_shared003
+    family: XGBoost
+    cv: 0.965207986418628
+    public_lb: 0.96578
+  - key: 019_blend_best
+    family: Blend
+    cv: 0.968872315017554
+    public_lb: 0.97000
+  - key: 020_blend_bias
+    family: Blend
+    cv: 0.9692240443617589
+    public_lb: 0.96969
+  - key: 024_seed_ensemble_blend
+    family: Blend
+    cv: 0.9694803109983217
+    public_lb: 0.96958
+  - key: 026_realmlp_v5
+    family: RealMLP
+    cv: 0.9690389777981231
+    public_lb: 0.96979
+  - key: 027_blend_add026
+    family: Blend
+    cv: 0.9695425457477898
+    public_lb: 0.96975
+  - key: 028_cat_v3
+    family: CatBoost
+    cv: 0.9688146470512534
+    public_lb: 0.96969
+  - key: 029_blend_add028
+    family: Blend
+    cv: 0.9700023026377228
+    public_lb: 0.970036
+  - key: 030_ovr_xgb
+    family: XGBoost
+    cv: 0.9609971296999271
+    public_lb: 0.96118
+  - key: 031_blend_add030
+    family: Blend
+    cv: 0.9700333620193362
+    public_lb: 0.97043
+  - key: 032_ovr_tabm
+    family: TabM
+    cv: 0.9610105651284856
+    tuned_cv: 0.9686168281485955
+    public_lb: 0.96106
+    public_lb_biased: 0.96895
+  - key: 033_blend_add032
+    family: Blend
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+    optional: true
+  - key: 035_shared001_updated
+    family: RealMLP
+    cv: 0.9687410900866934
+    public_lb: 0.97012
+  - key: 037_tabicl_v2
+    family: TabICL
+    cv: 0.9580770153777599
+    public_lb: 0.95920
+
+cv:
+  raw:
+    score: 0.9700341769455824
+    recalls:
+      GALAXY: 0.9606283776623927
+      QSO: 0.9765158822977045
+      STAR: 0.9729582708766501
+  tuned:
+    score: 0.9701353365798572
+    recalls:
+      GALAXY: 0.9581196354773763
+      QSO: 0.9779500268902112
+      STAR: 0.9743363473719839
+  best:
+    kind: tuned
+    score: 0.9701353365798572
+    recalls:
+      GALAXY: 0.9581196354773763
+      QSO: 0.9779500268902112
+      STAR: 0.9743363473719839
+  fold_std: 0.0004333204101776352
+  seed_std: 0.00003756158120962409
+  note: >
+    Despite 037 TabICL being weak as a standalone model, adding it to the GPU LogReg
+    stacker improves CV and Public LB. The improvement is mainly reflected in stronger
+    STAR recall after tuning.
+
+public_lb:
+  default:
+    score: 0.97060
+    interpretation: >
+      This is the best Public LB observed so far and exceeds the previous 033/031
+      Public LB 0.97043. Since CV also improves over previous stacker runs, this is a
+      credible candidate for the primary submission slot.
+  raw:
+    score: null
+    interpretation: >
+      Raw was not submitted in this run.
+  tuned:
+    score: null
+    interpretation: >
+      Default corresponds to the best_kind=tuned output selected by CV.
+
+outputs:
+  oof_proba: oof_exp_20260610_038_gpu_logreg_stacker_add037_own_proba.npy
+  pred_proba: pred_exp_20260610_038_gpu_logreg_stacker_add037_own_proba.npy
+  oof_raw_proba: oof_raw_exp_20260610_038_gpu_logreg_stacker_add037_own_proba.npy
+  pred_raw_proba: pred_raw_exp_20260610_038_gpu_logreg_stacker_add037_own_proba.npy
+  oof_tuned_proba: oof_tuned_exp_20260610_038_gpu_logreg_stacker_add037_own_proba.npy
+  pred_tuned_proba: pred_tuned_exp_20260610_038_gpu_logreg_stacker_add037_own_proba.npy
+  submission: submission_exp_20260610_038_gpu_logreg_stacker_add037_own.csv
+  submission_raw: submission_raw_exp_20260610_038_gpu_logreg_stacker_add037_own.csv
+  submission_tuned: submission_tuned_exp_20260610_038_gpu_logreg_stacker_add037_own.csv
+  cv_result: cv_result_exp_20260610_038_gpu_logreg_stacker_add037_own.json
+  summary: gpu_logreg_stacker_summary.json
+  fold_scores: fold_scores_exp_20260610_038_gpu_logreg_stacker_add037_own.csv
+  seed_scores: seed_scores_exp_20260610_038_gpu_logreg_stacker_add037_own.csv
+  base_model_scores: base_model_scores_exp_20260610_038_gpu_logreg_stacker_add037_own.csv
+  loaded_model_specs: loaded_model_specs_exp_20260610_038_gpu_logreg_stacker_add037_own.csv
+  feature_importance: stacker_importance_exp_20260610_038_gpu_logreg_stacker_add037_own.csv
+
+comparison_to_previous_stackers:
+  exp_034_gpu_logreg:
+    exp_id: exp_20260609_034_gpu_logreg_stacker_own
+    best_cv: 0.9700373069292101
+    public_lb_default: 0.97022
+    public_lb_raw: 0.97027
+  exp_036_gpu_logreg_add035:
+    exp_id: exp_20260610_036_gpu_logreg_stacker_add035_own
+    best_cv: 0.9700674063284508
+    public_lb_default: 0.97037
+  exp_038_gpu_logreg_add037:
+    exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+    best_cv: 0.9701353365798572
+    public_lb_default: 0.97060
+  delta_vs_036_gpu_logreg_add035:
+    cv: 0.0000679302514064
+    public_lb: 0.00023
+  judgement: >
+    Adding 037 TabICL improves the GPU LogReg stacker clearly over 036 add035,
+    even though 037 alone is very weak. This confirms that 037 has useful
+    meta-level diversity.
+
+comparison_to_current_best:
+  previous_current_best:
+    exp_id: exp_20260609_033_blend_add032_tabm_check
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+  previous_public_tied_best:
+    exp_id: exp_20260608_031_blend_add030_ovr_xgb_check
+    cv: 0.9700333620193362
+    public_lb: 0.97043
+  exp_038_gpu_logreg_add037:
+    cv: 0.9701353365798572
+    public_lb: 0.97060
+  judgement: >
+    038 GPU LogReg add037 updates both CV and Public LB versus the previous
+    best candidates. It should be promoted to the primary submission slot.
+
+submission_slot_decision:
+  recommended_slots_while_038_blend_add037_is_running:
+    slot_1:
+      exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+      candidate: default
+      role: current_best_cv_and_public
+      cv: 0.9701353365798572
+      public_lb: 0.97060
+      reason: >
+        This is the current best on both CV and Public LB among confirmed submissions.
+    slot_2:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      role: previous_public_confirmed_best_backup
+      cv: 0.9700400336552478
+      public_lb: 0.97043
+      reason: >
+        Keep the previous best blend as backup because it is a different/simple blend
+        family and has stable Public confirmation.
+  superseded:
+    - exp_id: exp_20260610_036_gpu_logreg_stacker_add035_own
+      reason: >
+        Superseded by 038 GPU LogReg add037 on both CV and Public LB.
+    - exp_id: exp_20260609_034_gpu_logreg_stacker_own
+      reason: >
+        Superseded by later GPU LogReg stackers.
+    - exp_id: exp_20260610_036_blend_add035_shared001_check
+      reason: >
+        Higher CV than 033 but weaker Public LB, and now clearly weaker than 038 GPU LogReg add037.
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_as_current_best
+  role: current_best_gpu_logreg_stacker_with_weak_tabicl_diversity
+  priority: high
+  decision: promote_to_submission_slot_1
+  reason: >
+    037 TabICL was weak as a standalone model, but it improved the GPU LogReg
+    stacker materially. The resulting 038 stacker has the best CV and best Public LB
+    observed so far. This validates the hypothesis that weak low-correlation materials
+    can still help at the meta-stacker level.
+  public_overfit_risk:
+    default: moderate
+    note: >
+      Public LB improvement is supported by CV improvement, so the result is more
+      credible than a pure Public-only gain. Still, this is a meta-stacker with many
+      correlated inputs, so 033 should remain as a backup slot.
+  next_action:
+    - Keep 038 GPU LogReg add037 default as slot_1.
+    - Keep 033 as slot_2 until exp_20260610_038_blend_add037_tabicl_check finishes.
+    - After the 038 blend/corr check finishes, compare whether it beats 0.97060 Public LB or provides a safer backup.
+    - Keep 037 in future stacker pools despite weak standalone performance.
+    - Do not deepen 037 standalone; its value appears to be meta-stacker diversity rather than direct prediction strength.
