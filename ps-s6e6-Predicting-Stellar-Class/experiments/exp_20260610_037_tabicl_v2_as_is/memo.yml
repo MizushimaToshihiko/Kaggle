@@ -58,3 +58,145 @@ judgement:
   - Add OOF/pred npy to npy-files dataset.
   - Run 038 add037 blend/corr check against 033, 036 GPU LogReg add035, 036 blend
     add035, 034, 031, 029, 028, 030, 032, and 035.
+
+result:
+  status: completed
+  cv_balanced_accuracy: 0.9580770153777599
+  fold_mean: 0.9580770095023634
+  fold_std: 0.000473255845089214
+  public_lb: 0.95920
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260610_037_tabicl_v2_as_is.csv
+
+model_summary:
+  model_family: TabICL
+  model_type: tabicl_v2_as_is_raw_features_balanced_context
+  purpose: >
+    Run TabICL v2 as-is as a potential low-correlation / different-family
+    material for later blend and correlation checks.
+  use_original: false
+  use_fe: false
+  use_bias_search: false
+  use_external_stacking_files: false
+  public_lb_from_source_not_available: true
+  source_notebook_lb_note: >
+    Source notebook appears to be shared as blend material or reference.
+    No confirmed source LB is assumed.
+  seed: 42
+  n_splits: 5
+  metric: balanced_accuracy_score
+  class_order:
+    - GALAXY
+    - QSO
+    - STAR
+
+cv:
+  score: 0.9580770153777599
+  fold_mean: 0.9580770095023634
+  fold_std: 0.000473255845089214
+  recalls:
+    GALAXY: 0.9414220620960051
+    QSO: 0.9708390599523659
+    STAR: 0.9619699240849089
+  note: >
+    CV is far below the current best candidates. The main weakness is GALAXY recall.
+    This result is too weak for standalone submission and likely too weak for high-weight blending.
+
+public_lb:
+  score: 0.95920
+  interpretation: >
+    Public LB is consistent with the low CV and confirms that this as-is TabICL
+    implementation is not competitive as a standalone model. It should not be promoted
+    to a submission slot.
+
+config:
+  samples_per_class: 10000
+  max_context_size_per_fold: 30000
+  tabicl_params:
+    n_estimators: 8
+    batch_size: 1
+    device: cuda
+    use_amp: auto
+    random_state: 42
+    verbose: false
+  device: cuda
+
+outputs:
+  oof_proba: oof_exp_20260610_037_tabicl_v2_as_is_proba.npy
+  pred_proba: pred_exp_20260610_037_tabicl_v2_as_is_proba.npy
+  oof_csv: oof_exp_20260610_037_tabicl_v2_as_is.csv
+  pred_csv: pred_exp_20260610_037_tabicl_v2_as_is.csv
+  submission: submission_exp_20260610_037_tabicl_v2_as_is.csv
+  cv_result: cv_result_exp_20260610_037_tabicl_v2_as_is.json
+  fold_scores: fold_scores_exp_20260610_037_tabicl_v2_as_is.csv
+  feature_info: feature_info_exp_20260610_037_tabicl_v2_as_is.json
+  feature_columns: feature_columns_exp_20260610_037_tabicl_v2_as_is.csv
+  class_distribution: class_distribution_exp_20260610_037_tabicl_v2_as_is.csv
+  registry: oof_registry.csv
+  memo: memo.yml
+
+comparison_to_current_slots:
+  slot_1:
+    exp_id: exp_20260609_033_blend_add032_tabm_check
+    role: current_public_confirmed_best
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+  slot_2:
+    exp_id: exp_20260610_036_gpu_logreg_stacker_add035_own
+    role: improved_stacker_backup
+    cv: 0.9700674063284508
+    public_lb: 0.97037
+  exp_037:
+    cv: 0.9580770153777599
+    public_lb: 0.95920
+  judgement: >
+    037 is far below the current submission slots on both CV and Public LB.
+    It should not be considered for a standalone slot.
+
+comparison_to_auxiliary_materials:
+  vs_030_ovr_xgb:
+    exp_id: exp_20260608_030_ovr_xgb_as_is
+    cv: 0.9609971296999271
+    public_lb: 0.96118
+    comparison: >
+      037 is weaker than 030, which was already only a low-weight auxiliary material.
+      This lowers the expected value of 037 as a blend input.
+  vs_032_ovr_tabm_raw:
+    exp_id: exp_20260609_032_ovr_tabm_as_is
+    raw_cv: 0.9610105651284856
+    public_lb_raw: 0.96106
+    tuned_cv: 0.9686168281485955
+    public_lb_biased: 0.96895
+    comparison: >
+      037 is weaker than 032 raw and much weaker than 032 biased.
+      Unlike 032, no strong bias-tuned variant has been confirmed.
+  vs_035_shared001_updated:
+    exp_id: exp_20260610_035_shared001_updated_realmlp_pytorch_as_is
+    cv: 0.9687410900866934
+    public_lb: 0.97012
+    comparison: >
+      037 is much weaker than 035 and should not receive similar priority.
+
+judgement:
+  status: completed
+  keep_hold_drop: hold_for_optional_corr_only
+  role: weak_tabicl_family_material
+  priority: low
+  not_for_submission_slot: true
+  use_in_next_blend_check: optional
+  reason: >
+    The TabICL family is different from the existing model families, but the as-is
+    performance is too low. It may still be kept as an OOF/pred asset for optional
+    correlation inspection, but it should not drive the next main experiment unless
+    there is a specific hypothesis that its errors are highly complementary.
+  risk:
+    standalone_strength: very_low
+    blend_weight_expected: very_low
+    public_lb_gap_to_current_best: large
+  next_action:
+    - Keep 037 OOF/pred files in the asset pool for reference.
+    - Do not promote 037 to a submission slot.
+    - Do not deepen TabICL v2 as-is unless a later correlation check shows unusually useful diversity.
+    - If running 038 add037 blend/corr check, treat it as optional/diagnostic rather than high-priority.
+    - Prefer future effort on genuinely stronger diverse models or safer meta-stacker variants.
