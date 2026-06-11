@@ -1,1 +1,45 @@
+# exp_20260611_039_cat_v3_seed2026_qbin_variant
 
+status: completed
+competition: PS S6E6 Predicting Stellar Class
+metric: balanced_accuracy_score
+
+purpose:
+  - CatBoost v3 variant based on exp_20260608_028_cat_v3_as_is.
+  - Change seed/fold seed, qbin categorical FE, original weight, and stochastic CatBoost params.
+  - Create a lower-correlation CatBoost asset for later GPU LogReg stacker / blend-corr checks.
+
+config:
+  seed: 2026
+  n_splits: 5
+  fold_seed_formula: SEED + fold * 17
+  original_weight: 0.03
+  qbin_variant:
+    raw_num_bins: [24, 80, 320]
+    color_bins: [48]
+    manual_combo_bins: q80/q48 variant
+  catboost_changes_vs_028:
+    learning_rate: 0.038
+    l2_leaf_reg: 10.0
+    random_strength: 1.8
+    bagging_temperature: 0.6
+
+result:
+  cv_balanced_accuracy: 0.968705302309
+  fold_mean: 0.968705311790
+  fold_std: 0.000557571717
+  public_lb: null
+
+outputs:
+  oof_proba: oof_exp_20260611_039_cat_v3_seed2026_qbin_variant_proba.npy
+  pred_proba: pred_exp_20260611_039_cat_v3_seed2026_qbin_variant_proba.npy
+  submission: submission_exp_20260611_039_cat_v3_seed2026_qbin_variant.csv
+  cv_result: cv_result_exp_20260611_039_cat_v3_seed2026_qbin_variant.json
+  fold_scores: fold_scores_exp_20260611_039_cat_v3_seed2026_qbin_variant.csv
+  feature_columns: feature_columns_exp_20260611_039_cat_v3_seed2026_qbin_variant.csv
+  feature_importance: feature_importance_exp_20260611_039_cat_v3_seed2026_qbin_variant.csv
+
+next_action:
+  - Submit only if the standalone result is not obviously broken.
+  - Add this OOF/pred to the 038 GPU LogReg stacker pool as exp_040 or later.
+  - Run blend/corr check to verify whether this variant lowers correlation versus 028/033/038.
