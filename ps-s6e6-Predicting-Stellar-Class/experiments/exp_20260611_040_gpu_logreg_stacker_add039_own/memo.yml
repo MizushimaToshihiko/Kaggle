@@ -451,3 +451,218 @@ judgement:
   - If Public LB improves 038 GPU LogReg add037, promote 040 to current best.
   - If Public LB does not improve, keep 038 GPU LogReg add037 as slot_1 and 033 as
     backup slot.
+
+result:
+  status: completed
+  raw_cv_balanced_accuracy: 0.9701462773161619
+  tuned_cv_balanced_accuracy: 0.9702017877238539
+  best_cv_balanced_accuracy: 0.9702017877238539
+  best_kind: tuned
+  public_lb: 0.97069
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260611_040_gpu_logreg_stacker_add039_own.csv
+
+model_summary:
+  model_family: GPU_LogisticRegression_Stacker
+  model_type: pytorch_multinomial_logistic_regression_on_own_oof_pred_assets
+  metric: balanced_accuracy_score
+  use_external_stacking_files: false
+  use_logit_input: true
+  input_transform: prob_to_logit
+  n_models_loaded: 17
+  skipped_specs: []
+  n_splits: 5
+  n_seeds: 5
+  stacker_seeds:
+    - 42
+    - 43
+    - 44
+    - 45
+    - 46
+  seed: 42
+  epochs: 1000
+  lr: 0.01
+  C_REG: 0.1
+  boost_star_weight: 1.0
+
+loaded_models:
+  - 015_realmlp_seed42
+  - 017_realmlp_bias
+  - 018_xgb_shared003
+  - 019_blend_best
+  - 020_blend_bias
+  - 024_seed_ensemble_blend
+  - 026_realmlp_v5
+  - 027_blend_add026
+  - 028_cat_v3
+  - 029_blend_add028
+  - 030_ovr_xgb
+  - 031_blend_add030
+  - 032_ovr_tabm
+  - 033_blend_add032
+  - 035_shared001_updated
+  - 037_tabicl_v2
+  - 039_cat_v3_seed2026_qbin_variant
+
+added_model:
+  key: 039_cat_v3_seed2026_qbin_variant
+  exp_id: exp_20260611_039_cat_v3_seed2026_qbin_variant
+  family: CatBoost
+  role: catboost_v3_lower_correlation_variant_material
+  cv: 0.9687053023092482
+  public_lb: 0.96984
+  oof: oof_exp_20260611_039_cat_v3_seed2026_qbin_variant_proba.npy
+  pred: pred_exp_20260611_039_cat_v3_seed2026_qbin_variant_proba.npy
+  judgement: >
+    039 was not strong enough as a standalone model, but it worked as an additional
+    CatBoost-family material inside the GPU LogReg stacker.
+
+best_bias:
+  GALAXY: -0.0599999999999985
+  QSO: -0.019999999999999796
+  STAR: 0.0
+
+raw_recalls:
+  GALAXY: 0.9605621489880258
+  QSO: 0.9766524674969909
+  STAR: 0.9732242154634689
+
+tuned_recalls:
+  GALAXY: 0.9594998410511815
+  QSO: 0.9768658818708758
+  STAR: 0.9742396402495044
+
+best_recalls:
+  GALAXY: 0.9594998410511815
+  QSO: 0.9768658818708758
+  STAR: 0.9742396402495044
+
+stability:
+  fold_std: 0.0004243933247385625
+  seed_std: 0.00003796856516139141
+  note: >
+    Fold and seed variability remain small. The improvement is not large, but it is
+    consistent enough to promote this run as the current best.
+
+comparison_to_038_gpu_logreg_add037:
+  exp_038:
+    exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+    best_cv: 0.9701353365798572
+    public_lb: 0.97060
+    n_models_loaded: 16
+  exp_040:
+    exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+    best_cv: 0.9702017877238539
+    public_lb: 0.97069
+    n_models_loaded: 17
+  delta:
+    cv: 0.0000664511439967
+    public_lb: 0.00009
+  judgement: >
+    Adding 039 to the 038 stacker pool improved both CV and Public LB.
+    This confirms that 039 is useful as a stacker input even though it is not a
+    standalone submission candidate.
+
+comparison_to_039_standalone:
+  exp_039:
+    exp_id: exp_20260611_039_cat_v3_seed2026_qbin_variant
+    cv: 0.9687053023092482
+    public_lb: 0.96984
+  exp_040:
+    exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+    best_cv: 0.9702017877238539
+    public_lb: 0.97069
+  delta:
+    cv: 0.0014964854146057
+    public_lb: 0.00085
+  judgement: >
+    039 should be treated as an auxiliary material, not as a direct submission.
+    Its value appears when combined with the existing OOF/pred pool through the
+    learned GPU LogReg stacker.
+
+comparison_to_previous_submission_slots:
+  previous_slot_1:
+    exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+    cv: 0.9701353365798572
+    public_lb: 0.97060
+  previous_slot_2_private_hedge:
+    exp_id: exp_20260609_033_blend_add032_tabm_check
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+  new_slot_1:
+    exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+    cv: 0.9702017877238539
+    public_lb: 0.97069
+  judgement: >
+    040 replaces 038 as the strongest confirmed candidate. Because 040 and 038 are
+    very similar stacker-family submissions, 033 remains a useful diversity backup
+    for a second final slot, while 038 can be kept as a public-LB-oriented backup.
+
+outputs:
+  oof_proba: oof_exp_20260611_040_gpu_logreg_stacker_add039_own_proba.npy
+  pred_proba: pred_exp_20260611_040_gpu_logreg_stacker_add039_own_proba.npy
+  oof_raw_proba: oof_raw_exp_20260611_040_gpu_logreg_stacker_add039_own_proba.npy
+  pred_raw_proba: pred_raw_exp_20260611_040_gpu_logreg_stacker_add039_own_proba.npy
+  oof_tuned_proba: oof_tuned_exp_20260611_040_gpu_logreg_stacker_add039_own_proba.npy
+  pred_tuned_proba: pred_tuned_exp_20260611_040_gpu_logreg_stacker_add039_own_proba.npy
+  submission: submission_exp_20260611_040_gpu_logreg_stacker_add039_own.csv
+  submission_raw: submission_raw_exp_20260611_040_gpu_logreg_stacker_add039_own.csv
+  submission_tuned: submission_tuned_exp_20260611_040_gpu_logreg_stacker_add039_own.csv
+  cv_result: cv_result_exp_20260611_040_gpu_logreg_stacker_add039_own.json
+  summary: gpu_logreg_stacker_summary.json
+  fold_scores: fold_scores_exp_20260611_040_gpu_logreg_stacker_add039_own.csv
+  seed_scores: seed_scores_exp_20260611_040_gpu_logreg_stacker_add039_own.csv
+  base_model_scores: base_model_scores_exp_20260611_040_gpu_logreg_stacker_add039_own.csv
+  loaded_model_specs: loaded_model_specs_exp_20260611_040_gpu_logreg_stacker_add039_own.csv
+  feature_importance: stacker_importance_exp_20260611_040_gpu_logreg_stacker_add039_own.csv
+
+submission_slot_decision:
+  promote_to_slot_1: true
+  recommended_slots_after_040:
+    slot_1:
+      exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+      candidate: tuned/default_selected
+      cv: 0.9702017877238539
+      public_lb: 0.97069
+      role: current_best_cv_and_public
+      reason: >
+        Best confirmed CV and best confirmed Public LB so far. 039 improved the
+        previous 038 stacker.
+    slot_2_private_hedge:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      cv: 0.9700400336552478
+      public_lb: 0.97043
+      role: simpler_blend_family_backup
+      reason: >
+        More diverse than another GPU LogReg stacker submission. Useful as a
+        Private LB hedge.
+    public_lb_backup:
+      exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+      cv: 0.9701353365798572
+      public_lb: 0.97060
+      role: previous_stacker_best_backup
+      reason: >
+        Very strong backup, but likely highly correlated with 040.
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_as_current_best
+  role: current_best_gpu_logreg_stacker
+  priority: highest
+  decision: promote_to_submission_slot_1
+  reason: >
+    040 improves both CV and Public LB over 038 by adding 039 CatBoost variant to
+    the existing stacker pool. The gain is small but directionally clean: CV improves
+    from 0.9701353 to 0.9702018 and Public LB improves from 0.97060 to 0.97069.
+  notes:
+    - 039 standalone was not a direct submission candidate, but it was useful as stacker material.
+    - The best output is tuned, with bias GALAXY=-0.06, QSO=-0.02, STAR=0.0.
+    - No external stacking files were used.
+    - n_models_loaded increased from 16 to 17.
+  next_action:
+    - Keep 040 as current slot_1.
+    - Keep 033 as the safer diversity backup slot_2 unless a stronger diverse candidate appears.
+    - Keep 038 as a strong public-LB-oriented backup but avoid using both 040 and 038 as the only two final submissions unless prioritizing Public LB over diversity.
+    - Next experiments should continue adding lower-correlation own OOF/pred assets to the stacker pool.
+    - Candidate next direction: another CatBoost/XGB/RealMLP variant with changed FE/fold, followed by GPU LogReg stacker add041.
