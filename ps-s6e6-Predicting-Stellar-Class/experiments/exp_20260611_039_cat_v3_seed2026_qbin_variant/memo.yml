@@ -43,3 +43,164 @@ next_action:
   - Submit only if the standalone result is not obviously broken.
   - Add this OOF/pred to the 038 GPU LogReg stacker pool as exp_040 or later.
   - Run blend/corr check to verify whether this variant lowers correlation versus 028/033/038.
+
+result:
+  status: completed
+  cv_balanced_accuracy: 0.9687053023092482
+  mean_fold_balanced_accuracy: 0.9687053117895165
+  std_fold_balanced_accuracy: 0.0005575717165417303
+  public_lb: 0.96984
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260611_039_cat_v3_seed2026_qbin_variant.csv
+
+model_summary:
+  model_family: CatBoost
+  model_type: cat_v3_seed2026_qbin_variant
+  model_id: cat-v3-seed2026-qbin-variant
+  purpose: >
+    CatBoost v3 variant with changed seed/fold/qbin/original_weight/stochastic
+    params for lower-correlation material.
+  use_original: true
+  original_weight: 0.03
+  use_fe: true
+  seed: 2026
+  n_splits: 5
+  fold_seed_formula: SEED + fold * 17
+  metric: balanced_accuracy_score
+  n_features: 242
+  n_cat_features: 154
+  classes:
+    - GALAXY
+    - QSO
+    - STAR
+
+cv:
+  score: 0.9687053023092482
+  fold_mean: 0.9687053117895165
+  fold_std: 0.0005575717165417303
+  recalls:
+    GALAXY: 0.9595713680194977
+    QSO: 0.9749280793560008
+    STAR: 0.9716164595522461
+  interpretation: >
+    CV is slightly below 028 CatBoost v3, but still strong enough as an auxiliary
+    CatBoost-family material. The result meets the target level for a stacker/blend
+    input rather than standalone best.
+
+public_lb:
+  score: 0.96984
+  interpretation: >
+    Public LB is not competitive with the current best submissions, but it is higher
+    than the previous 028 CatBoost v3 Public LB. This supports keeping 039 as a
+    candidate input for the next GPU LogReg stacker.
+
+qbin_variant:
+  raw_num_bins:
+    - 24
+    - 80
+    - 320
+  color_bins:
+    - 48
+  manual_combo_bins: q80/q48 variant
+
+catboost_params:
+  loss_function: MultiClass
+  eval_metric: TotalF1:average=Macro
+  depth: 8
+  learning_rate: 0.038
+  l2_leaf_reg: 10.0
+  random_strength: 1.8
+  bootstrap_type: Bayesian
+  bagging_temperature: 0.6
+  one_hot_max_size: 16
+  max_ctr_complexity: 3
+  class_weights:
+    - 1.0
+    - 3.25
+    - 5.0
+  border_count: 254
+  task_type: GPU
+  devices: "0:1"
+  gpu_ram_part: 0.85
+  gpu_cat_features_storage: CpuPinnedMemory
+  thread_count: 4
+  allow_writing_files: false
+  verbose: 250
+
+outputs:
+  oof_proba: oof_exp_20260611_039_cat_v3_seed2026_qbin_variant_proba.npy
+  pred_proba: pred_exp_20260611_039_cat_v3_seed2026_qbin_variant_proba.npy
+  oof_csv: oof_exp_20260611_039_cat_v3_seed2026_qbin_variant.csv
+  pred_csv: pred_exp_20260611_039_cat_v3_seed2026_qbin_variant.csv
+  submission: submission_exp_20260611_039_cat_v3_seed2026_qbin_variant.csv
+  cv_result: cv_result_exp_20260611_039_cat_v3_seed2026_qbin_variant.json
+  fold_scores: fold_scores_exp_20260611_039_cat_v3_seed2026_qbin_variant.csv
+  feature_columns: feature_columns_exp_20260611_039_cat_v3_seed2026_qbin_variant.csv
+  feature_importance: feature_importance_exp_20260611_039_cat_v3_seed2026_qbin_variant.csv
+  class_distribution: class_distribution_exp_20260611_039_cat_v3_seed2026_qbin_variant.csv
+
+comparison_to_028_cat_v3:
+  exp_028:
+    exp_id: exp_20260608_028_cat_v3_as_is
+    cv: 0.9688146470512534
+    public_lb: 0.96969
+    original_weight: 0.06
+    seed: 42
+  exp_039:
+    exp_id: exp_20260611_039_cat_v3_seed2026_qbin_variant
+    cv: 0.9687053023092482
+    public_lb: 0.96984
+    original_weight: 0.03
+    seed: 2026
+  delta:
+    cv: -0.0001093447420052
+    public_lb: 0.00015
+  judgement: >
+    039 is not a CV improvement over 028, but Public LB is slightly better and the
+    configuration is intentionally different. It should be treated as a CatBoost
+    variant material, not as a standalone replacement for the current best.
+
+comparison_to_current_best:
+  current_best:
+    exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+    cv: 0.9701353365798572
+    public_lb: 0.97060
+  exp_039:
+    cv: 0.9687053023092482
+    public_lb: 0.96984
+  judgement: >
+    039 is clearly below the current best as a standalone submission. Its value is
+    only as a possible lower-correlation input for the next stacker/blend experiment.
+
+submission_slot_decision:
+  promote_to_slot: false
+  reason: >
+    Standalone CV/LB are below the current submission slots. Do not use 039 directly
+    as a final submission.
+  current_recommended_slots:
+    slot_1:
+      exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+      public_lb: 0.97060
+      role: current_best
+    slot_2:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      public_lb: 0.97043
+      role: previous_public_confirmed_best_backup
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_as_catboost_variant_material
+  role: catboost_v3_lower_correlation_variant_for_stacker
+  priority: medium
+  not_for_standalone_submission: true
+  reason: >
+    039 did not improve CV versus 028, but it achieved a slightly better Public LB
+    and was produced with different seed/fold/qbin/original_weight/stochastic params.
+    This makes it reasonable to keep as an auxiliary CatBoost-family input.
+  next_action:
+    - Keep 039 OOF/pred files in the asset pool.
+    - Run 040 GPU LogReg stacker add039 using the current 038 stacker input pool plus 039.
+    - Check whether 039 improves over 038_gpu_logreg_stacker_add037_own CV 0.9701353365798572 and Public LB 0.97060.
+    - If 040 does not improve, keep 039 only as optional CatBoost variant material.
+    - Probability blend add039 can be checked later, but GPU LogReg stacker add039 should be prioritized.
