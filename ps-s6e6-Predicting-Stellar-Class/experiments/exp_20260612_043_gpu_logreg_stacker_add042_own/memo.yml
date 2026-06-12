@@ -1,1 +1,461 @@
-
+experiment:
+  id: exp_20260612_043_gpu_logreg_stacker_add042_own
+  title: GPU logistic regression stacker add042 using own OOF/pred assets including
+    042 RealMLP v5 variant
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: PyTorchMultiLogReg
+  created_at: '2026-06-12'
+objective:
+  summary: Train a GPU multinomial logistic regression stacker using only self-owned
+    OOF/pred assets and save exp_id-named OOF/pred probabilities for submission and
+    later diagnostics.
+  success_criteria:
+  - load only self-owned OOF/pred npy files
+  - exclude external submission and public notebook predictions
+  - train fold-safe GPU logistic regression stacker
+  - save raw and tuned OOF/pred probabilities
+  - save default best OOF/pred probabilities with exp_id in filename
+  - save raw/tuned/default submissions
+  - save cv_result, fold_scores, seed_scores, base_model_scores, importance
+  - update oof_registry
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  target_col: class
+  id_col: id
+  use_original: false
+  use_external_stacking_files: false
+  n_models_loaded: 18
+  loaded_model_keys:
+  - 015_realmlp_seed42
+  - 017_realmlp_bias
+  - 018_xgb_shared003
+  - 019_blend_best
+  - 020_blend_bias
+  - 024_seed_ensemble_blend
+  - 026_realmlp_v5
+  - 027_blend_add026
+  - 028_cat_v3
+  - 029_blend_add028
+  - 030_ovr_xgb
+  - 031_blend_add030
+  - 032_ovr_tabm
+  - 033_blend_add032
+  - 035_shared001_updated
+  - 037_tabicl_v2
+  - 039_cat_v3_seed2026_qbin_variant
+  - 042_realmlp_v5_seed2026_foldvariant
+  skipped_specs: []
+seed:
+  seed: 42
+  stacker_seeds: &id001
+  - 42
+  - 43
+  - 44
+  - 45
+  - 46
+  stratified_kfold_random_states: *id001
+  numpy_random_seed: set per stacker seed
+  torch_random_seed: set per stacker seed
+features:
+  feature_family: own_oof_pred_assets_logit_meta_features
+  input_transform: prob_to_logit
+  use_logit_input: true
+  n_meta_features: 54
+  input_feature_names:
+  - 015_realmlp_seed42__GALAXY
+  - 015_realmlp_seed42__QSO
+  - 015_realmlp_seed42__STAR
+  - 017_realmlp_bias__GALAXY
+  - 017_realmlp_bias__QSO
+  - 017_realmlp_bias__STAR
+  - 018_xgb_shared003__GALAXY
+  - 018_xgb_shared003__QSO
+  - 018_xgb_shared003__STAR
+  - 019_blend_best__GALAXY
+  - 019_blend_best__QSO
+  - 019_blend_best__STAR
+  - 020_blend_bias__GALAXY
+  - 020_blend_bias__QSO
+  - 020_blend_bias__STAR
+  - 024_seed_ensemble_blend__GALAXY
+  - 024_seed_ensemble_blend__QSO
+  - 024_seed_ensemble_blend__STAR
+  - 026_realmlp_v5__GALAXY
+  - 026_realmlp_v5__QSO
+  - 026_realmlp_v5__STAR
+  - 027_blend_add026__GALAXY
+  - 027_blend_add026__QSO
+  - 027_blend_add026__STAR
+  - 028_cat_v3__GALAXY
+  - 028_cat_v3__QSO
+  - 028_cat_v3__STAR
+  - 029_blend_add028__GALAXY
+  - 029_blend_add028__QSO
+  - 029_blend_add028__STAR
+  - 030_ovr_xgb__GALAXY
+  - 030_ovr_xgb__QSO
+  - 030_ovr_xgb__STAR
+  - 031_blend_add030__GALAXY
+  - 031_blend_add030__QSO
+  - 031_blend_add030__STAR
+  - 032_ovr_tabm__GALAXY
+  - 032_ovr_tabm__QSO
+  - 032_ovr_tabm__STAR
+  - 033_blend_add032__GALAXY
+  - 033_blend_add032__QSO
+  - 033_blend_add032__STAR
+  - 035_shared001_updated__GALAXY
+  - 035_shared001_updated__QSO
+  - 035_shared001_updated__STAR
+  - 037_tabicl_v2__GALAXY
+  - 037_tabicl_v2__QSO
+  - 037_tabicl_v2__STAR
+  - 039_cat_v3_seed2026_qbin_variant__GALAXY
+  - 039_cat_v3_seed2026_qbin_variant__QSO
+  - 039_cat_v3_seed2026_qbin_variant__STAR
+  - 042_realmlp_v5_seed2026_foldvariant__GALAXY
+  - 042_realmlp_v5_seed2026_foldvariant__QSO
+  - 042_realmlp_v5_seed2026_foldvariant__STAR
+  note: Each base model contributes 3 probability-derived features. With USE_LOGIT_INPUT=True,
+    class probabilities are clipped and transformed by log(p/(1-p)).
+cv:
+  scheme: StratifiedKFold meta-stacker CV
+  n_splits: 5
+  n_seeds: 5
+  shuffle: true
+  raw_score: 0.9701430377310448
+  tuned_score: 0.9701820598346598
+  best_score: 0.9701820598346598
+  best_kind: tuned
+  best_bias:
+  - -0.03299999999999875
+  - 0.006999999999999729
+  - 0.0
+  fold_scores:
+  - seed: 42
+    fold: 1
+    balanced_accuracy: 0.9707862685767304
+    n_train: 461877
+    n_valid: 115470
+    elapsed_sec: 7.738993406295776
+    recall_GALAXY: 0.9591104164459044
+    recall_QSO: 0.9778479661957403
+    recall_STAR: 0.9754004230885464
+  - seed: 42
+    fold: 2
+    balanced_accuracy: 0.970053660353669
+    n_train: 461877
+    n_valid: 115470
+    elapsed_sec: 2.524837017059326
+    recall_GALAXY: 0.960845607714316
+    recall_QSO: 0.975969951769175
+    recall_STAR: 0.9733454215775159
+  - seed: 42
+    fold: 3
+    balanced_accuracy: 0.9696227222629908
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 2.5488202571868896
+    recall_GALAXY: 0.958487866906856
+    recall_QSO: 0.9755858124546503
+    recall_STAR: 0.9747944874274661
+  - seed: 42
+    fold: 4
+    balanced_accuracy: 0.9695871619439562
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 2.6032464504241943
+    recall_GALAXY: 0.9616271060718449
+    recall_QSO: 0.9748164589380229
+    recall_STAR: 0.9723179208220006
+  - seed: 42
+    fold: 5
+    balanced_accuracy: 0.970108325798888
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 2.5882833003997803
+    recall_GALAXY: 0.9591898908551446
+    recall_QSO: 0.9768226054294007
+    recall_STAR: 0.9743124811121184
+  - seed: 43
+    fold: 1
+    balanced_accuracy: 0.9697568449880681
+    n_train: 461877
+    n_valid: 115470
+    elapsed_sec: 2.5855062007904053
+    recall_GALAXY: 0.9616403518067183
+    recall_QSO: 0.9760979982073499
+    recall_STAR: 0.971532184950136
+  - seed: 43
+    fold: 2
+    balanced_accuracy: 0.9706576328715021
+    n_train: 461877
+    n_valid: 115470
+    elapsed_sec: 2.6182827949523926
+    recall_GALAXY: 0.9589382218925506
+    recall_QSO: 0.9769089589824577
+    recall_STAR: 0.9761257177394983
+  - seed: 43
+    fold: 3
+    balanced_accuracy: 0.970700393103974
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 2.6923751831054688
+    recall_GALAXY: 0.9624350958991205
+    recall_QSO: 0.9768662768363994
+    recall_STAR: 0.9727998065764023
+  - seed: 43
+    fold: 4
+    balanced_accuracy: 0.969331780971221
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 2.655129909515381
+    recall_GALAXY: 0.9605939387517219
+    recall_QSO: 0.9756274543281543
+    recall_STAR: 0.9717739498337866
+  - seed: 43
+    fold: 5
+    balanced_accuracy: 0.9691440824160207
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 2.669114112854004
+    recall_GALAXY: 0.96109727667691
+    recall_QSO: 0.9760116100392693
+    recall_STAR: 0.9703233605318827
+  - seed: 44
+    fold: 1
+    balanced_accuracy: 0.9702243846035031
+    n_train: 461877
+    n_valid: 115470
+    elapsed_sec: 2.7546558380126953
+    recall_GALAXY: 0.9612297340256437
+    recall_QSO: 0.9760979982073499
+    recall_STAR: 0.9733454215775159
+  - seed: 44
+    fold: 2
+    balanced_accuracy: 0.9701916561983824
+    n_train: 461877
+    n_valid: 115470
+    elapsed_sec: 2.7464616298675537
+    recall_GALAXY: 0.960739641835329
+    recall_QSO: 0.9780613769260318
+    recall_STAR: 0.9717739498337866
+  - seed: 44
+    fold: 3
+    balanced_accuracy: 0.9697802694375874
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 2.7873759269714355
+    recall_GALAXY: 0.9603687612588746
+    recall_QSO: 0.9749028981177174
+    recall_STAR: 0.9740691489361702
+  - seed: 44
+    fold: 4
+    balanced_accuracy: 0.9697494061641686
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 2.7786662578582764
+    recall_GALAXY: 0.9613489456395041
+    recall_QSO: 0.9758835581355643
+    recall_STAR: 0.9720157147174373
+  - seed: 44
+    fold: 5
+    balanced_accuracy: 0.9701438598275387
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 2.8207614421844482
+    recall_GALAXY: 0.9596799830454593
+    recall_QSO: 0.9778897046269421
+    recall_STAR: 0.9728618918102145
+  - seed: 45
+    fold: 1
+    balanced_accuracy: 0.9697719366010089
+    n_train: 461877
+    n_valid: 115470
+    elapsed_sec: 2.86562180519104
+    recall_GALAXY: 0.9602098124403942
+    recall_QSO: 0.9769089589824577
+    recall_STAR: 0.9721970383801752
+  - seed: 45
+    fold: 2
+    balanced_accuracy: 0.9700007718717137
+    n_train: 461877
+    n_valid: 115470
+    elapsed_sec: 2.889380931854248
+    recall_GALAXY: 0.9615078944579846
+    recall_QSO: 0.9767809125442827
+    recall_STAR: 0.971713508612874
+  - seed: 45
+    fold: 3
+    balanced_accuracy: 0.9700620397966023
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 2.9523046016693115
+    recall_GALAXY: 0.9608720991840627
+    recall_QSO: 0.9766955482521661
+    recall_STAR: 0.9726184719535783
+  - seed: 45
+    fold: 4
+    balanced_accuracy: 0.9708625370206868
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 2.921189546585083
+    recall_GALAXY: 0.960382006993748
+    recall_QSO: 0.9775909168516306
+    recall_STAR: 0.9746146872166818
+  - seed: 45
+    fold: 5
+    balanced_accuracy: 0.9695645788727233
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 2.959111452102661
+    recall_GALAXY: 0.9603290240542546
+    recall_QSO: 0.9752006146491378
+    recall_STAR: 0.9731640979147779
+  - seed: 46
+    fold: 1
+    balanced_accuracy: 0.9706074416602021
+    n_train: 461877
+    n_valid: 115470
+    elapsed_sec: 3.0267415046691895
+    recall_GALAXY: 0.9612694712302639
+    recall_QSO: 0.9764821375218746
+    recall_STAR: 0.9740707162284679
+  - seed: 46
+    fold: 2
+    balanced_accuracy: 0.9707763758471044
+    n_train: 461877
+    n_valid: 115470
+    elapsed_sec: 3.024439573287964
+    recall_GALAXY: 0.9610575394722899
+    recall_QSO: 0.977805284049682
+    recall_STAR: 0.9734663040193412
+  - seed: 46
+    fold: 3
+    balanced_accuracy: 0.9701299069103312
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 3.04325270652771
+    recall_GALAXY: 0.9612429797605171
+    recall_QSO: 0.9762260446455248
+    recall_STAR: 0.9729206963249516
+  - seed: 46
+    fold: 4
+    balanced_accuracy: 0.9699391703627529
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 3.0566370487213135
+    recall_GALAXY: 0.9611502596164035
+    recall_QSO: 0.9759262421034659
+    recall_STAR: 0.9727410093683893
+  - seed: 46
+    fold: 5
+    balanced_accuracy: 0.9692004266885316
+    n_train: 461878
+    n_valid: 115469
+    elapsed_sec: 3.11564040184021
+    recall_GALAXY: 0.9585143583766027
+    recall_QSO: 0.9762250298787776
+    recall_STAR: 0.9728618918102145
+  seed_scores:
+  - seed: 42
+    balanced_accuracy: 0.9700316269374528
+    recall_GALAXY: 0.9598521775988131
+    recall_QSO: 0.9762085655993102
+    recall_STAR: 0.9740341376142353
+  - seed: 43
+    balanced_accuracy: 0.969918148454802
+    recall_GALAXY: 0.9609409770054043
+    recall_QSO: 0.9763024679238196
+    recall_STAR: 0.972511000435182
+  - seed: 44
+    balanced_accuracy: 0.9700179083671099
+    recall_GALAXY: 0.9606734131609622
+    recall_QSO: 0.9765671017474369
+    recall_STAR: 0.9728132101929307
+  - seed: 45
+    balanced_accuracy: 0.9700523751757798
+    recall_GALAXY: 0.9606601674260888
+    recall_QSO: 0.97663539434708
+    recall_STAR: 0.9728615637541705
+  - seed: 46
+    balanced_accuracy: 0.9701306680706633
+    recall_GALAXY: 0.9606469216912155
+    recall_QSO: 0.9765329554476153
+    recall_STAR: 0.973212127073159
+  fold_std: 0.0004867883399570105
+  seed_std: 6.825573369230026e-05
+  raw_recalls:
+    GALAXY: 0.9606548691321395
+    QSO: 0.9765500285975262
+    STAR: 0.9732242154634689
+  tuned_recalls:
+    GALAXY: 0.9599846349475469
+    QSO: 0.9768658818708758
+    STAR: 0.9736956626855567
+model:
+  model_family: GPU_LogisticRegression_Stacker
+  implementation: PyTorch linear layer + CrossEntropyLoss
+  epochs: 1000
+  lr: 0.01
+  C_REG: 0.1
+  weight_decay_mapping: 1 / (C_REG * n_train)
+  class_weight: balanced class weights per fold
+  boost_star_weight: 1.0
+  device: cuda
+outputs:
+  oof_proba: oof_exp_20260612_043_gpu_logreg_stacker_add042_own_proba.npy
+  pred_proba: pred_exp_20260612_043_gpu_logreg_stacker_add042_own_proba.npy
+  oof_raw_proba: oof_raw_exp_20260612_043_gpu_logreg_stacker_add042_own_proba.npy
+  pred_raw_proba: pred_raw_exp_20260612_043_gpu_logreg_stacker_add042_own_proba.npy
+  oof_tuned_proba: oof_tuned_exp_20260612_043_gpu_logreg_stacker_add042_own_proba.npy
+  pred_tuned_proba: pred_tuned_exp_20260612_043_gpu_logreg_stacker_add042_own_proba.npy
+  submission: submission_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  submission_raw: submission_raw_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  submission_tuned: submission_tuned_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  cv_result: cv_result_exp_20260612_043_gpu_logreg_stacker_add042_own.json
+  summary: gpu_logreg_stacker_summary.json
+  fold_scores: fold_scores_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  seed_scores: seed_scores_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  base_model_scores: base_model_scores_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  loaded_model_specs: loaded_model_specs_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  feature_importance: stacker_importance_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  registry: oof_registry.csv
+  memo: memo.yml
+judgement:
+  status: pending_public_lb
+  reason: This is a self-owned GPU logistic regression stacker. Adoption depends on
+    OOF CV, Public LB, and whether the stacker improves over the current 040 GPU LogReg
+    add039 reference.
+  current_reference:
+    033_cv: 0.9700400336552478
+    033_public_lb: 0.97043
+    036_gpu_logreg_add035_cv: 0.9700674063284508
+    036_gpu_logreg_add035_public_lb: 0.97037
+    040_gpu_logreg_add039_cv: 0.9702017877238539
+    040_gpu_logreg_add039_public_lb: 0.97069
+    038_gpu_logreg_add037_cv: 0.9701353365798572
+    038_gpu_logreg_add037_public_lb: 0.9706
+    039_cat_v3_variant_cv: 0.9687053023092482
+    039_cat_v3_variant_public_lb: 0.96984
+    042_realmlp_v5_variant_cv: 0.9689482884928097
+    042_realmlp_v5_variant_public_lb: 0.96943
+    031_cv: 0.9700333620193362
+    031_public_lb: 0.97043
+  risk_notes:
+  - Base blend assets such as 029/031 may themselves contain OOF-optimized HC weights.
+  - Bias search is optimized on OOF labels and should be validated by Public LB before
+    promotion.
+  - Do not treat in-sample-looking meta improvements as final without LB confirmation.
+  next_action:
+  - Submit submission_raw and submission_tuned if both are generated and quota allows,
+    otherwise submit the default best submission first.
+  - Record Public LB for raw/tuned/default submission and compare against 040 GPU
+    LogReg add039 / 038 GPU LogReg add037 / 033.
+  - If Public LB improves 040 GPU LogReg add039, promote 043 to current best.
+  - If Public LB does not improve, keep 040 GPU LogReg add039 as slot_1 and 033 as
+    backup/diversity slot.
