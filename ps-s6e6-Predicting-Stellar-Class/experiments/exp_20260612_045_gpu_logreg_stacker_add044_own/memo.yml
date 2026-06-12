@@ -459,3 +459,251 @@ judgement:
   - If Public LB improves 040 GPU LogReg add039, promote 045 to current best.
   - If Public LB does not improve, keep 040 GPU LogReg add039 as slot_1 and 033 as
     backup/diversity slot.
+
+result:
+  status: completed
+  raw_cv_balanced_accuracy: 0.9701651297689362
+  tuned_cv_balanced_accuracy: 0.9702445493383917
+  best_cv_balanced_accuracy: 0.9702445493383917
+  best_kind: tuned
+  public_lb: 0.97040
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260612_045_gpu_logreg_stacker_add044_own.csv
+
+model_summary:
+  model_family: GPU_LogisticRegression_Stacker
+  model_type: pytorch_multinomial_logistic_regression_on_own_oof_pred_assets
+  metric: balanced_accuracy_score
+  use_external_stacking_files: false
+  use_logit_input: true
+  input_transform: prob_to_logit
+  n_models_loaded: 18
+  skipped_specs: []
+  n_splits: 5
+  n_seeds: 5
+  stacker_seeds:
+    - 42
+    - 43
+    - 44
+    - 45
+    - 46
+  seed: 42
+  epochs: 1000
+  lr: 0.01
+  C_REG: 0.1
+  boost_star_weight: 1.0
+
+loaded_models:
+  - 015_realmlp_seed42
+  - 017_realmlp_bias
+  - 018_xgb_shared003
+  - 019_blend_best
+  - 020_blend_bias
+  - 024_seed_ensemble_blend
+  - 026_realmlp_v5
+  - 027_blend_add026
+  - 028_cat_v3
+  - 029_blend_add028
+  - 030_ovr_xgb
+  - 031_blend_add030
+  - 032_ovr_tabm
+  - 033_blend_add032
+  - 035_shared001_updated
+  - 037_tabicl_v2
+  - 039_cat_v3_seed2026_qbin_variant
+  - 044_shared001_updated_seed2027_foldvariant
+
+dropped_model:
+  key: 042_realmlp_v5_seed2026_foldvariant
+  exp_id: exp_20260611_042_realmlp_v5_seed2026_foldvariant
+  reason: >
+    042 lowered both CV and Public LB in 043, so 045 intentionally drops 042 and
+    tests the marginal contribution of 044 against the stronger 040-like pool.
+
+added_model:
+  key: 044_shared001_updated_seed2027_foldvariant
+  exp_id: exp_20260612_044_shared001_updated_seed2027_foldvariant
+  family: RealMLP
+  role: shared001_updated_seed_fold_variant_material
+  cv: 0.9686035095582338
+  public_lb: 0.97000
+  oof: oof_exp_20260612_044_shared001_updated_seed2027_foldvariant_proba.npy
+  pred: pred_exp_20260612_044_shared001_updated_seed2027_foldvariant_proba.npy
+  judgement: >
+    044 is not a standalone submission candidate, but it improves the stacker OOF
+    CV when added to the 040-style pool. However, this improvement does not
+    transfer to Public LB.
+
+best_bias:
+  GALAXY: -0.006999999999998396
+  QSO: 0.04000000000000159
+  STAR: 0.0
+
+raw_recalls:
+  GALAXY: 0.9604985694606337
+  QSO: 0.9765671017474369
+  STAR: 0.973429718098738
+
+tuned_recalls:
+  GALAXY: 0.9600958991204832
+  QSO: 0.9771475888444039
+  STAR: 0.9734901600502877
+
+best_recalls:
+  GALAXY: 0.9600958991204832
+  QSO: 0.9771475888444039
+  STAR: 0.9734901600502877
+
+stability:
+  fold_std: 0.0004880185877358555
+  seed_std: 0.00004125379522784529
+  note: >
+    Seed stability is acceptable. CV is the highest so far, but Public LB does not
+    confirm the gain.
+
+comparison_to_040_gpu_logreg_add039:
+  exp_040:
+    exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+    best_cv: 0.9702017877238539
+    public_lb: 0.97069
+    n_models_loaded: 17
+  exp_045:
+    exp_id: exp_20260612_045_gpu_logreg_stacker_add044_own
+    best_cv: 0.9702445493383917
+    public_lb: 0.97040
+    n_models_loaded: 18
+  delta:
+    cv: 0.0000427616145378
+    public_lb: -0.00029
+  judgement: >
+    045 improves OOF CV over 040, but Public LB is clearly worse. Do not replace
+    040 as slot_1.
+
+comparison_to_041_blend_add039_gpu040:
+  exp_041:
+    exp_id: exp_20260611_041_blend_add039_gpu040_check
+    cv: 0.9702371689099357
+    public_lb: 0.97050
+  exp_045:
+    exp_id: exp_20260612_045_gpu_logreg_stacker_add044_own
+    best_cv: 0.9702445493383917
+    public_lb: 0.97040
+  delta:
+    cv: 0.0000073804284560
+    public_lb: -0.00010
+  judgement: >
+    045 slightly improves CV over 041, but has lower Public LB. It is a CV-best
+    diagnostic run, not a better final submission.
+
+comparison_to_043_gpu_logreg_add042:
+  exp_043:
+    exp_id: exp_20260612_043_gpu_logreg_stacker_add042_own
+    best_cv: 0.9701820598346598
+    public_lb: 0.97034
+  exp_045:
+    exp_id: exp_20260612_045_gpu_logreg_stacker_add044_own
+    best_cv: 0.9702445493383917
+    public_lb: 0.97040
+  delta:
+    cv: 0.0000624895037319
+    public_lb: 0.00006
+  judgement: >
+    045 is better than 043 on both CV and Public LB. Dropping 042 and adding 044
+    was the right comparison design.
+
+comparison_to_044_standalone:
+  exp_044:
+    exp_id: exp_20260612_044_shared001_updated_seed2027_foldvariant
+    cv: 0.9686035095582338
+    public_lb: 0.97000
+  exp_045:
+    exp_id: exp_20260612_045_gpu_logreg_stacker_add044_own
+    best_cv: 0.9702445493383917
+    public_lb: 0.97040
+  delta:
+    cv: 0.0016410397801579
+    public_lb: 0.00040
+  judgement: >
+    The stacker is much stronger than 044 standalone, but the marginal value of
+    044 is mixed: it helps OOF CV but does not produce a Public LB improvement over
+    the current best.
+
+outputs:
+  oof_proba: oof_exp_20260612_045_gpu_logreg_stacker_add044_own_proba.npy
+  pred_proba: pred_exp_20260612_045_gpu_logreg_stacker_add044_own_proba.npy
+  oof_raw_proba: oof_raw_exp_20260612_045_gpu_logreg_stacker_add044_own_proba.npy
+  pred_raw_proba: pred_raw_exp_20260612_045_gpu_logreg_stacker_add044_own_proba.npy
+  oof_tuned_proba: oof_tuned_exp_20260612_045_gpu_logreg_stacker_add044_own_proba.npy
+  pred_tuned_proba: pred_tuned_exp_20260612_045_gpu_logreg_stacker_add044_own_proba.npy
+  submission: submission_exp_20260612_045_gpu_logreg_stacker_add044_own.csv
+  submission_raw: submission_raw_exp_20260612_045_gpu_logreg_stacker_add044_own.csv
+  submission_tuned: submission_tuned_exp_20260612_045_gpu_logreg_stacker_add044_own.csv
+  cv_result: cv_result_exp_20260612_045_gpu_logreg_stacker_add044_own.json
+  summary: gpu_logreg_stacker_summary.json
+  fold_scores: fold_scores_exp_20260612_045_gpu_logreg_stacker_add044_own.csv
+  seed_scores: seed_scores_exp_20260612_045_gpu_logreg_stacker_add044_own.csv
+  base_model_scores: base_model_scores_exp_20260612_045_gpu_logreg_stacker_add044_own.csv
+  loaded_model_specs: loaded_model_specs_exp_20260612_045_gpu_logreg_stacker_add044_own.csv
+  feature_importance: stacker_importance_exp_20260612_045_gpu_logreg_stacker_add044_own.csv
+
+submission_slot_decision:
+  promote_to_slot_1: false
+  reason: >
+    045 is the highest OOF CV run so far, but Public LB is below 040, 038, 041,
+    and slightly below 033. The CV gain is not confirmed publicly.
+  recommended_slots_after_045:
+    slot_1:
+      exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+      cv: 0.9702017877238539
+      public_lb: 0.97069
+      role: current_best_cv_and_public
+      reason: >
+        Best confirmed Public LB and still very strong CV. Keep as main final
+        candidate.
+    slot_2_private_hedge:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      cv: 0.9700400336552478
+      public_lb: 0.97043
+      role: simpler_blend_family_backup
+      reason: >
+        More diverse than the stacker-heavy 040/045 family. Still useful as a
+        Private LB hedge.
+    public_lb_backup:
+      exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+      cv: 0.9701353365798572
+      public_lb: 0.97060
+      role: previous_stacker_best_backup
+      reason: >
+        Strong Public LB backup, but likely highly correlated with 040.
+    cv_best_not_selected:
+      exp_id: exp_20260612_045_gpu_logreg_stacker_add044_own
+      cv: 0.9702445493383917
+      public_lb: 0.97040
+      reason: >
+        Highest OOF CV but weaker Public LB. Keep as diagnostic/private-risk
+        reference, not as main submission.
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_as_cv_best_diagnostic_not_submission_slot
+  role: gpu_logreg_stacker_add044_check
+  priority: medium
+  decision: do_not_promote
+  reason: >
+    045 confirms that adding 044 shared001 updated variant can raise OOF CV, but
+    the gain does not transfer to Public LB. Public LB 0.97040 is below the current
+    best 040 LB 0.97069.
+  notes:
+    - 042 was correctly dropped from the 045 pool.
+    - 044 was loaded correctly; skipped_specs is empty.
+    - n_models_loaded remains 18 because 042 was replaced by 044.
+    - The best output is tuned, with bias GALAXY=-0.007, QSO=0.040, STAR=0.0.
+    - Compared with 040, 045 improves GALAXY/QSO recall but lowers STAR recall.
+    - This run has the highest OOF CV so far, but Public LB suggests overfitting or insufficient public transfer.
+  next_action:
+    - Keep 040 as slot_1.
+    - Keep 033 as slot_2 diversity/private hedge.
+    - Keep 038 as public-LB backup.
+    - Do not prioritize more shared001 updated seed/fold variants.
+    - Next higher-priority direction should be an XGB-family variant or a materially different model/FE source.
