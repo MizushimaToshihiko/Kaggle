@@ -227,3 +227,261 @@ judgement:
   - Record Public LB
   - Add OOF/pred npy to npy-files dataset
   - Run 043 GPU LogReg stacker add042
+
+result:
+  status: completed
+  cv_balanced_accuracy: 0.9689482884928097
+  public_lb: 0.96943
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260611_042_realmlp_v5_seed2026_foldvariant.csv
+
+model_summary:
+  model_family: RealMLP
+  model_type: realmlp_v5_seed2026_foldvariant
+  model: RealMLP v5 seed2026/fold variant
+  source: exp_20260608_026_realmlp_v5_as_is
+  metric: balanced_accuracy_score
+  use_original: false
+  use_fe: true
+  use_bias_search: false
+  fe_family: realmlp_v5_seed2026_foldvariant
+  n_features: 40
+  n_splits: 5
+  seed: 2026
+  fold_seed_formula: SEED + fold * 17
+  class_order:
+    - GALAXY
+    - QSO
+    - STAR
+
+cv:
+  score: 0.9689482884928097
+  per_class_recall:
+    GALAXY: 0.9584693228780333
+    QSO: 0.9765414920225707
+    STAR: 0.971834050577825
+  fold_scores:
+    - fold: 1
+      fold_seed: 2043
+      balanced_accuracy: 0.9684867825424851
+      n_train: 461877
+      n_valid: 115470
+      n_features: 40
+    - fold: 2
+      fold_seed: 2060
+      balanced_accuracy: 0.9685334210858695
+      n_train: 461877
+      n_valid: 115470
+      n_features: 40
+    - fold: 3
+      fold_seed: 2077
+      balanced_accuracy: 0.9685737506987668
+      n_train: 461878
+      n_valid: 115469
+      n_features: 40
+    - fold: 4
+      fold_seed: 2094
+      balanced_accuracy: 0.9699424865381383
+      n_train: 461878
+      n_valid: 115469
+      n_features: 40
+    - fold: 5
+      fold_seed: 2111
+      balanced_accuracy: 0.9692050381674036
+      n_train: 461878
+      n_valid: 115469
+      n_features: 40
+  interpretation: >
+    042 is a valid RealMLP v5 variant, but standalone CV/LB are not strong enough
+    to promote it as a submission candidate. Fold 4 is strong, while folds 1-3 are
+    weaker, so the mean CV stays below the original 026 RealMLP v5 level.
+
+variant_design:
+  base_exp_id: exp_20260608_026_realmlp_v5_as_is
+  changed_params:
+    seed: 2026
+    fold_seed_formula: SEED + fold * 17
+    dropout: 0.052
+    weight_decay: 0.014
+    ema_decay: 0.998
+    ls_eps: 0.035
+  unchanged_core:
+    - RealMLP architecture
+    - PBLD structure
+    - feature engineering family
+    - TargetEncoder usage
+    - epochs
+    - learning_rate
+    - n_ens
+  judgement: >
+    The variant was intentionally conservative: the RealMLP v5 recipe was kept
+    mostly intact, while seed/fold/stochastic regularization were changed to create
+    a different OOF/pred material.
+
+config:
+  n_ens: 8
+  embed_dim: 7
+  onehot_thresh: 10
+  hidden_dims:
+    - 512
+    - 512
+    - 512
+  dropout: 0.052
+  p_drop_sched: expm4t
+  activation: GELU
+  add_front_scale: true
+  pbld_hidden_dim: 16
+  pbld_out_dim: 5
+  pbld_freq_scale: 2.33
+  pbld_activation: PReLU
+  pbld_lr_factor: 0.115
+  lr: 0.01
+  mom: 0.9
+  sq_mom: 0.98
+  lr_sched: flat_cos
+  flat_ratio: 0.2
+  first_layer_lr_factor: 1.0
+  first_layer_wd_factor: 0.1
+  lr_scale_mult: 10.0
+  lr_bias_mult: 0.1
+  weight_decay: 0.014
+  wd_scale_mult: 0.1
+  wd_bias_mult: 0.5
+  grad_clip: 1.0
+  class_weight_power: 0.0
+  sample_weight_power: 0.0
+  loss_prior_power: 1.075
+  focal_gamma: 0.0
+  ls_eps: 0.035
+  ls_eps_sched: cos
+  tfms:
+    - median_center
+    - robust_scale
+  epochs: 6
+  train_bs: 256
+  eval_bs: 10240
+  numeric_noise_std: 0.0
+  ema_decay: 0.998
+  use_early_stopping: false
+  device: cuda
+  random_state: 2026
+
+feature_info:
+  n_features_before_te: 34
+  n_cat_cols: 14
+  n_num_cols: 20
+  cat_cols:
+    - alpha_cat_
+    - alpha_cat___delta_cat___
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    - delta_cat_
+    - g_cat_
+    - galaxy_population
+    - i_cat_
+    - r_cat_
+    - redshift_cat_
+    - spectral_type
+    - u_cat_
+    - u_cat___z_cat___
+    - z_cat_
+  num_cols:
+    - _g-i
+    - _g-r
+    - _g_div_redshift
+    - _i-z
+    - _i_div_redshift
+    - _log1p_redshift
+    - _mag_mean
+    - _mag_range
+    - _r-i
+    - _r-z
+    - _u-g
+    - _u-r
+    - alpha
+    - delta
+    - g
+    - i
+    - r
+    - redshift
+    - u
+    - z
+  combo_names:
+    - alpha_cat___delta_cat___
+    - u_cat___z_cat___
+
+outputs:
+  submission: /kaggle/working/exp_20260611_042_realmlp_v5_seed2026_foldvariant/submission_exp_20260611_042_realmlp_v5_seed2026_foldvariant.csv
+  oof_proba: /kaggle/working/exp_20260611_042_realmlp_v5_seed2026_foldvariant/oof_exp_20260611_042_realmlp_v5_seed2026_foldvariant_proba.npy
+  pred_proba: /kaggle/working/exp_20260611_042_realmlp_v5_seed2026_foldvariant/pred_exp_20260611_042_realmlp_v5_seed2026_foldvariant_proba.npy
+
+comparison_to_026_realmlp_v5:
+  exp_026:
+    exp_id: exp_20260608_026_realmlp_v5_as_is
+    cv: 0.9690389777981231
+    public_lb: 0.96979
+  exp_042:
+    exp_id: exp_20260611_042_realmlp_v5_seed2026_foldvariant
+    cv: 0.9689482884928097
+    public_lb: 0.96943
+  delta:
+    cv: -0.0000906893053134
+    public_lb: -0.00036
+  judgement: >
+    042 does not improve over 026 as a standalone RealMLP v5 model. The seed/fold
+    variant is weaker on Public LB and slightly weaker on CV.
+
+comparison_to_current_best:
+  current_best:
+    exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+    cv: 0.9702017877238539
+    public_lb: 0.97069
+  exp_042:
+    cv: 0.9689482884928097
+    public_lb: 0.96943
+  judgement: >
+    042 is clearly below the current best as a standalone submission. Its only
+    remaining value is as an auxiliary RealMLP-family input for the next learned
+    stacker check.
+
+submission_slot_decision:
+  promote_to_slot: false
+  reason: >
+    Standalone CV and Public LB are both below 026 and far below the current
+    040 stacker. Do not use 042 directly as a final submission.
+  current_recommended_slots:
+    slot_1:
+      exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+      cv: 0.9702017877238539
+      public_lb: 0.97069
+      role: current_best_cv_and_public
+    slot_2_private_hedge:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      cv: 0.9700400336552478
+      public_lb: 0.97043
+      role: simpler_blend_family_backup
+    public_lb_backup:
+      exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+      cv: 0.9701353365798572
+      public_lb: 0.97060
+      role: previous_stacker_best_backup
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_as_optional_realmlp_variant_material
+  role: realmlp_v5_seed_fold_variant_for_stacker_check
+  priority: low_to_medium
+  not_for_standalone_submission: true
+  reason: >
+    042 was designed as a lower-correlation RealMLP v5 variant, but the standalone
+    result is weaker than 026 on both CV and Public LB. It should not be promoted
+    directly. However, because the OOF/pred files were successfully created and the
+    recipe differs from 026 by seed/fold/regularization, it can still be tested once
+    in the GPU LogReg stacker.
+  next_action:
+    - Keep 042 OOF/pred files in the asset pool.
+    - Run 043 GPU LogReg stacker add042 only if compute/time cost is acceptable.
+    - Compare 043 against 040 CV 0.9702017877238539 and Public LB 0.97069.
+    - If 043 does not improve, deprioritize further RealMLP v5 seed/fold variants.
+    - The next higher-priority direction after this is likely shared001 updated variant or XGB-family variant, depending on available GPU time.
