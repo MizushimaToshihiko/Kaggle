@@ -1,1 +1,214 @@
-
+experiment:
+  id: exp_20260612_044_shared001_updated_seed2027_foldvariant
+  title: shared001 updated RealMLP seed2027/fold variant
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: RealMLP_TD_Classifier PyTorch implementation
+  created_at: '2026-06-12'
+objective:
+  summary: Create a conservative seed/fold/regularization variant of the updated shared001
+    RealMLP PyTorch notebook and save OOF/pred probabilities with exp_id in filenames
+    for later GPU LogReg stacker add044 check.
+  success_criteria:
+  - run shared001 updated RealMLP seed/fold variant
+  - save OOF proba npy with exp_id in filename
+  - save test pred proba npy with exp_id in filename
+  - save submission
+  - save cv_result
+  - save fold_scores
+  - update oof_registry
+  - write memo.yml
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  target_col: class
+  id_col: id
+  use_original: false
+  use_external_stacking_files: false
+seed:
+  seed: 2027
+  random_seed: 2027
+  numpy_seed: 2027
+  torch_seed: 2027
+  stratified_kfold_random_state: 2027
+  target_encoder_random_state: fold_seed
+  fold_seed_formula: SEED + fold * FOLD_SEED_MULTIPLIER
+  config_random_state: 2027
+  audit: Base CONFIG random_state equals SEED, then config_fold random_state is set
+    to fold_seed inside each fold.
+features:
+  feature_family: shared001_updated_seed2027_foldvariant_fe
+  feature_info:
+    n_features: 29
+    n_cat_features: 14
+    n_num_features_initial: 15
+    cat_cols:
+    - alpha_cat_
+    - alpha_cat__delta_cat__
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    - delta_cat_
+    - g_cat_
+    - galaxy_population
+    - i_cat_
+    - r_cat_
+    - redshift_cat_
+    - spectral_type
+    - u_cat_
+    - u_cat__z_cat__
+    - z_cat_
+    combo_names:
+    - alpha_cat__delta_cat__
+    - u_cat__z_cat__
+    color_pairs:
+    - - u
+      - g
+    - - g
+      - r
+    - - i
+      - z
+    - - g
+      - i
+    - - r
+      - z
+    important_combos:
+    - - alpha_cat_
+      - delta_cat_
+    - - u_cat_
+      - z_cat_
+  target_encoder_safety: TargetEncoder is fit inside each fold on train fold combo
+    features and labels, then transforms validation and test.
+model:
+  family: RealMLP
+  type: shared001_updated_seed2027_foldvariant
+  config:
+    n_ens: 8
+    embed_dim: 8
+    onehot_thresh: 8
+    hidden_dims:
+    - 512
+    - 512
+    - 512
+    dropout: 0.052
+    p_drop_sched: expm4t
+    activation: <class 'torch.nn.modules.activation.SiLU'>
+    add_front_scale: true
+    pbld_hidden_dim: 20
+    pbld_out_dim: 5
+    pbld_freq_scale: 5.0
+    pbld_activation: <class 'torch.nn.modules.activation.PReLU'>
+    pbld_lr_factor: 0.093
+    lr: 0.01
+    mom: 0.9
+    sq_mom: 0.98
+    lr_sched: flat_cos
+    flat_ratio: 0.25
+    first_layer_lr_factor: 1.0
+    first_layer_wd_factor: 0.1
+    lr_scale_mult: 10.0
+    lr_bias_mult: 0.1
+    weight_decay: 0.0145
+    wd_scale_mult: 0.1
+    wd_bias_mult: 0.5
+    ema_decay: 0.998
+    grad_clip: 1.2
+    ls_eps: 0.035
+    ls_eps_sched: cos
+    tfms:
+    - median_center
+    - robust_scale
+    epochs: 6
+    train_bs: 256
+    eval_bs: 10240
+    verbosity: 2
+    use_early_stopping: false
+    early_stopping_additive_patience: 10
+    early_stopping_multiplicative_patience: 1
+    device: cuda
+    random_state: 2027
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 2027
+  fold_seed_formula: SEED + fold * FOLD_SEED_MULTIPLIER
+  fold_seed_multiplier: 19
+  score: 0.9686035095582338
+  recalls:
+    GALAXY: 0.9590786266822083
+    QSO: 0.9757561271266743
+    STAR: 0.9709757748658189
+  fold_scores:
+  - fold: 1
+    fold_seed: 2046
+    balanced_accuracy: 0.9681575229942069
+    recall_GALAXY: 0.9588057645438169
+    recall_QSO: 0.9741346194886679
+    recall_STAR: 0.971532184950136
+    n_train: 461877
+    n_valid: 115470
+  - fold: 2
+    fold_seed: 2065
+    balanced_accuracy: 0.9682390365309903
+    recall_GALAXY: 0.9588322560135636
+    recall_QSO: 0.976951641128516
+    recall_STAR: 0.9689332124508915
+    n_train: 461877
+    n_valid: 115470
+  - fold: 3
+    fold_seed: 2084
+    balanced_accuracy: 0.9697005068549679
+    recall_GALAXY: 0.9623688672247537
+    recall_QSO: 0.9766528661061078
+    recall_STAR: 0.9700797872340425
+    n_train: 461878
+    n_valid: 115469
+  - fold: 4
+    fold_seed: 2103
+    balanced_accuracy: 0.968464523704483
+    recall_GALAXY: 0.9561963547737629
+    recall_QSO: 0.9763957657503841
+    recall_STAR: 0.9728014505893019
+    n_train: 461878
+    n_valid: 115469
+  - fold: 5
+    fold_seed: 2122
+    balanced_accuracy: 0.9684559329572323
+    recall_GALAXY: 0.9591898908551446
+    recall_QSO: 0.9746457230664163
+    recall_STAR: 0.971532184950136
+    n_train: 461878
+    n_valid: 115469
+  fold_std: 0.0005614701403469239
+outputs:
+  oof_proba: oof_exp_20260612_044_shared001_updated_seed2027_foldvariant_proba.npy
+  pred_proba: pred_exp_20260612_044_shared001_updated_seed2027_foldvariant_proba.npy
+  oof_csv: oof_exp_20260612_044_shared001_updated_seed2027_foldvariant.csv
+  pred_csv: pred_exp_20260612_044_shared001_updated_seed2027_foldvariant.csv
+  submission: submission_exp_20260612_044_shared001_updated_seed2027_foldvariant.csv
+  cv_result: cv_result_exp_20260612_044_shared001_updated_seed2027_foldvariant.json
+  fold_scores: fold_scores_exp_20260612_044_shared001_updated_seed2027_foldvariant.csv
+  feature_info: feature_info_exp_20260612_044_shared001_updated_seed2027_foldvariant.json
+  feature_columns: feature_columns_exp_20260612_044_shared001_updated_seed2027_foldvariant.csv
+  class_distribution: class_distribution_exp_20260612_044_shared001_updated_seed2027_foldvariant.csv
+  registry: oof_registry.csv
+reference:
+  base_exp_id: exp_20260610_035_shared001_updated_realmlp_pytorch_as_is
+  base_public_lb_reported_by_user: 0.97012
+  note: 035 shared001 updated reference LB was 0.97012; this experiment's own Public
+    LB should be recorded after submission.
+judgement:
+  status: pending_public_lb_and_stacker_check
+  role: shared001_updated_seed_fold_variant_material
+  reason: 035 shared001 updated was useful as stacker material, but 042 RealMLP v5
+    seed/fold was not. This run tests whether a shared001-updated seed/fold/regularization
+    variant can provide useful lower-correlation OOF/pred material for the next GPU
+    LogReg stacker.
+  next_action:
+  - Submit submission_exp_20260612_044_shared001_updated_seed2027_foldvariant.csv
+  - Record Public LB
+  - Add OOF/pred npy to npy-files dataset
+  - Run 045 GPU LogReg stacker add044 using current 040 pool plus 044
+  - Check whether 045 improves over 040 CV 0.9702017877238539 / Public LB 0.97069
