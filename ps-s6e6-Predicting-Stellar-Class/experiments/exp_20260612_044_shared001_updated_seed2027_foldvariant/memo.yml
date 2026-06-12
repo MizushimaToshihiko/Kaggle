@@ -212,3 +212,200 @@ judgement:
   - Add OOF/pred npy to npy-files dataset
   - Run 045 GPU LogReg stacker add044 using current 040 pool plus 044
   - Check whether 045 improves over 040 CV 0.9702017877238539 / Public LB 0.97069
+
+result:
+  status: completed
+  cv_balanced_accuracy: 0.9686035095582338
+  fold_std: 0.0005614701403469239
+  public_lb: 0.97000
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260612_044_shared001_updated_seed2027_foldvariant.csv
+
+model_summary:
+  model_family: RealMLP
+  model_type: shared001_updated_seed2027_foldvariant
+  source: exp_20260610_035_shared001_updated_realmlp_pytorch_as_is
+  metric: balanced_accuracy_score
+  use_original: false
+  use_fe: true
+  use_bias_search: false
+  use_external_stacking_files: false
+  n_splits: 5
+  seed: 2027
+  fold_seed_formula: SEED + fold * FOLD_SEED_MULTIPLIER
+  fold_seed_multiplier: 19
+
+cv:
+  score: 0.9686035095582338
+  fold_std: 0.0005614701403469239
+  recalls:
+    GALAXY: 0.9590786266822083
+    QSO: 0.9757561271266743
+    STAR: 0.9709757748658189
+  interpretation: >
+    044 is a valid shared001 updated seed/fold variant, but standalone CV is lower
+    than 035. It should not be used directly as a final submission.
+
+variant_design:
+  base_exp_id: exp_20260610_035_shared001_updated_realmlp_pytorch_as_is
+  base_public_lb: 0.97012
+  changed_params:
+    seed: 2027
+    fold_seed_formula: SEED + fold * FOLD_SEED_MULTIPLIER
+    fold_seed_multiplier: 19
+    dropout: 0.052
+    flat_ratio: 0.25
+    weight_decay: 0.0145
+    ema_decay: 0.998
+    ls_eps: 0.035
+  unchanged_core:
+    - RealMLP architecture
+    - PBLD structure
+    - feature engineering family
+    - TargetEncoder usage
+    - epochs
+    - learning_rate
+    - n_ens
+  judgement: >
+    The variant was conservative and kept the shared001 updated recipe mostly
+    intact while changing seed/fold and mild regularization. The resulting single
+    model did not improve over 035, but it can still be tested once as a stacker
+    input.
+
+config:
+  n_ens: 8
+  embed_dim: 8
+  onehot_thresh: 8
+  hidden_dims:
+    - 512
+    - 512
+    - 512
+  dropout: 0.052
+  p_drop_sched: expm4t
+  activation: SiLU
+  add_front_scale: true
+  pbld_hidden_dim: 20
+  pbld_out_dim: 5
+  pbld_freq_scale: 5.0
+  pbld_activation: PReLU
+  pbld_lr_factor: 0.093
+  lr: 0.01
+  mom: 0.9
+  sq_mom: 0.98
+  lr_sched: flat_cos
+  flat_ratio: 0.25
+  first_layer_lr_factor: 1.0
+  first_layer_wd_factor: 0.1
+  lr_scale_mult: 10.0
+  lr_bias_mult: 0.1
+  weight_decay: 0.0145
+  wd_scale_mult: 0.1
+  wd_bias_mult: 0.5
+  ema_decay: 0.998
+  grad_clip: 1.2
+  ls_eps: 0.035
+  ls_eps_sched: cos
+  tfms:
+    - median_center
+    - robust_scale
+  epochs: 6
+  train_bs: 256
+  eval_bs: 10240
+  use_early_stopping: false
+  device: cuda
+  random_state: 2027
+
+outputs:
+  oof_proba: oof_exp_20260612_044_shared001_updated_seed2027_foldvariant_proba.npy
+  pred_proba: pred_exp_20260612_044_shared001_updated_seed2027_foldvariant_proba.npy
+  oof_csv: oof_exp_20260612_044_shared001_updated_seed2027_foldvariant.csv
+  pred_csv: pred_exp_20260612_044_shared001_updated_seed2027_foldvariant.csv
+  submission: submission_exp_20260612_044_shared001_updated_seed2027_foldvariant.csv
+  cv_result: cv_result_exp_20260612_044_shared001_updated_seed2027_foldvariant.json
+  fold_scores: fold_scores_exp_20260612_044_shared001_updated_seed2027_foldvariant.csv
+  feature_info: feature_info_exp_20260612_044_shared001_updated_seed2027_foldvariant.json
+  feature_columns: feature_columns_exp_20260612_044_shared001_updated_seed2027_foldvariant.csv
+  class_distribution: class_distribution_exp_20260612_044_shared001_updated_seed2027_foldvariant.csv
+
+comparison_to_035_shared001_updated:
+  exp_035:
+    exp_id: exp_20260610_035_shared001_updated_realmlp_pytorch_as_is
+    cv: 0.9687410900866934
+    public_lb: 0.97012
+  exp_044:
+    exp_id: exp_20260612_044_shared001_updated_seed2027_foldvariant
+    cv: 0.9686035095582338
+    public_lb: 0.97000
+  delta:
+    cv: -0.0001375805284596
+    public_lb: -0.00012
+  judgement: >
+    044 does not improve over 035 as a standalone shared001 updated model.
+    Both CV and Public LB are slightly worse.
+
+comparison_to_042_realmlp_v5_variant:
+  exp_042:
+    exp_id: exp_20260611_042_realmlp_v5_seed2026_foldvariant
+    cv: 0.9689482884928097
+    public_lb: 0.96943
+  exp_044:
+    exp_id: exp_20260612_044_shared001_updated_seed2027_foldvariant
+    cv: 0.9686035095582338
+    public_lb: 0.97000
+  judgement: >
+    044 has lower CV than 042 but better Public LB. As a single model, neither is
+    a final submission candidate. As stacker material, 044 may still be worth one
+    add-check because its Public LB is relatively better than 042.
+
+comparison_to_current_best:
+  current_best:
+    exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+    cv: 0.9702017877238539
+    public_lb: 0.97069
+  exp_044:
+    cv: 0.9686035095582338
+    public_lb: 0.97000
+  judgement: >
+    044 is clearly below the current best as a standalone model. It should only be
+    evaluated as an auxiliary input to the GPU LogReg stacker.
+
+submission_slot_decision:
+  promote_to_slot: false
+  reason: >
+    Standalone CV and Public LB are below 035 and far below 040. Do not use 044
+    directly as a final submission.
+  current_recommended_slots:
+    slot_1:
+      exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+      cv: 0.9702017877238539
+      public_lb: 0.97069
+      role: current_best_cv_and_public
+    slot_2_private_hedge:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      cv: 0.9700400336552478
+      public_lb: 0.97043
+      role: simpler_blend_family_backup
+    public_lb_backup:
+      exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+      cv: 0.9701353365798572
+      public_lb: 0.97060
+      role: previous_stacker_best_backup
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_as_optional_shared001_variant_material
+  role: shared001_updated_seed_fold_variant_for_stacker_check
+  priority: low_to_medium
+  not_for_standalone_submission: true
+  reason: >
+    044 was designed as a shared001 updated seed/fold/regularization variant, but
+    it does not improve over 035 as a standalone model. Public LB 0.97000 is still
+    decent, so it can be tested once in the GPU LogReg stacker, but expectations
+    should be modest.
+  next_action:
+    - Keep 044 OOF/pred files in the asset pool.
+    - Run 045 GPU LogReg stacker add044 only if compute/time cost is acceptable.
+    - Compare 045 against 040 CV 0.9702017877238539 and Public LB 0.97069.
+    - If 045 does not improve, deprioritize further shared001 updated seed/fold variants.
+    - After that, move priority to XGB-family variant or another materially different model family.
