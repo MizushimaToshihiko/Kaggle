@@ -459,3 +459,240 @@ judgement:
   - If Public LB improves 040 GPU LogReg add039, promote 043 to current best.
   - If Public LB does not improve, keep 040 GPU LogReg add039 as slot_1 and 033 as
     backup/diversity slot.
+
+result:
+  status: completed
+  raw_cv_balanced_accuracy: 0.9701430377310448
+  tuned_cv_balanced_accuracy: 0.9701820598346598
+  best_cv_balanced_accuracy: 0.9701820598346598
+  best_kind: tuned
+  public_lb: 0.97034
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+
+model_summary:
+  model_family: GPU_LogisticRegression_Stacker
+  model_type: pytorch_multinomial_logistic_regression_on_own_oof_pred_assets
+  metric: balanced_accuracy_score
+  use_external_stacking_files: false
+  use_logit_input: true
+  input_transform: prob_to_logit
+  n_models_loaded: 18
+  skipped_specs: []
+  n_splits: 5
+  n_seeds: 5
+  stacker_seeds:
+    - 42
+    - 43
+    - 44
+    - 45
+    - 46
+  seed: 42
+  epochs: 1000
+  lr: 0.01
+  C_REG: 0.1
+  boost_star_weight: 1.0
+
+loaded_models:
+  - 015_realmlp_seed42
+  - 017_realmlp_bias
+  - 018_xgb_shared003
+  - 019_blend_best
+  - 020_blend_bias
+  - 024_seed_ensemble_blend
+  - 026_realmlp_v5
+  - 027_blend_add026
+  - 028_cat_v3
+  - 029_blend_add028
+  - 030_ovr_xgb
+  - 031_blend_add030
+  - 032_ovr_tabm
+  - 033_blend_add032
+  - 035_shared001_updated
+  - 037_tabicl_v2
+  - 039_cat_v3_seed2026_qbin_variant
+  - 042_realmlp_v5_seed2026_foldvariant
+
+added_model:
+  key: 042_realmlp_v5_seed2026_foldvariant
+  exp_id: exp_20260611_042_realmlp_v5_seed2026_foldvariant
+  family: RealMLP
+  role: realmlp_v5_seed_fold_variant_material
+  cv: 0.9689482884928097
+  public_lb: 0.96943
+  oof: oof_exp_20260611_042_realmlp_v5_seed2026_foldvariant_proba.npy
+  pred: pred_exp_20260611_042_realmlp_v5_seed2026_foldvariant_proba.npy
+  judgement: >
+    042 was successfully added to the own OOF/pred stacker pool, but it did not
+    improve the GPU LogReg stacker. This suggests that this RealMLP v5 seed/fold
+    variant is not useful enough as an additional meta input.
+
+best_bias:
+  GALAXY: -0.03299999999999875
+  QSO: 0.006999999999999729
+  STAR: 0.0
+
+raw_recalls:
+  GALAXY: 0.9606548691321395
+  QSO: 0.9765500285975262
+  STAR: 0.9732242154634689
+
+tuned_recalls:
+  GALAXY: 0.9599846349475469
+  QSO: 0.9768658818708758
+  STAR: 0.9736956626855567
+
+best_recalls:
+  GALAXY: 0.9599846349475469
+  QSO: 0.9768658818708758
+  STAR: 0.9736956626855567
+
+stability:
+  fold_std: 0.0004867883399570105
+  seed_std: 0.00006825573369230026
+  note: >
+    Fold and seed variability are still acceptable, but seed_std is larger than
+    040. The final CV and Public LB do not support promotion.
+
+comparison_to_040_gpu_logreg_add039:
+  exp_040:
+    exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+    best_cv: 0.9702017877238539
+    public_lb: 0.97069
+    n_models_loaded: 17
+  exp_043:
+    exp_id: exp_20260612_043_gpu_logreg_stacker_add042_own
+    best_cv: 0.9701820598346598
+    public_lb: 0.97034
+    n_models_loaded: 18
+  delta:
+    cv: -0.0000197278891941
+    public_lb: -0.00035
+  judgement: >
+    Adding 042 to the 040 input pool did not improve the stacker. CV is slightly
+    lower and Public LB is clearly lower. 040 remains the current best.
+
+comparison_to_042_standalone:
+  exp_042:
+    exp_id: exp_20260611_042_realmlp_v5_seed2026_foldvariant
+    cv: 0.9689482884928097
+    public_lb: 0.96943
+  exp_043:
+    exp_id: exp_20260612_043_gpu_logreg_stacker_add042_own
+    best_cv: 0.9701820598346598
+    public_lb: 0.97034
+  delta:
+    cv: 0.0012337713418501
+    public_lb: 0.00091
+  judgement: >
+    The stacker is much stronger than 042 standalone, but this is mostly due to
+    the existing stacker pool. The marginal contribution from 042 is not confirmed
+    because 043 underperforms 040.
+
+comparison_to_038_gpu_logreg_add037:
+  exp_038:
+    exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+    best_cv: 0.9701353365798572
+    public_lb: 0.97060
+  exp_043:
+    exp_id: exp_20260612_043_gpu_logreg_stacker_add042_own
+    best_cv: 0.9701820598346598
+    public_lb: 0.97034
+  delta:
+    cv: 0.0000467232548026
+    public_lb: -0.00026
+  judgement: >
+    043 has higher CV than 038, but lower Public LB. 038 remains the better
+    Public-LB-oriented backup.
+
+comparison_to_041_blend_add039_gpu040:
+  exp_041:
+    exp_id: exp_20260611_041_blend_add039_gpu040_check
+    cv: 0.9702371689099357
+    public_lb: 0.97050
+  exp_043:
+    exp_id: exp_20260612_043_gpu_logreg_stacker_add042_own
+    best_cv: 0.9701820598346598
+    public_lb: 0.97034
+  delta:
+    cv: -0.0000551090752759
+    public_lb: -0.00016
+  judgement: >
+    043 is weaker than 041 on both CV and Public LB. However, 041 itself was not
+    promoted because it failed to beat 040 on Public LB.
+
+outputs:
+  oof_proba: oof_exp_20260612_043_gpu_logreg_stacker_add042_own_proba.npy
+  pred_proba: pred_exp_20260612_043_gpu_logreg_stacker_add042_own_proba.npy
+  oof_raw_proba: oof_raw_exp_20260612_043_gpu_logreg_stacker_add042_own_proba.npy
+  pred_raw_proba: pred_raw_exp_20260612_043_gpu_logreg_stacker_add042_own_proba.npy
+  oof_tuned_proba: oof_tuned_exp_20260612_043_gpu_logreg_stacker_add042_own_proba.npy
+  pred_tuned_proba: pred_tuned_exp_20260612_043_gpu_logreg_stacker_add042_own_proba.npy
+  submission: submission_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  submission_raw: submission_raw_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  submission_tuned: submission_tuned_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  cv_result: cv_result_exp_20260612_043_gpu_logreg_stacker_add042_own.json
+  summary: gpu_logreg_stacker_summary.json
+  fold_scores: fold_scores_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  seed_scores: seed_scores_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  base_model_scores: base_model_scores_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  loaded_model_specs: loaded_model_specs_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+  feature_importance: stacker_importance_exp_20260612_043_gpu_logreg_stacker_add042_own.csv
+
+submission_slot_decision:
+  promote_to_slot_1: false
+  reason: >
+    043 does not beat 040 on either CV or Public LB. The added 042 RealMLP v5
+    variant does not improve the stacker.
+  recommended_slots_after_043:
+    slot_1:
+      exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+      cv: 0.9702017877238539
+      public_lb: 0.97069
+      role: current_best_cv_and_public
+      reason: >
+        Still the best confirmed Public LB and the best practical final candidate.
+    slot_2_private_hedge:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      cv: 0.9700400336552478
+      public_lb: 0.97043
+      role: simpler_blend_family_backup
+      reason: >
+        More diverse than another GPU LogReg stacker-heavy submission.
+    public_lb_backup:
+      exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+      cv: 0.9701353365798572
+      public_lb: 0.97060
+      role: previous_stacker_best_backup
+      reason: >
+        Strong Public LB backup, but highly correlated with 040.
+    not_selected:
+      exp_id: exp_20260612_043_gpu_logreg_stacker_add042_own
+      cv: 0.9701820598346598
+      public_lb: 0.97034
+      reason: >
+        Lower than 040 on both CV and Public LB. Do not promote.
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_as_diagnostic_not_submission_slot
+  role: gpu_logreg_stacker_add042_check
+  priority: low
+  decision: do_not_promote
+  reason: >
+    043 tested whether 042 RealMLP v5 seed/fold variant helps the current own
+    OOF/pred GPU LogReg stacker. It did not. CV decreased slightly versus 040 and
+    Public LB dropped from 0.97069 to 0.97034.
+  notes:
+    - n_models_loaded increased from 17 to 18.
+    - 042 was loaded correctly; skipped_specs is empty.
+    - The best output is tuned, with bias GALAXY=-0.033, QSO=0.007, STAR=0.0.
+    - No external stacking files were used.
+    - This weakens the case for further RealMLP v5 seed/fold variants.
+  next_action:
+    - Keep 040 as slot_1.
+    - Keep 033 as slot_2 diversity/private hedge.
+    - Keep 038 as public-LB backup.
+    - Do not prioritize more RealMLP v5 seed/fold variants.
+    - Next candidate should be either shared001 updated variant or XGB-family variant, rather than another RealMLP v5 seed-only variant.
