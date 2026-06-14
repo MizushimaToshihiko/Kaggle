@@ -1,1 +1,725 @@
+experiment:
+  id: exp_20260612_046_blend_add042_044_045_check
+  title: Blend check after adding 042/044/045 to 041 pool
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  created_at: '2026-06-12'
+objective:
+  summary: Load OOF/pred probabilities from npy-files, add 042 RealMLP v5 variant,
+    044 shared001 updated variant, and 045 GPU LogReg stacker, and decide whether
+    a direct probability blend can improve over the current 040 best.
+  success_criteria:
+  - load existing OOF/pred npy files including 038/039/040/042/044/045
+  - recompute individual balanced accuracy
+  - compute pairwise OOF correlations with focus tables for 040/039/038/033
+  - evaluate add042/add044/add045 blend sets
+  - separate safe blends from in-sample meta screening
+  - save best safe blend OOF/pred npy
+  - save best safe blend submission
+inputs:
+  npy_dir: /kaggle/input/datasets/mizushimatoshihiko/npy-files
+  models:
+  - key: 015_realmlp_seed42
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    family: RealMLP
+    role: stable_single_realmlp_backup
+    oof: oof_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+    pred: pred_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+    cv: 0.9681693449222352
+    public_lb: 0.96977
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260605_015_shared001_realmlp_as_is_proba.npy
+  - key: 017_realmlp_bias
+    exp_id: exp_20260606_017_bias_search_on_015_realmlp
+    family: RealMLP
+    role: previous_best_realmlp_bias_backup
+    oof: oof_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+    pred: pred_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+    cv: 0.9683022653955233
+    public_lb: 0.96985
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260606_017_bias_search_on_015_realmlp_proba.npy
+  - key: 018_xgb_shared003
+    exp_id: exp_20260606_018_shared003_xgb_as_is
+    family: XGBoost
+    role: effective_blend_material
+    oof: oof_exp_20260606_018_shared003_xgb_as_is_proba.npy
+    pred: pred_exp_20260606_018_shared003_xgb_as_is_proba.npy
+    cv: 0.965207986418628
+    public_lb: 0.96578
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260606_018_shared003_xgb_as_is_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260606_018_shared003_xgb_as_is_proba.npy
+  - key: 019_blend_best
+    exp_id: exp_20260607_019_blend_add018_xgb_check
+    family: Blend
+    role: previous_public_confirmed_best
+    oof: oof_exp_20260607_019_blend_add018_xgb_check_best_blend_proba.npy
+    pred: pred_exp_20260607_019_blend_add018_xgb_check_best_blend_proba.npy
+    cv: 0.968872315017554
+    public_lb: 0.97
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260607_019_blend_add018_xgb_check_best_blend_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260607_019_blend_add018_xgb_check_best_blend_proba.npy
+  - key: 020_blend_bias
+    exp_id: exp_20260607_020_bias_search_on_019_best_blend
+    family: Blend
+    role: cv_trusted_attack_reference
+    oof: oof_exp_20260607_020_bias_search_on_019_best_blend_proba.npy
+    pred: pred_exp_20260607_020_bias_search_on_019_best_blend_proba.npy
+    cv: 0.9692240443617589
+    public_lb: 0.96969
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260607_020_bias_search_on_019_best_blend_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260607_020_bias_search_on_019_best_blend_proba.npy
+  - key: 024_seed_ensemble_blend
+    exp_id: exp_20260608_024_seed_ensemble_and_blend_check
+    family: Blend
+    role: seed_ensemble_blend_reference
+    oof: oof_exp_20260608_024_seed_ensemble_and_blend_check_best_blend_proba.npy
+    pred: pred_exp_20260608_024_seed_ensemble_and_blend_check_best_blend_proba.npy
+    cv: 0.9694803109983217
+    public_lb: 0.96958
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260608_024_seed_ensemble_and_blend_check_best_blend_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260608_024_seed_ensemble_and_blend_check_best_blend_proba.npy
+  - key: 026_realmlp_v5
+    exp_id: exp_20260608_026_realmlp_v5_as_is
+    family: RealMLP
+    role: realmlp_v5_single_model_candidate
+    oof: oof_exp_20260608_026_realmlp_v5_as_is_proba.npy
+    pred: pred_exp_20260608_026_realmlp_v5_as_is_proba.npy
+    cv: 0.9690389777981231
+    public_lb: 0.96979
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260608_026_realmlp_v5_as_is_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260608_026_realmlp_v5_as_is_proba.npy
+  - key: 027_blend_add026
+    exp_id: exp_20260608_027_blend_add026_realmlp_v5_check
+    family: Blend
+    role: previous_cv_trusted_slot
+    oof: oof_exp_20260608_027_blend_add026_realmlp_v5_check_best_blend_proba.npy
+    pred: pred_exp_20260608_027_blend_add026_realmlp_v5_check_best_blend_proba.npy
+    cv: 0.9695425457477898
+    public_lb: 0.96975
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260608_027_blend_add026_realmlp_v5_check_best_blend_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260608_027_blend_add026_realmlp_v5_check_best_blend_proba.npy
+  - key: 028_cat_v3
+    exp_id: exp_20260608_028_cat_v3_as_is
+    family: CatBoost
+    role: catboost_v3_family_aux_material
+    oof: oof_exp_20260608_028_cat_v3_as_is_proba.npy
+    pred: pred_exp_20260608_028_cat_v3_as_is_proba.npy
+    cv: 0.9688146470512534
+    public_lb: 0.96969
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260608_028_cat_v3_as_is_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260608_028_cat_v3_as_is_proba.npy
+  - key: 029_blend_add028
+    exp_id: exp_20260608_029_blend_add028_cat_v3_check
+    family: Blend
+    role: previous_best_backup
+    oof: oof_exp_20260608_029_blend_add028_cat_v3_check_best_blend_proba.npy
+    pred: pred_exp_20260608_029_blend_add028_cat_v3_check_best_blend_proba.npy
+    cv: 0.9700023026377228
+    public_lb: 0.970036
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260608_029_blend_add028_cat_v3_check_best_blend_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260608_029_blend_add028_cat_v3_check_best_blend_proba.npy
+  - key: 030_ovr_xgb
+    exp_id: exp_20260608_030_ovr_xgb_as_is
+    family: XGBoost
+    role: low_weight_auxiliary_xgb_ovr_material
+    oof: oof_exp_20260608_030_ovr_xgb_as_is_proba.npy
+    pred: pred_exp_20260608_030_ovr_xgb_as_is_proba.npy
+    cv: 0.9609971296999271
+    public_lb: 0.96118
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260608_030_ovr_xgb_as_is_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260608_030_ovr_xgb_as_is_proba.npy
+  - key: 031_blend_add030
+    exp_id: exp_20260608_031_blend_add030_ovr_xgb_check
+    family: Blend
+    role: public_confirmed_current_best_before_033
+    oof: oof_exp_20260608_031_blend_add030_ovr_xgb_check_best_blend_proba.npy
+    pred: pred_exp_20260608_031_blend_add030_ovr_xgb_check_best_blend_proba.npy
+    cv: 0.9700333620193362
+    public_lb: 0.97043
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260608_031_blend_add030_ovr_xgb_check_best_blend_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260608_031_blend_add030_ovr_xgb_check_best_blend_proba.npy
+  - key: 032_ovr_tabm
+    exp_id: exp_20260609_032_ovr_tabm_as_is
+    family: TabM
+    role: tabm_ovr_family_aux_material
+    oof: oof_exp_20260609_032_ovr_tabm_as_is_proba.npy
+    pred: pred_exp_20260609_032_ovr_tabm_as_is_proba.npy
+    cv: 0.9610105651284856
+    public_lb: 0.96106
+    tuned_cv: 0.9686168281485955
+    public_lb_biased: 0.96895
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260609_032_ovr_tabm_as_is_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260609_032_ovr_tabm_as_is_proba.npy
+  - key: 033_blend_add032
+    exp_id: exp_20260609_033_blend_add032_tabm_check
+    family: Blend
+    role: previous_public_confirmed_best_backup
+    oof: oof_exp_20260609_033_blend_add032_tabm_check_best_blend_proba.npy
+    pred: pred_exp_20260609_033_blend_add032_tabm_check_best_blend_proba.npy
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260609_033_blend_add032_tabm_check_best_blend_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260609_033_blend_add032_tabm_check_best_blend_proba.npy
+  - key: 034_gpu_logreg_default
+    exp_id: exp_20260609_034_gpu_logreg_stacker_own
+    family: GPU_LogisticRegression_Stacker
+    role: stacker_backup_default
+    oof: oof_exp_20260609_034_gpu_logreg_stacker_own_proba.npy
+    pred: pred_exp_20260609_034_gpu_logreg_stacker_own_proba.npy
+    cv: 0.9700373069292101
+    public_lb: 0.97022
+    raw_cv: 0.9699389938897909
+    public_lb_raw: 0.97027
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260609_034_gpu_logreg_stacker_own_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260609_034_gpu_logreg_stacker_own_proba.npy
+  - key: 035_shared001_updated
+    exp_id: exp_20260610_035_shared001_updated_realmlp_pytorch_as_is
+    family: RealMLP
+    role: updated_shared001_realmlp_aux_material
+    oof: oof_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is_proba.npy
+    pred: pred_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is_proba.npy
+    cv: 0.9687410900866934
+    public_lb: 0.97012
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260610_035_shared001_updated_realmlp_pytorch_as_is_proba.npy
+  - key: 036_gpu_logreg_add035
+    exp_id: exp_20260610_036_gpu_logreg_stacker_add035_own
+    family: GPU_LogisticRegression_Stacker
+    role: improved_stacker_backup_add035
+    oof: oof_exp_20260610_036_gpu_logreg_stacker_add035_own_proba.npy
+    pred: pred_exp_20260610_036_gpu_logreg_stacker_add035_own_proba.npy
+    cv: 0.9700674063284508
+    public_lb: 0.97037
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260610_036_gpu_logreg_stacker_add035_own_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260610_036_gpu_logreg_stacker_add035_own_proba.npy
+  - key: 036_blend_add035
+    exp_id: exp_20260610_036_blend_add035_shared001_check
+    family: Blend
+    role: cv_best_but_public_weak_add035_blend
+    oof: oof_exp_20260610_036_blend_add035_shared001_check_best_blend_proba.npy
+    pred: pred_exp_20260610_036_blend_add035_shared001_check_best_blend_proba.npy
+    cv: 0.9700727843277738
+    public_lb: 0.97023
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260610_036_blend_add035_shared001_check_best_blend_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260610_036_blend_add035_shared001_check_best_blend_proba.npy
+  - key: 037_tabicl_v2
+    exp_id: exp_20260610_037_tabicl_v2_as_is
+    family: TabICL
+    role: weak_tabicl_family_material_optional_corr
+    oof: oof_exp_20260610_037_tabicl_v2_as_is_proba.npy
+    pred: pred_exp_20260610_037_tabicl_v2_as_is_proba.npy
+    cv: 0.9580770153777599
+    public_lb: 0.9592
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260610_037_tabicl_v2_as_is_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260610_037_tabicl_v2_as_is_proba.npy
+  - key: 038_gpu_logreg_add037
+    exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+    family: GPU_LogisticRegression_Stacker
+    role: previous_stacker_best_before_040
+    oof: oof_exp_20260610_038_gpu_logreg_stacker_add037_own_proba.npy
+    pred: pred_exp_20260610_038_gpu_logreg_stacker_add037_own_proba.npy
+    cv: 0.9701353365798572
+    public_lb: 0.9706
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260610_038_gpu_logreg_stacker_add037_own_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260610_038_gpu_logreg_stacker_add037_own_proba.npy
+  - key: 039_cat_v3_seed2026_qbin_variant
+    exp_id: exp_20260611_039_cat_v3_seed2026_qbin_variant
+    family: CatBoost
+    role: catboost_v3_lower_correlation_variant_material
+    oof: oof_exp_20260611_039_cat_v3_seed2026_qbin_variant_proba.npy
+    pred: pred_exp_20260611_039_cat_v3_seed2026_qbin_variant_proba.npy
+    cv: 0.9687053023092482
+    public_lb: 0.96984
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260611_039_cat_v3_seed2026_qbin_variant_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260611_039_cat_v3_seed2026_qbin_variant_proba.npy
+  - key: 040_gpu_logreg_add039
+    exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+    family: GPU_LogisticRegression_Stacker
+    role: current_best_after_add039
+    oof: oof_exp_20260611_040_gpu_logreg_stacker_add039_own_proba.npy
+    pred: pred_exp_20260611_040_gpu_logreg_stacker_add039_own_proba.npy
+    cv: 0.9702017877238539
+    public_lb: 0.97069
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260611_040_gpu_logreg_stacker_add039_own_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260611_040_gpu_logreg_stacker_add039_own_proba.npy
+  - key: 042_realmlp_v5_seed2026_foldvariant
+    exp_id: exp_20260611_042_realmlp_v5_seed2026_foldvariant
+    family: RealMLP
+    role: realmlp_v5_seed_fold_variant_material
+    oof: oof_exp_20260611_042_realmlp_v5_seed2026_foldvariant_proba.npy
+    pred: pred_exp_20260611_042_realmlp_v5_seed2026_foldvariant_proba.npy
+    cv: 0.9689482884928097
+    public_lb: 0.96943
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260611_042_realmlp_v5_seed2026_foldvariant_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260611_042_realmlp_v5_seed2026_foldvariant_proba.npy
+  - key: 044_shared001_updated_seed2027_foldvariant
+    exp_id: exp_20260612_044_shared001_updated_seed2027_foldvariant
+    family: RealMLP
+    role: shared001_updated_seed_fold_variant_material
+    oof: oof_exp_20260612_044_shared001_updated_seed2027_foldvariant_proba.npy
+    pred: pred_exp_20260612_044_shared001_updated_seed2027_foldvariant_proba.npy
+    cv: 0.9686035095582338
+    public_lb: 0.97
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260612_044_shared001_updated_seed2027_foldvariant_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260612_044_shared001_updated_seed2027_foldvariant_proba.npy
+  - key: 045_gpu_logreg_add044
+    exp_id: exp_20260612_045_gpu_logreg_stacker_add044_own
+    family: GPU_LogisticRegression_Stacker
+    role: cv_best_but_public_weak_stacker_add044
+    oof: oof_exp_20260612_045_gpu_logreg_stacker_add044_own_proba.npy
+    pred: pred_exp_20260612_045_gpu_logreg_stacker_add044_own_proba.npy
+    cv: 0.9702445493383917
+    public_lb: 0.9704
+    raw_cv: 0.9701651297689362
+    tuned_cv: 0.9702445493383917
+    resolved_oof_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/oof_exp_20260612_045_gpu_logreg_stacker_add044_own_proba.npy
+    resolved_pred_path: /kaggle/input/datasets/mizushimatoshihiko/npy-files/pred_exp_20260612_045_gpu_logreg_stacker_add044_own_proba.npy
+  blend_sets:
+    A_045_only:
+    - 045_gpu_logreg_add044
+    B_040_only:
+    - 040_gpu_logreg_add039
+    C_041_proxy_best_public_context_038_only:
+    - 038_gpu_logreg_add037
+    D_033_only:
+    - 033_blend_add032
+    E_044_only:
+    - 044_shared001_updated_seed2027_foldvariant
+    F_042_only:
+    - 042_realmlp_v5_seed2026_foldvariant
+    G_039_only:
+    - 039_cat_v3_seed2026_qbin_variant
+    H_036_gpu_only:
+    - 036_gpu_logreg_add035
+    I_036_blend_only:
+    - 036_blend_add035
+    J_037_only:
+    - 037_tabicl_v2
+    K_031_only:
+    - 031_blend_add030
+    L_045_040:
+    - 045_gpu_logreg_add044
+    - 040_gpu_logreg_add039
+    M_045_033:
+    - 045_gpu_logreg_add044
+    - 033_blend_add032
+    N_045_038:
+    - 045_gpu_logreg_add044
+    - 038_gpu_logreg_add037
+    O_045_039:
+    - 045_gpu_logreg_add044
+    - 039_cat_v3_seed2026_qbin_variant
+    P_045_044:
+    - 045_gpu_logreg_add044
+    - 044_shared001_updated_seed2027_foldvariant
+    Q_045_042:
+    - 045_gpu_logreg_add044
+    - 042_realmlp_v5_seed2026_foldvariant
+    R_040_044:
+    - 040_gpu_logreg_add039
+    - 044_shared001_updated_seed2027_foldvariant
+    S_040_042:
+    - 040_gpu_logreg_add039
+    - 042_realmlp_v5_seed2026_foldvariant
+    T_040_044_042:
+    - 040_gpu_logreg_add039
+    - 044_shared001_updated_seed2027_foldvariant
+    - 042_realmlp_v5_seed2026_foldvariant
+    U_040_033_044:
+    - 040_gpu_logreg_add039
+    - 033_blend_add032
+    - 044_shared001_updated_seed2027_foldvariant
+    V_040_033_042:
+    - 040_gpu_logreg_add039
+    - 033_blend_add032
+    - 042_realmlp_v5_seed2026_foldvariant
+    W_045_040_033:
+    - 045_gpu_logreg_add044
+    - 040_gpu_logreg_add039
+    - 033_blend_add032
+    X_045_040_038:
+    - 045_gpu_logreg_add044
+    - 040_gpu_logreg_add039
+    - 038_gpu_logreg_add037
+    Y_045_040_033_038:
+    - 045_gpu_logreg_add044
+    - 040_gpu_logreg_add039
+    - 033_blend_add032
+    - 038_gpu_logreg_add037
+    Z1_045_040_033_038_044_042:
+    - 045_gpu_logreg_add044
+    - 040_gpu_logreg_add039
+    - 033_blend_add032
+    - 038_gpu_logreg_add037
+    - 044_shared001_updated_seed2027_foldvariant
+    - 042_realmlp_v5_seed2026_foldvariant
+    Z2_045_040_033_038_036gpu_036blend:
+    - 045_gpu_logreg_add044
+    - 040_gpu_logreg_add039
+    - 033_blend_add032
+    - 038_gpu_logreg_add037
+    - 036_gpu_logreg_add035
+    - 036_blend_add035
+    Z3_045_040_033_038_036gpu_036blend_044_042:
+    - 045_gpu_logreg_add044
+    - 040_gpu_logreg_add039
+    - 033_blend_add032
+    - 038_gpu_logreg_add037
+    - 036_gpu_logreg_add035
+    - 036_blend_add035
+    - 044_shared001_updated_seed2027_foldvariant
+    - 042_realmlp_v5_seed2026_foldvariant
+    Z4_041_old_best_like_plus_new:
+    - 040_gpu_logreg_add039
+    - 033_blend_add032
+    - 038_gpu_logreg_add037
+    - 036_gpu_logreg_add035
+    - 036_blend_add035
+    - 039_cat_v3_seed2026_qbin_variant
+    - 037_tabicl_v2
+    - 044_shared001_updated_seed2027_foldvariant
+    - 042_realmlp_v5_seed2026_foldvariant
+    - 045_gpu_logreg_add044
+    Z5_040_033_038_036gpu_036blend_039_044_042:
+    - 040_gpu_logreg_add039
+    - 033_blend_add032
+    - 038_gpu_logreg_add037
+    - 036_gpu_logreg_add035
+    - 036_blend_add035
+    - 039_cat_v3_seed2026_qbin_variant
+    - 044_shared001_updated_seed2027_foldvariant
+    - 042_realmlp_v5_seed2026_foldvariant
+    Z6_045_033_038_036gpu_036blend_039_044_042:
+    - 045_gpu_logreg_add044
+    - 033_blend_add032
+    - 038_gpu_logreg_add037
+    - 036_gpu_logreg_add035
+    - 036_blend_add035
+    - 039_cat_v3_seed2026_qbin_variant
+    - 044_shared001_updated_seed2027_foldvariant
+    - 042_realmlp_v5_seed2026_foldvariant
+    Z7_component_diagnostics_with_new:
+    - 027_blend_add026
+    - 026_realmlp_v5
+    - 028_cat_v3
+    - 039_cat_v3_seed2026_qbin_variant
+    - 030_ovr_xgb
+    - 032_ovr_tabm
+    - 035_shared001_updated
+    - 037_tabicl_v2
+    - 042_realmlp_v5_seed2026_foldvariant
+    - 044_shared001_updated_seed2027_foldvariant
+    Z8_full_all_loaded:
+    - 015_realmlp_seed42
+    - 017_realmlp_bias
+    - 018_xgb_shared003
+    - 019_blend_best
+    - 020_blend_bias
+    - 024_seed_ensemble_blend
+    - 026_realmlp_v5
+    - 027_blend_add026
+    - 028_cat_v3
+    - 029_blend_add028
+    - 030_ovr_xgb
+    - 031_blend_add030
+    - 032_ovr_tabm
+    - 033_blend_add032
+    - 034_gpu_logreg_default
+    - 035_shared001_updated
+    - 036_gpu_logreg_add035
+    - 036_blend_add035
+    - 037_tabicl_v2
+    - 038_gpu_logreg_add037
+    - 039_cat_v3_seed2026_qbin_variant
+    - 040_gpu_logreg_add039
+    - 042_realmlp_v5_seed2026_foldvariant
+    - 044_shared001_updated_seed2027_foldvariant
+    - 045_gpu_logreg_add044
+outputs:
+  individual_scores: individual_scores.csv
+  pairwise_oof_correlation: pairwise_oof_correlation.csv
+  pairwise_oof_correlation_focus_prefix: pairwise_oof_correlation_focus_*.csv
+  blend_diagnostics: blend_diagnostics.csv
+  safe_blend_diagnostics: safe_blend_diagnostics.csv
+  safe_blend_diagnostics_focus_prefix: safe_blend_diagnostics_focus_*.csv
+  best_blend_info: best_blend_info.json
+  best_oof_proba: oof_exp_20260612_046_blend_add042_044_045_check_best_blend_proba.npy
+  best_pred_proba: pred_exp_20260612_046_blend_add042_044_045_check_best_blend_proba.npy
+  best_submission: submission_exp_20260612_046_blend_add042_044_045_check_best_blend.csv
+  summary: blend_add042_044_045_summary.json
+judgement:
+  status: completed_pending_manual_review
+  initial_view: 040 is current best. 041 should only replace it if safe probability
+    blend improves CV and Public LB. 039 may help as direct blend material or only
+    through GPU LogReg stacker.
+  automatic_view:
+    best_safe_includes_045: true
+    best_safe_weight_045: 0.5144616346780971
+    best_safe_includes_044: false
+    best_safe_weight_044: .nan
+    best_safe_includes_042: false
+    best_safe_weight_042: .nan
+    best_safe_includes_040: true
+    best_safe_weight_040: 0.2949869322672667
+    best_safe_includes_039: false
+    best_safe_weight_039: .nan
+    best_safe_includes_033: false
+    best_safe_weight_033: .nan
+    best_safe_cv: 0.9702533348410616
+    040_reference_cv: 0.9702017877238539
+    040_reference_public_lb: 0.97069
+    045_reference_cv: 0.9702445493383917
+    045_reference_public_lb: 0.9704
+    promotion_rule: Promote 046 only if the best safe probability blend beats 040
+      on CV and also confirms on Public LB. Do not promote in-sample LogReg/Ridge/ElasticNet
+      diagnostic rows.
+  next_action:
+  - Review individual_scores.csv and confirm 040 recomputed OOF CV
+  - Review pairwise_oof_correlation_focus_045.csv, focus_044.csv, focus_042.csv, focus_040.csv
+  - Review safe_blend_diagnostics_focus_045.csv, focus_044.csv, focus_042.csv, focus_040.csv
+  - Submit only best safe blend, not in-sample meta rows
+  - Keep 040 as slot_1 unless 046 best safe blend confirms on Public LB
 
+result:
+  status: completed
+  public_lb: 0.97042
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260612_046_blend_add042_044_045_check_best_blend.csv
+
+purpose:
+  description: >
+    Blend/correlation check after adding 042, 044, and 045 to the 041 candidate
+    pool. The purpose was to confirm whether the new RealMLP variants and the
+    045 CV-best stacker can improve CV/LB when blended with the existing strong
+    stacker/blend family.
+  added_models:
+    - 042_realmlp_v5_seed2026_foldvariant
+    - 044_shared001_updated_seed2027_foldvariant
+    - 045_gpu_logreg_add044
+
+model_pool:
+  n_models: 25
+  model_keys:
+    - 015_realmlp_seed42
+    - 017_realmlp_bias
+    - 018_xgb_shared003
+    - 019_blend_best
+    - 020_blend_bias
+    - 024_seed_ensemble_blend
+    - 026_realmlp_v5
+    - 027_blend_add026
+    - 028_cat_v3
+    - 029_blend_add028
+    - 030_ovr_xgb
+    - 031_blend_add030
+    - 032_ovr_tabm
+    - 033_blend_add032
+    - 034_gpu_logreg_default
+    - 035_shared001_updated
+    - 036_gpu_logreg_add035
+    - 036_blend_add035
+    - 037_tabicl_v2
+    - 038_gpu_logreg_add037
+    - 039_cat_v3_seed2026_qbin_variant
+    - 040_gpu_logreg_add039
+    - 042_realmlp_v5_seed2026_foldvariant
+    - 044_shared001_updated_seed2027_foldvariant
+    - 045_gpu_logreg_add044
+
+best_blend:
+  set_name: X_045_040_038
+  method: hc_nonnegative_raw
+  cv_balanced_accuracy: 0.9702533348410616
+  public_lb: 0.97042
+  n_models: 3
+  keys:
+    - 045_gpu_logreg_add044
+    - 040_gpu_logreg_add039
+    - 038_gpu_logreg_add037
+  weights:
+    045_gpu_logreg_add044: 0.5144616346780971
+    040_gpu_logreg_add039: 0.2949869322672667
+    038_gpu_logreg_add037: 0.19055143305463623
+  oof_proba: /kaggle/working/exp_20260612_046_blend_add042_044_045_check/oof_exp_20260612_046_blend_add042_044_045_check_best_blend_proba.npy
+  pred_proba: /kaggle/working/exp_20260612_046_blend_add042_044_045_check/pred_exp_20260612_046_blend_add042_044_045_check_best_blend_proba.npy
+  submission: /kaggle/working/exp_20260612_046_blend_add042_044_045_check/submission_exp_20260612_046_blend_add042_044_045_check_best_blend.csv
+  interpretation: >
+    The best blend is a compact 3-model HC blend of the CV-best stacker 045,
+    the Public-best stacker 040, and the previous strong stacker backup 038.
+    042 and 044 were included in the search pool, but neither entered the best
+    blend directly. 044 contributes only indirectly through 045.
+
+added_model_effect:
+  042_realmlp_v5_seed2026_foldvariant:
+    standalone_cv: 0.9689482884928097
+    public_lb: 0.96943
+    direct_weight_in_best_blend: 0.0
+    judgement: >
+      042 did not enter the best blend. Together with the previous 043 result,
+      this supports deprioritizing further RealMLP v5 seed/fold variants.
+  044_shared001_updated_seed2027_foldvariant:
+    standalone_cv: 0.9686035095582338
+    public_lb: 0.97000
+    direct_weight_in_best_blend: 0.0
+    indirect_effect: included_inside_045_gpu_logreg_add044
+    judgement: >
+      044 did not enter the best blend directly. However, 045, which includes
+      044 in its stacker pool, received the largest weight in the 046 best blend.
+      This suggests 044 is not useful as a direct probability-blend member, but
+      may have marginal value through the learned stacker.
+  045_gpu_logreg_add044:
+    standalone_cv: 0.9702445493383917
+    public_lb: 0.97040
+    direct_weight_in_best_blend: 0.5144616346780971
+    judgement: >
+      045 is the main contributor in the 046 best blend and helps push OOF CV to
+      the new highest value. However, the Public LB still does not beat 040.
+
+comparison_to_045:
+  exp_045:
+    exp_id: exp_20260612_045_gpu_logreg_stacker_add044_own
+    cv: 0.9702445493383917
+    public_lb: 0.97040
+  exp_046:
+    exp_id: exp_20260612_046_blend_add042_044_045_check
+    cv: 0.9702533348410616
+    public_lb: 0.97042
+  delta:
+    cv: 0.0000087855026699
+    public_lb: 0.00002
+  judgement: >
+    046 slightly improves both CV and Public LB over 045, but the improvement is
+    too small and still below 040/038/041 Public LB.
+
+comparison_to_040_current_best:
+  exp_040:
+    exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+    cv: 0.9702017877238539
+    public_lb: 0.97069
+  exp_046:
+    exp_id: exp_20260612_046_blend_add042_044_045_check
+    cv: 0.9702533348410616
+    public_lb: 0.97042
+  delta:
+    cv: 0.0000515471172077
+    public_lb: -0.00027
+  judgement: >
+    046 has higher OOF CV than 040, but Public LB is clearly lower. Do not replace
+    040 as slot_1.
+
+comparison_to_041:
+  exp_041:
+    exp_id: exp_20260611_041_blend_add039_gpu040_check
+    cv: 0.9702371689099357
+    public_lb: 0.97050
+  exp_046:
+    exp_id: exp_20260612_046_blend_add042_044_045_check
+    cv: 0.9702533348410616
+    public_lb: 0.97042
+  delta:
+    cv: 0.0000161659311259
+    public_lb: -0.00008
+  judgement: >
+    046 improves CV over 041, but Public LB is lower. 041 remains a stronger
+    Public-LB diagnostic than 046, although neither should replace 040.
+
+comparison_to_038_public_backup:
+  exp_038:
+    exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+    cv: 0.9701353365798572
+    public_lb: 0.97060
+  exp_046:
+    exp_id: exp_20260612_046_blend_add042_044_045_check
+    cv: 0.9702533348410616
+    public_lb: 0.97042
+  delta:
+    cv: 0.0001179982612044
+    public_lb: -0.00018
+  judgement: >
+    046 is stronger on CV but weaker on Public LB. 038 remains the better
+    Public-LB-oriented backup.
+
+comparison_to_033_private_hedge:
+  exp_033:
+    exp_id: exp_20260609_033_blend_add032_tabm_check
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+  exp_046:
+    exp_id: exp_20260612_046_blend_add042_044_045_check
+    cv: 0.9702533348410616
+    public_lb: 0.97042
+  delta:
+    cv: 0.0002133011858138
+    public_lb: -0.00001
+  judgement: >
+    046 has much higher CV, but Public LB is slightly below 033 and is much more
+    stacker-heavy. 033 remains useful as a diversity/private hedge.
+
+submission_slot_decision:
+  promote_to_slot_1: false
+  reason: >
+    Although 046 is the highest OOF CV run so far, Public LB 0.97042 is below
+    040, 038, and 041. The CV gain does not transfer enough to Public LB.
+  recommended_slots_after_046:
+    slot_1:
+      exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+      cv: 0.9702017877238539
+      public_lb: 0.97069
+      role: current_best_cv_and_public
+      reason: >
+        Still the best confirmed Public LB and strong enough CV. Keep as main
+        final candidate.
+    slot_2_private_hedge:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      cv: 0.9700400336552478
+      public_lb: 0.97043
+      role: simpler_blend_family_backup
+      reason: >
+        More diverse than the stacker-heavy 040/045/046 cluster. Keep as private
+        hedge unless a clearly better diverse candidate appears.
+    public_lb_backup:
+      exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+      cv: 0.9701353365798572
+      public_lb: 0.97060
+      role: previous_stacker_best_backup
+      reason: >
+        Strong Public LB backup, but likely highly correlated with 040.
+    cv_best_not_selected:
+      exp_id: exp_20260612_046_blend_add042_044_045_check
+      cv: 0.9702533348410616
+      public_lb: 0.97042
+      role: highest_oof_cv_diagnostic
+      reason: >
+        Highest OOF CV, but Public LB does not confirm the gain. Do not promote
+        to final slot unless later evidence suggests CV should be trusted over
+        Public LB for this cluster.
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_as_cv_best_diagnostic_not_submission_slot
+  role: blend_add042_044_045_check
+  priority: medium
+  decision: do_not_promote
+  reason: >
+    046 confirms that 045 can be blended with 040 and 038 to produce the highest
+    OOF CV so far. However, Public LB remains below the current best 040 and below
+    the public-LB backup 038. 042 and 044 do not enter the best blend directly.
+  notes:
+    - Best blend is X_045_040_038 / hc_nonnegative_raw.
+    - 045 receives the largest weight, 0.51446.
+    - 040 remains important with weight 0.29499.
+    - 038 remains useful with weight 0.19055.
+    - 042 direct weight is zero because it is not included in the best blend.
+    - 044 direct weight is zero because it is not included in the best blend.
+    - 044 contributes only indirectly through 045.
+    - This is another case of CV improving while Public LB does not follow.
+  next_action:
+    - Keep 040 as slot_1.
+    - Keep 033 as slot_2 diversity/private hedge.
+    - Keep 038 as public-LB backup.
+    - Keep 046 as CV-best diagnostic only.
+    - Do not deepen RealMLP v5 or shared001 updated seed/fold variants for now.
+    - Next higher-priority direction should be a materially different XGB-family variant or another lower-correlation model/FE source.
