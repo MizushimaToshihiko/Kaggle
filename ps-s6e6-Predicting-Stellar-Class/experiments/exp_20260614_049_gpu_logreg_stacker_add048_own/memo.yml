@@ -472,4 +472,287 @@ judgement:
   - If Public LB does not improve, keep 040 GPU LogReg add039 as slot_1 and 033 as
     backup/diversity slot; keep 049 as diagnostic/add048 material.
 
+result:
+  status: completed
+  raw_cv_balanced_accuracy: 0.97011955078962
+  tuned_cv_balanced_accuracy: 0.9701958734042008
+  best_cv_balanced_accuracy: 0.9701958734042008
+  best_kind: tuned
+  public_lb: 0.97046
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260614_049_gpu_logreg_stacker_add048_own.csv
 
+model_summary:
+  model_family: GPU_LogisticRegression_Stacker
+  model_type: pytorch_multinomial_logistic_regression_on_own_oof_pred_assets
+  metric: balanced_accuracy_score
+  use_external_stacking_files: false
+  use_logit_input: true
+  input_transform: prob_to_logit
+  n_models_loaded: 19
+  skipped_specs: []
+  n_splits: 5
+  n_seeds: 5
+  stacker_seeds:
+    - 42
+    - 43
+    - 44
+    - 45
+    - 46
+  seed: 42
+  epochs: 1000
+  lr: 0.01
+  C_REG: 0.1
+  boost_star_weight: 1.0
+
+loaded_models:
+  - 015_realmlp_seed42
+  - 017_realmlp_bias
+  - 018_xgb_shared003
+  - 019_blend_best
+  - 020_blend_bias
+  - 024_seed_ensemble_blend
+  - 026_realmlp_v5
+  - 027_blend_add026
+  - 028_cat_v3
+  - 029_blend_add028
+  - 030_ovr_xgb
+  - 031_blend_add030
+  - 032_ovr_tabm
+  - 033_blend_add032
+  - 035_shared001_updated
+  - 037_tabicl_v2
+  - 039_cat_v3_seed2026_qbin_variant
+  - 044_shared001_updated_seed2027_foldvariant
+  - 048_ovr_xgb_seed2027_fe_foldvariant
+
+added_model:
+  key: 048_ovr_xgb_seed2027_fe_foldvariant
+  exp_id: exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant
+  family: XGBoost
+  role: improved_xgb_ovr_variant_material
+  cv: 0.9636973807714805
+  public_lb: 0.96444
+  oof: oof_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant_proba.npy
+  pred: pred_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant_proba.npy
+  judgement: >
+    048 was loaded correctly and tested as an additional XGB OVR material.
+    It improves the Public LB of the stacker compared with 045, but lowers OOF CV.
+    Its marginal contribution is therefore mixed.
+
+excluded_models:
+  - key: 042_realmlp_v5_seed2026_foldvariant
+    reason: >
+      042 previously lowered the stacker in 043 and remains excluded.
+  - key: 047_xgb_multiclass_fe_objective_foldvariant
+    reason: >
+      047 was a failed multiclass XGB variant and was intentionally excluded.
+
+best_bias:
+  GALAXY: 0.010000000000001563
+  QSO: 0.06600000000000167
+  STAR: 0.0
+
+raw_recalls:
+  GALAXY: 0.9604243933453428
+  QSO: 0.9766012480472585
+  STAR: 0.9733330109762584
+
+tuned_recalls:
+  GALAXY: 0.9602733919677864
+  QSO: 0.9771988082941362
+  STAR: 0.9731154199506794
+
+best_recalls:
+  GALAXY: 0.9602733919677864
+  QSO: 0.9771988082941362
+  STAR: 0.9731154199506794
+
+stability:
+  fold_std: 0.00041454214281674075
+  seed_std: 0.00005332357681047718
+  note: >
+    Fold and seed stability are acceptable. However, OOF CV is below 045/046 and
+    very slightly below 040.
+
+comparison_to_048_standalone:
+  exp_048:
+    exp_id: exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant
+    cv: 0.9636973807714805
+    public_lb: 0.96444
+  exp_049:
+    exp_id: exp_20260614_049_gpu_logreg_stacker_add048_own
+    best_cv: 0.9701958734042008
+    public_lb: 0.97046
+  delta:
+    cv: 0.0064984926327203
+    public_lb: 0.00602
+  judgement: >
+    The GPU LogReg stacker is much stronger than 048 standalone. 048 has no
+    standalone submission value, but it can be used as auxiliary XGB-family
+    material.
+
+comparison_to_045_add044:
+  exp_045:
+    exp_id: exp_20260612_045_gpu_logreg_stacker_add044_own
+    best_cv: 0.9702445493383917
+    public_lb: 0.97040
+  exp_049:
+    exp_id: exp_20260614_049_gpu_logreg_stacker_add048_own
+    best_cv: 0.9701958734042008
+    public_lb: 0.97046
+  delta:
+    cv: -0.0000486759341909
+    public_lb: 0.00006
+  judgement: >
+    Adding 048 lowers OOF CV compared with 045, but slightly improves Public LB.
+    This suggests 048 may provide some public-transfer diversity, but not enough
+    to create a new best model.
+
+comparison_to_046_cv_best_diagnostic:
+  exp_046:
+    exp_id: exp_20260612_046_blend_add042_044_045_check
+    cv: 0.9702533348410616
+    public_lb: 0.97042
+  exp_049:
+    exp_id: exp_20260614_049_gpu_logreg_stacker_add048_own
+    best_cv: 0.9701958734042008
+    public_lb: 0.97046
+  delta:
+    cv: -0.0000574614368608
+    public_lb: 0.00004
+  judgement: >
+    049 is weaker than 046 on OOF CV but slightly better on Public LB. Still,
+    neither 046 nor 049 beats 040 on Public LB.
+
+comparison_to_040_current_best:
+  exp_040:
+    exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+    cv: 0.9702017877238539
+    public_lb: 0.97069
+  exp_049:
+    exp_id: exp_20260614_049_gpu_logreg_stacker_add048_own
+    best_cv: 0.9701958734042008
+    public_lb: 0.97046
+  delta:
+    cv: -0.0000059143196531
+    public_lb: -0.00023
+  judgement: >
+    049 is almost tied with 040 on CV, but clearly below 040 on Public LB.
+    Do not replace 040 as slot_1.
+
+comparison_to_038_public_backup:
+  exp_038:
+    exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+    cv: 0.9701353365798572
+    public_lb: 0.97060
+  exp_049:
+    exp_id: exp_20260614_049_gpu_logreg_stacker_add048_own
+    best_cv: 0.9701958734042008
+    public_lb: 0.97046
+  delta:
+    cv: 0.0000605368243436
+    public_lb: -0.00014
+  judgement: >
+    049 has higher CV than 038, but lower Public LB. 038 remains the better
+    Public-LB-oriented backup.
+
+comparison_to_033_private_hedge:
+  exp_033:
+    exp_id: exp_20260609_033_blend_add032_tabm_check
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+  exp_049:
+    exp_id: exp_20260614_049_gpu_logreg_stacker_add048_own
+    best_cv: 0.9701958734042008
+    public_lb: 0.97046
+  delta:
+    cv: 0.0001558397489530
+    public_lb: 0.00003
+  judgement: >
+    049 is slightly better than 033 on both CV and Public LB, but it is much more
+    stacker-clustered and likely more correlated with 040. 033 may still be useful
+    as a private-diversity hedge.
+
+outputs:
+  oof_proba: oof_exp_20260614_049_gpu_logreg_stacker_add048_own_proba.npy
+  pred_proba: pred_exp_20260614_049_gpu_logreg_stacker_add048_own_proba.npy
+  oof_raw_proba: oof_raw_exp_20260614_049_gpu_logreg_stacker_add048_own_proba.npy
+  pred_raw_proba: pred_raw_exp_20260614_049_gpu_logreg_stacker_add048_own_proba.npy
+  oof_tuned_proba: oof_tuned_exp_20260614_049_gpu_logreg_stacker_add048_own_proba.npy
+  pred_tuned_proba: pred_tuned_exp_20260614_049_gpu_logreg_stacker_add048_own_proba.npy
+  submission: submission_exp_20260614_049_gpu_logreg_stacker_add048_own.csv
+  submission_raw: submission_raw_exp_20260614_049_gpu_logreg_stacker_add048_own.csv
+  submission_tuned: submission_tuned_exp_20260614_049_gpu_logreg_stacker_add048_own.csv
+  cv_result: cv_result_exp_20260614_049_gpu_logreg_stacker_add048_own.json
+  summary: gpu_logreg_stacker_summary.json
+  fold_scores: fold_scores_exp_20260614_049_gpu_logreg_stacker_add048_own.csv
+  seed_scores: seed_scores_exp_20260614_049_gpu_logreg_stacker_add048_own.csv
+  base_model_scores: base_model_scores_exp_20260614_049_gpu_logreg_stacker_add048_own.csv
+  loaded_model_specs: loaded_model_specs_exp_20260614_049_gpu_logreg_stacker_add048_own.csv
+  feature_importance: stacker_importance_exp_20260614_049_gpu_logreg_stacker_add048_own.csv
+
+submission_slot_decision:
+  promote_to_slot_1: false
+  reason: >
+    049 improves Public LB over 045/046 and slightly over 033, but it does not
+    beat the current best 040 or the Public-LB backup 038. It should not replace
+    040.
+  recommended_slots_after_049:
+    slot_1:
+      exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+      cv: 0.9702017877238539
+      public_lb: 0.97069
+      role: current_best_cv_and_public
+      reason: >
+        Still the best confirmed Public LB and nearly tied with 049 on CV.
+    slot_2_private_hedge:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      cv: 0.9700400336552478
+      public_lb: 0.97043
+      role: simpler_blend_family_backup
+      reason: >
+        Lower than 049 on CV/Public LB, but more useful as a diversity hedge
+        against the stacker-heavy 040/049 cluster.
+    public_lb_backup:
+      exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+      cv: 0.9701353365798572
+      public_lb: 0.97060
+      role: previous_stacker_best_backup
+      reason: >
+        Stronger Public LB than 049, but likely highly correlated with 040.
+    public_lb_second_tier:
+      exp_id: exp_20260614_049_gpu_logreg_stacker_add048_own
+      cv: 0.9701958734042008
+      public_lb: 0.97046
+      role: add048_stacker_public_improved_diagnostic
+      reason: >
+        Better Public LB than 045/046 and slightly above 033, but still below
+        040/038. Keep as a candidate reference, not as slot_1.
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_as_public_improved_stacker_diagnostic
+  role: gpu_logreg_stacker_add048_check
+  priority: medium
+  decision: do_not_promote
+  reason: >
+    049 confirms that 048 has some marginal Public LB value when added to the GPU
+    LogReg stacker, but the gain is not enough to beat 040 or 038. OOF CV also
+    decreases compared with 045/046.
+  notes:
+    - 048 was loaded correctly and skipped_specs is empty.
+    - n_models_loaded increased to 19.
+    - 042 and 047 remain excluded.
+    - 049 improves Public LB over 045 and 046 but not over 040 or 038.
+    - Best output is tuned, with bias GALAXY=0.010, QSO=0.066, STAR=0.0.
+    - Compared with 045, Public LB improves slightly but OOF CV drops.
+    - Compared with 040, CV is almost tied but Public LB is lower.
+  next_action:
+    - Keep 040 as slot_1.
+    - Keep 038 as Public LB backup.
+    - Keep 033 as private-diversity hedge unless prioritizing Public LB over diversity.
+    - Keep 049 as a useful diagnostic/reference because it is the best add048 stacker result.
+    - Do not submit 049 as main unless later evidence favors it over 033 for slot_2.
+    - If continuing, consider a small blend check using 049 with 040 and 038, but avoid spending much time unless compute/submission budget is comfortable.
