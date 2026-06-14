@@ -1,1 +1,229 @@
-
+experiment:
+  id: exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant
+  title: OVR XGB seed2027 conservative FE/fold variant
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: XGBClassifier binary one-vs-rest
+  created_at: '2026-06-14'
+objective:
+  summary: After 047 multiclass softprob XGB underperformed, return to the 030 binary
+    OVR XGB route. Create a conservative XGB-family material by changing seed/folds
+    and modestly expanding FE while preserving the OVR objective.
+  success_criteria:
+  - keep one-vs-rest binary XGB for GALAXY/QSO/STAR
+  - do not use multiclass softprob
+  - use seed_list [2027,3407,7117]
+  - use conservative FE changes from 030
+  - use fold-safe TargetEncoder
+  - save OOF proba npy with exp_id in filename
+  - save test pred proba npy with exp_id in filename
+  - save submission
+  - save cv_result
+  - save fold_scores
+  - update oof_registry
+  - write memo.yml
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  target_col: class
+  id_col: id
+  use_original: false
+seed:
+  base_seed: 2027
+  seed_list:
+  - 2027
+  - 3407
+  - 7117
+  numpy_seed: 2027
+  fold_seed_formula: seed + target_id*1009 + fold*17
+  stratified_kfold_random_state: seed + target_id*101 for each binary classifier
+  target_encoder_random_state: fold_seed
+features:
+  feature_family: ovr_xgb_seed2027_conservative_fe_foldvariant
+  source_exp: exp_20260608_030_ovr_xgb_as_is
+  feature_info:
+    n_features: 40
+    n_cat_cols_final: 13
+    n_te_columns: 3
+    feature_cols:
+    - spectral_type
+    - galaxy_population
+    - alpha_cat_
+    - delta_cat_
+    - u_cat_
+    - g_cat_
+    - r_cat_
+    - i_cat_
+    - z_cat_
+    - redshift_cat_
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    - redshift_64_quantile_bin_
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+    - _g_/_redshift
+    - _i_/_redshift
+    - _u-g
+    - _u-r
+    - _g-r
+    - _r-i
+    - _i-z
+    - _g-i
+    - _r-z
+    - _mag_mean
+    - _mag_std
+    - _mag_range
+    - _mag_slope_uz
+    - _redshift_abs
+    - _log1p_redshift
+    - _z_/_g
+    - alpha_cat_-delta_cat_
+    - redshift_64_quantile_bin_-g_cat_
+    - u_cat_-z_cat_
+    cat_cols_final:
+    - spectral_type
+    - galaxy_population
+    - alpha_cat_
+    - delta_cat_
+    - u_cat_
+    - g_cat_
+    - r_cat_
+    - i_cat_
+    - z_cat_
+    - redshift_cat_
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    - redshift_64_quantile_bin_
+    te_columns:
+    - alpha_cat_-delta_cat_
+    - redshift_64_quantile_bin_-g_cat_
+    - u_cat_-z_cat_
+    source: ps6e6-one-vs-rest-xgb.ipynb XGB body only
+  changed_from_030:
+  - add g-r/r-i/i-z/g-i/r-z color indices
+  - add magnitude mean/std/range and u-to-z slope
+  - add redshift_abs and log1p_redshift
+  - add z/g ratio
+  - keep delta 100/500 qbins
+  - add redshift 64 qbin
+  - add redshift/g combo for TE
+  target_encoder_safety: TargetEncoder is fit inside each binary fold on train fold
+    combo features and binary labels, then transforms validation and test.
+model:
+  family: XGBoost
+  type: binary one-vs-rest
+  class_order:
+  - GALAXY
+  - QSO
+  - STAR
+  xgb_params_base:
+    subsample: 0.85
+    colsample_bytree: 0.58
+    max_depth: 4
+    min_child_weight: 1.5
+    learning_rate: 0.018
+    max_bin: 1024
+    tree_method: hist
+    device: cuda
+    objective: binary:logistic
+    eval_metric: aucpr
+    random_state: 2027
+    n_estimators: 18000
+    early_stopping_rounds: 450
+    reg_alpha: 0.02
+    reg_lambda: 1.6
+  n_binary_models: 45
+  probability_postprocess: Average across seeds for each class, then normalize independent
+    one-vs-rest probabilities so each row sums to 1.
+  target_specific_changes:
+  - QSO/STAR use aucpr as eval_metric
+  - scale_pos_weight=(neg/pos)^0.25 per binary fold
+  excluded:
+  - external stacking files
+  - LogisticRegressionCV second-stage blend
+  - final bias search as submitted output
+  - multiclass softprob objective
+cv:
+  scheme: StratifiedKFold binary one-vs-rest per class and seed
+  n_splits: 5
+  shuffle: true
+  score: 0.9636973807714805
+  fold_scores:
+  - fold: 1
+    balanced_accuracy: 0.9630232178493422
+    recall_GALAXY: 0.9775087421850164
+    recall_QSO: 0.9673481582653976
+    recall_STAR: 0.9442127530976125
+    n_valid: 115470
+  - fold: 2
+    balanced_accuracy: 0.9640681281115578
+    recall_GALAXY: 0.9768067182367278
+    recall_QSO: 0.9685859405010884
+    recall_STAR: 0.946811725596857
+    n_valid: 115470
+  - fold: 3
+    balanced_accuracy: 0.9647138973777296
+    recall_GALAXY: 0.9772570732224224
+    recall_QSO: 0.969652994152546
+    recall_STAR: 0.9472316247582205
+    n_valid: 115469
+  - fold: 4
+    balanced_accuracy: 0.9639917360071255
+    recall_GALAXY: 0.9765682950090071
+    recall_QSO: 0.9684138637527745
+    recall_STAR: 0.946993049259595
+    n_valid: 115469
+  - fold: 5
+    balanced_accuracy: 0.9626899342181382
+    recall_GALAXY: 0.9764358376602734
+    recall_QSO: 0.9668772409083148
+    recall_STAR: 0.9447567240858266
+    n_valid: 115469
+  fold_std: 0.0007384915448554254
+  recalls:
+    GALAXY: 0.9769153332626894
+    QSO: 0.9681756485662822
+    STAR: 0.9460011604854698
+  binary_model_log_path: binary_model_log_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+submission_distribution:
+  total_rows: 247435
+  class_counts:
+    GALAXY: 161045
+    QSO: 50286
+    STAR: 36104
+  class_ratio:
+    GALAXY: 0.6508578
+    QSO: 0.20322913
+    STAR: 0.14591307
+outputs:
+  oof_proba: oof_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant_proba.npy
+  pred_proba: pred_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant_proba.npy
+  oof_csv: oof_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+  pred_csv: pred_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+  submission: submission_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+  cv_result: cv_result_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.json
+  fold_scores: fold_scores_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+  feature_info: feature_info_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.json
+  feature_columns: feature_columns_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+  binary_model_log: binary_model_log_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+  class_distribution: class_distribution_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+  registry: oof_registry.csv
+judgement:
+  status: pending_public_lb_and_corr
+  reason: 048 is a conservative OVR XGB variant. It should be compared first against
+    030 and 047. Only if CV/LB or correlation behavior is acceptable should it be
+    added to GPU LogReg stacker.
+  next_action:
+  - Submit submission_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+  - Record Public LB
+  - Add OOF/pred npy to npy-files dataset only if worth testing further
+  - Compare against 030 and 047
+  - If favorable, run 049 GPU LogReg stacker add048
