@@ -1,1 +1,265 @@
-
+experiment:
+  id: exp_20260614_047_xgb_multiclass_fe_objective_foldvariant
+  title: XGB multiclass FE/objective/fold variant
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: XGBClassifier multiclass softprob
+  created_at: '2026-06-14'
+objective:
+  summary: Run an XGB-family third-candidate experiment based on 030, but make it
+    materially different by changing objective, FE, seed/fold split, and TE handling.
+  success_criteria:
+  - use 030 as implementation base
+  - change binary one-vs-rest objective to multiclass softprob
+  - use different seed/fold configuration
+  - add richer FE and additional qbin features
+  - save OOF proba npy with exp_id in filename
+  - save test pred proba npy with exp_id in filename
+  - save submission
+  - save cv_result
+  - save fold_scores
+  - update oof_registry
+  - write memo.yml
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  target_col: class
+  id_col: id
+  use_original: false
+seed:
+  base_seed: 2027
+  seed_list:
+  - 2027
+  - 3407
+  - 7117
+  numpy_seed: 2027
+  xgb_random_state: fold_seed = seed + fold * 17
+  stratified_kfold_random_state: each seed in seed_list
+features:
+  feature_family: xgb_multiclass_fe_objective_foldvariant
+  source_notebook: exp_20260608_030_ovr_xgb_as_is
+  feature_info:
+    n_features: 78
+    n_cat_cols_final: 20
+    n_te_columns: 4
+    feature_cols:
+    - spectral_type
+    - galaxy_population
+    - alpha_cat_
+    - delta_cat_
+    - u_cat_
+    - g_cat_
+    - r_cat_
+    - i_cat_
+    - z_cat_
+    - redshift_cat_
+    - alpha_64_quantile_bin_
+    - delta_64_quantile_bin_
+    - delta_256_quantile_bin_
+    - redshift_32_quantile_bin_
+    - redshift_128_quantile_bin_
+    - u_64_quantile_bin_
+    - g_64_quantile_bin_
+    - r_64_quantile_bin_
+    - i_64_quantile_bin_
+    - z_64_quantile_bin_
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+    - _u-g
+    - _abs_u-g
+    - _g-r
+    - _abs_g-r
+    - _r-i
+    - _abs_r-i
+    - _i-z
+    - _abs_i-z
+    - _u-r
+    - _abs_u-r
+    - _g-i
+    - _abs_g-i
+    - _r-z
+    - _abs_r-z
+    - _mag_mean
+    - _mag_std
+    - _mag_min
+    - _mag_max
+    - _mag_range
+    - _mag_slope_uz
+    - _mag_curvature_gri
+    - _redshift_abs
+    - _log1p_redshift_abs
+    - _redshift_sq
+    - _redshift_cbrt
+    - _u_div_redshift
+    - _redshift_x_u
+    - _g_div_redshift
+    - _redshift_x_g
+    - _r_div_redshift
+    - _redshift_x_r
+    - _i_div_redshift
+    - _redshift_x_i
+    - _z_div_redshift
+    - _redshift_x_z
+    - _flux_u
+    - _flux_g
+    - _flux_r
+    - _flux_i
+    - _flux_z
+    - _flux_mean
+    - _flux_std
+    - _flux_range
+    - _flux_u_div_g
+    - _flux_g_div_r
+    - _flux_i_div_z
+    - alpha_cat_-delta_cat_
+    - g_cat_-r_cat_
+    - redshift_128_quantile_bin_-z_64_quantile_bin_
+    - u_cat_-z_cat_
+    cat_cols_final:
+    - spectral_type
+    - galaxy_population
+    - alpha_cat_
+    - delta_cat_
+    - u_cat_
+    - g_cat_
+    - r_cat_
+    - i_cat_
+    - z_cat_
+    - redshift_cat_
+    - alpha_64_quantile_bin_
+    - delta_64_quantile_bin_
+    - delta_256_quantile_bin_
+    - redshift_32_quantile_bin_
+    - redshift_128_quantile_bin_
+    - u_64_quantile_bin_
+    - g_64_quantile_bin_
+    - r_64_quantile_bin_
+    - i_64_quantile_bin_
+    - z_64_quantile_bin_
+    te_columns:
+    - alpha_cat_-delta_cat_
+    - g_cat_-r_cat_
+    - redshift_128_quantile_bin_-z_64_quantile_bin_
+    - u_cat_-z_cat_
+    source: 030-based XGB FE variant for multiclass softprob objective
+  target_encoder_safety: For selected combo features, smoothed class-rate encodings
+    are fit on each training fold only and then applied to validation/test. 042/044-style
+    direct leakage is avoided for validation.
+model:
+  family: XGBoost
+  type: multiclass softprob
+  class_order:
+  - GALAXY
+  - QSO
+  - STAR
+  xgb_params_base:
+    objective: multi:softprob
+    num_class: 3
+    eval_metric: mlogloss
+    tree_method: hist
+    device: cuda
+    n_estimators: 9000
+    early_stopping_rounds: 350
+    learning_rate: 0.025
+    max_depth: 5
+    min_child_weight: 2.0
+    subsample: 0.82
+    colsample_bytree: 0.62
+    max_bin: 512
+    reg_alpha: 0.05
+    reg_lambda: 2.0
+    random_state: 2027
+  n_models: 15
+  probability_postprocess: Average multiclass softprob predictions across seeds/folds,
+    then normalize defensively so each row sums to 1.
+  changed_from_030:
+  - OVR binary XGB -> multiclass softprob XGB
+  - binary AUC monitoring -> multiclass logloss monitoring
+  - SEED 42 -> 2027
+  - SEED_LIST [60,0,2809] -> [2027,3407,7117]
+  - richer FE and additional qbins
+  - fold-safe multiclass smoothed TE instead of binary TargetEncoder
+cv:
+  scheme: StratifiedKFold multiclass per seed
+  n_splits: 5
+  shuffle: true
+  score: 0.9596874103404002
+  fold_scores:
+  - fold: 1
+    balanced_accuracy: 0.9586485187464951
+    recall_GALAXY: 0.9801049062201971
+    recall_QSO: 0.9625677579068675
+    recall_STAR: 0.9332728921124207
+    n_valid: 115470
+  - fold: 2
+    balanced_accuracy: 0.9606131701848222
+    recall_GALAXY: 0.9793631450672884
+    recall_QSO: 0.9659396474454736
+    recall_STAR: 0.9365367180417045
+    n_valid: 115470
+  - fold: 3
+    balanced_accuracy: 0.9601582374959312
+    recall_GALAXY: 0.9799327116668433
+    recall_QSO: 0.9663664689060566
+    recall_STAR: 0.9341755319148937
+    n_valid: 115469
+  - fold: 4
+    balanced_accuracy: 0.9602038005561943
+    recall_GALAXY: 0.9796942884391227
+    recall_QSO: 0.9647430425132321
+    recall_STAR: 0.9361740707162285
+    n_valid: 115469
+  - fold: 5
+    balanced_accuracy: 0.9588132989754028
+    recall_GALAXY: 0.9798929744622231
+    recall_QSO: 0.9633344715724774
+    recall_STAR: 0.9332124508915081
+    n_valid: 115469
+  fold_std: 0.0007985906056383474
+  recalls:
+    GALAXY: 0.9797976051711349
+    QSO: 0.9645902870850157
+    STAR: 0.93467433876505
+  model_log_path: xgb_multiclass_model_log_exp_20260614_047_xgb_multiclass_fe_objective_foldvariant.csv
+submission_distribution:
+  total_rows: 247435
+  class_counts:
+    GALAXY: 161984
+    QSO: 49986
+    STAR: 35465
+  class_ratio:
+    GALAXY: 0.65465274
+    QSO: 0.20201669
+    STAR: 0.14333057
+outputs:
+  oof_proba: oof_exp_20260614_047_xgb_multiclass_fe_objective_foldvariant_proba.npy
+  pred_proba: pred_exp_20260614_047_xgb_multiclass_fe_objective_foldvariant_proba.npy
+  oof_csv: oof_exp_20260614_047_xgb_multiclass_fe_objective_foldvariant.csv
+  pred_csv: pred_exp_20260614_047_xgb_multiclass_fe_objective_foldvariant.csv
+  submission: submission_exp_20260614_047_xgb_multiclass_fe_objective_foldvariant.csv
+  cv_result: cv_result_exp_20260614_047_xgb_multiclass_fe_objective_foldvariant.json
+  fold_scores: fold_scores_exp_20260614_047_xgb_multiclass_fe_objective_foldvariant.csv
+  feature_info: feature_info_exp_20260614_047_xgb_multiclass_fe_objective_foldvariant.json
+  feature_columns: feature_columns_exp_20260614_047_xgb_multiclass_fe_objective_foldvariant.csv
+  model_log: xgb_multiclass_model_log_exp_20260614_047_xgb_multiclass_fe_objective_foldvariant.csv
+  registry: oof_registry.csv
+judgement:
+  status: pending_public_lb_and_corr
+  reason: This is not expected to be a standalone final model. Its purpose is to produce
+    a lower-correlation XGB-family OOF/pred material after RealMLP seed/fold variants
+    failed to improve Public LB.
+  next_action:
+  - Submit submission_exp_20260614_047_xgb_multiclass_fe_objective_foldvariant.csv
+  - Record Public LB
+  - Add OOF/pred npy to npy-files dataset
+  - Compare OOF correlation against 030, 040, 045, 046, and 033
+  - If correlation/diversity is favorable, run 048 GPU LogReg stacker add047 or blend
+    check
