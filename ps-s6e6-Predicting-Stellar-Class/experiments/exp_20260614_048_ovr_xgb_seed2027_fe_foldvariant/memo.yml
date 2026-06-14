@@ -227,3 +227,318 @@ judgement:
   - Add OOF/pred npy to npy-files dataset only if worth testing further
   - Compare against 030 and 047
   - If favorable, run 049 GPU LogReg stacker add048
+
+result:
+  status: completed
+  cv_balanced_accuracy: 0.9636973807714805
+  fold_std: 0.0007384915448554254
+  public_lb: 0.96444
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+
+model_summary:
+  model_family: XGBoost
+  model_type: ovr_xgb_seed2027_fe_foldvariant
+  model: XGBClassifier binary one-vs-rest
+  source: exp_20260608_030_ovr_xgb_as_is
+  metric: balanced_accuracy_score
+  purpose: >
+    Return to the 030 OVR route after 047 multiclass failed; create an XGB-family
+    material with conservative FE, seed/fold changes, and mild class weighting.
+  seed: 2027
+  seed_list:
+    - 2027
+    - 3407
+    - 7117
+  n_splits: 5
+  fold_seed_multiplier: 17
+  spw_power: 0.25
+
+variant_design:
+  base_exp_id: exp_20260608_030_ovr_xgb_as_is
+  failed_previous_xgb_variant: exp_20260614_047_xgb_multiclass_fe_objective_foldvariant
+  changed_from_030:
+    - kept objective: binary one-vs-rest
+    - seed/folds: SEED=2027 and seed_list=[2027, 3407, 7117]
+    - fold_seed_formula: seed + target_id*1009 + fold*17
+    - feature engineering: add adjacent colors, mag stats, redshift transforms, and one redshift quantile bin
+    - target encoding: add one extra redshift/g combo and use fold_seed as random_state
+    - minority classes: use aucpr eval_metric for QSO/STAR
+    - mild class imbalance correction: scale_pos_weight=(neg/pos)^0.25
+  judgement: >
+    Returning from multiclass softprob to binary OVR was the right direction.
+    048 clearly improves over both 047 and 030, while keeping the model family
+    sufficiently different from the current stacker/blend leaders.
+
+xgb_params_base:
+  objective: binary:logistic
+  eval_metric: aucpr
+  tree_method: hist
+  device: cuda
+  n_estimators: 18000
+  early_stopping_rounds: 450
+  learning_rate: 0.018
+  max_depth: 4
+  min_child_weight: 1.5
+  subsample: 0.85
+  colsample_bytree: 0.58
+  max_bin: 1024
+  reg_alpha: 0.02
+  reg_lambda: 1.6
+  random_state: 2027
+
+cv:
+  score: 0.9636973807714805
+  fold_std: 0.0007384915448554254
+  recalls:
+    GALAXY: 0.9769153332626894
+    QSO: 0.9681756485662822
+    STAR: 0.9460011604854698
+  interpretation: >
+    048 is still far below the final submission candidates, but it is a much
+    stronger XGB-family material than 047. STAR recall recovered meaningfully
+    after returning to OVR.
+
+fold_scores:
+  - fold: 1
+    balanced_accuracy: 0.9630232178493422
+    recall_GALAXY: 0.9775087421850164
+    recall_QSO: 0.9673481582653976
+    recall_STAR: 0.9442127530976125
+    n_valid: 115470
+  - fold: 2
+    balanced_accuracy: 0.9640681281115578
+    recall_GALAXY: 0.9768067182367278
+    recall_QSO: 0.9685859405010884
+    recall_STAR: 0.946811725596857
+    n_valid: 115470
+  - fold: 3
+    balanced_accuracy: 0.9647138973777296
+    recall_GALAXY: 0.9772570732224224
+    recall_QSO: 0.969652994152546
+    recall_STAR: 0.9472316247582205
+    n_valid: 115469
+  - fold: 4
+    balanced_accuracy: 0.9639917360071255
+    recall_GALAXY: 0.9765682950090071
+    recall_QSO: 0.9684138637527745
+    recall_STAR: 0.946993049259595
+    n_valid: 115469
+  - fold: 5
+    balanced_accuracy: 0.9626899342181382
+    recall_GALAXY: 0.9764358376602734
+    recall_QSO: 0.9668772409083148
+    recall_STAR: 0.9447567240858266
+    n_valid: 115469
+
+confusion_matrix:
+  class_order:
+    - GALAXY
+    - QSO
+    - STAR
+  matrix:
+    - [368766, 3555, 5159]
+    - [2731, 113415, 997]
+    - [4052, 415, 78257]
+  interpretation: >
+    The main remaining weakness is still STAR recall, but it is substantially
+    better than the failed 047 multiclass variant.
+
+feature_info:
+  n_features: 40
+  n_cat_cols_final: 13
+  n_te_columns: 3
+  added_or_used_features:
+    - spectral_type
+    - galaxy_population
+    - alpha_cat_
+    - delta_cat_
+    - u_cat_
+    - g_cat_
+    - r_cat_
+    - i_cat_
+    - z_cat_
+    - redshift_cat_
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    - redshift_64_quantile_bin_
+    - alpha
+    - delta
+    - u
+    - g
+    - r
+    - i
+    - z
+    - redshift
+    - _g_/_redshift
+    - _i_/_redshift
+    - _u-g
+    - _u-r
+    - _g-r
+    - _r-i
+    - _i-z
+    - _g-i
+    - _r-z
+    - _mag_mean
+    - _mag_std
+    - _mag_range
+    - _mag_slope_uz
+    - _redshift_abs
+    - _log1p_redshift
+    - _z_/_g
+    - alpha_cat_-delta_cat_
+    - redshift_64_quantile_bin_-g_cat_
+    - u_cat_-z_cat_
+
+submission_distribution:
+  total_rows: 247435
+  class_counts:
+    GALAXY: 161045
+    QSO: 50286
+    STAR: 36104
+  class_ratio:
+    GALAXY: 0.6508578
+    QSO: 0.20322913
+    STAR: 0.14591307
+
+outputs:
+  oof_proba: oof_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant_proba.npy
+  pred_proba: pred_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant_proba.npy
+  oof_csv: oof_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+  pred_csv: pred_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+  submission: submission_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+  cv_result: cv_result_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.json
+  fold_scores: fold_scores_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+  feature_info: feature_info_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.json
+  feature_columns: feature_columns_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+  binary_model_log: binary_model_log_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+  class_distribution: class_distribution_exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant.csv
+
+comparison_to_047_multiclass_xgb:
+  exp_047:
+    exp_id: exp_20260614_047_xgb_multiclass_fe_objective_foldvariant
+    model_type: xgb_multiclass_softprob_fe_objective_foldvariant
+    cv: 0.9596874103404002
+    public_lb: 0.96027
+    recalls:
+      GALAXY: 0.9797976051711349
+      QSO: 0.9645902870850157
+      STAR: 0.93467433876505
+  exp_048:
+    exp_id: exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant
+    model_type: ovr_xgb_seed2027_fe_foldvariant
+    cv: 0.9636973807714805
+    public_lb: 0.96444
+    recalls:
+      GALAXY: 0.9769153332626894
+      QSO: 0.9681756485662822
+      STAR: 0.9460011604854698
+  delta:
+    cv: 0.0040099704310803
+    public_lb: 0.00417
+    STAR_recall: 0.0113268217204198
+  judgement: >
+    048 strongly improves over 047. The main improvement is the recovery of STAR
+    recall after abandoning the multiclass softprob objective and returning to OVR.
+
+comparison_to_030_ovr_xgb:
+  exp_030:
+    exp_id: exp_20260608_030_ovr_xgb_as_is
+    model_type: one_vs_rest_xgb
+    cv: 0.9609971296999271
+    public_lb: 0.96118
+  exp_048:
+    exp_id: exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant
+    model_type: ovr_xgb_seed2027_fe_foldvariant
+    cv: 0.9636973807714805
+    public_lb: 0.96444
+  delta:
+    cv: 0.0027002510715534
+    public_lb: 0.00326
+  judgement: >
+    048 clearly improves over the original 030 OVR XGB baseline. This means the
+    conservative OVR route is useful, unlike the 047 multiclass route.
+
+comparison_to_current_best:
+  current_best:
+    exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+    cv: 0.9702017877238539
+    public_lb: 0.97069
+  exp_048:
+    cv: 0.9636973807714805
+    public_lb: 0.96444
+  delta:
+    cv: -0.0065044069523734
+    public_lb: -0.00625
+  judgement: >
+    048 is far below the current best as a standalone model. Its value is as
+    XGB-family auxiliary OOF/pred material, not as a direct submission.
+
+comparison_to_046_cv_best_diagnostic:
+  exp_046:
+    exp_id: exp_20260612_046_blend_add042_044_045_check
+    cv: 0.9702533348410616
+    public_lb: 0.97042
+  exp_048:
+    cv: 0.9636973807714805
+    public_lb: 0.96444
+  delta:
+    cv: -0.0065559540695811
+    public_lb: -0.00598
+  judgement: >
+    048 is not a final candidate, but it is a better XGB-family material than
+    previous 030/047 variants and should be tested once in the stacker.
+
+submission_slot_decision:
+  promote_to_slot: false
+  reason: >
+    048 is much weaker than all current final-slot candidates. It should not be
+    submitted directly except for diagnostic purposes.
+  recommended_slots_after_048:
+    slot_1:
+      exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+      cv: 0.9702017877238539
+      public_lb: 0.97069
+      role: current_best_cv_and_public
+    slot_2_private_hedge:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      cv: 0.9700400336552478
+      public_lb: 0.97043
+      role: simpler_blend_family_backup
+    public_lb_backup:
+      exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+      cv: 0.9701353365798572
+      public_lb: 0.97060
+      role: previous_stacker_best_backup
+    cv_best_not_selected:
+      exp_id: exp_20260612_046_blend_add042_044_045_check
+      cv: 0.9702533348410616
+      public_lb: 0.97042
+      role: highest_oof_cv_diagnostic
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_as_xgb_ovr_variant_material
+  role: xgb_ovr_variant_for_stacker_check
+  priority: medium
+  decision: do_not_promote_standalone_but_test_in_stacker
+  reason: >
+    048 is not competitive as a standalone model, but it successfully improves
+    the XGB-family OVR route over both 030 and the failed 047 multiclass variant.
+    Since the competition's best models are dominated by RealMLP/CatBoost/blend/
+    stacker families, a stronger XGB OVR material may still provide useful
+    diversity in GPU LogReg stacking.
+  notes:
+    - Returning to OVR was clearly better than multiclass softprob.
+    - 048 beats 030 on both CV and Public LB.
+    - STAR recall recovered substantially compared with 047.
+    - Standalone performance is still far below the final candidates.
+    - The value of 048 should be judged by stacker contribution, not by direct LB.
+  next_action:
+    - Keep 048 OOF/pred files in the asset pool.
+    - Run 049 GPU LogReg stacker add048 using the current strong own OOF/pred pool.
+    - Compare 049 against 040 CV 0.9702017877238539 / LB 0.97069.
+    - Also compare against 045 CV 0.9702445493383917 / LB 0.97040 and 046 CV 0.9702533348410616 / LB 0.97042.
+    - If 049 improves CV but not LB, keep it as diagnostic only.
+    - If 049 improves LB over 040, promote it to slot_1 candidate.
