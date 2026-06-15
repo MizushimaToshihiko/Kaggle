@@ -1,1 +1,219 @@
-
+experiment:
+  id: exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is
+  title: shared001 updated v2 RealMLP PyTorch as-is
+  competition: PS S6E6 Predicting Stellar Class
+  status: completed
+  metric: balanced_accuracy_score
+  model: RealMLP_TD_Classifier PyTorch implementation
+  created_at: '2026-06-15'
+objective:
+  summary: Run the further-updated shared001 RealMLP PyTorch notebook as-is and save
+    standard generated artifacts for later blend/correlation/stacker checks.
+  success_criteria:
+  - run updated shared001 source as-is
+  - save OOF proba npy with exp_id in filename
+  - save test pred proba npy with exp_id in filename
+  - save OOF/test prediction CSVs
+  - save submission
+  - save cv_result
+  - save fold_scores
+  - save feature_info and feature_columns
+  - save class_distribution
+  - save generated_data_manifest
+  - update oof_registry
+  - write memo.yml
+data:
+  train_path: /kaggle/input/competitions/playground-series-s6e6/train.csv
+  test_path: /kaggle/input/competitions/playground-series-s6e6/test.csv
+  sample_submission_path: /kaggle/input/competitions/playground-series-s6e6/sample_submission.csv
+  target_col: class
+  id_col: id
+  use_original: false
+  use_external_stacking_files: false
+seed:
+  seed: 42
+  random_seed: 42
+  numpy_seed: 42
+  torch_seed: 42
+  stratified_kfold_random_state: 42
+  target_encoder_random_state: 42
+  config_random_state: 42
+  audit: CONFIG random_state is asserted to equal SEED before training.
+features:
+  feature_family: shared001_updated_v2_realmlp_pytorch_fe
+  feature_info:
+    n_features: 30
+    n_cat_features: 14
+    n_num_features_initial: 16
+    cat_cols:
+    - alpha_cat_
+    - alpha_cat__delta_cat__
+    - delta_100_quantile_bin_
+    - delta_500_quantile_bin_
+    - delta_cat_
+    - g_cat_
+    - galaxy_population
+    - i_cat_
+    - r_cat_
+    - redshift_cat_
+    - spectral_type
+    - u_cat_
+    - u_cat__z_cat__
+    - z_cat_
+    combo_names:
+    - alpha_cat__delta_cat__
+    - u_cat__z_cat__
+    color_pairs:
+    - - u
+      - g
+    - - g
+      - r
+    - - i
+      - z
+    - - r
+      - z
+    - - u
+      - z
+    important_combos:
+    - - alpha_cat_
+      - delta_cat_
+    - - u_cat_
+      - z_cat_
+    source_update_note: Further updated shared001 RealMLP source as of 2026-06-15;
+      includes _Distance_Modulus and u-z color pair.
+  target_encoder_safety: TargetEncoder is fit inside each fold on train fold combo
+    features and labels, then transforms validation and test.
+model:
+  family: RealMLP
+  type: shared001_updated_v2_realmlp_pytorch_as_is
+  config:
+    n_ens: 8
+    embed_dim: 8
+    onehot_thresh: 8
+    hidden_dims:
+    - 512
+    - 512
+    - 512
+    dropout: 0.06
+    p_drop_sched: expm4t
+    activation: <class 'torch.nn.modules.activation.SiLU'>
+    add_front_scale: true
+    pbld_hidden_dim: 20
+    pbld_out_dim: 5
+    pbld_freq_scale: 5.0
+    pbld_activation: <class 'torch.nn.modules.activation.PReLU'>
+    pbld_lr_factor: 0.093
+    lr: 0.01
+    mom: 0.9
+    sq_mom: 0.98
+    lr_sched: flat_cos
+    flat_ratio: 0.3
+    first_layer_lr_factor: 1.0
+    first_layer_wd_factor: 0.1
+    lr_scale_mult: 10.0
+    lr_bias_mult: 0.1
+    weight_decay: 0.013
+    wd_scale_mult: 0.1
+    wd_bias_mult: 0.5
+    ema_decay: 0.997875
+    grad_clip: 1.2
+    ls_eps: 0.04
+    ls_eps_sched: cos
+    tfms:
+    - median_center
+    - robust_scale
+    epochs: 6
+    train_bs: 256
+    eval_bs: 10240
+    verbosity: 2
+    use_early_stopping: false
+    early_stopping_additive_patience: 10
+    early_stopping_multiplicative_patience: 1
+    device: cuda
+    random_state: 42
+cv:
+  scheme: StratifiedKFold
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+  score: 0.9689075888054314
+  recalls:
+    GALAXY: 0.9592640669704355
+    QSO: 0.9759268586257822
+    STAR: 0.9715318408200764
+  confusion_matrix:
+  - - 362103
+    - 5433
+    - 9944
+  - - 1701
+    - 114323
+    - 1119
+  - - 2011
+    - 344
+    - 80369
+  fold_scores:
+  - fold: 1
+    balanced_accuracy: 0.9700769177930839
+    recall_GALAXY: 0.9647266080322137
+    recall_QSO: 0.976268726791583
+    recall_STAR: 0.9692354185554548
+    n_train: 461877
+    n_valid: 115470
+  - fold: 2
+    balanced_accuracy: 0.9686575917192827
+    recall_GALAXY: 0.9569381159266717
+    recall_QSO: 0.9763540910836996
+    recall_STAR: 0.9726805681474766
+    n_train: 461877
+    n_valid: 115470
+  - fold: 3
+    balanced_accuracy: 0.9683884502678093
+    recall_GALAXY: 0.9563817950619901
+    recall_QSO: 0.9747748516795425
+    recall_STAR: 0.9740087040618955
+    n_train: 461878
+    n_valid: 115469
+  - fold: 4
+    balanced_accuracy: 0.9688356478656154
+    recall_GALAXY: 0.9589382218925506
+    recall_QSO: 0.9760969779750726
+    recall_STAR: 0.9714717437292233
+    n_train: 461878
+    n_valid: 115469
+  - fold: 5
+    balanced_accuracy: 0.9685793917308986
+    recall_GALAXY: 0.9593355939387517
+    recall_QSO: 0.9761396619429742
+    recall_STAR: 0.9702629193109701
+    n_train: 461878
+    n_valid: 115469
+  fold_std: 0.000602033630893248
+outputs:
+  oof_proba: oof_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is_proba.npy
+  pred_proba: pred_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is_proba.npy
+  oof_csv: oof_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.csv
+  pred_csv: pred_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.csv
+  submission: submission_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.csv
+  cv_result: cv_result_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.json
+  fold_scores: fold_scores_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.csv
+  feature_info: feature_info_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.json
+  feature_columns: feature_columns_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.csv
+  class_distribution: class_distribution_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.csv
+  generated_data_manifest: generated_data_manifest_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.json
+  registry: oof_registry.csv
+reference:
+  source_notebook_public_lb_reported_by_user: 0.97055
+  note: Reference value from the updated shared001 source/user report; this experiment's
+    own Public LB should be recorded after submission.
+judgement:
+  status: pending_public_lb_and_blend_check
+  role: shared001_updated_v2_realmlp_material
+  reason: The updated shared001 source reportedly has strong Public LB despite limited
+    CV gain. Adoption depends on this run's CV/Public LB and blend/stacker contribution
+    against 040/038/050/049/045/033.
+  next_action:
+  - Submit submission_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.csv
+  - Record Public LB
+  - Add generated OOF/pred npy to npy-files dataset
+  - Run add051 blend check if LB/CV are acceptable
+  - Only run GPU LogReg stacker add051 if blend check shows meaningful contribution
