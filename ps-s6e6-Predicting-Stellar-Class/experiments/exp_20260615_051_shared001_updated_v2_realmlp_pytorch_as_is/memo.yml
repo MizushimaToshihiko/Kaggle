@@ -217,3 +217,306 @@ judgement:
   - Add generated OOF/pred npy to npy-files dataset
   - Run add051 blend check if LB/CV are acceptable
   - Only run GPU LogReg stacker add051 if blend check shows meaningful contribution
+
+result:
+  status: completed
+  cv_balanced_accuracy: 0.9689075888054314
+  fold_std: 0.000602033630893248
+  public_lb: 0.97055
+  public_lb_source: user_reported_after_submission
+  public_lb_reference_from_source: 0.97055
+  submitted: true
+  submission: submission_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.csv
+
+model_summary:
+  model_family: RealMLP
+  model_type: shared001_updated_v2_realmlp_pytorch_as_is
+  source: ps-s6-e6-realmlp-pytorch updated shared001 source attached by user on 2026-06-15
+  metric: balanced_accuracy_score
+  run_type: as_is_updated_source
+  use_original: false
+  use_fe: true
+  use_bias_search: false
+  use_external_stacking_files: false
+  seed: 42
+  n_splits: 5
+  purpose: >
+    Run the further updated shared001 RealMLP source as-is, while adding the
+    standard generated artifacts for later blend/stacker use.
+
+variant_design:
+  base_lineage:
+    - exp_20260605_015_shared001_realmlp_as_is
+    - exp_20260610_035_shared001_updated_realmlp_pytorch_as_is
+  update_note: >
+    Further updated shared001 source. 051 keeps the run as close as possible to
+    the shared code while adding the usual OOF/pred/submission/cv_result/fold
+    score/feature info/generated manifest outputs.
+  interpretation: >
+    051 is not a new custom-tuned model. It is an as-is check of the latest
+    shared001 update. The main value is that its Public LB is high relative to
+    its CV, making it a potentially useful blend/stacker material.
+
+config:
+  n_ens: 8
+  embed_dim: 8
+  onehot_thresh: 8
+  hidden_dims:
+    - 512
+    - 512
+    - 512
+  dropout: 0.06
+  p_drop_sched: expm4t
+  activation: SiLU
+  add_front_scale: true
+  pbld_hidden_dim: 20
+  pbld_out_dim: 5
+  pbld_freq_scale: 5.0
+  pbld_activation: PReLU
+  pbld_lr_factor: 0.093
+  lr: 0.01
+  mom: 0.9
+  sq_mom: 0.98
+  lr_sched: flat_cos
+  flat_ratio: 0.3
+  first_layer_lr_factor: 1.0
+  first_layer_wd_factor: 0.1
+  lr_scale_mult: 10.0
+  lr_bias_mult: 0.1
+  weight_decay: 0.013
+  wd_scale_mult: 0.1
+  wd_bias_mult: 0.5
+  ema_decay: 0.997875
+  grad_clip: 1.2
+  ls_eps: 0.04
+  ls_eps_sched: cos
+  tfms:
+    - median_center
+    - robust_scale
+  epochs: 6
+  train_bs: 256
+  eval_bs: 10240
+  use_early_stopping: false
+  early_stopping_additive_patience: 10
+  early_stopping_multiplicative_patience: 1
+  device: cuda
+  random_state: 42
+
+cv:
+  score: 0.9689075888054314
+  fold_std: 0.000602033630893248
+  recalls:
+    GALAXY: 0.9592640669704355
+    QSO: 0.9759268586257822
+    STAR: 0.9715318408200764
+  confusion_matrix:
+    class_order:
+      - GALAXY
+      - QSO
+      - STAR
+    matrix:
+      - [362103, 5433, 9944]
+      - [1701, 114323, 1119]
+      - [2011, 344, 80369]
+  interpretation: >
+    CV is not high enough to be considered a direct final candidate. The recall
+    profile is RealMLP-like: QSO and STAR are strong, while GALAXY is weaker.
+    Public LB is much stronger than the CV would suggest, so this should be
+    treated as a Public-LB-strong auxiliary material.
+
+outputs:
+  oof_proba: oof_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is_proba.npy
+  pred_proba: pred_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is_proba.npy
+  oof_csv: oof_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.csv
+  pred_csv: pred_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.csv
+  submission: submission_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.csv
+  cv_result: cv_result_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.json
+  fold_scores: fold_scores_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.csv
+  feature_info: feature_info_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.json
+  feature_columns: feature_columns_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.csv
+  class_distribution: class_distribution_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.csv
+  generated_data_manifest: generated_data_manifest_exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is.json
+
+comparison_to_015_shared001:
+  exp_015:
+    exp_id: exp_20260605_015_shared001_realmlp_as_is
+    cv: 0.9681693449222352
+    public_lb: 0.96977
+  exp_051:
+    exp_id: exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is
+    cv: 0.9689075888054314
+    public_lb: 0.97055
+  delta:
+    cv: 0.0007382438831962
+    public_lb: 0.00078
+  judgement: >
+    051 is clearly better than the first shared001 as-is run.
+
+comparison_to_035_shared001_updated:
+  exp_035:
+    exp_id: exp_20260610_035_shared001_updated_realmlp_pytorch_as_is
+    cv: 0.9687410900866934
+    public_lb: 0.97012
+  exp_051:
+    exp_id: exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is
+    cv: 0.9689075888054314
+    public_lb: 0.97055
+  delta:
+    cv: 0.0001664987187380
+    public_lb: 0.00043
+  judgement: >
+    051 improves over 035 on both CV and Public LB. The Public LB gain is larger
+    than the CV gain, suggesting better public transfer or better alignment with
+    the public split.
+
+comparison_to_044_shared001_seed_fold_variant:
+  exp_044:
+    exp_id: exp_20260612_044_shared001_updated_seed2027_foldvariant
+    cv: 0.9686035095582338
+    public_lb: 0.97000
+  exp_051:
+    exp_id: exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is
+    cv: 0.9689075888054314
+    public_lb: 0.97055
+  delta:
+    cv: 0.0003040792471976
+    public_lb: 0.00055
+  judgement: >
+    051 is better than the previous shared001 seed/fold variant. This weakens
+    the case for continuing 044-style seed/fold variants and strengthens the
+    case for testing 051 in blend/stacker.
+
+comparison_to_050_cv_best_blend:
+  exp_050:
+    exp_id: exp_20260614_050_blend_add047_048_049_check
+    cv: 0.9702769901284838
+    public_lb: 0.97052
+  exp_051:
+    exp_id: exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is
+    cv: 0.9689075888054314
+    public_lb: 0.97055
+  delta:
+    cv: -0.0013694013230524
+    public_lb: 0.00003
+  judgement: >
+    051 has much lower CV than 050 but slightly higher Public LB. It should not
+    replace 050 as CV-best diagnostic, but it is important enough to add to the
+    next blend check.
+
+comparison_to_040_current_best:
+  exp_040:
+    exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+    cv: 0.9702017877238539
+    public_lb: 0.97069
+  exp_051:
+    exp_id: exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is
+    cv: 0.9689075888054314
+    public_lb: 0.97055
+  delta:
+    cv: -0.0012941989184225
+    public_lb: -0.00014
+  judgement: >
+    051 is below 040 on both CV and Public LB. Do not replace slot_1.
+
+comparison_to_038_public_backup:
+  exp_038:
+    exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+    cv: 0.9701353365798572
+    public_lb: 0.97060
+  exp_051:
+    exp_id: exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is
+    cv: 0.9689075888054314
+    public_lb: 0.97055
+  delta:
+    cv: -0.0012277477744258
+    public_lb: -0.00005
+  judgement: >
+    051 is very close to 038 on Public LB but much lower on CV. 038 remains the
+    better Public-LB backup, while 051 should be tested as a RealMLP-family blend
+    material.
+
+comparison_to_033_private_hedge:
+  exp_033:
+    exp_id: exp_20260609_033_blend_add032_tabm_check
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+  exp_051:
+    exp_id: exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is
+    cv: 0.9689075888054314
+    public_lb: 0.97055
+  delta:
+    cv: -0.0011324448498164
+    public_lb: 0.00012
+  judgement: >
+    051 has better Public LB but much weaker CV than 033. It is not an automatic
+    replacement for the private-diversity hedge. The next blend check should
+    decide whether 051 has useful complementary weight.
+
+submission_slot_decision:
+  promote_to_slot_1: false
+  promote_to_slot_2: hold
+  reason: >
+    051 is strong on Public LB but weak on CV relative to the current final-slot
+    candidates. It should be held as a high-priority blend/stacker material
+    rather than promoted directly.
+  recommended_slots_after_051:
+    slot_1:
+      exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+      cv: 0.9702017877238539
+      public_lb: 0.97069
+      role: current_best_public_confirmed
+      reason: >
+        Still the best confirmed Public LB.
+    public_lb_backup:
+      exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+      cv: 0.9701353365798572
+      public_lb: 0.97060
+      role: previous_stacker_best_backup
+      reason: >
+        Public LB remains slightly better than 051, with much stronger CV.
+    cv_best_diagnostic:
+      exp_id: exp_20260614_050_blend_add047_048_049_check
+      cv: 0.9702769901284838
+      public_lb: 0.97052
+      role: highest_oof_cv_blend_diagnostic
+      reason: >
+        Highest CV so far; Public LB slightly below 051.
+    public_strong_realmlp_material:
+      exp_id: exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is
+      cv: 0.9689075888054314
+      public_lb: 0.97055
+      role: public_lb_strong_realmlp_aux_material
+      reason: >
+        Best standalone shared001/RealMLP-style public result so far, but CV is
+        too low for direct slot promotion.
+    private_diversity_hedge:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      cv: 0.9700400336552478
+      public_lb: 0.97043
+      role: simpler_blend_family_backup
+      reason: >
+        Lower Public LB than 051, but stronger CV and useful as a less
+        stacker-heavy hedge.
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_as_public_strong_realmlp_material
+  role: shared001_updated_v2_as_is_check
+  priority: high
+  decision: do_not_promote_standalone_but_test_in_blend
+  reason: >
+    051 has a strong Public LB of 0.97055 despite only moderate CV. It improves
+    over the previous shared001 lineage runs 015/035/044 and is now strong enough
+    to justify a dedicated blend check with 040/038/050/049/045/033.
+  notes:
+    - Public LB is better than 050, 049, 046, 045, 033, and 035.
+    - Public LB is still below 040 and 038.
+    - CV is far below 040/038/050/049/033, so standalone promotion is risky.
+    - The result suggests public-transfer strength rather than broad OOF strength.
+    - This should be evaluated by blend weight, not by standalone CV alone.
+  next_action:
+    - Keep 051 OOF/pred files in the asset pool.
+    - Run 052 blend add051 using the 050 blend framework.
+    - Check whether 051 receives meaningful weight in hc_nonnegative_raw or other safe blend methods.
+    - If 051 receives meaningful safe-blend weight and improves Public LB/CV, consider GPU LogReg stacker add051 afterwards.
+    - If 051 receives zero weight, keep as standalone public-strong diagnostic only.
