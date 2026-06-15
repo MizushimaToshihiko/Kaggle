@@ -454,3 +454,363 @@ judgement:
   - Submit only the best safe blend, not optional in-sample meta rows
   - If 051 receives meaningful safe-blend weight and improves LB/CV, consider GPU
     LogReg stacker add051 next
+
+result:
+  status: completed
+  cv_balanced_accuracy: 0.9702813295320772
+  public_lb: 0.97061
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260615_052_blend_add051_trimmed_check_best_blend.csv
+
+model_summary:
+  model_family: Blend
+  model_type: trimmed_safe_probability_blend_check
+  metric: balanced_accuracy_score
+  exp_id: exp_20260615_052_blend_add051_trimmed_check
+  purpose: >
+    Trim the heavy 050 blend/correlation framework, add 051 shared001 updated v2,
+    and check whether 051 improves the safe probability blend against the current
+    upper group: 040, 038, 049, 050, 045, 033, and RealMLP/CatBoost auxiliary
+    models.
+  run_in_sample_meta: false
+  n_models_in_pool: 19
+  class_names:
+    - GALAXY
+    - QSO
+    - STAR
+
+added_model:
+  key: 051_shared001_updated_v2
+  exp_id: exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is
+  family: RealMLP
+  role: public_strong_shared001_updated_v2_material
+  cv: 0.9689075888054314
+  public_lb: 0.97055
+  judgement: >
+    051 was important enough to test because its standalone Public LB was high.
+    However, in the best 052 safe blend it receives zero direct weight. Its direct
+    probability-blend contribution is therefore not confirmed.
+
+omitted_models:
+  - key: 017_realmlp_bias
+    reason: zero weight in 050 best blend and superseded by later RealMLP/shared001 variants
+  - key: 018_xgb_shared003
+    reason: zero weight in 050 best blend; older XGB material
+  - key: 019_blend_best
+    reason: zero weight in 050 best blend; old composite
+  - key: 020_blend_bias
+    reason: zero weight in 050 best blend; old bias blend
+  - key: 024_seed_ensemble_blend
+    reason: zero weight in 050 best blend; old seed ensemble blend
+  - key: 030_ovr_xgb
+    reason: zero weight in 050 best blend and superseded by 048/049 path
+  - key: 034_gpu_logreg_default
+    reason: only about 0.99% weight in 050 full blend; stacker family covered by 040/045/049/050
+  - key: 036_gpu_logreg_add035
+    reason: only about 0.57% weight in 050 full blend; stacker family covered by 040/045/049/050
+  - key: 037_tabicl_v2
+    reason: zero weight in 050 best blend and weak standalone
+  - key: 047_xgb_multiclass_fe_objective_foldvariant
+    reason: zero weight in 050 best blend and failed standalone multiclass XGB
+  - key: 048_ovr_xgb_seed2027_fe_foldvariant
+    reason: zero direct weight in 050; its signal is represented through 049
+
+best_blend:
+  set_name: Z05_051_plus_realmlp_and_core
+  method: hc_nonnegative_raw
+  cv_balanced_accuracy: 0.9702813295320772
+  public_lb: 0.97061
+  n_models: 7
+  keys:
+    - 051_shared001_updated_v2
+    - 026_realmlp_v5
+    - 042_realmlp_v5_seed2026_foldvariant
+    - 044_shared001_updated_seed2027_foldvariant
+    - 040_gpu_logreg_add039
+    - 049_gpu_logreg_add048
+    - 050_blend_add047_048_049_best
+  weights:
+    051_shared001_updated_v2: 0.0
+    026_realmlp_v5: 0.08538166020688433
+    042_realmlp_v5_seed2026_foldvariant: 0.08051551777352962
+    044_shared001_updated_seed2027_foldvariant: 0.049030562247666026
+    040_gpu_logreg_add039: 0.20627077091992446
+    049_gpu_logreg_add048: 0.5403850688649761
+    050_blend_add047_048_049_best: 0.03841641998701947
+  recalls:
+    GALAXY: 0.9602389530571156
+    QSO: 0.9771390522694484
+    STAR: 0.9734659832696678
+  interpretation: >
+    052 becomes the new highest-CV run and slightly beats 038 on Public LB.
+    However, the new 051 model receives zero direct weight in the best blend.
+    The best blend is mainly driven by 049, 040, 026, 042, 044, and a small
+    amount of 050.
+
+important_safe_blends:
+  - set_name: B_050_only
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9702769901284838
+    public_lb: 0.97052
+    interpretation: >
+      050 alone was already extremely strong. 052 improves CV over 050 only
+      slightly.
+  - set_name: Q_051_050
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9702769901284838
+    weights:
+      051_shared001_updated_v2: 0.0
+      050_blend_add047_048_049_best: 1.0
+    interpretation: >
+      When paired directly with 050, 051 receives zero weight. This argues
+      against treating 051 as directly complementary to 050.
+  - set_name: V_051_045_040_038
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9702550939645449
+    weights:
+      051_shared001_updated_v2: 0.009852221602079608
+      045_gpu_logreg_add044: 0.5362222563878071
+      040_gpu_logreg_add039: 0.2701642182751024
+      038_gpu_logreg_add037: 0.18407313973461076
+    interpretation: >
+      051 can receive a very small positive weight in some compact blends, but
+      the weight is too small to justify a dedicated stacker run by itself.
+  - set_name: Z08_trimmed_full_with_050_051
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.970249691663204
+    weights:
+      051_shared001_updated_v2: 0.03969607195532618
+      050_blend_add047_048_049_best: 0.004975124378109453
+      049_gpu_logreg_add048: 0.2230482587097823
+      040_gpu_logreg_add039: 0.03969607195532618
+      038_gpu_logreg_add037: 0.13095734138062107
+    interpretation: >
+      051 has some non-zero contribution in broader trimmed blends, but these
+      blends do not beat the best 052 blend.
+
+correlation_summary:
+  focus_051:
+    lowest_corr_pair:
+      pair:
+        - 032_ovr_tabm
+        - 051_shared001_updated_v2
+      pearson_flat_proba: 0.9892165429653579
+      disagreement_rate: 0.0220162224797219
+      interpretation: >
+        051 is most different from the weaker TabM/OVR-style model, but that
+        does not translate into best-blend weight.
+    vs_040:
+      pearson_flat_proba: 0.9980577827221454
+      disagreement_rate: 0.008220359679707351
+      interpretation: >
+        051 is highly correlated with the current best 040.
+    vs_049:
+      pearson_flat_proba: 0.9980731765361843
+      disagreement_rate: 0.008142416952023652
+      interpretation: >
+        051 is also highly correlated with 049, which dominates the best 052
+        blend.
+    vs_050:
+      pearson_flat_proba: 0.9984340552261921
+      disagreement_rate: 0.007406291190566505
+      interpretation: >
+        051 is very close to 050 and receives zero weight when directly paired
+        with 050.
+    vs_035:
+      pearson_flat_proba: 0.9989019447231988
+      disagreement_rate: 0.005670766454142829
+      interpretation: >
+        051 is extremely close to the older shared001 updated lineage, so it is
+        not a genuinely new low-correlation family.
+
+comparison_to_051_standalone:
+  exp_051:
+    exp_id: exp_20260615_051_shared001_updated_v2_realmlp_pytorch_as_is
+    cv: 0.9689075888054314
+    public_lb: 0.97055
+  exp_052:
+    exp_id: exp_20260615_052_blend_add051_trimmed_check
+    cv: 0.9702813295320772
+    public_lb: 0.97061
+  delta:
+    cv: 0.0013737407266458
+    public_lb: 0.00006
+  judgement: >
+    052 is much stronger than 051 standalone. However, the improvement is not
+    because 051 receives direct weight in the best blend.
+
+comparison_to_050_cv_best_blend:
+  exp_050:
+    exp_id: exp_20260614_050_blend_add047_048_049_check
+    cv: 0.9702769901284838
+    public_lb: 0.97052
+  exp_052:
+    exp_id: exp_20260615_052_blend_add051_trimmed_check
+    cv: 0.9702813295320772
+    public_lb: 0.97061
+  delta:
+    cv: 0.0000043394035934
+    public_lb: 0.00009
+  judgement: >
+    052 slightly improves over 050 on both CV and Public LB. The CV gain is very
+    small, but the Public LB gain is useful.
+
+comparison_to_040_current_best:
+  exp_040:
+    exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+    cv: 0.9702017877238539
+    public_lb: 0.97069
+  exp_052:
+    exp_id: exp_20260615_052_blend_add051_trimmed_check
+    cv: 0.9702813295320772
+    public_lb: 0.97061
+  delta:
+    cv: 0.0000795418082233
+    public_lb: -0.00008
+  judgement: >
+    052 has higher CV than 040, but still lower Public LB. Do not replace 040 as
+    slot_1.
+
+comparison_to_038_public_backup:
+  exp_038:
+    exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+    cv: 0.9701353365798572
+    public_lb: 0.97060
+  exp_052:
+    exp_id: exp_20260615_052_blend_add051_trimmed_check
+    cv: 0.9702813295320772
+    public_lb: 0.97061
+  delta:
+    cv: 0.0001459929522200
+    public_lb: 0.00001
+  judgement: >
+    052 slightly beats 038 on Public LB and clearly beats it on CV. 052 can
+    replace 038 as the Public-LB backup, although the Public LB margin is tiny.
+
+comparison_to_049:
+  exp_049:
+    exp_id: exp_20260614_049_gpu_logreg_stacker_add048_own
+    cv: 0.9701958734042008
+    public_lb: 0.97046
+  exp_052:
+    exp_id: exp_20260615_052_blend_add051_trimmed_check
+    cv: 0.9702813295320772
+    public_lb: 0.97061
+  delta:
+    cv: 0.0000854561278764
+    public_lb: 0.00015
+  judgement: >
+    052 improves over 049 on both CV and Public LB. 049 remains the dominant
+    component inside the best 052 blend.
+
+comparison_to_045:
+  exp_045:
+    exp_id: exp_20260612_045_gpu_logreg_stacker_add044_own
+    cv: 0.9702445493383917
+    public_lb: 0.97040
+  exp_052:
+    exp_id: exp_20260615_052_blend_add051_trimmed_check
+    cv: 0.9702813295320772
+    public_lb: 0.97061
+  delta:
+    cv: 0.0000367801936855
+    public_lb: 0.00021
+  judgement: >
+    052 is better than 045 on both CV and Public LB.
+
+comparison_to_033_private_hedge:
+  exp_033:
+    exp_id: exp_20260609_033_blend_add032_tabm_check
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+  exp_052:
+    exp_id: exp_20260615_052_blend_add051_trimmed_check
+    cv: 0.9702813295320772
+    public_lb: 0.97061
+  delta:
+    cv: 0.0002412958768294
+    public_lb: 0.00018
+  judgement: >
+    052 is stronger than 033 on both CV and Public LB. However, 033 may still be
+    useful as a simpler/private-diversity hedge if final submissions are chosen
+    with correlation risk in mind.
+
+outputs:
+  summary: blend_add051_trimmed_summary.json
+  best_blend_info: best_blend_info.json
+  safe_blend_diagnostics: safe_blend_diagnostics.csv
+  safe_blend_diagnostics_focus_051: safe_blend_diagnostics_focus_051.csv
+  pairwise_oof_correlation: pairwise_oof_correlation.csv
+  pairwise_oof_correlation_focus_051: pairwise_oof_correlation_focus_051.csv
+  submission: submission_exp_20260615_052_blend_add051_trimmed_check_best_blend.csv
+  oof_proba: oof_exp_20260615_052_blend_add051_trimmed_check_best_blend_proba.npy
+  pred_proba: pred_exp_20260615_052_blend_add051_trimmed_check_best_blend_proba.npy
+  memo: memo.yml
+
+submission_slot_decision:
+  promote_to_slot_1: false
+  promote_to_public_backup: true
+  reason: >
+    052 is the new highest-CV run and has Public LB 0.97061, which slightly beats
+    the previous Public-LB backup 038. However, it still does not beat 040 on
+    Public LB.
+  recommended_slots_after_052:
+    slot_1:
+      exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+      cv: 0.9702017877238539
+      public_lb: 0.97069
+      role: current_best_public_confirmed
+      reason: >
+        Still the best confirmed Public LB. Keep as the main final candidate.
+    slot_2_public_backup:
+      exp_id: exp_20260615_052_blend_add051_trimmed_check
+      cv: 0.9702813295320772
+      public_lb: 0.97061
+      role: highest_cv_and_second_best_public_confirmed
+      reason: >
+        Highest OOF CV so far and slightly better Public LB than 038. Suitable
+        as the Public-LB backup candidate.
+    previous_public_backup:
+      exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+      cv: 0.9701353365798572
+      public_lb: 0.97060
+      role: previous_public_lb_backup
+      reason: >
+        Very close to 052 on Public LB, but lower CV. Keep as reference.
+    private_diversity_hedge:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      cv: 0.9700400336552478
+      public_lb: 0.97043
+      role: simpler_blend_family_backup
+      reason: >
+        Weaker than 052 on both CV and Public LB, but still useful as a
+        lower-complexity/private-diversity hedge.
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_as_current_cv_best_and_public_backup
+  role: trimmed_blend_add051_check
+  priority: high
+  decision: promote_to_public_backup_but_not_slot_1
+  reason: >
+    052 is the strongest CV result so far and the second-best Public LB result
+    behind 040. It slightly improves over 050 and 038. However, 051 itself does
+    not receive direct weight in the best blend, so the result should be viewed
+    as a successful trimmed blend refinement rather than proof that 051 is a
+    strong direct blending component.
+  notes:
+    - Best safe blend is Z05_051_plus_realmlp_and_core / hc_nonnegative_raw.
+    - 051 is included in the best set but receives weight 0.0.
+    - 049 is the dominant component with weight about 0.5404.
+    - 040 remains important with weight about 0.2063.
+    - 026, 042, and 044 provide additional RealMLP-family support.
+    - 050 receives small but non-zero weight.
+    - 038 is not included in the best blend, but 052 slightly beats 038 on Public LB.
+    - The runtime reduction by trimming was appropriate.
+  next_action:
+    - Keep 040 as slot_1.
+    - Use 052 as the new Public-LB backup / slot_2 public candidate.
+    - Keep 038 as previous backup reference because the LB gap is only 0.00001.
+    - Do not prioritize GPU LogReg stacker add051 based only on 052, because 051 has zero weight in the best blend.
+    - If continuing, prefer small final-selection checks or bias/search around 052/040 rather than broad new all-model blends.
