@@ -571,3 +571,326 @@ judgement:
     GPU LogReg stacker add047 next
   - Submit only best safe blend, not in-sample meta rows
   - Keep 040 as slot_1 unless 050 best safe blend confirms on Public LB
+
+result:
+  status: completed
+  cv_balanced_accuracy: 0.9702769901284838
+  public_lb: 0.97052
+  public_lb_source: user_reported_after_submission
+  submitted: true
+  submission: submission_exp_20260614_050_blend_add047_048_049_check_best_blend.csv
+
+model_summary:
+  model_family: Blend
+  model_type: safe_probability_blend_check
+  metric: balanced_accuracy_score
+  purpose: >
+    Blend/correlation check after adding 047, 048, and 049 to the 046 candidate
+    pool. The main purpose was to verify whether 049 can improve a probability
+    blend with 040/038/045/033, and whether weak standalone 047/048 can receive
+    useful direct blend weight.
+  n_models_in_pool: 28
+  class_names:
+    - GALAXY
+    - QSO
+    - STAR
+
+added_models:
+  - key: 047_xgb_multiclass_fe_objective_foldvariant
+    exp_id: exp_20260614_047_xgb_multiclass_fe_objective_foldvariant
+    family: XGBoost
+    role: failed_multiclass_xgb_variant_low_priority_diagnostic
+    cv: 0.9596874103404002
+    public_lb: 0.96027
+  - key: 048_ovr_xgb_seed2027_fe_foldvariant
+    exp_id: exp_20260614_048_ovr_xgb_seed2027_fe_foldvariant
+    family: XGBoost
+    role: improved_xgb_ovr_variant_material
+    cv: 0.9636973807714805
+    public_lb: 0.96444
+  - key: 049_gpu_logreg_add048
+    exp_id: exp_20260614_049_gpu_logreg_stacker_add048_own
+    family: GPU_LogisticRegression_Stacker
+    role: add048_stacker_public_improved_diagnostic
+    cv: 0.9701958734042008
+    public_lb: 0.97046
+
+best_blend:
+  set_name: Z21_full_all_loaded
+  method: hc_nonnegative_raw
+  cv_balanced_accuracy: 0.9702769901284838
+  public_lb: 0.97052
+  n_models: 28
+  recalls:
+    GALAXY: 0.9613198050227827
+    QSO: 0.9766012480472585
+    STAR: 0.9729099173154103
+  oof_proba: /kaggle/working/exp_20260614_050_blend_add047_048_049_check/oof_exp_20260614_050_blend_add047_048_049_check_best_blend_proba.npy
+  pred_proba: /kaggle/working/exp_20260614_050_blend_add047_048_049_check/pred_exp_20260614_050_blend_add047_048_049_check_best_blend_proba.npy
+  submission: /kaggle/working/exp_20260614_050_blend_add047_048_049_check/submission_exp_20260614_050_blend_add047_048_049_check_best_blend.csv
+  main_weights:
+    049_gpu_logreg_add048: 0.24995508474001138
+    040_gpu_logreg_add039: 0.12251438730414618
+    036_blend_add035: 0.11425909520959307
+    039_cat_v3_seed2026_qbin_variant: 0.1045843272073356
+    026_realmlp_v5: 0.09740697141859689
+    028_cat_v3: 0.03539727950591619
+    029_blend_add028: 0.02762543746736932
+    045_gpu_logreg_add044: 0.02762942151524164
+    031_blend_add030: 0.025633413531209702
+    032_ovr_tabm: 0.025633413531209702
+    033_blend_add032: 0.025633413531209702
+    035_shared001_updated: 0.025633413531209702
+    042_realmlp_v5_seed2026_foldvariant: 0.025633413531209702
+    044_shared001_updated_seed2027_foldvariant: 0.025633413531209702
+    034_gpu_logreg_default: 0.009861504634453547
+    036_gpu_logreg_add035: 0.005699182747658558
+  zero_or_near_zero_weights:
+    047_xgb_multiclass_fe_objective_foldvariant: 0.0
+    048_ovr_xgb_seed2027_fe_foldvariant: 0.0
+    038_gpu_logreg_add037: 0.0
+    037_tabicl_v2: 0.0
+    030_ovr_xgb: 0.0
+    018_xgb_shared003: 0.0
+    019_blend_best: 0.0
+    020_blend_bias: 0.0
+    024_seed_ensemble_blend: 0.0
+    017_realmlp_bias: 0.0
+  interpretation: >
+    The best blend relies heavily on 049, while 047 and 048 receive zero direct
+    weight. 048 is useful mainly through 049, not as a direct probability-blend
+    member. 047 does not show useful direct contribution.
+
+important_safe_blends:
+  - set_name: X_049_045_040_038_033
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9702643172104816
+    n_models: 5
+    weights:
+      049_gpu_logreg_add048: 0.19068397962763695
+      045_gpu_logreg_add044: 0.31895297056386546
+      040_gpu_logreg_add039: 0.28487902099034945
+      038_gpu_logreg_add037: 0.1956990750649031
+      033_blend_add032: 0.009784953753245158
+    interpretation: >
+      Compact stacker-heavy blend with 049 gives strong CV, but still does not
+      beat 040 on Public LB.
+  - set_name: W_049_045_040_038
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9702640093465217
+    n_models: 4
+    weights:
+      049_gpu_logreg_add048: 0.18640369818787422
+      045_gpu_logreg_add044: 0.35512375466088836
+      040_gpu_logreg_add039: 0.28348214657775744
+      038_gpu_logreg_add037: 0.17499040057348006
+    interpretation: >
+      049 remains useful when blended with the core stacker cluster.
+  - set_name: Z10_047_045
+    method: hc_nonnegative_raw
+    cv_balanced_accuracy: 0.9702445493383917
+    n_models: 2
+    weights:
+      047_xgb_multiclass_fe_objective_foldvariant: 0.0
+      045_gpu_logreg_add044: 1.0
+    interpretation: >
+      047 receives zero weight even in a direct pair with 045. This argues
+      against spending a GPU LogReg stacker run on add047.
+
+added_model_effect:
+  047_xgb_multiclass_fe_objective_foldvariant:
+    direct_weight_in_best_blend: 0.0
+    pair_with_045_weight: 0.0
+    judgement: >
+      047 does not help in safe probability blending. Since it receives zero
+      weight even when explicitly paired with 045, do not prioritize GPU LogReg
+      stacker add047.
+  048_ovr_xgb_seed2027_fe_foldvariant:
+    direct_weight_in_best_blend: 0.0
+    judgement: >
+      048 does not help directly in the probability blend. Its useful signal is
+      already captured through 049, the GPU LogReg stacker that includes 048.
+  049_gpu_logreg_add048:
+    direct_weight_in_best_blend: 0.24995508474001138
+    judgement: >
+      049 is the main new contributor in 050. It improves CV and Public LB over
+      049 standalone, and it is useful in probability blending, but not enough to
+      surpass 040 or 038 on Public LB.
+
+comparison_to_049:
+  exp_049:
+    exp_id: exp_20260614_049_gpu_logreg_stacker_add048_own
+    cv: 0.9701958734042008
+    public_lb: 0.97046
+  exp_050:
+    exp_id: exp_20260614_050_blend_add047_048_049_check
+    cv: 0.9702769901284838
+    public_lb: 0.97052
+  delta:
+    cv: 0.0000811167242830
+    public_lb: 0.00006
+  judgement: >
+    050 improves both CV and Public LB over 049. Blending 049 with the broader
+    pool is useful.
+
+comparison_to_046:
+  exp_046:
+    exp_id: exp_20260612_046_blend_add042_044_045_check
+    cv: 0.9702533348410616
+    public_lb: 0.97042
+  exp_050:
+    exp_id: exp_20260614_050_blend_add047_048_049_check
+    cv: 0.9702769901284838
+    public_lb: 0.97052
+  delta:
+    cv: 0.0000236552874222
+    public_lb: 0.00010
+  judgement: >
+    050 improves over 046 on both CV and Public LB, mainly through 049.
+
+comparison_to_045:
+  exp_045:
+    exp_id: exp_20260612_045_gpu_logreg_stacker_add044_own
+    cv: 0.9702445493383917
+    public_lb: 0.97040
+  exp_050:
+    exp_id: exp_20260614_050_blend_add047_048_049_check
+    cv: 0.9702769901284838
+    public_lb: 0.97052
+  delta:
+    cv: 0.0000324407900921
+    public_lb: 0.00012
+  judgement: >
+    050 improves over 045 on both CV and Public LB.
+
+comparison_to_041:
+  exp_041:
+    exp_id: exp_20260611_041_blend_add039_gpu040_check
+    cv: 0.9702371689099357
+    public_lb: 0.97050
+  exp_050:
+    exp_id: exp_20260614_050_blend_add047_048_049_check
+    cv: 0.9702769901284838
+    public_lb: 0.97052
+  delta:
+    cv: 0.0000398212185481
+    public_lb: 0.00002
+  judgement: >
+    050 slightly improves over 041 on both CV and Public LB, but the margin is
+    small.
+
+comparison_to_038_public_backup:
+  exp_038:
+    exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+    cv: 0.9701353365798572
+    public_lb: 0.97060
+  exp_050:
+    exp_id: exp_20260614_050_blend_add047_048_049_check
+    cv: 0.9702769901284838
+    public_lb: 0.97052
+  delta:
+    cv: 0.0001416535486266
+    public_lb: -0.00008
+  judgement: >
+    050 has higher CV than 038, but Public LB is lower. 038 remains the stronger
+    Public-LB backup.
+
+comparison_to_040_current_best:
+  exp_040:
+    exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+    cv: 0.9702017877238539
+    public_lb: 0.97069
+  exp_050:
+    exp_id: exp_20260614_050_blend_add047_048_049_check
+    cv: 0.9702769901284838
+    public_lb: 0.97052
+  delta:
+    cv: 0.0000752024046299
+    public_lb: -0.00017
+  judgement: >
+    050 is the highest CV run so far and has a decent Public LB, but it does not
+    beat 040 on Public LB. Do not replace 040 as slot_1.
+
+comparison_to_033_private_hedge:
+  exp_033:
+    exp_id: exp_20260609_033_blend_add032_tabm_check
+    cv: 0.9700400336552478
+    public_lb: 0.97043
+  exp_050:
+    exp_id: exp_20260614_050_blend_add047_048_049_check
+    cv: 0.9702769901284838
+    public_lb: 0.97052
+  delta:
+    cv: 0.0002369564732360
+    public_lb: 0.00009
+  judgement: >
+    050 is stronger than 033 on both CV and Public LB, but it is more
+    stacker/blend-clustered. 033 may still be useful as a diversity hedge if
+    prioritizing private-LB robustness over Public LB.
+
+submission_slot_decision:
+  promote_to_slot_1: false
+  reason: >
+    050 achieves the highest OOF CV so far and improves Public LB over 049/046/045
+    and slightly over 041, but Public LB 0.97052 is still below 040 and 038.
+  recommended_slots_after_050:
+    slot_1:
+      exp_id: exp_20260611_040_gpu_logreg_stacker_add039_own
+      cv: 0.9702017877238539
+      public_lb: 0.97069
+      role: current_best_public_confirmed
+      reason: >
+        Best confirmed Public LB. Keep as main final candidate.
+    public_lb_backup:
+      exp_id: exp_20260610_038_gpu_logreg_stacker_add037_own
+      cv: 0.9701353365798572
+      public_lb: 0.97060
+      role: previous_stacker_best_backup
+      reason: >
+        Still better than 050 on Public LB, although likely highly correlated
+        with 040.
+    cv_best_diagnostic:
+      exp_id: exp_20260614_050_blend_add047_048_049_check
+      cv: 0.9702769901284838
+      public_lb: 0.97052
+      role: highest_oof_cv_and_second_tier_public_blend
+      reason: >
+        Highest CV and stronger Public LB than 041/049/046/045/033, but not
+        enough to replace 040 or 038.
+    private_diversity_hedge:
+      exp_id: exp_20260609_033_blend_add032_tabm_check
+      cv: 0.9700400336552478
+      public_lb: 0.97043
+      role: simpler_blend_family_backup
+      reason: >
+        Weaker than 050 on CV/Public LB, but potentially less tied to the
+        stacker-heavy 040/049/050 cluster.
+
+judgement:
+  status: completed
+  keep_hold_drop: keep_as_cv_best_public_second_tier_diagnostic
+  role: blend_add047_048_049_check
+  priority: medium_high
+  decision: do_not_promote_to_slot_1
+  reason: >
+    050 is a useful improvement over the recent 045/046/049 line and achieves
+    the highest OOF CV so far. However, it still fails to beat 040 and 038 on
+    Public LB. The best blend assigns large weight to 049, but gives zero direct
+    weight to 047 and 048.
+  notes:
+    - Best safe blend is Z21_full_all_loaded / hc_nonnegative_raw.
+    - 049 receives the largest weight, about 0.25.
+    - 040 remains important with weight about 0.1225.
+    - 036_blend and 039 also receive meaningful weights.
+    - 047 receives zero weight in the best blend and also zero weight when paired with 045.
+    - 048 receives zero direct weight in the best blend; its value is through 049.
+    - 038 receives zero weight in the full best blend, although compact 049/045/040/038 blends remain strong.
+    - CV improvement continues, but Public LB still does not surpass 040.
+  next_action:
+    - Keep 040 as slot_1.
+    - Keep 038 as Public LB backup.
+    - Keep 050 as current CV-best diagnostic and second-tier Public LB candidate.
+    - Keep 033 as private-diversity hedge unless choosing only by Public LB.
+    - Do not run GPU LogReg stacker add047 unless there is separate evidence beyond this blend check.
+    - Do not use 048 directly in probability blend; use it through 049.
+    - If continuing, consider either a compact 050-style blend refinement around 049/045/040/038/033, or move to a genuinely new low-correlation model/FE source.
